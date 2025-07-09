@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 const LoadingPage = lazy(() => import('./pages/LoadingPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const SignupPage = lazy(() => import('./pages/SignupPage'));
+const TwoFactorPage = lazy(() => import('./pages/TwoFactorPage'));
 
 const AppRouter = () => (
   <Router>
@@ -12,6 +13,7 @@ const AppRouter = () => (
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/2fa" element={<TwoFactorPage />} />
         <Route path="/loading" element={<LoadingPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
