@@ -1,14 +1,16 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import CustomButton from "@/components/CustomButton";
 import { Alert } from "@mui/material";
+import { isMobile } from "@/utils/isMobile";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -18,10 +20,18 @@ const LoginPage = () => {
       setInfo("Please enter the credentials first !");
       return;
     }
-    // Simulate login error
-    setTimeout(() => {
-      setError("You have entered the wrong credentials");
-    }, 800);
+    // Check for admin credentials
+    if (email === "admin@gmail.com" && password === "admin123") {
+      setInfo("Login successful! Redirecting...");
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1000);
+    } else {
+      // Simulate login error
+      setTimeout(() => {
+        setError("You have entered the wrong credentials");
+      }, 800);
+    }
   };
 
   return (
@@ -67,12 +77,12 @@ const LoginPage = () => {
         </div>
       )}
       <div
-        className="w-full max-w-md rounded-2xl p-10 flex flex-col items-center border border-gray-100"
+        className="w-full max-w-md rounded-2xl p-10 flex flex-col items-center border border-gray-100 shadow-none md:shadow"
         style={{
           background: `linear-gradient(180deg, rgba(255,255,255,0) -9.58%, rgba(255,255,255,0.052) 100%)`,
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          boxShadow: [
+          boxShadow: isMobile() ? 'none' : [
             "0px 10px 10px 0px #0000001A",
             "0px 4px 4px 0px #0000000D",
             "0px 1px 0px 0px #0000000D",

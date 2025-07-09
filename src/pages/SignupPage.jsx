@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronRight } from "lucide-react";
 import CustomButton from "../components/CustomButton";
 import { Alert } from "../components/ui/alert";
+import { isMobile } from "@/utils/isMobile";
 
 const SignupPage = () => {
   const [email, setEmail] = useState('');
@@ -67,12 +68,12 @@ const SignupPage = () => {
       )}
       {/* Card */}
       <div
-        className="w-full max-w-md rounded-2xl p-10 flex flex-col items-center border border-gray-100"
+        className="w-full max-w-md rounded-2xl p-10 flex flex-col items-center border border-gray-100 shadow-none md:shadow"
         style={{
           background: `linear-gradient(180deg, rgba(255,255,255,0) -9.58%, rgba(255,255,255,0.052) 100%)`,
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          boxShadow: [
+          boxShadow: isMobile() ? 'none' : [
             "0px 10px 10px 0px #0000001A",
             "0px 4px 4px 0px #0000000D",
             "0px 1px 0px 0px #0000000D",
