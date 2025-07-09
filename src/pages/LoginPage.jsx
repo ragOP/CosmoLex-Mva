@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import CustomButton from "../components/CustomButton";
 import { ChevronRight } from "lucide-react";
-import LoadingPage from "./LoadingPage";
-import { Alert } from "../components/ui/alert";
+import CustomButton from "@/components/CustomButton";
+import { Alert } from "@mui/material";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");

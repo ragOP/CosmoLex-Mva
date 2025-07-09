@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Progress } from '../components/ui/progress';
+import { Progress } from './ui/progress';
 
-const LoadingPage = () => {
+const PageLoading = () => {
   const [progress, setProgress] = useState(0);
   const navigate = useNavigate();
 
@@ -24,7 +24,6 @@ const LoadingPage = () => {
       }}
     >
       <img src="/brand-logo.png" alt="Brand Logo" className="w-20 h-20 mb-8" />
-      <div className="text-lg font-medium text-gray-dark mb-6">Loading...</div>
       <div className="w-64">
         <Progress value={progress} />
       </div>
@@ -32,4 +31,4 @@ const LoadingPage = () => {
   );
 };
 
-export default LoadingPage;
+export default PageLoading;
