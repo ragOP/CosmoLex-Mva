@@ -68,7 +68,7 @@ const LoginPage = () => {
         <div className="absolute top-24 md:top-20 left-1/2 -translate-x-1/2 z-10 flex justify-center w-full">
           <div className="flex flex-col items-center">
             {error && (
-              <Alert color="error" className="w-fit rounded-xl md:rounded-sm">{error}</Alert>
+              <Alert severity="error" className="w-fit rounded-xl md:rounded-sm">{error}</Alert>
             )}
             {info && (
               <Alert color="warning" className="w-fit rounded-xl md:rounded-sm px-8">{info}</Alert>
