@@ -58,7 +58,7 @@ function getIconForType(type) {
     return typeToIcon[type] || null;
 }
 
-const Sidebar = () => {
+const Sidebar = ({ isDrawer }) => {
     const navigate = useNavigate();
     const [openTree, setOpenTree] = React.useState(null);
     const [hovered, setHovered] = React.useState(null);
@@ -73,7 +73,7 @@ const Sidebar = () => {
     };
 
     return (
-        <aside className="bg-white shadow h-full w-64 flex-shrink-0 gap-2 hidden md:flex flex-col p-4">
+        <aside className={`bg-white shadow h-full w-64 flex-shrink-0 flex flex-col p-4 ${isDrawer ? '' : 'hidden md:flex'}`}>
             <div className="flex p-4">
                 <img src="/brand-logo.png" alt="Logo" className="h-10 w-10" />
             </div>
