@@ -7,7 +7,8 @@ const SignupPage = lazy(() => import('./pages/SignupPage'));
 const TwoFactorPage = lazy(() => import('./pages/TwoFactorPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 
-const DashboardHome = () => <div>Dashboard Home</div>;
+const DashboardHome = lazy(() => import('./components/dashboard/Dashboard'));
+const DashboardForm = lazy(() => import('./components/dashboard/DashboardForm'));
 const MatterPage = () => <div>Matter Page</div>;
 const UserManagementPage = () => <div>User Management Page</div>;
 const BulkImportPage = () => <div>Bulk Import Page</div>;
@@ -21,6 +22,7 @@ const AppRouter = () => (
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/dashboard/*" element={<DashboardPage />}>
           <Route index element={<DashboardHome />} />
+          <Route path="dashboard-form" element={<DashboardForm />} />
           <Route path="matter" element={<MatterPage />} />
           <Route path="user-management" element={<UserManagementPage />} />
           <Route path="bulk-import" element={<BulkImportPage />} />
