@@ -68,10 +68,10 @@ const SignupPage = () => {
         <div className="absolute top-24 md:top-20 left-1/2 -translate-x-1/2 z-10 flex justify-center w-full">
           <div className="flex flex-col items-center">
             {error && (
-              <Alert color="error" className="w-fit rounded-xl md:rounded-2xl">{error}</Alert>
+              <Alert color="error" className="w-fit rounded-xl md:rounded-2xl max-w-md">{error}</Alert>
             )}
             {info && (
-              <Alert color="warning" className="w-fit rounded-xl md:rounded-2xl">{info}</Alert>
+              <Alert color="success" className="w-fit rounded-xl md:rounded-2xl max-w-md">{info}</Alert>
             )}
           </div>
         </div>

@@ -12,6 +12,21 @@ const VerificationPage = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  // Auto-clear messages after 5 seconds
+  React.useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
+  React.useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   // Get email from URL params or localStorage
   const urlParams = new URLSearchParams(window.location.search);
   const email = urlParams.get('email') || localStorage.getItem('signup_email') || '';
@@ -33,14 +48,55 @@ const VerificationPage = () => {
         data: { email }
       });
 
-      if (result.response) {
-        setMessage('Verification link sent successfully! Please check your inbox.');
+      console.log('Resend Verification API Response:', result); // Debug log
+
+      // Check if request was successful - API returns Apistatus: true for success
+      if (result.response && (result.response.Apistatus === true || result.response.success === true)) {
+        setMessage('Verification link sent successfully! Please check your inbox and spam folder.');
       } else {
-        setError('Failed to resend verification link. Please try again.');
+        // Handle API errors
+        let errorMessage = 'Failed to resend verification link. Please try again.';
+        
+        // Check for different response structures
+        if (result.response?.errors) {
+          // Handle validation errors like: { email: ["message"] }
+          const errors = result.response.errors;
+          if (typeof errors === 'object') {
+            const errorMessages = Object.values(errors).flat();
+            errorMessage = errorMessages.join('. ');
+          } else {
+            errorMessage = errors;
+          }
+        } else if (result.response?.message) {
+          errorMessage = result.response.message;
+        } else if (result.response?.data?.message) {
+          errorMessage = result.response.data.message;
+        } else if (result.response?.data?.errors) {
+          const errors = result.response.data.errors;
+          if (typeof errors === 'object') {
+            errorMessage = Object.values(errors).flat().join('. ');
+          } else {
+            errorMessage = errors;
+          }
+        }
+        
+        setError(errorMessage);
       }
     } catch (error) {
       console.error('Resend verification error:', error);
-      setError('An error occurred while resending the verification link.');
+      
+      // Handle different error types
+      if (error.response?.status === 404) {
+        setError('Email not found. Please check your email address or sign up again.');
+      } else if (error.response?.status === 429) {
+        setError('Too many requests. Please wait a few minutes before trying again.');
+      } else if (error.response?.status >= 500) {
+        setError('Server error. Please try again later.');
+      } else if (error.code === 'ERR_NETWORK') {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError('An error occurred while resending the verification link. Please try again.');
+      }
     } finally {
       setIsResending(false);
     }
@@ -76,10 +132,10 @@ const VerificationPage = () => {
         <div className="absolute top-24 md:top-20 left-1/2 -translate-x-1/2 z-10 flex justify-center w-full">
           <div className="flex flex-col items-center">
             {error && (
-              <Alert color="error" className="w-fit rounded-xl md:rounded-2xl">{error}</Alert>
+              <Alert color="error" className="w-fit rounded-xl md:rounded-2xl max-w-md">{error}</Alert>
             )}
             {message && (
-              <Alert color="warning" className="w-fit rounded-xl md:rounded-2xl">{message}</Alert>
+              <Alert color="success" className="w-fit rounded-xl md:rounded-2xl max-w-md">{message}</Alert>
             )}
           </div>
         </div>
@@ -128,7 +184,7 @@ const VerificationPage = () => {
             type="button"
             onClick={handleResendLink}
             disabled={isResending}
-            className="bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50"
+            className={`bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 ${isResending ? 'animate-pulse' : ''}`}
             icon={isResending ? RefreshCw : Mail}
             iconPosition="left"
           >

@@ -7,9 +7,18 @@ const getFormData = async () => {
       endpoint: endpoints.formData.replace('/', ''), // Remove leading slash as apiService adds it
       method: 'GET'
     });
-    return result.response;
+    
+    console.log('Form Data API Response:', result); // Debug log
+    
+    // Check if request was successful - API returns Apistatus: true for success
+    if (result.response && (result.response.Apistatus === true || result.response.success === true)) {
+      return result.response;
+    } else {
+      console.error('Form data API error:', result.response?.message || 'Failed to fetch form data');
+      return null;
+    }
   } catch (error) {
-    console.log(error);
+    console.error('Form data fetch error:', error);
     return null;
   }
 };

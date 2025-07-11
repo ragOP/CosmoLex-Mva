@@ -15,6 +15,22 @@ export const useSignupForm = () => {
   const [countryOptions, setCountryOptions] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Auto-clear error messages after 7 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(''), 7000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
+  // Auto-clear info messages after 5 seconds (except during redirect)
+  useEffect(() => {
+    if (info && !info.includes('Redirecting')) {
+      const timer = setTimeout(() => setInfo(''), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [info]);
+
   // Fetch country options on mount
   useEffect(() => {
     const fetchCountryOptions = async () => {
@@ -22,9 +38,12 @@ export const useSignupForm = () => {
         const data = await getFormData();
         if (data && data.country_codes) {
           setCountryOptions(data.country_codes);
+        } else {
+          setError('Failed to load country options. Please refresh the page.');
         }
       } catch (error) {
         console.error('Error fetching country options:', error);
+        setError('Unable to load form data. Please check your connection and refresh.');
       }
     };
 
@@ -82,18 +101,64 @@ export const useSignupForm = () => {
         data: formData
       });
 
-      if (result.response) {
+      console.log('API Response:', result); // Debug log
+      
+      // Check if request was successful - API returns Apistatus: true for success
+      if (result.response && (result.response.Apistatus === true || result.response.success === true)) {
         // Store email for verification page
         localStorage.setItem('signup_email', formData.email);
         
+        // Show success message
+        setInfo('Account created successfully! Redirecting...');
+        
         // Navigate to verification page
-        navigate(`/verification?email=${encodeURIComponent(formData.email)}`);
+        setTimeout(() => {
+          navigate(`/verification?email=${encodeURIComponent(formData.email)}`);
+        }, 1500);
       } else {
-        setError(result.error?.message || 'Registration failed. Please try again.');
+        // Handle API errors
+        let errorMessage = 'Registration failed. Please try again.';
+        
+        // Check for different response structures
+        if (result.response?.errors) {
+          // Handle validation errors like: { password: ["message"] }
+          const errors = result.response.errors;
+          if (typeof errors === 'object') {
+            const errorMessages = Object.values(errors).flat();
+            errorMessage = errorMessages.join('. ');
+          } else {
+            errorMessage = errors;
+          }
+        } else if (result.response?.message) {
+          errorMessage = result.response.message;
+        } else if (result.response?.data?.message) {
+          errorMessage = result.response.data.message;
+        } else if (result.response?.data?.errors) {
+          const errors = result.response.data.errors;
+          if (typeof errors === 'object') {
+            errorMessage = Object.values(errors).flat().join('. ');
+          } else {
+            errorMessage = errors;
+          }
+        }
+        
+        setError(errorMessage);
       }
     } catch (error) {
       console.error('Registration error:', error);
-      setError('An error occurred during registration. Please try again.');
+      
+      // Network or other errors
+      if (error.response?.status === 422) {
+        setError('Please check your input data. Some fields may be invalid.');
+      } else if (error.response?.status === 409) {
+        setError('An account with this email already exists.');
+      } else if (error.response?.status >= 500) {
+        setError('Server error. Please try again later.');
+      } else if (error.code === 'ERR_NETWORK') {
+        setError('Network error. Please check your connection.');
+      } else {
+        setError('An error occurred during registration. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
