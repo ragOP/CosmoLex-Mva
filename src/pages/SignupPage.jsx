@@ -1,38 +1,46 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import CustomButton from "../components/CustomButton";
 import { Alert } from "../components/ui/alert";
 import { isMobile } from "@/utils/isMobile";
+import { 
+  useSignupForm, 
+  stepTitles, 
+  stepDescriptions, 
+  SignupStep1, 
+  SignupStep2, 
+  SignupStep3 
+} from "../components/signup";
 
 const SignupPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [info, setInfo] = useState('');
+  const {
+    currentStep,
+    formData,
+    error,
+    info,
+    handleInputChange,
+    handleNext,
+    handlePrevious,
+    handleSubmit
+  } = useSignupForm();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError('');
-    setInfo('');
-    if (!email || !password || !confirmPassword) {
-      setInfo('Please enter all credentials!');
-      return;
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 1:
+        return <SignupStep1 formData={formData} handleInputChange={handleInputChange} />;
+      case 2:
+        return <SignupStep2 formData={formData} handleInputChange={handleInputChange} />;
+      case 3:
+        return <SignupStep3 formData={formData} handleInputChange={handleInputChange} />;
+      default:
+        return <SignupStep1 formData={formData} handleInputChange={handleInputChange} />;
     }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    // Simulate signup success
-    setTimeout(() => {
-      setInfo('Account created! Please log in.');
-    }, 800);
   };
 
   return (
     <div
-      className="relative min-h-screen flex items-center justify-center"
+      className="relative min-h-screen flex items-center justify-center py-8"
       style={{
         background: `radial-gradient(ellipse 80% 80% at 70% 20%, #e6f0ff 0%, #f2eaff 60%, #f8f9fb 100%),\nradial-gradient(ellipse 60% 60% at 20% 80%, #e0f7fa 0%, #f2eaff 80%, #f8f9fb 100%)`
       }}
@@ -68,7 +76,7 @@ const SignupPage = () => {
       )}
       {/* Card */}
       <div
-        className="w-full max-w-md rounded-2xl p-10 flex flex-col items-center border border-gray-100 shadow-none md:shadow"
+        className="w-full max-w-2xl rounded-2xl p-10 flex flex-col items-center border border-gray-100 shadow-none md:shadow mx-4"
         style={{
           background: `linear-gradient(180deg, rgba(255,255,255,0) -9.58%, rgba(255,255,255,0.052) 100%)`,
           backdropFilter: "blur(20px)",
@@ -81,55 +89,60 @@ const SignupPage = () => {
           ].join(", "),
         }}
       >
+        {/* Step Header */}
         <div className="flex flex-col items-start w-full mb-7">
-          <h1 className="font-semibold text-[30px] leading-[40px] text-gray-dark tracking-[-0.01rem]">Sign up</h1>
-          <p className="font-normal text-[16px] leading-[22px] tracking-[-0.01em] text-[#475569]">Create your account to get started!</p>
+          <h1 className="font-semibold text-[30px] leading-[40px] text-gray-dark tracking-[-0.01rem]">
+            {stepTitles[currentStep]}
+          </h1>
+          <p className="font-normal text-[16px] leading-[22px] tracking-[-0.01em] text-[#475569]">
+            {stepDescriptions[currentStep]}
+          </p>
+          <p className="text-sm text-gray-400 mt-1">
+            Step {currentStep} of 3
+          </p>
         </div>
-        <form className="w-full flex flex-col gap-6" onSubmit={handleSubmit} autoComplete="off">
-          <div>
-            <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              className="w-full px-5 py-3 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary-700 text-base placeholder:text-gray-400 font-normal transition-all duration-150 hover:bg-gray-lightHover hover:ring-1 hover:ring-[#4648AB]"
-              placeholder="Enter your email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              autoComplete="email"
-            />
+
+        <form className="w-full" onSubmit={handleSubmit} autoComplete="off">
+          {/* Current Step Content */}
+          <div className="mb-8">
+            {renderCurrentStep()}
           </div>
-          <div>
-            <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              className="w-full px-5 py-3 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary-700 text-base placeholder:text-gray-400 font-normal transition-all duration-150 hover:bg-gray-lightHover hover:ring-1 hover:ring-[#4648AB]"
-              placeholder="Enter your password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              autoComplete="new-password"
-            />
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between gap-4">
+            {currentStep > 1 ? (
+              <CustomButton
+                type="button"
+                onClick={handlePrevious}
+                className="bg-gray-200 text-gray-700 hover:bg-gray-300"
+                icon={ChevronLeft}
+                iconPosition="left"
+              >
+                Previous
+              </CustomButton>
+            ) : (
+              <div></div>
+            )}
+
+            {currentStep < 3 ? (
+              <CustomButton
+                type="button"
+                onClick={handleNext}
+                icon={ChevronRight}
+                iconPosition="right"
+              >
+                Next
+              </CustomButton>
+            ) : (
+              <CustomButton
+                type="submit"
+                icon={ChevronRight}
+                iconPosition="right"
+              >
+                Sign Up
+              </CustomButton>
+            )}
           </div>
-          <div>
-            <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              id="confirmPassword"
-              type="password"
-              className="w-full px-5 py-3 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary-700 text-base placeholder:text-gray-400 font-normal transition-all duration-150 hover:bg-gray-lightHover hover:ring-1 hover:ring-[#4648AB]"
-              placeholder="Confirm your password"
-              value={confirmPassword}
-              onChange={e => setConfirmPassword(e.target.value)}
-              autoComplete="new-password"
-            />
-          </div>
-          <CustomButton
-            type="submit"
-            className="mt-2"
-            icon={ChevronRight}
-            iconPosition="right"
-          >
-            Sign Up
-          </CustomButton>
         </form>
       </div>
     </div>
