@@ -10,4 +10,6 @@ export const endpoints = {
   formData: "/form-data",
   firmRegister: "firm/register",
   resendVerification: "firm/resend-link",
+  forgotPassword: "forgot-password",
+  resetPassword: "reset-password",
 };

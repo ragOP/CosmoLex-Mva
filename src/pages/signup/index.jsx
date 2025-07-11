@@ -141,6 +141,7 @@ const SignupPage = () => {
                 disabled={isSubmitting}
                 icon={ChevronRight}
                 iconPosition="right"
+                loading={isSubmitting}
               >
                 {isSubmitting ? 'Creating Account...' : 'Sign Up'}
               </CustomButton>

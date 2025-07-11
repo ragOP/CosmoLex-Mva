@@ -7,6 +7,8 @@ const SignupPage = lazy(() => import('./pages/signup'));
 const VerificationPage = lazy(() => import('./pages/verification'));
 const TwoFactorPage = lazy(() => import('./pages/TwoFactorPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const ForgotPasswordPage = lazy(() => import('./pages/forget-password'));
+const ResetPasswordPage = lazy(() => import('./pages/reset-password'));
 
 const DashboardHome = lazy(() => import('./components/dashboard/Dashboard'));
 const DashboardForm = lazy(() => import('./components/dashboard/DashboardForm'));
@@ -22,6 +24,8 @@ const AppRouter = () => (
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/verification" element={<VerificationPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/dashboard/*" element={<DashboardPage />}>
           <Route index element={<DashboardHome />} />
           <Route path="dashboard-form" element={<DashboardForm />} />

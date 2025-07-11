@@ -148,6 +148,7 @@ const LoginPage = () => {
               autoComplete="current-password"
             />
           </div>
+          <Link to="/forgot-password">Forgot Password?</Link>
           <CustomButton
             type="submit"
             className="mt-2"
