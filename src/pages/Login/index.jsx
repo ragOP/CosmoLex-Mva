@@ -4,33 +4,79 @@ import { ChevronRight } from "lucide-react";
 import CustomButton from "@/components/CustomButton";
 import { Alert } from "@/components/ui/alert";
 import { isMobile } from "@/utils/isMobile";
+import { getBrowserInfo } from "@/utils/deviceDetection";
+import postLogin from "./helper";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setInfo("");
+
     if (!email || !password) {
-      setInfo("Please enter the credentials first !");
+      setInfo("Please enter the credentials first!");
       return;
     }
-    // Check for admin credentials
-    if (email === "admin@gmail.com" && password === "admin123") {
-      setInfo("Login successful! Redirecting...");
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 1000);
-    } else {
-      // Simulate login error
-      setTimeout(() => {
-        setError("You have entered the wrong credentials");
-      }, 800);
+
+    setIsSubmitting(true);
+
+    try {
+      const browserInfo = await getBrowserInfo();
+
+      const payload = {
+        email,
+        password,
+        remember,
+        browser_info: [browserInfo],
+      };
+
+      const result = await postLogin(payload);
+
+      if (result.response && result.response.Apistatus) {
+        if (result.response.two_factor_required) {
+          localStorage.setItem(
+            "login_temp_data",
+            JSON.stringify({
+              email,
+              otp: result.response.otp,
+            })
+          );
+
+          setInfo(result.response.message);
+          setTimeout(() => {
+            navigate("/2fa");
+          }, 1500);
+        } else {
+          if (result.response.token) {
+            localStorage.setItem("auth_token", result.response.token);
+            if (remember) {
+              localStorage.setItem("remember_login", "true");
+            }
+          }
+
+          setInfo("Login successful! Redirecting...");
+          setTimeout(() => {
+            navigate("/dashboard");
+          }, 1000);
+        }
+      } else {
+        setError(
+          result.response?.data?.message || "Login failed. Please try again."
+        );
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setError("An error occurred during login. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -68,10 +114,20 @@ const LoginPage = () => {
         <div className="absolute top-24 md:top-20 left-1/2 -translate-x-1/2 z-10 flex justify-center w-full">
           <div className="flex flex-col items-center">
             {error && (
-              <Alert severity="error" className="w-fit rounded-xl md:rounded-sm">{error}</Alert>
+              <Alert
+                severity="error"
+                className="w-fit rounded-xl md:rounded-sm"
+              >
+                {error}
+              </Alert>
             )}
             {info && (
-              <Alert color="success" className="w-fit rounded-xl md:rounded-sm px-8">{info}</Alert>
+              <Alert
+                color="success"
+                className="w-fit rounded-xl md:rounded-sm px-8"
+              >
+                {info}
+              </Alert>
             )}
           </div>
         </div>
@@ -82,12 +138,14 @@ const LoginPage = () => {
           background: `linear-gradient(180deg, rgba(255,255,255,0) -9.58%, rgba(255,255,255,0.052) 100%)`,
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          boxShadow: isMobile() ? 'none' : [
-            "0px 10px 10px 0px #0000001A",
-            "0px 4px 4px 0px #0000000D",
-            "0px 1px 0px 0px #0000000D",
-            "0px 20px 50px 0px #FFFFFF26 inset",
-          ].join(", "),
+          boxShadow: isMobile()
+            ? "none"
+            : [
+                "0px 10px 10px 0px #0000001A",
+                "0px 4px 4px 0px #0000000D",
+                "0px 1px 0px 0px #0000000D",
+                "0px 20px 50px 0px #FFFFFF26 inset",
+              ].join(", "),
         }}
       >
         <div className="flex flex-col items-start w-full mb-7">
@@ -121,6 +179,7 @@ const LoginPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
+              disabled={isSubmitting}
             />
           </div>
           <div>
@@ -146,16 +205,43 @@ const LoginPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
+              disabled={isSubmitting}
             />
           </div>
-          <Link to="/forgot-password">Forgot Password?</Link>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <input
+                id="remember"
+                type="checkbox"
+                className="h-4 w-4 text-primary-700 border-gray-300 rounded focus:ring-primary-700"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                disabled={isSubmitting}
+              />
+              <label
+                htmlFor="remember"
+                className="text-sm font-medium text-gray-dark tracking-[-0.01em]"
+              >
+                Remember me
+              </label>
+            </div>
+            <Link
+              to="/forgot-password"
+              className="text-sm font-medium text-primary-700 hover:text-primary-800 tracking-[-0.01em]"
+            >
+              Forgot Password?
+            </Link>
+          </div>
+
           <CustomButton
             type="submit"
             className="mt-2"
             icon={ChevronRight}
             iconPosition="right"
+            disabled={isSubmitting}
           >
-            Login
+            {isSubmitting ? "Logging in..." : "Login"}
           </CustomButton>
         </form>
       </div>

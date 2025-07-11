@@ -12,4 +12,7 @@ export const endpoints = {
   resendVerification: "firm/resend-link",
   forgotPassword: "forgot-password",
   resetPassword: "reset-password",
+  login: "login",
+  verifyOtp: "verify-otp",
+  resendOtp: "resend-otp",
 };

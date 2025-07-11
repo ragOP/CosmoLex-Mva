@@ -2,10 +2,10 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import PageLoading from './components/PageLoading';
 
-const LoginPage = lazy(() => import('./pages/LoginPage'));
+const LoginPage = lazy(() => import('./pages/Login'));
 const SignupPage = lazy(() => import('./pages/signup'));
 const VerificationPage = lazy(() => import('./pages/verification'));
-const TwoFactorPage = lazy(() => import('./pages/TwoFactorPage'));
+const TwoFactorPage = lazy(() => import('./pages/two-factor'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/forget-password'));
 const ResetPasswordPage = lazy(() => import('./pages/reset-password'));
