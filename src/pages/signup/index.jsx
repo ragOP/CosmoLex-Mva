@@ -20,6 +20,7 @@ const SignupPage = () => {
     error,
     info,
     countryOptions,
+    isSubmitting,
     handleInputChange,
     handleNext,
     handlePrevious,
@@ -137,10 +138,11 @@ const SignupPage = () => {
             ) : (
               <CustomButton
                 type="submit"
+                disabled={isSubmitting}
                 icon={ChevronRight}
                 iconPosition="right"
               >
-                Sign Up
+                {isSubmitting ? 'Creating Account...' : 'Sign Up'}
               </CustomButton>
             )}
           </div>

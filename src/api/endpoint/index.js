@@ -8,4 +8,6 @@ export const BACKEND_URL = isDev()
 
 export const endpoints = {
   formData: "/form-data",
+  firmRegister: "firm/register",
+  resendVerification: "firm/resend-link",
 };

@@ -4,6 +4,7 @@ import PageLoading from './components/PageLoading';
 
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const SignupPage = lazy(() => import('./pages/signup'));
+const VerificationPage = lazy(() => import('./pages/VerificationPage'));
 const TwoFactorPage = lazy(() => import('./pages/TwoFactorPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 
@@ -20,6 +21,7 @@ const AppRouter = () => (
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/verification" element={<VerificationPage />} />
         <Route path="/dashboard/*" element={<DashboardPage />}>
           <Route index element={<DashboardHome />} />
           <Route path="dashboard-form" element={<DashboardForm />} />

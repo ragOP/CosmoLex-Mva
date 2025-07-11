@@ -1,14 +1,19 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { initialFormData } from './signupData';
 import { validateStep } from './signupValidation';
 import getFormData from '../helper/getFormData';
+import { apiService } from '@/api/api_services';
+import { endpoints } from '@/api/endpoint';
 
 export const useSignupForm = () => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(initialFormData);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [countryOptions, setCountryOptions] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch country options on mount
   useEffect(() => {
@@ -57,7 +62,7 @@ export const useSignupForm = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setInfo('');
@@ -68,11 +73,30 @@ export const useSignupForm = () => {
       return;
     }
 
-    console.log(formData, "formData");
+    setIsSubmitting(true);
+    
+    try {
+      const result = await apiService({
+        endpoint: endpoints.firmRegister,
+        method: 'POST',
+        data: formData
+      });
 
-    setTimeout(() => {
-      setInfo('Account created! Please log in.');
-    }, 800);
+      if (result.response) {
+        // Store email for verification page
+        localStorage.setItem('signup_email', formData.email);
+        
+        // Navigate to verification page
+        navigate(`/verification?email=${encodeURIComponent(formData.email)}`);
+      } else {
+        setError(result.error?.message || 'Registration failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      setError('An error occurred during registration. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return {
@@ -81,6 +105,7 @@ export const useSignupForm = () => {
     error,
     info,
     countryOptions,
+    isSubmitting,
     handleInputChange,
     handleNext,
     handlePrevious,
