@@ -52,7 +52,7 @@ export const initialFormData = {
   first_name: '',
   last_name: '',
   email: '',
-  country_code_id: 1,
+  country_code_id: 1, // Default to first country (will be loaded from API)
   phone_number: '',
   firm_name: '',
   number_of_users: '',

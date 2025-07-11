@@ -1,5 +1,6 @@
 import React from 'react';
-import { numberOfUsersOptions, practiceAreaOptions, heardAboutUsOptions } from './signupData';
+import { numberOfUsersOptions, heardAboutUsOptions } from './signupData';
+import DynamicDropdown from '../../../components/DynamicDropdown';
 
 const SignupStep2 = ({ formData, handleInputChange }) => (
   <div className="flex flex-col gap-4">
@@ -38,20 +39,15 @@ const SignupStep2 = ({ formData, handleInputChange }) => (
         </select>
       </div>
       <div>
-        <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor="practice_area_id">
-          Practice Area
-        </label>
-        <select
+        <DynamicDropdown
           id="practice_area_id"
           name="practice_area_id"
-          className="w-full px-5 py-3 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary-700 text-base font-normal transition-all duration-150 hover:bg-gray-lightHover hover:ring-1 hover:ring-[#4648AB]"
+          label="Practice Area"
+          placeholder="Select Practice Area"
           value={formData.practice_area_id}
           onChange={handleInputChange}
-        >
-          {practiceAreaOptions.map(option => (
-            <option key={option.value} value={option.value}>{option.label}</option>
-          ))}
-        </select>
+          dataKey="practice_areas"
+        />
       </div>
     </div>
 

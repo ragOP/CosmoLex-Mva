@@ -1,7 +1,8 @@
 import React from 'react';
-import { countryOptions } from './signupData';
+import DynamicDropdown from '../../../components/DynamicDropdown';
+import PhoneNumberInput from '../../../components/PhoneNumberInput';
 
-const SignupStep1 = ({ formData, handleInputChange }) => (
+const SignupStep1 = ({ formData, handleInputChange, countryOptions }) => (
   <div className="flex flex-col gap-4">
     {/* Personal Information */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -54,36 +55,29 @@ const SignupStep1 = ({ formData, handleInputChange }) => (
     </div>
 
     {/* Phone Information */}
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div>
-        <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor="country_code_id">
-          Country Code
-        </label>
-        <select
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="md:col-span-1">
+        <DynamicDropdown
           id="country_code_id"
           name="country_code_id"
-          className="w-full px-5 py-3 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary-700 text-base font-normal transition-all duration-150 hover:bg-gray-lightHover hover:ring-1 hover:ring-[#4648AB]"
+          label="Country Code"
           value={formData.country_code_id}
           onChange={handleInputChange}
-        >
-          {countryOptions.map(option => (
-            <option key={option.value} value={option.value}>{option.label}</option>
-          ))}
-        </select>
+          dataKey="country_codes"
+        />
       </div>
-      <div className="md:col-span-2">
+      <div className="md:col-span-4">
         <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor="phone_number">
           Phone Number <span className="text-red-500">*</span>
         </label>
-        <input
+        <PhoneNumberInput
           id="phone_number"
           name="phone_number"
-          type="tel"
-          className="w-full px-5 py-3 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary-700 text-base placeholder:text-gray-400 font-normal transition-all duration-150 hover:bg-gray-lightHover hover:ring-1 hover:ring-[#4648AB]"
-          placeholder="Enter your phone number"
           value={formData.phone_number}
           onChange={handleInputChange}
-          autoComplete="tel"
+          countryCodeId={formData.country_code_id}
+          countryOptions={countryOptions}
+          placeholder="Enter your phone number"
         />
       </div>
     </div>

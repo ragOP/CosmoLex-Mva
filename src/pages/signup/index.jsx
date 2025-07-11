@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, ChevronLeft } from "lucide-react";
-import CustomButton from "../components/CustomButton";
-import { Alert } from "../components/ui/alert";
+import CustomButton from "../../components/CustomButton";
+import { Alert } from "../../components/ui/alert";
 import { isMobile } from "@/utils/isMobile";
 import { 
   useSignupForm, 
@@ -11,7 +11,7 @@ import {
   SignupStep1, 
   SignupStep2, 
   SignupStep3 
-} from "../components/signup";
+} from "./components/index";
 
 const SignupPage = () => {
   const {
@@ -19,6 +19,7 @@ const SignupPage = () => {
     formData,
     error,
     info,
+    countryOptions,
     handleInputChange,
     handleNext,
     handlePrevious,
@@ -28,13 +29,13 @@ const SignupPage = () => {
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
-        return <SignupStep1 formData={formData} handleInputChange={handleInputChange} />;
+        return <SignupStep1 formData={formData} handleInputChange={handleInputChange} countryOptions={countryOptions} />;
       case 2:
         return <SignupStep2 formData={formData} handleInputChange={handleInputChange} />;
       case 3:
         return <SignupStep3 formData={formData} handleInputChange={handleInputChange} />;
       default:
-        return <SignupStep1 formData={formData} handleInputChange={handleInputChange} />;
+        return <SignupStep1 formData={formData} handleInputChange={handleInputChange} countryOptions={countryOptions} />;
     }
   };
 

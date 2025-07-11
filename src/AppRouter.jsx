@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import PageLoading from './components/PageLoading';
 
 const LoginPage = lazy(() => import('./pages/LoginPage'));
-const SignupPage = lazy(() => import('./pages/SignupPage'));
+const SignupPage = lazy(() => import('./pages/signup'));
 const TwoFactorPage = lazy(() => import('./pages/TwoFactorPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 

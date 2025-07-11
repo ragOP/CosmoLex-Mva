@@ -1,12 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { initialFormData } from './signupData';
 import { validateStep } from './signupValidation';
+import getFormData from '../helper/getFormData';
 
 export const useSignupForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(initialFormData);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
+  const [countryOptions, setCountryOptions] = useState([]);
+
+  // Fetch country options on mount
+  useEffect(() => {
+    const fetchCountryOptions = async () => {
+      try {
+        const data = await getFormData();
+        if (data && data.country_codes) {
+          setCountryOptions(data.country_codes);
+        }
+      } catch (error) {
+        console.error('Error fetching country options:', error);
+      }
+    };
+
+    fetchCountryOptions();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -62,6 +80,7 @@ export const useSignupForm = () => {
     formData,
     error,
     info,
+    countryOptions,
     handleInputChange,
     handleNext,
     handlePrevious,
