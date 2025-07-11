@@ -11,6 +11,7 @@ const VerificationPage = () => {
   const [isResending, setIsResending] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [cooldownTime, setCooldownTime] = useState(120);
 
   // Auto-clear messages after 5 seconds
   React.useEffect(() => {
@@ -26,6 +27,17 @@ const VerificationPage = () => {
       return () => clearTimeout(timer);
     }
   }, [error]);
+
+  // Cooldown timer effect
+  React.useEffect(() => {
+    let interval;
+    if (cooldownTime > 0) {
+      interval = setInterval(() => {
+        setCooldownTime(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [cooldownTime]);
 
   // Get email from URL params or localStorage
   const urlParams = new URLSearchParams(window.location.search);
@@ -53,6 +65,8 @@ const VerificationPage = () => {
       // Check if request was successful - API returns Apistatus: true for success
       if (result.response && (result.response.Apistatus === true || result.response.success === true)) {
         setMessage('Verification link sent successfully! Please check your inbox and spam folder.');
+        // Start 2-minute cooldown
+        setCooldownTime(120);
       } else {
         // Handle API errors
         let errorMessage = 'Failed to resend verification link. Please try again.';
@@ -81,6 +95,8 @@ const VerificationPage = () => {
         }
         
         setError(errorMessage);
+        // Start cooldown even on error to prevent spam
+        setCooldownTime(120);
       }
     } catch (error) {
       console.error('Resend verification error:', error);
@@ -97,6 +113,8 @@ const VerificationPage = () => {
       } else {
         setError('An error occurred while resending the verification link. Please try again.');
       }
+      // Start cooldown even on error to prevent spam
+      setCooldownTime(120);
     } finally {
       setIsResending(false);
     }
@@ -135,7 +153,7 @@ const VerificationPage = () => {
               <Alert color="error" className="w-fit rounded-xl md:rounded-2xl max-w-md">{error}</Alert>
             )}
             {message && (
-              <Alert color="success" className="w-fit rounded-xl md:rounded-2xl max-w-md">{message}</Alert>
+              <Alert color="green" className="w-fit rounded-xl md:rounded-2xl max-w-md">{message}</Alert>
             )}
           </div>
         </div>
@@ -183,12 +201,17 @@ const VerificationPage = () => {
           <CustomButton
             type="button"
             onClick={handleResendLink}
-            disabled={isResending}
+            disabled={isResending || cooldownTime > 0}
             className={`bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 ${isResending ? 'animate-pulse' : ''}`}
             icon={isResending ? RefreshCw : Mail}
             iconPosition="left"
           >
-            {isResending ? 'Sending...' : 'Resend Verification Link'}
+            {isResending 
+              ? 'Sending...' 
+              : cooldownTime > 0 
+                ? `Resend in ${cooldownTime}s` 
+                : 'Resend Verification Link'
+            }
           </CustomButton>
 
           <Link to="/login">

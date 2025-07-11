@@ -27,8 +27,8 @@ export const validateStep = (step, formData) => {
       if (formData.password !== formData.password_confirmation) {
         return 'Passwords do not match';
       }
-      if (formData.password.length < 6) {
-        return 'Password must be at least 6 characters long';
+      if (formData.password.length < 8) {
+        return 'Password must be at least 8 characters long';
       }
       if (!formData.terms_accepted) {
         return 'Please accept the terms and conditions';

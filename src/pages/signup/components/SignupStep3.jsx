@@ -39,7 +39,7 @@ const SignupStep3 = ({ formData, handleInputChange }) => (
     <div className="bg-gray-50 p-4 rounded-lg">
       <p className="text-sm text-gray-600 mb-2">Password Requirements:</p>
       <ul className="text-xs text-gray-500 space-y-1">
-        <li>• At least 6 characters long</li>
+        <li>• At least 8 characters long</li>
         <li>• Must match confirmation password</li>
       </ul>
     </div>
