@@ -7,7 +7,7 @@ export const BACKEND_URL = isDev()
   : "https://maplelawpro.com/newapp/public/api";
 
 export const endpoints = {
-  formData: "/form-data",
+  formData: "form-data",
   firmRegister: "firm/register",
   resendVerification: "firm/resend-link",
   forgotPassword: "forgot-password",

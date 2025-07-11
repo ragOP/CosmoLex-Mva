@@ -4,7 +4,7 @@ import { apiService } from "@/api/api_services";
 const getFormData = async () => {
   try {
     const result = await apiService({
-      endpoint: endpoints.formData.replace('/', ''), // Remove leading slash as apiService adds it
+      endpoint: endpoints.formData,
       method: 'GET'
     });
     

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import CustomButton from "@/components/CustomButton";
-import { Alert } from "@mui/material";
+import { Alert } from "@/components/ui/alert";
 import { isMobile } from "@/utils/isMobile";
 
 const LoginPage = () => {
@@ -71,7 +71,7 @@ const LoginPage = () => {
               <Alert severity="error" className="w-fit rounded-xl md:rounded-sm">{error}</Alert>
             )}
             {info && (
-              <Alert color="warning" className="w-fit rounded-xl md:rounded-sm px-8">{info}</Alert>
+              <Alert color="success" className="w-fit rounded-xl md:rounded-sm px-8">{info}</Alert>
             )}
           </div>
         </div>
