@@ -53,14 +53,11 @@ const PhoneNumberInput = ({
         const formatted = formatIncompletePhoneNumber(inputValue, country);
         setFormattedValue(formatted);
 
-        // Pass the raw number (without formatting) to parent
-        const cleanNumber = inputValue.replace(/\D/g, '');
-        
-        // Create a synthetic event for the parent handler
+        // Create a synthetic event for the parent handler with formatted data
         const syntheticEvent = {
           target: {
             name,
-            value: cleanNumber, // Store clean number
+            value: formatted, // Store formatted number
             type: 'tel'
           }
         };
