@@ -4,7 +4,7 @@ import PageLoading from './components/PageLoading';
 
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const SignupPage = lazy(() => import('./pages/signup'));
-const VerificationPage = lazy(() => import('./pages/VerificationPage'));
+const VerificationPage = lazy(() => import('./pages/verification'));
 const TwoFactorPage = lazy(() => import('./pages/TwoFactorPage'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 
