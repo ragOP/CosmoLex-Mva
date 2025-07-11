@@ -225,6 +225,7 @@ const TwoFactorPage = () => {
             icon={ChevronRight}
             iconPosition="right"
             disabled={isSubmitting}
+            loading={isSubmitting}
           >
             {isSubmitting ? "Verifying..." : "Verify"}
           </CustomButton>

@@ -240,6 +240,7 @@ const LoginPage = () => {
             icon={ChevronRight}
             iconPosition="right"
             disabled={isSubmitting}
+            loading={isSubmitting}
           >
             {isSubmitting ? "Logging in..." : "Login"}
           </CustomButton>
