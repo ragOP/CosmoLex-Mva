@@ -19,9 +19,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { 
     DataGrid,
     gridPageCountSelector,
- } from '@mui/x-data-grid';
+} from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom';
-import { cardHeaderClasses } from '@mui/material';
 
 const data = {
     date: 'June 23, 2025',
@@ -78,7 +77,6 @@ const data = {
         "Employment File"
     ],
 };
-
 const filesBreakdownData = [
     {
         category: 'Accident Benefit',
@@ -99,7 +97,6 @@ const filesBreakdownData = [
         Settled: data.settlements.property_damage_claim,
     },
 ];
-
 const figmaEarningData = [
     {
         name: 'Mon',
@@ -120,8 +117,6 @@ const figmaEarningData = [
         property_damage_claim: data.settlements.property_damage_claim,
     },
 ];
-
-
 const figmaInspectionData = [
     {
         name: 'Insurance',
@@ -146,7 +141,11 @@ const renderTooltipWithoutRange = ({ payload, content, ...rest }) => {
 const renderLegendWithoutRange = ({ payload, content, ...rest }) => {
     // console.log(payload);
     const newPayload = payload.filter((x) => x.dataKey !== "no_of_registration" && x.dataKey !== "no_of_renewal" && x.dataKey !== "no_of_transfer_of_ownership" && x.dataKey !== "complaints" && x.dataKey !== "failed" && x.dataKey !== "overdue" && x.dataKey !== "property_damage");
-    return <DefaultLegendContent payload={newPayload} {...rest} />;
+    const payloadToSend = newPayload.map((x) => ({
+        ...x,
+        value: snakeCaseToTitleCase(x.value),
+    }));
+    return <DefaultLegendContent payload={payloadToSend} {...rest} />;
 }
 
 const Dashboard = () => {
@@ -200,7 +199,7 @@ const Dashboard = () => {
                     <div>
                         <h1 className="text-xl text-[#40444D] font-semibold font-sans">Vehicle Transaction</h1>
                     </div>
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" className="py-5">
                         <ComposedChart
                             width={500}
                             height={400}
@@ -271,7 +270,7 @@ const Dashboard = () => {
                 <div className='w-full border border-[#E2E8F0] shadow-[0px_4px_24px_0px #000000] col-span-2 h-[25rem] bg-white rounded-lg p-6'>
                     <h1 className="text-xl text-[#40444D] font-semibold font-sans">Inspection Compliance</h1>
                     {/* <div className='border border-[#25282D] rounded-md p-2'> */}
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" className="py-5">
                         <ComposedChart
                             width={500}
                             height={300}
@@ -313,7 +312,7 @@ const Dashboard = () => {
                     <h1 className="text-xl text-[#40444D] font-semibold font-sans mb-4">
                         Claims Type Distribution
                     </h1>
-                    <ResponsiveContainer width="100%" height={300}>
+                    <ResponsiveContainer width="100%" height={300} className="py-5">
                         <BarChart
                             data={filesBreakdownData}
                             margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
@@ -381,3 +380,9 @@ const DashboardCard = ({ item }) => {
         </div>
     );
 };
+
+const snakeCaseToTitleCase = (str) => {
+    if (!str) return '';
+    const words = str.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+    return words;
+}
