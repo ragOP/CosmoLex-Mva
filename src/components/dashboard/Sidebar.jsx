@@ -1,4 +1,4 @@
-import { BookText, LayoutDashboardIcon, File, Folder, ChevronRight, ChevronDown } from 'lucide-react';
+import { BookText, LayoutDashboardIcon, File, Folder, ChevronRight, ChevronDown, TextSearch } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
@@ -9,6 +9,7 @@ const typeToIcon = {
     folder: Folder,
     tree: BookText,
     link: LayoutDashboardIcon,
+    data: TextSearch,
 };
 
 const sidebarItems = [
@@ -29,21 +30,69 @@ const sidebarItems = [
         label: 'Matter',
         type: 'tree',
         iconType: 'tree',
-        children: [
+        treeData: [
             {
-                id: '/dashboard/matter/claim-form',
-                label: 'Claim Form',
-                type: 'folder',
+                id: '1',
+                label: 'Forms',
+                fileType: 'folder',
                 children: [
-                    { id: '/dashboard/matter/claim-form/file1', label: 'File 1', type: 'file' },
-                    { id: '/dashboard/matter/claim-form/file2', label: 'File 2', type: 'file' },
+                    { id: '1.1', label: 'Claim Form', fileType: 'file' },
+                    { id: '1.2', label: 'Renewal Form', fileType: 'file' },
+                    { id: '1.3', label: 'Transfer of Ownership', fileType: 'file' },
                 ],
             },
-            { id: '/dashboard/matter/policy-application', label: 'Policy Application', type: 'file' },
-            { id: '/dashboard/matter/renewal-form', label: 'Renewal Form', type: 'file' },
-            { id: '/dashboard/matter/accident-report', label: 'Accident Report', type: 'file' },
-            { id: '/dashboard/matter/transfer-ownership', label: 'Transfer of Ownership', type: 'file' },
-            { id: '/dashboard/matter/file', label: 'File', type: 'file' },
+            {
+                id: '2',
+                label: 'Policies',
+                fileType: 'folder',
+                children: [
+                    { id: '2.1', label: 'Private Car Policy', fileType: 'file' },
+                    { id: '2.2', label: 'Two Wheeler Policy', fileType: 'file' },
+                    { id: '2.3', label: 'Commercial Vehicle Policy', fileType: 'file' },
+                ],
+            },
+            {
+                id: '3',
+                label: 'Claims',
+                fileType: 'folder',
+                children: [
+                    { id: '3.1', label: 'New Claim', fileType: 'file' },
+                    { id: '3.2', label: 'Claim Status', fileType: 'file' },
+                    { id: '3.3', label: 'Claim History', fileType: 'file' },
+                ],
+            },
+            {
+                id: '4',
+                label: 'Reports',
+                fileType: 'folder',
+                children: [
+                    { id: '4.1', label: 'Inspection Report', fileType: 'file' },
+                    { id: '4.2', label: 'Accident Report', fileType: 'file' },
+                ],
+            },
+        ],
+    },
+    {
+        id: 'crm',
+        label: 'CRM',
+        type: 'tree',
+        iconType: 'tree',
+        treeData: [
+            { id: '/dashboard/crm/launchpad', label: 'Launchpad', fileType: 'file' },
+            { id: '/dashboard/crm/inbox', label: 'Inbox', fileType: 'file' },
+            { id: '/dashboard/crm/new-intake', label: 'New Intake', fileType: 'file' },
+            { id: '/dashboard/crm/advanced-search', label: 'Advanced Search', fileType: 'file' },
+            { id: '/dashboard/crm/new-inquiries', label: 'New Inquiries', fileType: 'file' },
+            { id: '/dashboard/crm/text-messages', label: 'Text Messages', fileType: 'file' },
+            { id: '/dashboard/crm/tasks', label: 'Tasks', fileType: 'file' },
+            { id: '/dashboard/crm/calendar-events', label: 'Calendar Events', fileType: 'file' },
+            { id: '/dashboard/crm/newsfeed', label: 'Newsfeed', fileType: 'file' },
+            { id: '/dashboard/crm/contacts', label: 'Contacts', fileType: 'file' },
+            { id: '/dashboard/crm/reports', label: 'Reports', fileType: 'file' },
+            { id: '/dashboard/crm/documents', label: 'Documents', fileType: 'file' },
+            { id: '/dashboard/crm/automations', label: 'Automations', fileType: 'file' },
+            { id: '/dashboard/crm/email-marketing', label: 'Email Marketing', fileType: 'file' },
+            { id: '/dashboard/crm/setup', label: 'Setup', fileType: 'file' },
         ],
     },
     {
@@ -60,15 +109,17 @@ function getIconForType(type) {
 
 const Sidebar = ({ isDrawer }) => {
     const navigate = useNavigate();
-    const [openTree, setOpenTree] = React.useState(null);
+    const [openTree, setOpenTree] = React.useState({});
     const [hovered, setHovered] = React.useState(null);
 
     const handleItemClick = (item) => {
         if (item.type === 'tree') {
-            setOpenTree(openTree === item.id ? null : item.id);
+            setOpenTree((prev) => ({
+                ...prev,
+                [item.id]: !prev[item.id]
+            }));
         } else {
             navigate(item.id);
-            setOpenTree(null);
         }
     };
 
@@ -91,12 +142,12 @@ const Sidebar = ({ isDrawer }) => {
                             {getIconForType(item.type) && React.createElement(getIconForType(item.type), { className: 'mr-3 h-5 w-5' })}
                             {item.label}
                         </button>
-                        {item.type === 'tree' && openTree === item.id && (
+                        {item.type === 'tree' && openTree[item.id] && (
                             <Box sx={{ minWidth: 180, pl: 2 }}>
-                                <CustomRickTreeView />
-
+                                <CustomRickTreeView items={item.treeData || []} />
                             </Box>
                         )}
+
                     </React.Fragment>
                 ))}
             </div>

@@ -18,48 +18,6 @@ import { TreeItemDragAndDropOverlay } from '@mui/x-tree-view/TreeItemDragAndDrop
 import { useTreeItemModel } from '@mui/x-tree-view/hooks';
 import { File, FolderArchive, FolderClosed } from 'lucide-react';
 
-const ITEMS = [
-    {
-        id: '1',
-        label: 'Forms',
-        fileType: 'folder',
-        children: [
-            { id: '1.1', label: 'Claim Form', fileType: 'file' },
-            { id: '1.2', label: 'Renewal Form', fileType: 'file' },
-            { id: '1.3', label: 'Transfer of Ownership', fileType: 'file' },
-        ],
-    },
-    {
-        id: '2',
-        label: 'Policies',
-        fileType: 'folder',
-        children: [
-            { id: '2.1', label: 'Private Car Policy', fileType: 'file' },
-            { id: '2.2', label: 'Two Wheeler Policy', fileType: 'file' },
-            { id: '2.3', label: 'Commercial Vehicle Policy', fileType: 'file' },
-        ],
-    },
-    {
-        id: '3',
-        label: 'Claims',
-        fileType: 'folder',
-        children: [
-            { id: '3.1', label: 'New Claim', fileType: 'file' },
-            { id: '3.2', label: 'Claim Status', fileType: 'file' },
-            { id: '3.3', label: 'Claim History', fileType: 'file' },
-        ],
-    },
-    {
-        id: '4',
-        label: 'Reports',
-        fileType: 'folder',
-        children: [
-            { id: '4.1', label: 'Inspection Report', fileType: 'file' },
-            { id: '4.2', label: 'Accident Report', fileType: 'file' },
-        ],
-    },
-];
-
 function DotIcon() {
     return (
         <Box
@@ -246,15 +204,15 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(props, ref) {
     );
 });
 
-export default function CustomRickTreeView() {
+export default function CustomRickTreeView({ items }) {
     return (
         <RichTreeView
-            items={ITEMS}
-            defaultExpandedItems={['1', '1.1']}
-            defaultSelectedItems="1.1"
+            items={items}
+            defaultExpandedItems={[]}
+            defaultSelectedItems=""
             sx={{ height: 'fit-content', flexGrow: 1, maxWidth: 400, overflowY: 'auto' }}
             slots={{ item: CustomTreeItem }}
             itemChildrenIndentation={24}
         />
     );
-}
+};  
