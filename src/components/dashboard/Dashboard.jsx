@@ -10,196 +10,133 @@ import {
     Legend,
     DefaultLegendContent,
     ResponsiveContainer,
+    BarChart,
+    Bar,
 } from 'recharts';
-import CustomTable from '../CustomTable';
-import { FileText, Clock, CheckCircle, TrendingUp, PlusIcon, ChartLine, ShoppingCart } from "lucide-react";
+import CustomRadarGraph from '../custom_radar_graph/CustomRadarGraph';
+import { FileText, Clock, CheckCircle, TrendingUp, PlusIcon, ChartLine, ShoppingCart, FileIcon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox"
+import { 
+    DataGrid,
+    gridPageCountSelector,
+ } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom';
+import { cardHeaderClasses } from '@mui/material';
 
-const columnsDummyData = [
-    {
-        id: 1,
-        location: "Location 1",
-        individual: "Individual 1",
-        progress: "Progress 1",
-        deadline: "Deadline 1",
-        compliance: "Compliance 1",
-        np: "NP 1",
-        status: "Status 1",
+const data = {
+    date: 'June 23, 2025',
+    files_status: {
+        active: {
+            total: 256,
+            accident_benefit_claim: 112,
+            bodily_injury_claim: 96,
+            property_damage_claim: 48,
+        },
+        closed: {
+            total: 180,
+            accident_benefit_claim: 92,
+            bodily_injury_claim: 43,
+            property_damage_claim: 45,
+        },
     },
-    {
-        id: 2,
-        location: "Location 2",
-        individual: "Individual 2",
-        progress: "Progress 2",
-        deadline: "Deadline 2",
-        compliance: "Compliance 2",
-        np: "NP 2",
-        status: "Status 2",
+    settlements: {
+        total_settled_files: 145,
+        accident_benefit_claim: 76,
+        bodily_injury_claim: 37,
+        property_damage_claim: 32
     },
-    {
-        id: 3,
-        location: "Location 3",
-        individual: "Individual 3",
-        progress: "Progress 3",
-        deadline: "Deadline 3",
-        compliance: "Compliance 3",
-        np: "NP 3",
-        status: "Status 3",
+    deadlines: {
+        general: ['SOC', 'LAT', 'AOS', 'Section 33', 'Section 44'],
+        insurance: {
+            insurance_examinations: 4,
+            upcoming_assessment: 'clients',
+            done_assessments: 'clients',
+            inform_to_ab_insurance: 3,
+            inform_to_bi_insurance: 5,
+        },
     },
+    assessments: {
+        upcoming_assessments: 4,
+        inform_to_client: 'unform to client',
+        additional_text: 'A incent Benefit File\nProperty Damage File'
+    },
+    calendar: {
+        selected_date: '2025-06-23',
+        note: 'Preparation of notes',
+    },
+    pending_documents: [
+        "Family Physician Records",
+        "Hospital Records",
+        "Walk-In Clinic Records",
+        "OHIP Decorated Summary",
+        "Prescription Summary",
+        "Pending CNR's Payment from insurance",
+        "Accident Benefit File",
+        "Property Damage File",
+        "Notice of Assessment",
+        "School/College File",
+        "Employment File"
+    ],
+};
 
+const filesBreakdownData = [
     {
-        id: 4,
-        location: "Location 1",
-        individual: "Individual 1",
-        progress: "Progress 1",
-        deadline: "Deadline 1",
-        compliance: "Compliance 1",
-        np: "NP 1",
-        status: "Status 1",
+        category: 'Accident Benefit',
+        Active: data.files_status.active.accident_benefit_claim,
+        Closed: data.files_status.closed.accident_benefit_claim,
+        Settled: data.settlements.accident_benefit_claim,
     },
     {
-        id: 5,
-        location: "Location 2",
-        individual: "Individual 2",
-        progress: "Progress 2",
-        deadline: "Deadline 2",
-        compliance: "Compliance 2",
-        np: "NP 2",
-        status: "Status 2",
+        category: 'Bodily Injury',
+        Active: data.files_status.active.bodily_injury_claim,
+        Closed: data.files_status.closed.bodily_injury_claim,
+        Settled: data.settlements.bodily_injury_claim,
     },
     {
-        id: 6,
-        location: "Location 3",
-        individual: "Individual 3",
-        progress: "Progress 3",
-        deadline: "Deadline 3",
-        compliance: "Compliance 3",
-        np: "NP 3",
-        status: "Status 3",
+        category: 'Property Damage',
+        Active: data.files_status.active.property_damage_claim,
+        Closed: data.files_status.closed.property_damage_claim,
+        Settled: data.settlements.property_damage_claim,
     },
-
-    {
-        id: 7,
-        location: "Location 1",
-        individual: "Individual 1",
-        progress: "Progress 1",
-        deadline: "Deadline 1",
-        compliance: "Compliance 1",
-        np: "NP 1",
-        status: "Status 1",
-    },
-    {
-        id: 8,
-        location: "Location 2",
-        individual: "Individual 2",
-        progress: "Progress 2",
-        deadline: "Deadline 2",
-        compliance: "Compliance 2",
-        np: "NP 2",
-        status: "Status 2",
-    },
-    {
-        id: 9,
-        location: "Location 3",
-        individual: "Individual 3",
-        progress: "Progress 3",
-        deadline: "Deadline 3",
-        compliance: "Compliance 3",
-        np: "NP 3",
-        status: "Status 3",
-    },
-]
+];
 
 const figmaEarningData = [
     {
         name: 'Mon',
-        no_of_registration: 10,
-        no_of_renewal: 5,
-        no_of_transfer_of_ownership: 3,
+        accident_benefit_claim: data.files_status.active.accident_benefit_claim,
+        bodily_injury_claim: data.files_status.active.bodily_injury_claim,
+        property_damage_claim: data.files_status.active.property_damage_claim,
     },
     {
         name: 'Tue',
-        no_of_registration: 12,
-        no_of_renewal: 6,
-        no_of_transfer_of_ownership: 4,
+        accident_benefit_claim: data.files_status.closed.accident_benefit_claim,
+        bodily_injury_claim: data.files_status.closed.bodily_injury_claim,
+        property_damage_claim: data.files_status.closed.property_damage_claim,
     },
     {
         name: 'Wed',
-        no_of_registration: 15,
-        no_of_renewal: 8,
-        no_of_transfer_of_ownership: 5,
+        accident_benefit_claim: data.settlements.accident_benefit_claim,
+        bodily_injury_claim: data.settlements.bodily_injury_claim,
+        property_damage_claim: data.settlements.property_damage_claim,
     },
-    {
-        name: 'Thu',
-        no_of_registration: 18,
-        no_of_renewal: 10,
-        no_of_transfer_of_ownership: 6,
-    },
-    {
-        name: 'Fri',
-        no_of_registration: 20,
-        no_of_renewal: 12,
-        no_of_transfer_of_ownership: 7,
-    },
-    {
-        name: 'Sat',
-        no_of_registration: 22,
-        no_of_renewal: 14,
-        no_of_transfer_of_ownership: 8,
-    },
-    {
-        name: 'Sun',
-        no_of_registration: 25,
-        no_of_renewal: 16,
-        no_of_transfer_of_ownership: 9,
-    },
-]
+];
+
 
 const figmaInspectionData = [
     {
-        name: 'Mon',
-        complaints: 10,
-        failed: 3,
-        overdue: 9,
+        name: 'Insurance',
+        insurance_examinations: data.deadlines.insurance.insurance_examinations,
+        inform_to_ab_insurance: data.deadlines.insurance.inform_to_ab_insurance,
+        inform_to_bi_insurance: data.deadlines.insurance.inform_to_bi_insurance,
     },
     {
-        name: 'Tue',
-        complaints: 12,
-        failed: 4,
-        overdue: 10,
+        name: 'Assessment',
+        upcoming_assessments: data.assessments.upcoming_assessments,
+        // We could hardcode 0 for example if no numbers available
+        inform_to_client: 1,
     },
-    {
-        name: 'Wed',
-        complaints: 15,
-        failed: 5,
-        overdue: 12,
-    },
-    {
-        name: 'Thu',
-        complaints: 18,
-        failed: 6,
-        overdue: 15,
-    },
-    {
-        name: 'Fri',
-        complaints: 20,
-        failed: 7,
-        overdue: 18,
-    },
-    {
-        name: 'Sat',
-        complaints: 22,
-        failed: 8,
-        overdue: 20,
-    },
-    {
-        name: 'Sun',
-        complaints: 25,
-        failed: 9,
-        overdue: 22,
-    },
-]
+];
+
 
 const renderTooltipWithoutRange = ({ payload, content, ...rest }) => {
     const newPayload = payload.filter((x) => x.dataKey !== "no_of_registration" && x.dataKey !== "no_of_renewal" && x.dataKey !== "no_of_transfer_of_ownership" && x.dataKey !== "complaints" && x.dataKey !== "failed" && x.dataKey !== "overdue" && x.dataKey !== "property_damage");
@@ -214,80 +151,31 @@ const renderLegendWithoutRange = ({ payload, content, ...rest }) => {
 
 const Dashboard = () => {
     const navigate = useNavigate();
-    const column = [
-        {
-            id: "select",
-            header: ({ table }) => (
-                <Checkbox
-                    checked={
-                        table.getIsAllPageRowsSelected() ||
-                        (table.getIsSomePageRowsSelected() && "indeterminate")
-                    }
-                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-                    aria-label="Select all"
-                />
-            ),
-            cell: ({ row }) => (
-                <Checkbox
-                    checked={row.getIsSelected()}
-                    onCheckedChange={(value) => row.toggleSelected(!!value)}
-                    aria-label="Select row"
-                />
-            ),
-            enableSorting: false,
-            enableHiding: false,
-        },
-        {
-            accessorKey: "location",
-            header: "Location",
-            cell: ({ row }) => row.getValue("location"),
-        },
-        {
-            accessorKey: "individual",
-            header: "Individual",
-            cell: ({ row }) => row.getValue("individual"),
-        },
-        {
-            accessorKey: "progress",
-            header: "Progress",
-            cell: ({ row }) => row.getValue("progress"),
-        },
-        {
-            accessorKey: "deadline",
-            header: "Deadline",
-            cell: ({ row }) => row.getValue("deadline"),
-        },
-        {
-            accessorKey: "compliance",
-            header: "Compliance",
-            cell: ({ row }) => row.getValue("compliance"),
-        },
-        {
-            accessorKey: "np",
-            header: "NP",
-            cell: ({ row }) => row.getValue("np"),
-        },
-        {
-            accessorKey: "status",
-            header: "Status",
-            cell: ({ row }) => row.getValue("status"),
-        }
+
+    const pendingDocumentsColumns = [
+        { field: 'document', headerName: 'Document Name', headerClassName: "uppercase text-[#40444D] font-semibold text-xs", width: 200, cellClassName: "text-[#6366F1]" },
     ];
+    const pendingDocumentsRows = data.pending_documents.map((doc, index) => ({
+        id: index + 1,
+        document: doc,
+    }));
 
     const dashBoardItem = {
         cardData: [
-            { totalAmount: "₹100k", title: "Total Earning", percentage: "10%" },
-            { totalAmount: "₹1059.63k", title: "Registration Fees", percentage: "10%" },
-            { totalAmount: "₹10.99k", title: "Licensing Fees", percentage: "10%" },
-            { totalAmount: "$100k", title: "Fines Collected", percentage: "10%" },
+            { total: "256", title: "Active Files", percentage: "10%", icon: <FileIcon color="#6366F1" className="bg-white p-3 rounded-md shadow-lg w-10 h-10" /> },
+            { total: "180", title: "Closed Files", percentage: "10%", icon: <FileIcon color="#6366F1" className="bg-white p-3 rounded-md shadow-lg w-10 h-10" /> },
+            { total: "145", title: "Total Settled Files", percentage: "10%", icon: <FileIcon color="#6366F1" className="bg-white p-3 rounded-md shadow-lg w-10 h-10" /> },
+            { total: "4", title: "Upcoming Assessments", percentage: "10%", icon: <FileIcon color="#6366F1" className="bg-white p-3 rounded-md shadow-lg w-10 h-10" /> },
+            { total: "11", title: "Pending Documents", percentage: "10%", icon: <FileIcon color="#6366F1" className="bg-white p-3 rounded-md shadow-lg w-10 h-10" /> },
+            { total: "Preparation of notes", title: "Calendar Note 23, June 2025", percentage: "10%", icon: <FileIcon color="#6366F1" className="bg-white p-3 rounded-md shadow-lg w-10 h-10" /> },
         ]
     };
 
     return (
-        <div className="flex flex-col space-y-6 p-6 overflow-y-auto no-scrollbar">
+        <div className="flex flex-col space-y-6 overflow-y-auto overflow-x-hidden no-scrollbar">
             <div className="flex justify-between items-center">
                 <h2 className="text-[32px] text-[#1E293B] font-bold font-sans">Dashboard</h2>
-                <div className="flex items-center space-x-7">
+                <div className="flex items-center space-x-4 lg:space-x-7">
                     <button className="flex items-center gap-2 shadow-lg"
                         style={{
                             background: 'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
@@ -301,29 +189,16 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            <div className="flex space-x-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-x-auto w-full overflow-hidden no-scrollbar">
                 {dashBoardItem.cardData.map((item, index) => (
-                    <div key={index} className="flex flex-col items-center justify-center bg-[#fafafc] border-2 border-white p-3 shadow rounded-md space-y-3 w-full">
-                        <div className="flex items-center justify-between w-full">
-                            <h3 className="text-base text-[#4e5564] font-semibold font-sans uppercase">{item.title}</h3>
-                            <span className="text-[16px] text-[#22d3ee] font-semibold font-sans">{item.percentage}</span>
-                        </div>
-                        <h2 className="text-[30px] text-[#40444d] font-medium font-sans text-start w-full">{item.totalAmount}</h2>
-                        <div className="flex items-end justify-between w-full">
-                            <span className="text-[#6366F1] text-base font-medium font-sans">View net <span className="lowercase">{item.title}</span></span>
-                            <ShoppingCart color="#6366F1" className="bg-white p-3 rounded-md shadow-lg w-10 h-10" />
-                        </div>
-                    </div>
+                    <DashboardCard key={index} item={item} />
                 ))}
             </div>
 
-            <div className="flex space-x-6 overflow-x-auto w-full h-[30rem] overflow-hidden no-scrollbar">
-                <div className="w-[60%] bg-white shadow-md rounded-2xl p-6 no-scrollbar">
+            <div className="grid grid-cols-1 lg:grid-cols-5 lg:grid-rows-2 gap-6 overflow-x-auto w-full overflow-hidden no-scrollbar">
+                <div className="w-full border border-[#E2E8F0] shadow-[0px_4px_24px_0px #000000] col-span-3 h-[25rem] bg-white rounded-lg px-4 py-6 lg:p-6 no-scrollbar">
                     <div>
                         <h1 className="text-xl text-[#40444D] font-semibold font-sans">Vehicle Transaction</h1>
-                        {/* <div className='border border-[#25282D] rounded-md p-2'>
-                            
-                        </div> */}
                     </div>
                     <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart
@@ -343,7 +218,7 @@ const Dashboard = () => {
                             <Tooltip content={renderTooltipWithoutRange} />
                             <Area
                                 type="monotone"
-                                dataKey="no_of_registration"
+                                dataKey="accident_benefit_claim"
                                 stroke="none"
                                 // fill="#cccccc"
                                 connectNulls
@@ -351,14 +226,14 @@ const Dashboard = () => {
                                 activeDot={{ r: 8 }}
                                 style={{
                                     // background: 'linear-gradient(#3032F2 100%, #5D5FEF00 0%)',
-                                    fill: '#3032F2',
+                                    fill: '#9698f6',
                                     stroke: "#cccccc",
                                     strokeWidth: 2
                                 }}
                             />
                             <Area
                                 type="monotone"
-                                dataKey="no_of_renewal"
+                                dataKey="bodily_injury_claim"
                                 stroke="none"
                                 // fill="#cccccc"
                                 connectNulls
@@ -366,14 +241,14 @@ const Dashboard = () => {
                                 activeDot={{ r: 8 }}
                                 style={{
                                     // background: 'linear-gradient(#3032F2 100%, #5D5FEF00 0%)',
-                                    fill: '#ff00ff',
+                                    fill: '#6be2f4',
                                     stroke: "#cccccc",
                                     strokeWidth: 2
                                 }}
                             />
                             <Area
                                 type="monotone"
-                                dataKey="no_of_transfer_of_ownership"
+                                dataKey="property_damage_claim"
                                 stroke="none"
                                 // fill="#cccccc"
                                 connectNulls
@@ -381,7 +256,7 @@ const Dashboard = () => {
                                 activeDot={true}
                                 style={{
                                     // background: 'linear-gradient(#3032F2 100%, #5D5FEF00 0%)',
-                                    fill: '#ff00ff',
+                                    fill: '#6b7280',
                                     stroke: "#cccccc",
                                     strokeWidth: 2
                                 }}
@@ -393,7 +268,7 @@ const Dashboard = () => {
                     </ResponsiveContainer>
                 </div>
 
-                <div className='w-[40%] bg-white shadow-md rounded-2xl p-6'>
+                <div className='w-full border border-[#E2E8F0] shadow-[0px_4px_24px_0px #000000] col-span-2 h-[25rem] bg-white rounded-lg p-6'>
                     <h1 className="text-xl text-[#40444D] font-semibold font-sans">Inspection Compliance</h1>
                     {/* <div className='border border-[#25282D] rounded-md p-2'> */}
                     <ResponsiveContainer width="100%" height="100%">
@@ -413,25 +288,96 @@ const Dashboard = () => {
                             <YAxis tick={{ fill: '#25282D' }} />
                             <Tooltip contentStyle={{ background: '#fff', border: '1px solid #ccc' }} cursorStyle={{ stroke: '#ccc', strokeWidth: 1, strokeDasharray: '3 3' }} />
                             <Legend content={renderLegendWithoutRange} />
-                            <Line type="natural" dataKey="complaints" stroke="#ff00ff" connectNulls />
-                            <Line type="natural" dataKey="failed" stroke="#ff00ff" connectNulls />
-                            <Line type="natural" dataKey="overdue" stroke="#ff00ff" connectNulls />
+                            <Line type="natural" dataKey="insurance_examinations" stroke="#9698f6" connectNulls />
+                            <Line type="natural" dataKey="inform_to_ab_insurance" stroke="#9698f6" connectNulls />
+                            <Line type="natural" dataKey="inform_to_bi_insurance" stroke="#9698f6" connectNulls />
                         </ComposedChart>
                     </ResponsiveContainer>
                     {/* </div> */}
                 </div>
+
+                <div className='w-full border border-[#E2E8F0] shadow-[0px_4px_24px_0px #000000] col-span-2 bg-white rounded-lg p-6 h-[25rem]'>
+                    <h1 className="text-xl text-[#40444D] font-semibold font-sans mb-4">Files Breakdown Overview</h1>
+                    <CustomRadarGraph
+                        data={filesBreakdownData}
+                        dataKeys={['Active', 'Closed', 'Settled']}
+                        colors={{
+                            Active: '#9698f6',
+                            Closed: '#9698f6',
+                            Settled: '#9698f6'
+                        }}
+                    />
+                </div>
+
+                <div className="w-full border border-[#E2E8F0] shadow-[0px_4px_24px_0px #000000] col-span-3 h-[25rem] bg-white rounded-lg p-6">
+                    <h1 className="text-xl text-[#40444D] font-semibold font-sans mb-4">
+                        Claims Type Distribution
+                    </h1>
+                    <ResponsiveContainer width="100%" height={300}>
+                        <BarChart
+                            data={filesBreakdownData}
+                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                        >
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis dataKey="category" />
+                            <YAxis />
+                            <Tooltip />
+                            <Legend />
+                            <Bar dataKey="Active" fill="#9698f6" />
+                            <Bar dataKey="Closed" fill="#6be2f4" />
+                            <Bar dataKey="Settled" fill="#6b7280" />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+
             </div>
 
             {/* Table component */}
-            <div className='w-full bg-white shadow-md rounded-2xl p-6'>
-                <h1 className="text-xl text-[#40444D] font-semibold font-sans">Vehicle Registration</h1>
-                <CustomTable
-                    columns={column}            
-                    data={columnsDummyData}     
-                />
+            <div className='w-full h-full overflow-x-auto no-scrollbar'>
+                <div className='w-full bg-white rounded-lg p-6 overflow-x-hidden no-scrollbar'
+                    style={{
+                        backdropFilter: 'blur(20px)',
+                        boxShadow: '0px 1px 0px 0px #0000000D',
+                    }}
+                >
+                    <h1 className="text-xl text-[#40444D] font-semibold font-sans">Pending Documents ({pendingDocumentsRows.length})</h1>
+                    <div className="w-full overflow-x-auto">
+                        <div className="min-w-[300px] max-w-full">
+                            <DataGrid
+                                checkboxSelection
+                                rows={pendingDocumentsRows}
+                                columns={pendingDocumentsColumns}
+                                pageSize={5}
+                                rowsPerPageOptions={[5]}
+                                sx={{
+                                    padding: 2,
+                                    border: 'none',
+                                }}
+                            />
+
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     );
 };
 
 export default Dashboard;
+
+const DashboardCard = ({ item }) => {
+    return (
+        <div key={item.id} className="flex flex-col items-center justify-center bg-[#fafafc] border-2 border-white p-3 shadow rounded-md space-y-3 ">
+            <div className="flex items-center justify-between w-full">
+                <h3 className="text-base text-[#4e5564] font-semibold font-sans uppercase">{item.title}</h3>
+                <span className="text-[16px] text-[#22d3ee] font-semibold font-sans">{item.percentage}</span>
+            </div>
+            <h2 className="text-[30px] text-[#40444d] font-medium font-sans text-start w-full">{item.total}</h2>
+            <div className="flex items-end justify-between w-full">
+                <span className="text-[#6366F1] text-base font-medium font-sans cursor-pointer hover:underline">View net <span className="lowercase">{item.title}</span></span>
+                {item.icon}
+            </div>
+        </div>
+    );
+};
