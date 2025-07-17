@@ -1,29 +1,29 @@
 import { BACKEND_URL } from "../endpoint/index";
 import axios from "axios";
-// import { getToken } from "@/utils/auth";
+import { getToken } from "@/utils/auth";
 
 export const apiService = async ({
   endpoint,
   method = "GET",
   data,
   params,
-  // token: _token,
+  token: _token,
   headers = {},
   customUrl,
-  // removeToken = false,
+  removeToken = false,
   signal,
 }) => {
   try {
-    // const token = getToken();
+    const token = getToken();
 
     const requestHeaders = {
       "ngrok-skip-browser-warning": "true",
       ...headers,
     };
 
-    // if (!removeToken && (token || _token)) {
-    //   requestHeaders.Authorization = `Bearer ${_token || token}`;
-    // }
+    if (!removeToken && (token || _token)) {
+      requestHeaders.Authorization = `Bearer ${_token || token}`;
+    }
 
     const requestObj = {
       url: `${customUrl ? customUrl : BACKEND_URL}/${endpoint}`,

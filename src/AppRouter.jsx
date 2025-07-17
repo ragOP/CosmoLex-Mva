@@ -16,6 +16,7 @@ const DashboardForm = lazy(() => import('./components/dashboard/DashboardForm'))
 const MatterPage = () => <div>Matter Page</div>;
 const UserManagementPage = () => <div>User Management Page</div>;
 const BulkImportPage = () => <div>Bulk Import Page</div>;
+const CalendarPage = lazy(() => import('./pages/calendar'));
 
 const AppRouter = () => (
   <Router>
@@ -34,6 +35,7 @@ const AppRouter = () => (
           <Route path="matter" element={<MatterPage />} />
           <Route path="user-management" element={<UserManagementPage />} />
           <Route path="bulk-import" element={<BulkImportPage />} />
+          <Route path="calendar/:id" element={<CalendarPage />} />
         </Route>
         <Route path="/2fa" element={<TwoFactorPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />

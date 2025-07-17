@@ -15,4 +15,7 @@ export const endpoints = {
   login: "login",
   verifyOtp: "verify-otp",
   resendOtp: "resend-otp",
+  getEvent: "v2/event/show",
+  getEvents: "v2/event/list",
+  createEvent: "v2/event/store"
 };

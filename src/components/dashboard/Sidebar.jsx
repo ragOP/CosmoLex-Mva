@@ -1,4 +1,4 @@
-import { BookText, LayoutDashboardIcon, File, Folder, ChevronRight, ChevronDown, TextSearch } from 'lucide-react';
+import { BookText, LayoutDashboardIcon, File, Folder, TextSearch, Calendar } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
@@ -10,6 +10,7 @@ const typeToIcon = {
     tree: BookText,
     link: LayoutDashboardIcon,
     data: TextSearch,
+    calendar: Calendar,
 };
 
 const sidebarItems = [
@@ -20,11 +21,17 @@ const sidebarItems = [
         iconType: 'link',
     },
     {
-        id: '/dashboard/analytics',
-        label: 'Analytics',
+        id: '/dashboard/calendar/1',
+        label: ' Event Calendar',
         type: 'link',
-        iconType: 'link',
+        iconType: 'calendar',
     },
+    // {
+    //     id: '/dashboard/analytics',
+    //     label: 'Analytics',
+    //     type: 'link',
+    //     iconType: 'link',
+    // },
     {
         id: 'matter',
         label: 'Matter',
@@ -73,34 +80,40 @@ const sidebarItems = [
         ],
     },
     {
-        id: 'crm',
-        label: 'CRM',
-        type: 'tree',
-        iconType: 'tree',
-        treeData: [
-            { id: '/dashboard/crm/launchpad', label: 'Launchpad', fileType: 'file' },
-            { id: '/dashboard/crm/inbox', label: 'Inbox', fileType: 'file' },
-            { id: '/dashboard/crm/new-intake', label: 'New Intake', fileType: 'file' },
-            { id: '/dashboard/crm/advanced-search', label: 'Advanced Search', fileType: 'file' },
-            { id: '/dashboard/crm/new-inquiries', label: 'New Inquiries', fileType: 'file' },
-            { id: '/dashboard/crm/text-messages', label: 'Text Messages', fileType: 'file' },
-            { id: '/dashboard/crm/tasks', label: 'Tasks', fileType: 'file' },
-            { id: '/dashboard/crm/calendar-events', label: 'Calendar Events', fileType: 'file' },
-            { id: '/dashboard/crm/newsfeed', label: 'Newsfeed', fileType: 'file' },
-            { id: '/dashboard/crm/contacts', label: 'Contacts', fileType: 'file' },
-            { id: '/dashboard/crm/reports', label: 'Reports', fileType: 'file' },
-            { id: '/dashboard/crm/documents', label: 'Documents', fileType: 'file' },
-            { id: '/dashboard/crm/automations', label: 'Automations', fileType: 'file' },
-            { id: '/dashboard/crm/email-marketing', label: 'Email Marketing', fileType: 'file' },
-            { id: '/dashboard/crm/setup', label: 'Setup', fileType: 'file' },
-        ],
-    },
-    {
-        id: '/dashboard/profile',
-        label: 'My Profile',
+        id: '/dashboard/tasks',
+        label: 'Tasks',
         type: 'link',
         iconType: 'link',
     },
+    // {
+    //     id: 'crm',
+    //     label: 'CRM',
+    //     type: 'tree',
+    //     iconType: 'tree',
+    //     treeData: [
+    //         { id: '/dashboard/crm/launchpad', label: 'Launchpad', fileType: 'file' },
+    //         { id: '/dashboard/crm/inbox', label: 'Inbox', fileType: 'file' },
+    //         { id: '/dashboard/crm/new-intake', label: 'New Intake', fileType: 'file' },
+    //         { id: '/dashboard/crm/advanced-search', label: 'Advanced Search', fileType: 'file' },
+    //         { id: '/dashboard/crm/new-inquiries', label: 'New Inquiries', fileType: 'file' },
+    //         { id: '/dashboard/crm/text-messages', label: 'Text Messages', fileType: 'file' },
+    //         { id: '/dashboard/crm/tasks', label: 'Tasks', fileType: 'file' },
+    //         { id: '/dashboard/crm/calendar-events', label: 'Calendar Events', fileType: 'file' },
+    //         { id: '/dashboard/crm/newsfeed', label: 'Newsfeed', fileType: 'file' },
+    //         { id: '/dashboard/crm/contacts', label: 'Contacts', fileType: 'file' },
+    //         { id: '/dashboard/crm/reports', label: 'Reports', fileType: 'file' },
+    //         { id: '/dashboard/crm/documents', label: 'Documents', fileType: 'file' },
+    //         { id: '/dashboard/crm/automations', label: 'Automations', fileType: 'file' },
+    //         { id: '/dashboard/crm/email-marketing', label: 'Email Marketing', fileType: 'file' },
+    //         { id: '/dashboard/crm/setup', label: 'Setup', fileType: 'file' },
+    //     ],
+    // },
+    // {
+    //     id: '/dashboard/profile',
+    //     label: 'My Profile',
+    //     type: 'link',
+    //     iconType: 'link',
+    // },
 ];
 
 function getIconForType(type) {
