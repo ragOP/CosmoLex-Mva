@@ -7,7 +7,10 @@ const SignupStep1 = ({ formData, handleInputChange, countryOptions }) => (
     {/* Personal Information */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor="first_name">
+        <label
+          className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]"
+          htmlFor="first_name"
+        >
           First Name <span className="text-red-500">*</span>
         </label>
         <input
@@ -22,7 +25,10 @@ const SignupStep1 = ({ formData, handleInputChange, countryOptions }) => (
         />
       </div>
       <div>
-        <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor="last_name">
+        <label
+          className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]"
+          htmlFor="last_name"
+        >
           Last Name <span className="text-red-500">*</span>
         </label>
         <input
@@ -39,7 +45,10 @@ const SignupStep1 = ({ formData, handleInputChange, countryOptions }) => (
     </div>
 
     <div>
-      <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor="email">
+      <label
+        className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]"
+        htmlFor="email"
+      >
         Email <span className="text-red-500">*</span>
       </label>
       <input
@@ -67,7 +76,10 @@ const SignupStep1 = ({ formData, handleInputChange, countryOptions }) => (
         />
       </div>
       <div className="md:col-span-4">
-        <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor="phone_number">
+        <label
+          className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]"
+          htmlFor="phone_number"
+        >
           Phone Number <span className="text-red-500">*</span>
         </label>
         <PhoneNumberInput
@@ -84,4 +96,4 @@ const SignupStep1 = ({ formData, handleInputChange, countryOptions }) => (
   </div>
 );
 
-export default SignupStep1; 
+export default SignupStep1;

@@ -5,7 +5,10 @@ const SignupStep3 = ({ formData, handleInputChange }) => (
     {/* Password Information */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor="password">
+        <label
+          className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]"
+          htmlFor="password"
+        >
           Password <span className="text-red-500">*</span>
         </label>
         <input
@@ -20,7 +23,10 @@ const SignupStep3 = ({ formData, handleInputChange }) => (
         />
       </div>
       <div>
-        <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor="password_confirmation">
+        <label
+          className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]"
+          htmlFor="password_confirmation"
+        >
           Confirm Password <span className="text-red-500">*</span>
         </label>
         <input
@@ -69,4 +75,4 @@ const SignupStep3 = ({ formData, handleInputChange }) => (
   </div>
 );
 
-export default SignupStep3; 
+export default SignupStep3;

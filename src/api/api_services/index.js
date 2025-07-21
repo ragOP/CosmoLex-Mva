@@ -1,10 +1,10 @@
-import { BACKEND_URL } from "../endpoint/index";
-import axios from "axios";
-import { getToken } from "@/utils/auth";
+import { BACKEND_URL } from '../endpoint/index';
+import axios from 'axios';
+import { getToken } from '@/utils/auth';
 
 export const apiService = async ({
   endpoint,
-  method = "GET",
+  method = 'GET',
   data,
   params,
   token: _token,
@@ -17,7 +17,7 @@ export const apiService = async ({
     const token = getToken();
 
     const requestHeaders = {
-      "ngrok-skip-browser-warning": "true",
+      'ngrok-skip-browser-warning': 'true',
       ...headers,
     };
 
@@ -37,7 +37,7 @@ export const apiService = async ({
     const { data: res } = await axios(requestObj);
     return { response: res };
   } catch (error) {
-    console.error(error, "backend endpoint error");
+    console.error(error, 'backend endpoint error');
     return { success: false, error: true, ...(error || {}) };
   }
 };

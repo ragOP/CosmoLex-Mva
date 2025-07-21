@@ -3,7 +3,7 @@ export const countryOptions = [
   { value: 2, label: 'Canada (+1)' },
   { value: 3, label: 'United Kingdom (+44)' },
   { value: 4, label: 'India (+91)' },
-  { value: 5, label: 'Australia (+61)' }
+  { value: 5, label: 'Australia (+61)' },
 ];
 
 export const practiceAreaOptions = [
@@ -15,7 +15,7 @@ export const practiceAreaOptions = [
   { value: 5, label: 'Real Estate Law' },
   { value: 6, label: 'Immigration Law' },
   { value: 7, label: 'Employment Law' },
-  { value: 8, label: 'Other' }
+  { value: 8, label: 'Other' },
 ];
 
 export const heardAboutUsOptions = [
@@ -24,7 +24,7 @@ export const heardAboutUsOptions = [
   { value: 'B', label: 'Social Media' },
   { value: 'C', label: 'Referral' },
   { value: 'D', label: 'Advertisement' },
-  { value: 'E', label: 'Other' }
+  { value: 'E', label: 'Other' },
 ];
 
 export const numberOfUsersOptions = [
@@ -33,19 +33,19 @@ export const numberOfUsersOptions = [
   { value: 5, label: '6-10 users' },
   { value: 10, label: '11-25 users' },
   { value: 25, label: '26-50 users' },
-  { value: 50, label: '50+ users' }
+  { value: 50, label: '50+ users' },
 ];
 
 export const stepTitles = {
-  1: "Personal Information",
-  2: "Firm Details", 
-  3: "Account Security"
+  1: 'Personal Information',
+  2: 'Firm Details',
+  3: 'Account Security',
 };
 
 export const stepDescriptions = {
   1: "Let's start with your basic information",
-  2: "Tell us about your firm",
-  3: "Secure your account"
+  2: 'Tell us about your firm',
+  3: 'Secure your account',
 };
 
 export const initialFormData = {
@@ -60,5 +60,5 @@ export const initialFormData = {
   password: '',
   password_confirmation: '',
   heard_about_us: '',
-  terms_accepted: false
-}; 
+  terms_accepted: false,
+};

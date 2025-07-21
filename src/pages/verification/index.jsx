@@ -1,27 +1,27 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { ChevronRight, Mail, RefreshCw } from "lucide-react";
-import CustomButton from "../../components/CustomButton";
-import { Alert } from "../../components/ui/alert";
-import { isMobile } from "@/utils/isMobile";
-import postVerification from "./helper/postverification";
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ChevronRight, Mail, RefreshCw } from 'lucide-react';
+import CustomButton from '../../components/CustomButton';
+import { Alert } from '../../components/ui/alert';
+import { isMobile } from '@/utils/isMobile';
+import postVerification from './helper/postverification';
 
 const VerificationPage = () => {
   const [isResending, setIsResending] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [cooldownTime, setCooldownTime] = useState(120);
 
   useEffect(() => {
     if (message) {
-      const timer = setTimeout(() => setMessage(""), 5000);
+      const timer = setTimeout(() => setMessage(''), 5000);
       return () => clearTimeout(timer);
     }
   }, [message]);
 
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(""), 7000);
+      const timer = setTimeout(() => setError(''), 7000);
       return () => clearTimeout(timer);
     }
   }, [error]);
@@ -38,17 +38,17 @@ const VerificationPage = () => {
 
   const urlParams = new URLSearchParams(window.location.search);
   const email =
-    urlParams.get("email") || localStorage.getItem("signup_email") || "";
+    urlParams.get('email') || localStorage.getItem('signup_email') || '';
 
   const handleResendLink = async () => {
     if (!email) {
-      setError("Email not found. Please try signing up again.");
+      setError('Email not found. Please try signing up again.');
       return;
     }
 
     setIsResending(true);
-    setError("");
-    setMessage("");
+    setError('');
+    setMessage('');
 
     try {
       const result = await postVerification({ email });
@@ -58,18 +58,18 @@ const VerificationPage = () => {
         (result.response.Apistatus === true || result.response.success === true)
       ) {
         setMessage(
-          "Verification link sent successfully! Please check your inbox and spam folder."
+          'Verification link sent successfully! Please check your inbox and spam folder.'
         );
         setCooldownTime(120);
       } else {
         let errorMessage =
-          "Failed to resend verification link. Please try again.";
+          'Failed to resend verification link. Please try again.';
 
         if (result.response?.errors) {
           const errors = result.response.errors;
-          if (typeof errors === "object") {
+          if (typeof errors === 'object') {
             const errorMessages = Object.values(errors).flat();
-            errorMessage = errorMessages.join(". ");
+            errorMessage = errorMessages.join('. ');
           } else {
             errorMessage = errors;
           }
@@ -79,8 +79,8 @@ const VerificationPage = () => {
           errorMessage = result.response.data.message;
         } else if (result.response?.data?.errors) {
           const errors = result.response.data.errors;
-          if (typeof errors === "object") {
-            errorMessage = Object.values(errors).flat().join(". ");
+          if (typeof errors === 'object') {
+            errorMessage = Object.values(errors).flat().join('. ');
           } else {
             errorMessage = errors;
           }
@@ -90,23 +90,23 @@ const VerificationPage = () => {
         setCooldownTime(120);
       }
     } catch (error) {
-      console.error("Resend verification error:", error);
+      console.error('Resend verification error:', error);
 
       if (error.response?.status === 404) {
         setError(
-          "Email not found. Please check your email address or sign up again."
+          'Email not found. Please check your email address or sign up again.'
         );
       } else if (error.response?.status === 429) {
         setError(
-          "Too many requests. Please wait a few minutes before trying again."
+          'Too many requests. Please wait a few minutes before trying again.'
         );
       } else if (error.response?.status >= 500) {
-        setError("Server error. Please try again later.");
-      } else if (error.code === "ERR_NETWORK") {
-        setError("Network error. Please check your connection and try again.");
+        setError('Server error. Please try again later.');
+      } else if (error.code === 'ERR_NETWORK') {
+        setError('Network error. Please check your connection and try again.');
       } else {
         setError(
-          "An error occurred while resending the verification link. Please try again."
+          'An error occurred while resending the verification link. Please try again.'
         );
       }
       setCooldownTime(120);
@@ -135,7 +135,7 @@ const VerificationPage = () => {
         <Link
           to="/login"
           className="px-3 py-1 bg-white/80 rounded shadow text-primary-700 text-xs md:text-sm font-medium flex items-center gap-1 hover:bg-white border border-gray-200"
-          style={{ color: "#25282D" }}
+          style={{ color: '#25282D' }}
         >
           Log In
           <ChevronRight className="w-5 h-5" />
@@ -169,16 +169,16 @@ const VerificationPage = () => {
         className="w-full max-w-2xl rounded-2xl p-10 flex flex-col items-center border border-gray-100 shadow-none md:shadow mx-4"
         style={{
           background: `linear-gradient(180deg, rgba(255,255,255,0) -9.58%, rgba(255,255,255,0.052) 100%)`,
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           boxShadow: isMobile()
-            ? "none"
+            ? 'none'
             : [
-                "0px 10px 10px 0px #0000001A",
-                "0px 4px 4px 0px #0000000D",
-                "0px 1px 0px 0px #0000000D",
-                "0px 20px 50px 0px #FFFFFF26 inset",
-              ].join(", "),
+                '0px 10px 10px 0px #0000001A',
+                '0px 4px 4px 0px #0000000D',
+                '0px 1px 0px 0px #0000000D',
+                '0px 20px 50px 0px #FFFFFF26 inset',
+              ].join(', '),
         }}
       >
         <div className="mb-6">
@@ -198,7 +198,7 @@ const VerificationPage = () => {
           </p>
           {email && (
             <p className="text-sm text-gray-600 mb-6">
-              Verification email sent to:{" "}
+              Verification email sent to:{' '}
               <span className="font-medium">{email}</span>
             </p>
           )}
@@ -210,16 +210,16 @@ const VerificationPage = () => {
             onClick={handleResendLink}
             disabled={isResending || cooldownTime > 0}
             className={`bg-gray-200 text-gray-700 hover:bg-gray-300 disabled:opacity-50 ${
-              isResending ? "animate-pulse" : ""
+              isResending ? 'animate-pulse' : ''
             }`}
             icon={isResending ? RefreshCw : Mail}
             iconPosition="left"
           >
             {isResending
-              ? "Sending..."
+              ? 'Sending...'
               : cooldownTime > 0
               ? `Resend in ${cooldownTime}s`
-              : "Resend Verification Link"}
+              : 'Resend Verification Link'}
           </CustomButton>
 
           <Link to="/login">

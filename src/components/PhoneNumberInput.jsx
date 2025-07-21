@@ -2,23 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { formatIncompletePhoneNumber } from 'libphonenumber-js';
 import { codeToCountryMap } from '../utils/countryCodeMapping';
 
-const PhoneNumberInput = ({ 
-  value, 
-  onChange, 
+const PhoneNumberInput = ({
+  value,
+  onChange,
   countryCodeId,
   countryOptions = [],
-  name = "phone_number",
-  placeholder = "Enter your phone number",
-  className = "",
-  id = "phone_number"
+  name = 'phone_number',
+  placeholder = 'Enter your phone number',
+  className = '',
+  id = 'phone_number',
 }) => {
   const [formattedValue, setFormattedValue] = useState(value || '');
 
   // Get the country code from the selected country
   const getCountryFromId = (countryCodeId) => {
     if (!countryCodeId || !countryOptions.length) return null;
-    
-    const countryOption = countryOptions.find(option => option.id == countryCodeId);
+
+    const countryOption = countryOptions.find(
+      (option) => option.id == countryCodeId
+    );
     if (!countryOption) return null;
 
     return codeToCountryMap[countryOption.code] || null;
@@ -58,10 +60,10 @@ const PhoneNumberInput = ({
           target: {
             name,
             value: formatted, // Store formatted number
-            type: 'tel'
-          }
+            type: 'tel',
+          },
         };
-        
+
         onChange(syntheticEvent);
       } catch {
         // If formatting fails, just use the input as is
@@ -91,4 +93,4 @@ const PhoneNumberInput = ({
   );
 };
 
-export default PhoneNumberInput; 
+export default PhoneNumberInput;

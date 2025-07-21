@@ -1,36 +1,36 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronRight, ChevronLeft, Key, Shield } from "lucide-react";
-import CustomButton from "@/components/CustomButton";
-import { Alert } from "@/components/ui/alert";
-import { isMobile } from "@/utils/isMobile";
-import postResetPassword from "./helper/postResetPassword";
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { ChevronRight, ChevronLeft, Key, Shield } from 'lucide-react';
+import CustomButton from '@/components/CustomButton';
+import { Alert } from '@/components/ui/alert';
+import { isMobile } from '@/utils/isMobile';
+import postResetPassword from './helper/postResetPassword';
 
 const ResetPasswordPage = () => {
   const [searchParams] = useSearchParams();
-  const email = searchParams.get("email") || "";
+  const email = searchParams.get('email') || '';
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    otp_code: "",
-    password: "",
-    password_confirmation: "",
+    otp_code: '',
+    password: '',
+    password_confirmation: '',
   });
-  const [error, setError] = useState("");
-  const [info, setInfo] = useState("");
+  const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Clear messages after timeout
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => setError(""), 7000);
+      const timer = setTimeout(() => setError(''), 7000);
       return () => clearTimeout(timer);
     }
   }, [error]);
 
   useEffect(() => {
-    if (info && !info.includes("Redirecting")) {
-      const timer = setTimeout(() => setInfo(""), 5000);
+    if (info && !info.includes('Redirecting')) {
+      const timer = setTimeout(() => setInfo(''), 5000);
       return () => clearTimeout(timer);
     }
   }, [info]);
@@ -38,7 +38,7 @@ const ResetPasswordPage = () => {
   // Redirect to forgot password if no email
   useEffect(() => {
     if (!email) {
-      navigate("/forgot-password");
+      navigate('/forgot-password');
     }
   }, [email, navigate]);
 
@@ -52,29 +52,29 @@ const ResetPasswordPage = () => {
 
   const validateForm = () => {
     if (!formData.otp_code) {
-      return "Please enter the verification code";
+      return 'Please enter the verification code';
     }
     if (formData.otp_code.length !== 6) {
-      return "Verification code must be 6 digits";
+      return 'Verification code must be 6 digits';
     }
     if (!formData.password) {
-      return "Please enter a new password";
+      return 'Please enter a new password';
     }
     if (formData.password.length < 8) {
-      return "Password must be at least 8 characters long";
+      return 'Password must be at least 8 characters long';
     }
-    
+
     // Password complexity validation
     const passwordValidation = validatePassword(formData.password);
     if (passwordValidation) {
       return passwordValidation;
     }
-    
+
     if (!formData.password_confirmation) {
-      return "Please confirm your password";
+      return 'Please confirm your password';
     }
     if (formData.password !== formData.password_confirmation) {
-      return "Passwords do not match";
+      return 'Passwords do not match';
     }
     return null;
   };
@@ -82,31 +82,31 @@ const ResetPasswordPage = () => {
   const validatePassword = (password) => {
     // Check for at least one uppercase letter
     if (!/[A-Z]/.test(password)) {
-      return "Password must contain at least one uppercase letter";
+      return 'Password must contain at least one uppercase letter';
     }
-    
+
     // Check for at least one lowercase letter
     if (!/[a-z]/.test(password)) {
-      return "Password must contain at least one lowercase letter";
+      return 'Password must contain at least one lowercase letter';
     }
-    
+
     // Check for at least one number
     if (!/\d/.test(password)) {
-      return "Password must contain at least one number";
+      return 'Password must contain at least one number';
     }
-    
+
     // Check for at least one special character
     if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      return "Password must contain at least one symbol (!@#$%^&*(),.?\":{}|<>)";
+      return 'Password must contain at least one symbol (!@#$%^&*(),.?":{}|<>)';
     }
-    
+
     return null;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setInfo("");
+    setError('');
+    setInfo('');
 
     const validationError = validateForm();
     if (validationError) {
@@ -130,19 +130,19 @@ const ResetPasswordPage = () => {
         result.response &&
         (result.response.Apistatus === true || result.response.success === true)
       ) {
-        setInfo("Password reset successfully! Redirecting to login...");
-        
+        setInfo('Password reset successfully! Redirecting to login...');
+
         setTimeout(() => {
-          navigate("/login");
+          navigate('/login');
         }, 2000);
       } else {
-        let errorMessage = "Failed to reset password. Please try again.";
+        let errorMessage = 'Failed to reset password. Please try again.';
 
         if (result.response?.errors) {
           const errors = result.response.errors;
-          if (typeof errors === "object") {
+          if (typeof errors === 'object') {
             const errorMessages = Object.values(errors).flat();
-            errorMessage = errorMessages.join(". ");
+            errorMessage = errorMessages.join('. ');
           } else {
             errorMessage = errors;
           }
@@ -152,8 +152,8 @@ const ResetPasswordPage = () => {
           errorMessage = result.response.data.message;
         } else if (result.response?.data?.errors) {
           const errors = result.response.data.errors;
-          if (typeof errors === "object") {
-            errorMessage = Object.values(errors).flat().join(". ");
+          if (typeof errors === 'object') {
+            errorMessage = Object.values(errors).flat().join('. ');
           } else {
             errorMessage = errors;
           }
@@ -163,27 +163,31 @@ const ResetPasswordPage = () => {
         setIsSubmitting(false);
       }
     } catch (error) {
-      console.error("Reset password error:", error);
-      
+      console.error('Reset password error:', error);
+
       if (error.response?.status === 400) {
-        setError("Invalid verification code or expired link. Please try again.");
+        setError(
+          'Invalid verification code or expired link. Please try again.'
+        );
       } else if (error.response?.status === 404) {
-        setError("Reset link not found or expired. Please request a new one.");
+        setError('Reset link not found or expired. Please request a new one.');
       } else if (error.response?.status === 422) {
-        setError("Invalid input data. Please check all fields and try again.");
+        setError('Invalid input data. Please check all fields and try again.');
       } else if (error.response?.status >= 500) {
-        setError("Server error. Please try again later.");
-      } else if (error.code === "ERR_NETWORK") {
-        setError("Network error. Please check your connection and try again.");
+        setError('Server error. Please try again later.');
+      } else if (error.code === 'ERR_NETWORK') {
+        setError('Network error. Please check your connection and try again.');
       } else {
-        setError("An error occurred while resetting your password. Please try again.");
+        setError(
+          'An error occurred while resetting your password. Please try again.'
+        );
       }
       setIsSubmitting(false);
     }
   };
 
   const handleOtpChange = (e) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
     setFormData((prev) => ({
       ...prev,
       otp_code: value,
@@ -205,7 +209,7 @@ const ResetPasswordPage = () => {
           className="h-8 w-8 md:h-10 md:w-10 drop-shadow"
         />
       </div>
-      
+
       {/* Back to Login Link */}
       <div className="absolute top-6 right-8 flex items-center gap-2">
         <span className="text-xs md:text-sm text-gray-dark">
@@ -214,7 +218,7 @@ const ResetPasswordPage = () => {
         <Link
           to="/login"
           className="px-3 py-1 bg-white/80 rounded shadow text-primary-700 text-xs md:text-sm font-medium flex items-center gap-1 hover:bg-white border border-gray-200"
-          style={{ color: "#25282D" }}
+          style={{ color: '#25282D' }}
         >
           Back to Login
           <ChevronRight className="w-5 h-5" />
@@ -226,10 +230,20 @@ const ResetPasswordPage = () => {
         <div className="absolute top-24 md:top-20 left-1/2 -translate-x-1/2 z-10 flex justify-center w-full">
           <div className="flex flex-col items-center">
             {error && (
-              <Alert severity="error" className="w-fit rounded-xl md:rounded-sm max-w-md">{error}</Alert>
+              <Alert
+                severity="error"
+                className="w-fit rounded-xl md:rounded-sm max-w-md"
+              >
+                {error}
+              </Alert>
             )}
             {info && (
-              <Alert color="success" className="w-fit rounded-xl md:rounded-sm px-8 max-w-md">{info}</Alert>
+              <Alert
+                color="success"
+                className="w-fit rounded-xl md:rounded-sm px-8 max-w-md"
+              >
+                {info}
+              </Alert>
             )}
           </div>
         </div>
@@ -239,23 +253,25 @@ const ResetPasswordPage = () => {
         className="w-full max-w-md rounded-2xl p-10 flex flex-col items-center border border-gray-100 shadow-none md:shadow"
         style={{
           background: `linear-gradient(180deg, rgba(255,255,255,0) -9.58%, rgba(255,255,255,0.052) 100%)`,
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          boxShadow: isMobile() ? 'none' : [
-            "0px 10px 10px 0px #0000001A",
-            "0px 4px 4px 0px #0000000D",
-            "0px 1px 0px 0px #0000000D",
-            "0px 20px 50px 0px #FFFFFF26 inset",
-          ].join(", "),
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          boxShadow: isMobile()
+            ? 'none'
+            : [
+                '0px 10px 10px 0px #0000001A',
+                '0px 4px 4px 0px #0000000D',
+                '0px 1px 0px 0px #0000000D',
+                '0px 20px 50px 0px #FFFFFF26 inset',
+              ].join(', '),
         }}
       >
         <div className="flex flex-col items-start w-full mb-7">
-          
           <h1 className="font-semibold text-[30px] leading-[40px] text-gray-dark tracking-[-0.01rem] text-center w-full">
             Reset Password
           </h1>
           <p className="font-normal text-[16px] leading-[22px] tracking-[-0.01em] text-[#475569] text-center">
-            Enter the verification code sent to <strong>{email}</strong> and create a new password
+            Enter the verification code sent to <strong>{email}</strong> and
+            create a new password
           </p>
         </div>
 
@@ -333,14 +349,12 @@ const ResetPasswordPage = () => {
             loading={isSubmitting}
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Resetting Password..." : "Reset Password"}
+            {isSubmitting ? 'Resetting Password...' : 'Reset Password'}
           </CustomButton>
-
-          
         </form>
       </div>
     </div>
   );
 };
 
-export default ResetPasswordPage; 
+export default ResetPasswordPage;

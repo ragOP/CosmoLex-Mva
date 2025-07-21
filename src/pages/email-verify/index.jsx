@@ -1,9 +1,9 @@
-import React from "react";
-import { Link } from "react-router-dom";
-import { CheckCircle, Mail, ArrowRight, Home } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { isMobile } from "@/utils/isMobile";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { CheckCircle, Mail, ArrowRight, Home } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { isMobile } from '@/utils/isMobile';
 
 const EmailVerifySuccess = () => {
   return (
@@ -28,7 +28,7 @@ radial-gradient(ellipse 60% 60% at 20% 80%, #e6f9f0 0%, #f2eaff 80%, #f8f9fb 100
         <Link
           to="/login"
           className="px-3 py-1 bg-white/80 rounded shadow text-primary-700 text-xs md:text-sm font-medium flex items-center gap-1 hover:bg-white border border-gray-200"
-          style={{ color: "#25282D" }}
+          style={{ color: '#25282D' }}
         >
           <Home className="w-4 h-4" />
           Back to Login
@@ -40,20 +40,19 @@ radial-gradient(ellipse 60% 60% at 20% 80%, #e6f9f0 0%, #f2eaff 80%, #f8f9fb 100
         className="w-full max-w-md mx-4 border border-gray-100"
         style={{
           background: `linear-gradient(180deg, rgba(255,255,255,0) -9.58%, rgba(255,255,255,0.052) 100%)`,
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           boxShadow: isMobile()
-            ? "none"
+            ? 'none'
             : [
-                "0px 10px 10px 0px #0000001A",
-                "0px 4px 4px 0px #0000000D",
-                "0px 1px 0px 0px #0000000D",
-                "0px 20px 50px 0px #FFFFFF26 inset",
-              ].join(", "),
+                '0px 10px 10px 0px #0000001A',
+                '0px 4px 4px 0px #0000000D',
+                '0px 1px 0px 0px #0000000D',
+                '0px 20px 50px 0px #FFFFFF26 inset',
+              ].join(', '),
         }}
       >
         <CardContent className="p-10 flex flex-col items-center text-center">
-
           {/* Success Message */}
           <div className="mb-8">
             <h1 className="font-semibold text-[28px] leading-[36px] text-gray-dark tracking-[-0.01rem] mb-3">
@@ -68,7 +67,6 @@ radial-gradient(ellipse 60% 60% at 20% 80%, #e6f9f0 0%, #f2eaff 80%, #f8f9fb 100
           </div>
 
           <div className="w-full space-y-3">
-
             <Link to="/login" className="w-full">
               <Button
                 variant="outline"

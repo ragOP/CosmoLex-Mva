@@ -1,15 +1,21 @@
-import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { format } from "date-fns";
-import { CalendarDays, Mail, User, AlarmClock } from "lucide-react";
+import React from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { format } from 'date-fns';
+import { CalendarDays, Mail, User, AlarmClock } from 'lucide-react';
 
 const formatDate = (date) => {
-  if (!date) return "N/A";
-  return format(new Date(date), "PPpp");
+  if (!date) return 'N/A';
+  return format(new Date(date), 'PPpp');
 };
 
 const EventPreviewDialog = ({ event, open = false, onClose = () => {} }) => {
@@ -39,7 +45,9 @@ const EventPreviewDialog = ({ event, open = false, onClose = () => {} }) => {
         </DialogHeader>
 
         <div className="space-y-4 text-sm text-slate-700">
-          <p className="text-muted-foreground">{description || "No description provided."}</p>
+          <p className="text-muted-foreground">
+            {description || 'No description provided.'}
+          </p>
 
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -56,22 +64,22 @@ const EventPreviewDialog = ({ event, open = false, onClose = () => {} }) => {
             </div>
             <div className="flex items-center gap-2">
               <span>
-                <strong>Status:</strong> {status || "N/A"}
+                <strong>Status:</strong> {status || 'N/A'}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span>
-                <strong>Priority:</strong> {priority || "N/A"}
+                <strong>Priority:</strong> {priority || 'N/A'}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span>
-                <strong>Repeat:</strong> {repeat || "N/A"}
+                <strong>Repeat:</strong> {repeat || 'N/A'}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span>
-                <strong>Category:</strong> {eventcategory?.name || "N/A"}
+                <strong>Category:</strong> {eventcategory?.name || 'N/A'}
               </span>
             </div>
           </div>
@@ -79,7 +87,9 @@ const EventPreviewDialog = ({ event, open = false, onClose = () => {} }) => {
           {/* Participants */}
           <Separator className="my-4" />
           <h3 className="text-lg font-semibold text-[#40444D]">Participants</h3>
-          {participants.length === 0 && <p className="text-muted-foreground">No participants added.</p>}
+          {participants.length === 0 && (
+            <p className="text-muted-foreground">No participants added.</p>
+          )}
           {participants.map((p, index) => (
             <div key={index} className="flex items-center gap-3 py-2">
               <Avatar className="w-8 h-8">
@@ -90,7 +100,11 @@ const EventPreviewDialog = ({ event, open = false, onClose = () => {} }) => {
                 <p className="text-xs text-muted-foreground">
                   Role: {p.role} | Status: {p.status}
                 </p>
-                {p.comment && <p className="text-xs italic text-muted-foreground">“{p.comment}”</p>}
+                {p.comment && (
+                  <p className="text-xs italic text-muted-foreground">
+                    “{p.comment}”
+                  </p>
+                )}
               </div>
             </div>
           ))}
@@ -98,7 +112,9 @@ const EventPreviewDialog = ({ event, open = false, onClose = () => {} }) => {
           {/* Reminders */}
           <Separator className="my-4" />
           <h3 className="text-lg font-semibold text-[#40444D]">Reminders</h3>
-          {reminders.length === 0 && <p className="text-muted-foreground">No reminders set.</p>}
+          {reminders.length === 0 && (
+            <p className="text-muted-foreground">No reminders set.</p>
+          )}
           <div className="flex flex-wrap gap-2 mt-2">
             {reminders.map((r, idx) => (
               <Badge
@@ -107,14 +123,19 @@ const EventPreviewDialog = ({ event, open = false, onClose = () => {} }) => {
                 className="text-xs px-3 py-1 rounded-full flex items-center gap-1"
               >
                 <AlarmClock className="w-3 h-3" />
-                {`${r.type} - ${r.value} ${r.timing.replace("_", " ")} before ${r.relative_to}`}
+                {`${r.type} - ${r.value} ${r.timing.replace('_', ' ')} before ${
+                  r.relative_to
+                }`}
               </Badge>
             ))}
           </div>
         </div>
 
         <DialogFooter className="mt-6">
-          <Button onClick={onClose} className="bg-[#6366F1] text-white hover:bg-[#4f51d8]">
+          <Button
+            onClick={onClose}
+            className="bg-[#6366F1] text-white hover:bg-[#4f51d8]"
+          >
             Close
           </Button>
         </DialogFooter>

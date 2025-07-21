@@ -1,10 +1,10 @@
-import { apiService } from "@/api/api_services";
-import { endpoints } from "@/api/endpoint";
+import { apiService } from '@/api/api_services';
+import { endpoints } from '@/api/endpoint';
 
 const postVerification = async (formData) => {
   const result = await apiService({
     endpoint: endpoints.resendVerification,
-    method: "POST",
+    method: 'POST',
     data: formData,
   });
   return result;

@@ -1,13 +1,13 @@
-import EventPreviewDialog from '@/components/calendar/EventPreviewDialog'
-import { useState, useEffect } from 'react'
-import CalendarWrapper from '@/components/calendar/Calendar'
-import NewEventDialog from '@/components/calendar/NewEventDialog'
-import getEventsUserList from './helpers/getEventsUserList'
-import getUserEvents from './helpers/getUserEvents'
-import createEvent from './helpers/createEvent'
-import getEvent from './helpers/getEvent'
-import moment from 'moment'
-import { useParams, useNavigate } from 'react-router-dom'
+import EventPreviewDialog from '@/components/calendar/EventPreviewDialog';
+import { useState, useEffect } from 'react';
+import CalendarWrapper from '@/components/calendar/Calendar';
+import NewEventDialog from '@/components/calendar/NewEventDialog';
+import getEventsUserList from './helpers/getEventsUserList';
+import getUserEvents from './helpers/getUserEvents';
+import createEvent from './helpers/createEvent';
+import getEvent from './helpers/getEvent';
+import moment from 'moment';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const CalendarPage = () => {
   const params = useParams();
@@ -23,7 +23,7 @@ const CalendarPage = () => {
     const res = await getEvent(event.id);
     setIsOpen(true);
     setEvent(res);
-  }
+  };
 
   const getUsersEvents = async (userId) => {
     try {
@@ -37,7 +37,7 @@ const CalendarPage = () => {
       }));
       setEvents(mappedEvents);
     } catch (err) {
-      console.error("Error fetching user events:", err);
+      console.error('Error fetching user events:', err);
     }
   };
 
@@ -46,7 +46,7 @@ const CalendarPage = () => {
       const res = await createEvent(data);
       console.log(res);
     } catch (err) {
-      console.error(err?.message || "Failed to create event");
+      console.error(err?.message || 'Failed to create event');
     }
   };
 
@@ -65,7 +65,6 @@ const CalendarPage = () => {
 
   return (
     <div className="h-full w-full">
-
       <CalendarWrapper
         events={events}
         setEvents={setEvents}
@@ -93,9 +92,8 @@ const CalendarPage = () => {
           setOpen(false);
         }}
       />
-
     </div>
-  )
-}
+  );
+};
 
-export default CalendarPage
+export default CalendarPage;
