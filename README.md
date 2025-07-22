@@ -1,4 +1,3 @@
-
 # MVA Frontend
 
 A modern, Figma-accurate authentication UI built with React, Vite, Tailwind CSS, and shadcn/ui components.
@@ -16,10 +15,12 @@ A modern, Figma-accurate authentication UI built with React, Vite, Tailwind CSS,
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js v18+
 - pnpm (recommended) or npm/yarn
 
 ### Install
+
 ```sh
 pnpm install
 # or
@@ -27,6 +28,7 @@ npm install
 ```
 
 ### Run the App
+
 ```sh
 pnpm dev
 # or
@@ -34,6 +36,7 @@ npm run dev
 ```
 
 ### Build for Production
+
 ```sh
 pnpm build
 # or
@@ -49,6 +52,7 @@ npm run build
 - `vite.config.js` — Vite config with alias support for `@/`
 
 ## Design System
+
 - **Font**: Inter (Google Fonts)
 - **Primary Color**: #4648AB and palette in `tailwind.config.js`
 - **Gradients**: Custom backgrounds for all auth pages
@@ -57,10 +61,12 @@ npm run build
 - **Alerts**: shadcn/ui style, color-coded for error/warning
 
 ## Customization
+
 - Edit `tailwind.config.js` to change theme colors, fonts, or gradients.
 - Add more shadcn/ui components as needed.
 
 ## Credits
+
 - [shadcn/ui](https://ui.shadcn.com/)
 - [Radix UI](https://www.radix-ui.com/)
 - [Figma](https://www.figma.com/)

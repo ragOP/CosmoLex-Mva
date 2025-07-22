@@ -1,5 +1,11 @@
 import * as React from 'react';
-import { Search, Home, SlidersHorizontal, ChevronDown, MenuSquare } from 'lucide-react';
+import {
+  Search,
+  Home,
+  SlidersHorizontal,
+  ChevronDown,
+  MenuSquare,
+} from 'lucide-react';
 import Sidebar from './Sidebar';
 import MuiDrawer from '@mui/material/Drawer';
 
@@ -31,7 +37,11 @@ export default function Navbar() {
         ModalProps={{ keepMounted: true }}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { width: "fit-content", boxSizing: 'border-box', p: 0 },
+          '& .MuiDrawer-paper': {
+            width: 'fit-content',
+            boxSizing: 'border-box',
+            p: 0,
+          },
         }}
       >
         <Sidebar isDrawer={true} />
@@ -43,7 +53,8 @@ export default function Navbar() {
           style={{
             backdropFilter: 'blur(20px)',
             boxShadow: '0px 4px 4px 0px #4D515A1F',
-            background: 'linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
+            background:
+              'linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
           }}
         >
           <input
@@ -54,7 +65,8 @@ export default function Navbar() {
           />
           <Search className="h-5 w-5 text-gray-400 ml-2" />
         </div>
-        <button className="flex md:hidden items-center justify-center p-2 ml-2 rounded bg-white shadow"
+        <button
+          className="flex md:hidden items-center justify-center p-2 ml-2 rounded bg-white shadow"
           style={{
             backdropFilter: 'blur(20px)',
             boxShadow: '0px 4px 4px 0px #4D515A1F',
@@ -94,7 +106,10 @@ export default function Navbar() {
               boxShadow: '0px 4px 4px 0px #4D515A1F',
             }}
           />
-          <span className="font-medium text-gray-700" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <span
+            className="font-medium text-gray-700"
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
             Shibtain
           </span>
           <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -102,4 +117,4 @@ export default function Navbar() {
       </div>
     </header>
   );
-} 
+}

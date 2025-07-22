@@ -2,7 +2,7 @@ export const validateStep = (step, formData) => {
   switch (step) {
     case 1: {
       const step1Fields = ['first_name', 'last_name', 'email', 'phone_number'];
-      const missingStep1 = step1Fields.filter(field => !formData[field]);
+      const missingStep1 = step1Fields.filter((field) => !formData[field]);
       if (missingStep1.length > 0) {
         return 'Please fill in all required fields in this step';
       }
@@ -12,14 +12,14 @@ export const validateStep = (step, formData) => {
       }
       break;
     }
-    
+
     case 2: {
       if (!formData.firm_name) {
         return 'Please enter your firm name';
       }
       break;
     }
-    
+
     case 3: {
       if (!formData.password || !formData.password_confirmation) {
         return 'Please enter both password fields';
@@ -35,9 +35,9 @@ export const validateStep = (step, formData) => {
       }
       break;
     }
-    
+
     default:
       return null;
   }
   return null;
-}; 
+};

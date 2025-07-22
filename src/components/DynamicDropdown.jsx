@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import getFormData from '../pages/signup/helper/getFormData';
 
-const DynamicDropdown = ({ 
-  name, 
-  value, 
-  onChange, 
-  label, 
-  placeholder, 
+const DynamicDropdown = ({
+  name,
+  value,
+  onChange,
+  label,
+  placeholder,
   required = false,
   dataKey, // Key to extract specific data from API response
-  className = "",
-  id
+  className = '',
+  id,
 }) => {
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +21,7 @@ const DynamicDropdown = ({
       try {
         setLoading(true);
         const data = await getFormData();
-        
+
         if (data && dataKey) {
           // Extract specific data using the dataKey
           const extractedOptions = data[dataKey] || [];
@@ -47,7 +47,10 @@ const DynamicDropdown = ({
     return (
       <div>
         {label && (
-          <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor={id}>
+          <label
+            className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]"
+            htmlFor={id}
+          >
             {label} {required && <span className="text-red-500">*</span>}
           </label>
         )}
@@ -62,7 +65,10 @@ const DynamicDropdown = ({
     return (
       <div>
         {label && (
-          <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor={id}>
+          <label
+            className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]"
+            htmlFor={id}
+          >
             {label} {required && <span className="text-red-500">*</span>}
           </label>
         )}
@@ -76,7 +82,10 @@ const DynamicDropdown = ({
   return (
     <div>
       {label && (
-        <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor={id}>
+        <label
+          className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]"
+          htmlFor={id}
+        >
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
@@ -89,8 +98,15 @@ const DynamicDropdown = ({
       >
         {placeholder && <option value="">{placeholder}</option>}
         {options.map((option, index) => (
-          <option key={option.id || option.value || index} value={option.id || option.value}>
-            {option.name || option.code || option.label || option.text || option}
+          <option
+            key={option.id || option.value || index}
+            value={option.id || option.value}
+          >
+            {option.name ||
+              option.code ||
+              option.label ||
+              option.text ||
+              option}
           </option>
         ))}
       </select>
@@ -98,4 +114,4 @@ const DynamicDropdown = ({
   );
 };
 
-export default DynamicDropdown; 
+export default DynamicDropdown;

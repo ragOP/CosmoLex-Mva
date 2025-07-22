@@ -13,4 +13,4 @@ export const getScreenSize = () => {
   if (width < 1024) return 'lg';
   if (width < 1280) return 'xl';
   return '2xl';
-}; 
+};

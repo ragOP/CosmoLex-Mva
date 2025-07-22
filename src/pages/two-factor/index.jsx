@@ -1,49 +1,49 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import CustomButton from "@/components/CustomButton";
-import { ChevronRight } from "lucide-react";
-import { Alert } from "@/components/ui/alert";
-import { isMobile } from "@/utils/isMobile";
-import postTwoFactor from "./helper";
-import { getBrowserInfo } from "@/utils/deviceDetection";
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import CustomButton from '@/components/CustomButton';
+import { ChevronRight } from 'lucide-react';
+import { Alert } from '@/components/ui/alert';
+import { isMobile } from '@/utils/isMobile';
+import postTwoFactor from './helper';
+import { getBrowserInfo } from '@/utils/deviceDetection';
 
 const TwoFactorPage = () => {
-  const [code, setCode] = useState("");
-  const [error, setError] = useState("");
-  const [info, setInfo] = useState("");
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [trustDevice, setTrustDevice] = useState(false);
   const [loginData, setLoginData] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const tempData = localStorage.getItem("login_temp_data");
+    const tempData = localStorage.getItem('login_temp_data');
     if (tempData) {
       try {
         const parsedData = JSON.parse(tempData);
         setLoginData(parsedData);
-        setInfo(parsedData.message || "OTP sent to your registered number");
+        setInfo(parsedData.message || 'OTP sent to your registered number');
       } catch (error) {
-        console.error("Error parsing login temp data:", error);
-        navigate("/login");
+        console.error('Error parsing login temp data:', error);
+        navigate('/login');
       }
     } else {
-      navigate("/login");
+      navigate('/login');
     }
   }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setInfo("");
+    setError('');
+    setInfo('');
 
     if (!code || code.length !== 6) {
-      setError("Please enter the 6-digit code sent to your registered number.");
+      setError('Please enter the 6-digit code sent to your registered number.');
       return;
     }
 
     if (!loginData) {
-      setError("Session expired. Please login again.");
+      setError('Session expired. Please login again.');
       return;
     }
 
@@ -56,35 +56,35 @@ const TwoFactorPage = () => {
         email: loginData.email,
         otp_code: parseInt(code),
         trust_device: trustDevice,
-        token: browserInfo.token
+        token: browserInfo.token,
       };
 
-      console.log(payload, "payload");
+      console.log(payload, 'payload');
 
       const result = await postTwoFactor(payload);
 
       if (result.response && result.response.Apistatus) {
         if (result.response.token) {
-          localStorage.setItem("auth_token", result.response.token);
+          localStorage.setItem('auth_token', result.response.token);
 
-          const rememberLogin = localStorage.getItem("remember_login");
-          if (rememberLogin === "true") {
-            localStorage.setItem("remember_login", "true");
+          const rememberLogin = localStorage.getItem('remember_login');
+          if (rememberLogin === 'true') {
+            localStorage.setItem('remember_login', 'true');
           }
         }
 
-        localStorage.removeItem("login_temp_data");
+        localStorage.removeItem('login_temp_data');
 
-        setInfo("2FA successful! Redirecting...");
+        setInfo('2FA successful! Redirecting...');
         setTimeout(() => {
-          navigate("/dashboard");
+          navigate('/dashboard');
         }, 1200);
       } else {
-        setError(result.response?.message || "Invalid code. Please try again.");
+        setError(result.response?.message || 'Invalid code. Please try again.');
       }
     } catch (error) {
-      console.error("OTP verification error:", error);
-      setError("An error occurred during verification. Please try again.");
+      console.error('OTP verification error:', error);
+      setError('An error occurred during verification. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -95,7 +95,7 @@ const TwoFactorPage = () => {
       className="relative min-h-screen flex items-center justify-center"
       style={{
         background:
-          "radial-gradient(ellipse 80% 80% at 70% 20%, #e6f0ff 0%, #f2eaff 60%, #f8f9fb 100%),\nradial-gradient(ellipse 60% 60% at 20% 80%, #e0f7fa 0%, #f2eaff 80%, #f8f9fb 100%)",
+          'radial-gradient(ellipse 80% 80% at 70% 20%, #e6f0ff 0%, #f2eaff 60%, #f8f9fb 100%),\nradial-gradient(ellipse 60% 60% at 20% 80%, #e0f7fa 0%, #f2eaff 80%, #f8f9fb 100%)',
       }}
     >
       {/* Brand Logo */}
@@ -111,7 +111,7 @@ const TwoFactorPage = () => {
         <Link
           to="/login"
           className="px-3 py-1 bg-white/80 rounded shadow text-primary-700 text-xs md:text-sm font-medium flex items-center gap-1 hover:bg-white border border-gray-200"
-          style={{ color: "#25282D" }}
+          style={{ color: '#25282D' }}
         >
           Back to Login
           <ChevronRight className="w-5 h-5 rotate-180" />
@@ -142,16 +142,16 @@ const TwoFactorPage = () => {
         className="w-full max-w-md rounded-2xl p-10 flex flex-col items-center border border-gray-100 shadow-none md:shadow"
         style={{
           background: `linear-gradient(180deg, rgba(255,255,255,0) -9.58%, rgba(255,255,255,0.052) 100%)`,
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           boxShadow: isMobile()
-            ? "none"
+            ? 'none'
             : [
-                "0px 10px 10px 0px #0000001A",
-                "0px 4px 4px 0px #0000000D",
-                "0px 1px 0px 0px #0000000D",
-                "0px 20px 50px 0px #FFFFFF26 inset",
-              ].join(", "),
+                '0px 10px 10px 0px #0000001A',
+                '0px 4px 4px 0px #0000000D',
+                '0px 1px 0px 0px #0000000D',
+                '0px 20px 50px 0px #FFFFFF26 inset',
+              ].join(', '),
         }}
       >
         <div className="flex flex-col items-start w-full mb-7">
@@ -160,7 +160,7 @@ const TwoFactorPage = () => {
           </h1>
           <p className="font-normal text-[16px] leading-[22px] tracking-[-0.01em] text-[#475569]">
             {loginData?.message ||
-              "Enter the 6-digit code sent to your registered number."}
+              'Enter the 6-digit code sent to your registered number.'}
           </p>
         </div>
         <form
@@ -185,7 +185,7 @@ const TwoFactorPage = () => {
               placeholder="000000"
               value={code}
               onChange={(e) =>
-                setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                setCode(e.target.value.replace(/\D/g, '').slice(0, 6))
               }
               autoComplete="one-time-code"
               disabled={isSubmitting}
@@ -227,7 +227,7 @@ const TwoFactorPage = () => {
             disabled={isSubmitting}
             loading={isSubmitting}
           >
-            {isSubmitting ? "Verifying..." : "Verify"}
+            {isSubmitting ? 'Verifying...' : 'Verify'}
           </CustomButton>
         </form>
 

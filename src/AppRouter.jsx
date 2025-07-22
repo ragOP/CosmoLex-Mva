@@ -1,5 +1,10 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import PageLoading from './components/PageLoading';
 
 const LoginPage = lazy(() => import('./pages/Login'));
@@ -12,11 +17,14 @@ const ResetPasswordPage = lazy(() => import('./pages/reset-password'));
 const EmailVerifyPage = lazy(() => import('./pages/email-verify'));
 
 const DashboardHome = lazy(() => import('./components/dashboard/Dashboard'));
-const DashboardForm = lazy(() => import('./components/dashboard/DashboardForm'));
+const DashboardForm = lazy(() =>
+  import('./components/dashboard/DashboardForm')
+);
 const MatterPage = () => <div>Matter Page</div>;
 const UserManagementPage = () => <div>User Management Page</div>;
 const BulkImportPage = () => <div>Bulk Import Page</div>;
 const CalendarPage = lazy(() => import('./pages/calendar'));
+const TasksPage = lazy(() => import('./pages/tasks'));
 
 const AppRouter = () => (
   <Router>
@@ -36,6 +44,7 @@ const AppRouter = () => (
           <Route path="user-management" element={<UserManagementPage />} />
           <Route path="bulk-import" element={<BulkImportPage />} />
           <Route path="calendar/:id" element={<CalendarPage />} />
+          <Route path="tasks" element={<TasksPage />} />
         </Route>
         <Route path="/2fa" element={<TwoFactorPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />

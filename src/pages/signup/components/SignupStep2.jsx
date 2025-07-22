@@ -6,7 +6,10 @@ const SignupStep2 = ({ formData, handleInputChange }) => (
   <div className="flex flex-col gap-4">
     {/* Firm Information */}
     <div>
-      <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor="firm_name">
+      <label
+        className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]"
+        htmlFor="firm_name"
+      >
         Firm Name <span className="text-red-500">*</span>
       </label>
       <input
@@ -23,7 +26,10 @@ const SignupStep2 = ({ formData, handleInputChange }) => (
 
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
-        <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor="number_of_users">
+        <label
+          className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]"
+          htmlFor="number_of_users"
+        >
           Number of Users
         </label>
         <select
@@ -33,8 +39,10 @@ const SignupStep2 = ({ formData, handleInputChange }) => (
           value={formData.number_of_users}
           onChange={handleInputChange}
         >
-          {numberOfUsersOptions.map(option => (
-            <option key={option.value} value={option.value}>{option.label}</option>
+          {numberOfUsersOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
           ))}
         </select>
       </div>
@@ -52,7 +60,10 @@ const SignupStep2 = ({ formData, handleInputChange }) => (
     </div>
 
     <div>
-      <label className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]" htmlFor="heard_about_us">
+      <label
+        className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]"
+        htmlFor="heard_about_us"
+      >
         How did you hear about us?
       </label>
       <select
@@ -62,12 +73,14 @@ const SignupStep2 = ({ formData, handleInputChange }) => (
         value={formData.heard_about_us}
         onChange={handleInputChange}
       >
-        {heardAboutUsOptions.map(option => (
-          <option key={option.value} value={option.value}>{option.label}</option>
+        {heardAboutUsOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
         ))}
       </select>
     </div>
   </div>
 );
 
-export default SignupStep2; 
+export default SignupStep2;

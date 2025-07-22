@@ -18,9 +18,9 @@ const LoadingIcon = (props) => (
           xmlns="http://www.w3.org/1999/xhtml"
           style={{
             background:
-              "conic-gradient(from 90deg,#1fd6ba 0deg,#5b1fda 264.375deg,#5b1fda 360deg)",
-            height: "100%",
-            width: "100%",
+              'conic-gradient(from 90deg,#1fd6ba 0deg,#5b1fda 264.375deg,#5b1fda 360deg)',
+            height: '100%',
+            width: '100%',
             opacity: 1,
           }}
         />
@@ -42,9 +42,9 @@ const LoadingIcon = (props) => (
           xmlns="http://www.w3.org/1999/xhtml"
           style={{
             background:
-              "conic-gradient(from 90deg,#1fd6ba 0deg,#5b1fda 264.375deg,#5b1fda 360deg)",
-            height: "100%",
-            width: "100%",
+              'conic-gradient(from 90deg,#1fd6ba 0deg,#5b1fda 264.375deg,#5b1fda 360deg)',
+            height: '100%',
+            width: '100%',
             opacity: 1,
           }}
         />
@@ -63,5 +63,5 @@ const LoadingIcon = (props) => (
       </clipPath>
     </defs>
   </svg>
-)
-export default LoadingIcon
+);
+export default LoadingIcon;

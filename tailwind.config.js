@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    './index.html',
-    './src/**/*.{js,jsx,ts,tsx}',
-  ],
+  content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
       colors: {
@@ -82,12 +79,20 @@ export default {
       },
       backgroundImage: {
         'gradient-linear': 'linear-gradient(135deg, #6251FF 0%, #C6A5FB 100%)',
-        'gradient-mesh-1': 'radial-gradient(circle at 20% 20%, #F2D1FE 0%, #90A8FF 100%)',
-        'gradient-mesh-2': 'radial-gradient(circle at 80% 80%, #F2D1FE 0%, #90A8FF 100%)',
+        'gradient-mesh-1':
+          'radial-gradient(circle at 20% 20%, #F2D1FE 0%, #90A8FF 100%)',
+        'gradient-mesh-2':
+          'radial-gradient(circle at 80% 80%, #F2D1FE 0%, #90A8FF 100%)',
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['Satoshi', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: [
+          'Satoshi',
+          'Inter',
+          'ui-sans-serif',
+          'system-ui',
+          'sans-serif',
+        ],
       },
       fontSize: {
         'title-xxl': ['3.75rem', { lineHeight: '4.25rem', fontWeight: '700' }],

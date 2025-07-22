@@ -1,28 +1,28 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
-import CustomButton from "@/components/CustomButton";
-import { Alert } from "@/components/ui/alert";
-import { isMobile } from "@/utils/isMobile";
-import { getBrowserInfo } from "@/utils/deviceDetection";
-import postLogin from "./helper";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
+import CustomButton from '@/components/CustomButton';
+import { Alert } from '@/components/ui/alert';
+import { isMobile } from '@/utils/isMobile';
+import { getBrowserInfo } from '@/utils/deviceDetection';
+import postLogin from './helper';
 
 const LoginPage = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
-  const [error, setError] = useState("");
-  const [info, setInfo] = useState("");
+  const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setInfo("");
+    setError('');
+    setInfo('');
 
     if (!email || !password) {
-      setInfo("Please enter the credentials first!");
+      setInfo('Please enter the credentials first!');
       return;
     }
 
@@ -43,7 +43,7 @@ const LoginPage = () => {
       if (result.response && result.response.Apistatus) {
         if (result.response.two_factor_required) {
           localStorage.setItem(
-            "login_temp_data",
+            'login_temp_data',
             JSON.stringify({
               email,
               otp: result.response.otp,
@@ -52,29 +52,29 @@ const LoginPage = () => {
 
           setInfo(result.response.message);
           setTimeout(() => {
-            navigate("/2fa");
+            navigate('/2fa');
           }, 1500);
         } else {
           if (result.response.token) {
-            localStorage.setItem("auth_token", result.response.token);
+            localStorage.setItem('auth_token', result.response.token);
             if (remember) {
-              localStorage.setItem("remember_login", "true");
+              localStorage.setItem('remember_login', 'true');
             }
           }
 
-          setInfo("Login successful! Redirecting...");
+          setInfo('Login successful! Redirecting...');
           setTimeout(() => {
-            navigate("/dashboard");
+            navigate('/dashboard');
           }, 1000);
         }
       } else {
         setError(
-          result.response?.data?.message || "Login failed. Please try again."
+          result.response?.data?.message || 'Login failed. Please try again.'
         );
       }
     } catch (error) {
-      console.error("Login error:", error);
-      setError("An error occurred during login. Please try again.");
+      console.error('Login error:', error);
+      setError('An error occurred during login. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -103,7 +103,7 @@ const LoginPage = () => {
         <Link
           to="/signup"
           className="px-3 py-1 bg-white/80 rounded shadow text-primary-700 text-xs md:text-sm font-medium flex items-center gap-1 hover:bg-white border border-gray-200"
-          style={{ color: "#25282D" }}
+          style={{ color: '#25282D' }}
         >
           Sign Up
           <ChevronRight className="w-5 h-5" />
@@ -136,16 +136,16 @@ const LoginPage = () => {
         className="w-full max-w-md rounded-2xl p-10 flex flex-col items-center border border-gray-100 shadow-none md:shadow"
         style={{
           background: `linear-gradient(180deg, rgba(255,255,255,0) -9.58%, rgba(255,255,255,0.052) 100%)`,
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           boxShadow: isMobile()
-            ? "none"
+            ? 'none'
             : [
-                "0px 10px 10px 0px #0000001A",
-                "0px 4px 4px 0px #0000000D",
-                "0px 1px 0px 0px #0000000D",
-                "0px 20px 50px 0px #FFFFFF26 inset",
-              ].join(", "),
+                '0px 10px 10px 0px #0000001A',
+                '0px 4px 4px 0px #0000000D',
+                '0px 1px 0px 0px #0000000D',
+                '0px 20px 50px 0px #FFFFFF26 inset',
+              ].join(', '),
         }}
       >
         <div className="flex flex-col items-start w-full mb-7">
@@ -187,12 +187,12 @@ const LoginPage = () => {
               className="block text-base font-medium text-gray-dark mb-1 tracking-[-0.01em]"
               htmlFor="password"
               style={{
-                fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
+                fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
                 fontWeight: 500,
-                fontStyle: "normal",
-                fontSize: "16px",
-                lineHeight: "22px",
-                letterSpacing: "-0.01em",
+                fontStyle: 'normal',
+                fontSize: '16px',
+                lineHeight: '22px',
+                letterSpacing: '-0.01em',
               }}
             >
               Password
@@ -242,7 +242,7 @@ const LoginPage = () => {
             disabled={isSubmitting}
             loading={isSubmitting}
           >
-            {isSubmitting ? "Logging in..." : "Login"}
+            {isSubmitting ? 'Logging in...' : 'Login'}
           </CustomButton>
         </form>
       </div>
