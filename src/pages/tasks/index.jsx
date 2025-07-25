@@ -74,6 +74,7 @@ const TasksPage = () => {
 
   const handleCreateTask = async (data) => {
     setOpen(false);
+    console.log(data);
     createTaskMutation.mutate(data);
   };
 

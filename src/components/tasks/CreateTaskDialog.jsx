@@ -23,6 +23,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2 } from 'lucide-react';
 import { taskSchema } from '@/pages/tasks/schema/createTaskSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQuery } from '@tanstack/react-query';
+import getEventsUserList from '@/pages/calendar/helpers/getEventsUserList';
 
 const formFields = [
   { label: 'Client Name', name: 'client_name', type: 'text', required: true },
@@ -30,7 +32,12 @@ const formFields = [
   { label: 'Subject', name: 'subject', type: 'text', required: true },
   { label: 'Description', name: 'description', type: 'text' },
   { label: 'Due Date', name: 'due_date', type: 'date' },
-  { label: 'UTBMS Code', name: 'utbms_code', type: 'text' },
+  {
+    label: 'UTBMS Code',
+    name: 'utbms_code',
+    type: 'select',
+    options: ['A101', 'B202'],
+  },
   {
     label: 'Priority',
     name: 'priority',
@@ -58,11 +65,18 @@ export default function CreateTaskDialog({
   onClose = () => {},
   onSubmit = () => {},
 }) {
+  const { data: users } = useQuery({
+    queryKey: ['users'],
+    queryFn: getEventsUserList,
+  });
+
   const {
     control,
     register,
     handleSubmit,
     formState: { errors },
+    getValues,
+    reset,
   } = useForm({
     defaultValues: {
       client_name: '',
@@ -102,16 +116,30 @@ export default function CreateTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl overflow-y-auto max-h-screen">
+      <DialogContent className="bg-[#F5F5FA] rounded-lg w-full max-w-3xl p-6 space-y-6 max-h-[90vh] overflow-y-auto shadow-[0px_4px_24px_0px_#000000] no-scrollbar">
         <DialogHeader>
-          <DialogTitle>Create New Task</DialogTitle>
+          <DialogTitle className="text-2xl text-[#40444D] text-center font-bold font-sans">
+            Create New Task
+          </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form
+          onSubmit={handleSubmit(() => {
+            onSubmit(getValues());
+            reset();
+            onClose();
+          })}
+          className="space-y-4"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {formFields.map(({ label, name, type, required, options }) => (
               <div key={name}>
-                <Label>{label}</Label>
+                {type != 'checkbox' && (
+                  <Label className="text-[#40444D] font-semibold mb-2">
+                    {label}
+                  </Label>
+                )}
+
                 {type === 'select' ? (
                   <Controller
                     control={control}
@@ -145,10 +173,15 @@ export default function CreateTaskDialog({
                         <Checkbox
                           checked={field.value}
                           onCheckedChange={field.onChange}
+                          className={`border ${
+                            errors[name] ? 'border-red-500' : ''
+                          }`}
                         />
                       )}
                     />
-                    <Label>{label}</Label>
+                    <Label className="text-[#40444D] font-semibold">
+                      {label}
+                    </Label>
                   </div>
                 ) : (
                   <Controller
@@ -166,17 +199,15 @@ export default function CreateTaskDialog({
 
           <div>
             <div className="flex justify-between items-center">
-              <Label>Reminders</Label>
-              <Button
-                type="button"
-                size="icon"
-                variant="outline"
+              <Label className="text-[#40444D] font-semibold">Reminders</Label>
+              <div
+                className="p-1 rounded-full hover:bg-[#6366F1] hover:text-white transition-all duration-300 ease-in-out"
                 onClick={() =>
                   appendReminder({ type: 'email', scheduled_at: '' })
                 }
               >
-                <Plus className="h-4 w-4" />
-              </Button>
+                <Plus className="h-5 w-5" />
+              </div>
             </div>
 
             <div className="space-y-2 mt-2">
@@ -190,7 +221,7 @@ export default function CreateTaskDialog({
                         onValueChange={field.onChange}
                         value={field.value}
                       >
-                        <SelectTrigger className="w-[120px]">
+                        <SelectTrigger className="w-full">
                           <SelectValue placeholder="Type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -202,59 +233,118 @@ export default function CreateTaskDialog({
                       </Select>
                     )}
                   />
-                  <Input
-                    type="datetime-local"
-                    {...register(`reminders.${index}.scheduled_at`)}
-                    className="w-full"
+                  <Controller
+                    control={control}
+                    name={`reminders.${index}.scheduled_at`}
+                    render={({ field }) => (
+                      <Input
+                        type="datetime-local"
+                        className="w-full"
+                        {...field}
+                        value={field.value || ''} // Prevent uncontrolled to controlled warning
+                      />
+                    )}
                   />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => removeReminder(index)}
-                  >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
+
+                  <div className="flex items-center justify-end w-20 ">
+                    <Trash2
+                      className="text-[#6366F1] hover:text-red-500 transition-all duration-300 ease-in-out h-5 w-5 cursor-pointer"
+                      onClick={() => removeReminder(index)}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
 
             <div>
               <div className="flex justify-between items-center">
-                <Label>Assigned To</Label>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="outline"
-                  onClick={() => appendAssignedTo('')}
+                <div className="flex flex-col items-start space-y-2">
+                  <Label className="text-[#40444D] font-semibold">
+                    Assigned To
+                  </Label>
+                  {errors.assigned_to && (
+                    <p className="text-xs text-red-500">
+                      {errors.assigned_to.message}
+                    </p>
+                  )}
+                </div>
+                <div
+                  className="p-1 rounded-full hover:bg-[#6366F1] hover:text-white transition-all duration-300 ease-in-out"
+                  onClick={() => appendAssignedTo([users[0].id])}
                 >
-                  <Plus className="h-4 w-4" />
-                </Button>
+                  <Plus className="h-5 w-5" />
+                </div>
               </div>
 
               <div className="space-y-2 mt-2">
                 {assignedToFields.map((field, index) => (
-                  <div key={field.id} className="flex items-center space-x-2">
-                    <Input type="text" {...register(`assigned_to.${index}`)} />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => removeAssignedTo(index)}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
+                  <div
+                    key={field.id}
+                    className="flex flex-1 items-center space-x-2 w-full"
+                  >
+                    {/* Select between user array from dropdown */}
+                    <Controller
+                      control={control}
+                      name={`assigned_to.${index}`}
+                      render={({ field }) => (
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <SelectTrigger
+                            className={`w-full
+                              ${
+                                errors.assigned_to?.message
+                                  ? 'border-red-500'
+                                  : ''
+                              }
+                              `}
+                          >
+                            <SelectValue placeholder="Select User" />
+                          </SelectTrigger>
+                          <SelectContent className="w-full">
+                            <SelectGroup>
+                              {users?.map((user) => (
+                                <SelectItem
+                                  key={user.id}
+                                  value={user.id}
+                                  className="w-full"
+                                >
+                                  {user.name}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    <div className="flex items-center justify-end w-20 ">
+                      <Trash2
+                        className="text-[#6366F1] hover:text-red-500 transition-all duration-300 ease-in-out h-5 w-5 cursor-pointer"
+                        onClick={() => removeAssignedTo(index)}
+                      />
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          <DialogFooter className="pt-4">
+          <DialogFooter className="pt-4 flex justify-end gap-4">
             <DialogClose asChild>
-              <Button type="button" variant="outline">
+              <Button
+                type="button"
+                className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
+              >
                 Cancel
               </Button>
             </DialogClose>
-            <Button type="submit">Create Task</Button>
+            <Button
+              type="submit"
+              className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
+            >
+              Create Task
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

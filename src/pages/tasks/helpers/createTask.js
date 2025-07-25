@@ -2,6 +2,7 @@ import { apiService } from '@/api/api_services';
 import { endpoints } from '@/api/endpoint';
 
 const createTask = async (data) => {
+  console.log(data);
   try {
     const result = await apiService({
       endpoint: endpoints.createTask,

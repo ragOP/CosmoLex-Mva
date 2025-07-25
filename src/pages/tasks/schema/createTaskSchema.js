@@ -5,12 +5,14 @@ import { format } from 'date-fns';
 const today = format(new Date(), 'yyyy-MM-dd');
 
 export const taskSchema = z.object({
+  client_name: z.string().min(1, 'Client name is required'),
+  task_type: z.string().min(1, 'Task type is required'),
   subject: z.string().min(1, 'Subject is required'),
+  priority: z.string().min(1, 'Priority is required'),
+  status: z.string().min(1, 'Status is required'),
   due_date: z.string().refine(
     (val) => {
-      console.log(val);
-      const date = format(new Date(val), 'yyyy-MM-dd');
-      console.log(date);
+      const date = val.length > 0 ? format(new Date(val), 'yyyy-MM-dd') : '';
       return date >= today;
     },
     {
@@ -35,4 +37,5 @@ export const taskSchema = z.object({
         path: ['reminders.0.scheduled_at'],
       }
     ),
+  assigned_to: z.array(z.number()).min(1, 'At least one assignee is required.'),
 });
