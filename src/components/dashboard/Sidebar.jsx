@@ -243,6 +243,7 @@ const Sidebar = ({ isDrawer }) => {
     return activeItems.includes(item.id.split('/').pop());
   });
 
+  let lastSlug = '';
   const searchParams = new URLSearchParams(location.search);
   const slug = searchParams.get('slugId');
 
@@ -261,7 +262,11 @@ const Sidebar = ({ isDrawer }) => {
         [item.id]: !prev[item.id],
       }));
     } else {
-      navigate(item.id);
+      if (slug) {
+        navigate(item.id + `?slugId=${slug}`);
+      } else {
+        navigate(item.id);
+      }
     }
   };
 
