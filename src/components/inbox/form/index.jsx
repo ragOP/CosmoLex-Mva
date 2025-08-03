@@ -138,7 +138,7 @@ const Form = () => {
 
       const apiResponse = mode === 'add' ? await createForm({ slug: slugId, formData: submissionData }) : await updateForm({ slug: slugId, formData: submissionData });
 
-      if (apiResponse?.Apistatus) {
+      if (apiResponse?.response?.Apistatus) {
         toast.success(mode === 'edit' ? 'Form updated successfully!' : 'Form submitted successfully!');
       } else {
         const errorMessage = apiResponse?.data?.message || "Form submission failed!";
