@@ -26,25 +26,22 @@ import { useParams } from 'react-router-dom';
 import updateMatter from '@/pages/matter/intake/helpers/updateMatter';
 import createMatter from '@/pages/matter/intake/helpers/createMatter';
 import { useNavigate } from 'react-router-dom';
+import CreateContactDialog from './CreateContactDialog';
 
 export default function Overview() {
   const navigate = useNavigate();
   const { slug } = useParams();
   const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
   const [selectedContactType, setSelectedContactType] = useState(null);
   const [searchContactQuery, setSearchContactQuery] = useState('');
 
+  console.log(open);
   const updateMatterMutation = useMutation({
     mutationFn: updateMatter,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['matters'] });
-    },
-  });
-
-  const createMatterMutation = useMutation({
-    mutationFn: createMatter,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['matters'] });
+      navigate('/dashboard/inbox');
     },
   });
 
@@ -85,16 +82,6 @@ export default function Overview() {
     return () => debouncedSearch.cancel();
   }, [searchContactQuery, selectedContactType]);
 
-  const handleCreateMatter = async (data) => {
-    console.log(data);
-    createMatterMutation.mutate({ data });
-  };
-
-  const handleUpdateMatter = async (slug, data) => {
-    console.log(slug, data);
-    updateMatterMutation.mutate({ slug, data });
-  };
-
   const {
     control,
     handleSubmit,
@@ -121,7 +108,9 @@ export default function Overview() {
     if (matter) {
       reset({
         ...matter,
+        contacts_id: String(matter.contact.id) || '',
       });
+      setSelectedContactType(matter.contact.contact_type);
     }
   }, [matter, reset]);
 
@@ -295,28 +284,41 @@ export default function Overview() {
                         onChange={(e) => setSearchContactQuery(e.target.value)}
                         disabled={!selectedContactType}
                       />
+                      <p className="text-[0.7rem] text-[#40444D] text-end">
+                        Don't have a contact?{' '}
+                        <span
+                          onClick={() => setOpen(true)}
+                          className="text-[#6366F1] cursor-pointer hover:underline"
+                        >
+                          Add a new contact
+                        </span>
+                      </p>
 
-                      {searchContactQuery &&
-                        isArrayWithValues(searchContactData) && (
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                            disabled={!selectedContactType}
-                            className="w-full"
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Contact" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {searchContactData?.map((contact) => (
-                                <SelectItem key={contact.id} value={contact.id}>
-                                  {contact.prefix} {contact.first_name}
-                                  {contact.middle_name} {contact.last_name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
+                      {searchContactQuery ||
+                        (selectedContactType &&
+                          isArrayWithValues(searchContactData) && (
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              disabled={!selectedContactType}
+                              className="w-full"
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select Contact" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {searchContactData?.map((contact) => (
+                                  <SelectItem
+                                    key={contact.id}
+                                    value={contact.id}
+                                  >
+                                    {contact.prefix} {contact.first_name}
+                                    {contact.middle_name} {contact.last_name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ))}
                     </>
                   )}
                 />
@@ -373,6 +375,8 @@ export default function Overview() {
           </form>
         )}
       </div>
+
+      {open && <CreateContactDialog open={open} setOpen={setOpen} />}
     </div>
   );
 }

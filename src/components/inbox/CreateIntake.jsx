@@ -24,17 +24,21 @@ import searchContact from '@/pages/matter/intake/helpers/searchContact';
 import isArrayWithValues from '@/utils/isArrayWithValues';
 import createMatter from '@/pages/matter/intake/helpers/createMatter';
 import { useNavigate } from 'react-router-dom';
+import CreateContactDialog from './CreateContactDialog';
 
 export default function CreateIntake() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
   const [selectedContactType, setSelectedContactType] = useState(null);
   const [searchContactQuery, setSearchContactQuery] = useState('');
 
+  console.log(open);
   const createMatterMutation = useMutation({
     mutationFn: createMatter,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['matters'] });
+      navigate('/dashboard/inbox');
     },
   });
 
@@ -261,6 +265,16 @@ export default function CreateIntake() {
                       disabled={!selectedContactType}
                     />
 
+                    <p className="text-[0.7rem] text-[#40444D] text-end">
+                      Don't have a contact?{' '}
+                      <span
+                        onClick={() => setOpen(true)}
+                        className="text-[#6366F1] cursor-pointer hover:underline"
+                      >
+                        Add a new contact
+                      </span>
+                    </p>
+
                     {searchContactQuery &&
                       isArrayWithValues(searchContactData) && (
                         <Select
@@ -337,6 +351,8 @@ export default function CreateIntake() {
           </div>
         </form>
       </div>
+
+      {open && <CreateContactDialog open={open} setOpen={setOpen} />}
     </div>
   );
 }
