@@ -172,9 +172,9 @@ export default function Overview() {
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center bg-white/30 m-4 rounded-2xl h-full overflow-hidden no-scrollbar p-4">
+    <div className="flex flex-col items-center justify-center bg-white/30 m-4 rounded-2xl overflow-hidden no-scrollbar p-4">
       <BreadCrumb label="Overview" />
-      <div className="backdrop-blur-sm bg-white/40 rounded-lg p-4 w-full h-full space-y-6 overflow-hidden">
+      <div className="backdrop-blur-sm bg-white/40 rounded-lg p-4 w-full space-y-6 overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="animate-spin" />
@@ -184,7 +184,7 @@ export default function Overview() {
             onSubmit={handleSubmit(() => {
               updateMatterMutation.mutate({ slugId, data: getValues() });
             })}
-            className="space-y-4 w-full flex flex-col justify-between h-full overflow-hidden"
+            className="space-y-4 w-full flex flex-col justify-between overflow-hidden"
           >
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {formFields.map(({ label, name, type, required, options }) => (

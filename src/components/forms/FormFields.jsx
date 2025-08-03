@@ -90,7 +90,7 @@ const FormFields = ({
                     variant={'xlMedium'}
                     sx={{
                       fontWeight: 600,
-                      fontSize: '0.875rem',
+                      fontSize: '0.85rem',
                       color: '#374151',
                       display: 'block',
                       width: '100%',
@@ -259,13 +259,14 @@ const FormFields = ({
                     borderRadius: '0.625rem',
                     marginTop: '0.5rem',
                     fieldset: { borderRadius: '0.625rem' },
-                    '[`.${OutlinedInputClasses.root}`] .MuiOutlinedInput-root': {
-                      height: '36px',
-                    },
-                    '& .MuiInputLabel-root': {
-                      lineHeight: 3,
-                    },
                   },
+                  InputProps: {
+                    style: {
+                      height: '2.375rem',
+                      backgroundColor: mainBackgroundColor,
+                      borderRadius: '0.625rem',
+                    },
+                  }
                 },
                 inputAdornment: {
                   position: 'start',
@@ -295,13 +296,7 @@ const FormFields = ({
                     width: '100%',
                     borderRadius: '0.625rem',
                     marginTop: '0.5rem',
-                    fieldset: { borderRadius: '0.625rem' },
-                    '[`.${OutlinedInputClasses.root}`] .MuiOutlinedInput-root': {
-                      height: '36px',
-                    },
-                    '& .MuiInputLabel-root': {
-                      lineHeight: 3,
-                    },
+                    fieldset: { borderRadius: '0.625rem' }
                   },
                 },
                 inputAdornment: {
@@ -324,13 +319,7 @@ const FormFields = ({
                     width: '100%',
                     borderRadius: '0.625rem',
                     marginTop: '0.5rem',
-                    fieldset: { borderRadius: '0.625rem' },
-                    '[`.${OutlinedInputClasses.root}`] .MuiOutlinedInput-root': {
-                      height: '36px',
-                    },
-                    '& .MuiInputLabel-root': {
-                      lineHeight: 3,
-                    },
+                    fieldset: { borderRadius: '0.625rem' }
                   },
                 },
                 inputAdornment: {

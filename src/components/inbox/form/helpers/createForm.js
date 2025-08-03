@@ -1,12 +1,13 @@
 import { apiService } from '@/api/api_services';
 import { endpoints } from '@/api/endpoint';
 
-export const addForm = async ({ slug, formData }) => {
+export const createForm = async ({ slug, formData }) => {
   try {
+    console.log(">>", formData)
     const apiResponse = await apiService({
       endpoint: `${endpoints.addForm}/${slug}`,
       method: 'POST',
-      body: formData,
+      data: formData,
     });
 
     return apiResponse;

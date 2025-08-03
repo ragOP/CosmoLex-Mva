@@ -1,4 +1,4 @@
-import CustomField from '@/components/forms/FormFields';
+import FormFields from '@/components/forms/FormFields';
 import {
   getFormFields,
   getInitialFormData,
@@ -8,10 +8,29 @@ import { Button } from '@/components/ui/button';
 import { Stack, Typography } from '@mui/material';
 import { Grid } from '@mui/material';
 import { useState, useEffect } from 'react';
+import { useMatter } from '../MatterContext';
+import { updateForm } from './helpers/updateForm';
+import { createForm } from './helpers/createForm';
+import { getForm } from './helpers/getForm';
+import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
 
-const Form = ({ matter, onSubmit, onCancel, mode = 'add', slug }) => {
-  // Get case type from matter
-  const caseType = matter?.case_type || 'Criminal Defense Law';
+const Form = () => {
+  // Get matter from context
+  const { matter } = useMatter();
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const slugId = searchParams.get('slugId');
+  console.log('MATTER >>>>', matter, slugId);
+
+  // Get case type from matter with proper default
+  const caseType = matter?.case_type || 'Auto Accident';
+
+  // Mode state that depends on API response, not slugId
+  const [mode, setMode] = useState('add');
+
+  console.log('FORM SLUG ID >>>>', slugId);
+  console.log('FORM MODE >>>>', mode);
 
   // Get form fields based on case type
   const formFields = getFormFields(caseType);
@@ -20,19 +39,123 @@ const Form = ({ matter, onSubmit, onCancel, mode = 'add', slug }) => {
   const [formData, setFormData] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize form data based on mode and matter data
+  // Fetch form data using TanStack Query
+  const {
+    data: formResponse,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['form', slugId],
+    queryFn: () => getForm({ slugId }),
+    enabled: !!slugId, // Only fetch if slugId exists
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+  });
+
+  console.log('FORM RESPONSE >>>>', formResponse);
+  console.log('FORM LOADING >>>>', isLoading);
+  console.log('FORM ERROR >>>>', error);
+
+  // Determine mode based on API response
   useEffect(() => {
-    const initialData = getInitialFormData(caseType, matter, mode);
+    if (formResponse) {
+      if (
+        formResponse.response.Apistatus === false &&
+        formResponse.response.message === 'Case not found.'
+      ) {
+        setMode('add');
+      } else if (
+        formResponse.response.Apistatus &&
+        formResponse.response.data
+      ) {
+        setMode('edit');
+      } else {
+        setMode('add');
+      }
+    } else {
+      setMode('add');
+    }
+  }, [formResponse]);
+
+  console.log('FORM FIELDS >>>>', formResponse, formFields);
+
+  // Date format conversion functions
+  const formatDateForAPI = (dateValue) => {
+    if (!dateValue) return '';
+    // Convert Date object or string to YYYY-MM-DD format
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  };
+
+  const formatDateForForm = (dateValue) => {
+    if (!dateValue) return '';
+    // Convert YYYY-MM-DD string to Date object for form display
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return '';
+    return date;
+  };
+
+  // Initialize form data based on API response or defaults
+  useEffect(() => {
+    let initialData;
+
+    if (
+      mode === 'edit' &&
+      formResponse?.response.status === 200 &&
+      formResponse?.response.data
+    ) {
+      // Use API data if form exists
+      const apiFormData = formResponse.response.data;
+
+      // Convert date fields from API format to form format
+      const processedData = {};
+      Object.keys(apiFormData).forEach((key) => {
+        const value = apiFormData[key];
+        const field = formFields.find((f) => f.name === key);
+
+        if (field && field.type === 'date' && value) {
+          processedData[key] = formatDateForForm(value);
+        } else {
+          processedData[key] = value;
+        }
+      });
+
+      initialData = processedData;
+    } else {
+      // Use default initialization for add mode or when no data
+      initialData = getInitialFormData(caseType, null, mode);
+    }
+
     setFormData(initialData);
-  }, [matter, mode, caseType]);
+  }, [formResponse, mode, caseType]);
 
   console.log('>>>', formData);
 
   // Handle field value changes
   const handleFieldChange = (fieldName, value) => {
+    const field = formFields.find((f) => f.name === fieldName);
+
+    let processedValue = value;
+
+    // Handle date field conversion
+    if (field && field.type === 'date') {
+      if (value instanceof Date) {
+        // Convert Date object to string for storage
+        console.log('DATE VALUE >>>>', value);
+        processedValue = formatDateForAPI(value);
+      } else if (typeof value === 'string') {
+        // Convert string to Date object for form display
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+          processedValue = formatDateForAPI(date);
+        }
+      }
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [fieldName]: value,
+      [fieldName]: processedValue,
     }));
   };
 
@@ -42,17 +165,27 @@ const Form = ({ matter, onSubmit, onCancel, mode = 'add', slug }) => {
     setIsSubmitting(true);
 
     try {
-      if (onSubmit) {
-        const submissionData = getFormDataForSubmission(formData, mode);
-        await onSubmit(submissionData, mode, slug);
+      const submissionData = getFormDataForSubmission(formData, mode, caseType);
+
+      const apiResponse =
+        mode === 'add'
+          ? await createForm({ slug: slugId, formData: submissionData })
+          : await updateForm({ slug: slugId, formData: submissionData });
+
+      if (apiResponse?.Apistatus) {
+        toast.success(
+          mode === 'edit'
+            ? 'Form updated successfully!'
+            : 'Form submitted successfully!'
+        );
+      } else {
+        const errorMessage =
+          apiResponse?.data?.message || 'Form submission failed!';
+        toast.error(errorMessage);
       }
-      console.log('Form submitted:', {
-        formData: getFormDataForSubmission(formData, mode),
-        mode,
-        slug,
-      });
     } catch (error) {
       console.error('Form submission error:', error);
+      toast.error('Form submission failed!');
     } finally {
       setIsSubmitting(false);
     }
@@ -60,10 +193,9 @@ const Form = ({ matter, onSubmit, onCancel, mode = 'add', slug }) => {
 
   // Handle form cancellation
   const handleCancel = () => {
-    if (onCancel) {
-      onCancel(mode, slug);
-    }
-    console.log('Form cancelled:', { mode, slug });
+    console.log('Form cancelled:', { mode, slugId });
+    // Here you would typically navigate back
+    toast.info('Form cancelled!');
   };
 
   // Group fields by section
@@ -76,37 +208,35 @@ const Form = ({ matter, onSubmit, onCancel, mode = 'add', slug }) => {
       }
       sections[section].push(field);
     });
-
-    // Filter out empty sections and reorder to put "Other" at the end
-    const filteredSections = {};
-    const otherSection = sections['Other'] || [];
-    const otherSectionKey = 'Other';
-
-    Object.entries(sections).forEach(([sectionName, sectionFields]) => {
-      if (sectionFields.length > 0 && sectionName !== 'Other') {
-        filteredSections[sectionName] = sectionFields;
-      }
-    });
-
-    // Add "Other" section at the end if it has fields
-    if (otherSection.length > 0) {
-      filteredSections[otherSectionKey] = otherSection;
-    }
-
-    return filteredSections;
+    return sections;
   };
 
-  const groupedFields = groupFieldsBySection(formFields);
+  // Get grid size class based on field configuration
+  const getGridSize = (field) => {
+    if (!field.gridSize) return { xs: 12, sm: 6, md: 6 };
+
+    switch (field.gridSize) {
+      case 'FULL_WIDTH':
+        return { xs: 12, sm: 12, md: 12 };
+      case 'HALF_WIDTH':
+        return { xs: 12, sm: 6, md: 6 };
+      case 'THIRD_WIDTH':
+        return { xs: 12, sm: 6, md: 4 };
+      case 'QUARTER_WIDTH':
+        return { xs: 12, sm: 6, md: 4 };
+      default:
+        return { xs: 12, sm: 6, md: 6 };
+    }
+  };
 
   // Get form title based on mode
   const getFormTitle = () => {
     if (mode === 'edit') {
-      return `Edit ${caseType} - Intake Form`;
+      return `Edit ${caseType}`;
     }
-    return `${caseType} - Intake Form`;
+    return caseType;
   };
 
-  // Get submit button text based on mode
   const getSubmitButtonText = () => {
     if (isSubmitting) {
       return mode === 'edit' ? 'Updating...' : 'Submitting...';
@@ -114,57 +244,68 @@ const Form = ({ matter, onSubmit, onCancel, mode = 'add', slug }) => {
     return mode === 'edit' ? 'Update Form' : 'Submit Form';
   };
 
+  // Show loading state
+  if (isLoading) {
+    return (
+      <Stack spacing={2} sx={{ p: 3 }}>
+        <Typography variant="h6">Loading form data...</Typography>
+      </Stack>
+    );
+  }
+
+  // Group fields by section
+  const sections = groupFieldsBySection(formFields);
+
   return (
-    <Stack
-      sx={{
-        width: '100%',
-        height: '100%',
-        backgroundColor: '#fff',
-        borderRadius: 4,
-      }}
-    >
-      {/* Form Header */}
+    <Stack sx={{ p: 4 }}>
       <Stack
         sx={{
-          p: 2,
-          borderBottom: '1px solid #e5e7eb',
+          width: '100%',
+          height: '100%',
+          backgroundColor: '#fff',
+          borderRadius: 4,
         }}
       >
-        <Typography
-          variant="h5"
+        {/* Form Header */}
+        <Stack
           sx={{
-            fontWeight: 600,
-            color: '#1f2937',
-            fontSize: '1.25rem',
+            p: 2,
+            borderBottom: '1px solid #e5e7eb',
           }}
         >
-          {getFormTitle()}
-        </Typography>
-        {/* <Typography variant="body2" sx={{ 
-          color: '#6b7280', 
-          mt: 0.5 
-        }}>
-          {mode === 'edit' 
-            ? 'Update the information below'
-            : 'Please fill out all required fields below'
-          }
-        </Typography> */}
-      </Stack>
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 600,
+              color: '#1f2937',
+              fontSize: '1.25rem',
+            }}
+          >
+            {getFormTitle()}
+          </Typography>
+        </Stack>
 
-      <form onSubmit={handleSubmit}>
-        <Stack sx={{ p: 2 }}>
-          {Object.keys(groupedFields).length > 0 ? (
-            Object.entries(groupedFields).map(
-              ([sectionName, sectionFields], sectionIndex) => (
-                <Stack key={sectionIndex} sx={{ mb: 3 }}>
-                  <Stack
-                    sx={{
-                      mb: 2,
-                      mt: sectionIndex > 0 ? 2 : 0,
-                      pb: 1,
-                      borderBottom: '1px solid #e5e7eb',
-                    }}
-                  >
+        {/* Form Content */}
+        <form onSubmit={handleSubmit}>
+          <Stack sx={{ p: 2 }}>
+            {isLoading ? (
+              <Stack sx={{ textAlign: 'center', py: 4 }}>
+                <Typography
+                  sx={{ color: 'text.secondary', fontSize: '1.125rem', mb: 1 }}
+                >
+                  Loading form data...
+                </Typography>
+                <Typography
+                  sx={{ color: 'text.disabled', fontSize: '0.875rem' }}
+                >
+                  Please wait while we fetch the form data.
+                </Typography>
+              </Stack>
+            ) : (
+              Object.entries(sections).map(([sectionName, sectionFields]) => (
+                <Stack key={sectionName} spacing={2} sx={{ mb: 3 }}>
+                  {/* Section Heading */}
+                  {sectionName !== 'Other' && (
                     <Typography
                       variant="h6"
                       sx={{
@@ -175,8 +316,9 @@ const Form = ({ matter, onSubmit, onCancel, mode = 'add', slug }) => {
                     >
                       {sectionName}
                     </Typography>
-                  </Stack>
+                  )}
 
+                  {/* Section Fields */}
                   <Grid container spacing={2}>
                     {sectionFields.map((field, index) => {
                       if (field.type === 'section') {
@@ -215,7 +357,7 @@ const Form = ({ matter, onSubmit, onCancel, mode = 'add', slug }) => {
                               mb: isTextarea ? 1 : 0,
                             }}
                           >
-                            <CustomField
+                            <FormFields
                               label={field.label}
                               type={field.type}
                               options={field.options}
@@ -232,60 +374,46 @@ const Form = ({ matter, onSubmit, onCancel, mode = 'add', slug }) => {
                     })}
                   </Grid>
                 </Stack>
-              )
-            )
-          ) : (
-            <Stack sx={{ textAlign: 'center', py: 4 }}>
-              <Typography
-                sx={{ color: 'text.secondary', fontSize: '1.125rem', mb: 1 }}
-              >
-                {caseType
-                  ? `No form fields configured for case type: ${caseType}`
-                  : 'Please select a case type to load form fields'}
-              </Typography>
-              <Typography sx={{ color: 'text.disabled', fontSize: '0.875rem' }}>
-                Contact your administrator to configure form fields for this
-                case type.
-              </Typography>
-            </Stack>
-          )}
-        </Stack>
-
-        {/* Fixed Action Buttons */}
-        <Stack
-          sx={{
-            borderTop: '1px solid #e5e7eb',
-            px: 2,
-            py: 2,
-            flexDirection: 'row',
-            justifyContent: 'flex-end',
-            gap: 2,
-          }}
-        >
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleCancel}
-            className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-100"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-          >
-            {isSubmitting ? (
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>{getSubmitButtonText()}</span>
-              </div>
-            ) : (
-              getSubmitButtonText()
+              ))
             )}
-          </Button>
-        </Stack>
-      </form>
+          </Stack>
+
+          {/* Fixed Action Buttons */}
+          <Stack
+            sx={{
+              borderTop: '1px solid #e5e7eb',
+              px: 2,
+              py: 2,
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+              gap: 2,
+            }}
+          >
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-100"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>{getSubmitButtonText()}</span>
+                </div>
+              ) : (
+                getSubmitButtonText()
+              )}
+            </Button>
+          </Stack>
+        </form>
+      </Stack>
     </Stack>
   );
 };
