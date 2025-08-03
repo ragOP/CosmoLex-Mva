@@ -13,12 +13,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Pencil, Trash2 } from 'lucide-react';
 
-const MatterTable = ({
-  matters = [],
-  onRowClick,
-  handleEdit,
-  handleDelete,
-}) => {
+const MatterTable = ({ matters = [], onRowClick }) => {
   const [matterData, setMatterData] = useState([]);
 
   const columns = [
@@ -85,40 +80,6 @@ const MatterTable = ({
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
     },
-    {
-      field: 'edit',
-      headerName: 'Edit',
-      width: 80,
-      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
-      renderCell: (params) => (
-        <div className="w-full h-full flex items-center justify-center">
-          <Pencil
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit(params.row);
-            }}
-            className="h-4 w-4 cursor-pointer hover:text-blue-500 transition-colors duration-300"
-          />
-        </div>
-      ),
-    },
-    // {
-    //   field: 'delete',
-    //   headerName: 'Delete',
-    //   width: 80,
-    //   headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
-    //   renderCell: (params) => (
-    //     <div className="w-full h-full flex items-center justify-center">
-    //       <Trash2
-    //         onClick={(e) => {
-    //           e.stopPropagation();
-    //           handleDelete(params.row);
-    //         }}
-    //         className="h-4 w-4 cursor-pointer hover:text-red-500 transition-colors duration-300"
-    //       />
-    //     </div>
-    //   ),
-    // },
   ];
 
   useEffect(() => {
@@ -127,7 +88,7 @@ const MatterTable = ({
 
   return (
     <>
-      <Box sx={{ height: '100%', width: '100%' }}>
+      <Box sx={{ height: '100%', width: '100%', overflow: 'auto' }}>
         <DataGrid
           rows={matterData}
           columns={columns}
@@ -142,6 +103,7 @@ const MatterTable = ({
             backdropFilter: 'blur(20px)',
             boxShadow: '0px 0.75rem 0.75rem 0px rgba(0, 0, 0, 0.1)',
             zIndex: 10,
+            overflow: 'auto',
           }}
           disableRowSelectionOnClick
           disableSelectionOnClick

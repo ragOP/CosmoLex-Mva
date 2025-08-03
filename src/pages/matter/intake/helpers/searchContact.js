@@ -2,7 +2,6 @@ import { apiService } from '@/api/api_services';
 import { endpoints } from '@/api/endpoint';
 
 const searchContact = async ({ data }) => {
-  console.log(data);
   try {
     const result = await apiService({
       endpoint: endpoints.searchContact,

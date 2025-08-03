@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import debounce from 'lodash.debounce';
-import { useForm, Controller, useFieldArray } from 'react-hook-form';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogClose,
-} from '@/components/ui/dialog';
+import { useForm, Controller } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -21,24 +13,30 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2 } from 'lucide-react';
-import { createMatterSchema } from '@/pages/matter/intake/schema/createMatterSchema';
+import { Loader2 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQuery } from '@tanstack/react-query';
+import { createMatterSchema } from '@/pages/matter/intake/schema/createMatterSchema';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import getMatter from '@/pages/matter/intake/helpers/getMatter';
 import getMatterMeta from '@/pages/matter/intake/helpers/getMatterMeta';
 import getContacts from '@/pages/matter/intake/helpers/getContacts';
 import searchContact from '@/pages/matter/intake/helpers/searchContact';
 import isArrayWithValues from '@/utils/isArrayWithValues';
+import createMatter from '@/pages/matter/intake/helpers/createMatter';
 import { useNavigate } from 'react-router-dom';
 
-export default function CreateMatterDialog({
-  open = false,
-  onClose = () => {},
-  onSubmit = () => {},
-}) {
+export default function CreateIntake() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [selectedContactType, setSelectedContactType] = useState(null);
   const [searchContactQuery, setSearchContactQuery] = useState('');
+
+  const createMatterMutation = useMutation({
+    mutationFn: createMatter,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['matters'] });
+    },
+  });
 
   const { data: matterMeta } = useQuery({
     queryKey: ['matterMeta'],
@@ -71,6 +69,11 @@ export default function CreateMatterDialog({
     debouncedSearch(searchContactQuery, selectedContactType);
     return () => debouncedSearch.cancel();
   }, [searchContactQuery, selectedContactType]);
+
+  const handleCreateIntake = async (data) => {
+    console.log(data);
+    createMatterMutation.mutate({ data });
+  };
 
   const {
     control,
@@ -147,27 +150,28 @@ export default function CreateMatterDialog({
     { label: 'Case Description', name: 'case_description', type: 'text' },
   ];
 
+  console.log(getValues());
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-[#F5F5FA] rounded-lg w-full max-w-3xl p-6 space-y-6 max-h-[90vh] overflow-y-auto shadow-[0px_4px_24px_0px_#000000] no-scrollbar">
-        <DialogHeader>
-          <DialogTitle className="text-2xl text-[#40444D] text-center font-bold font-sans">
-            Create New Matter
-          </DialogTitle>
-        </DialogHeader>
+    <div className="flex items-center justify-center">
+      <div className="bg-[#F5F5FA] rounded-lg w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto no-scrollbar">
+        <div className="flex items-center justify-center">
+          <h1 className="text-2xl text-[#40444D] text-center font-bold font-sans">
+            Create Intake
+          </h1>
+        </div>
 
         <form
           onSubmit={handleSubmit(() => {
-            onSubmit(getValues());
-            reset();
-            onClose();
+            console.log(getValues());
+            handleCreateIntake(getValues());
           })}
-          className="space-y-4"
+          className="space-y-4 w-full"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {formFields.map(({ label, name, type, required, options }) => (
-              <div key={name}>
-                {type != 'checkbox' && (
+              <div key={name} className="w-full">
+                {type !== 'checkbox' && (
                   <Label className="text-[#40444D] font-semibold mb-2">
                     {label}
                   </Label>
@@ -181,9 +185,13 @@ export default function CreateMatterDialog({
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
+                        className="w-full"
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder={`Select ${label}`} />
+                          <SelectValue
+                            className="w-full"
+                            placeholder={`Select ${label}`}
+                          />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
@@ -252,12 +260,6 @@ export default function CreateMatterDialog({
                       onChange={(e) => setSearchContactQuery(e.target.value)}
                       disabled={!selectedContactType}
                     />
-                    <p
-                      onClick={() => navigate('/dashboard/contacts')}
-                      className="text-[0.6rem] text-[#22d3ee] hover:underline cursor-pointer text-end"
-                    >
-                      Create a new contact
-                    </p>
 
                     {searchContactQuery &&
                       isArrayWithValues(searchContactData) && (
@@ -265,6 +267,7 @@ export default function CreateMatterDialog({
                           onValueChange={field.onChange}
                           value={field.value}
                           disabled={!selectedContactType}
+                          className="w-full"
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select Contact" />
@@ -299,6 +302,7 @@ export default function CreateMatterDialog({
                   setSearchContactQuery(''); // reset search when type changes
                 }}
                 value={selectedContactType}
+                className="w-full"
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select Contact Type" />
@@ -314,24 +318,25 @@ export default function CreateMatterDialog({
             </div>
           </div>
 
-          <DialogFooter className="pt-4 flex justify-end gap-4">
-            <DialogClose asChild>
+          <div className="pt-4 flex justify-end gap-4">
+            <div>
               <Button
                 type="button"
                 className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
+                onClick={() => navigate(-1)}
               >
                 Cancel
               </Button>
-            </DialogClose>
+            </div>
             <Button
               type="submit"
               className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
             >
-              Create Task
+              Create Intake
             </Button>
-          </DialogFooter>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

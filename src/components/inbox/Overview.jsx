@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import debounce from 'lodash.debounce';
 import { useForm, Controller } from 'react-hook-form';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogClose,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -24,21 +16,37 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createMatterSchema } from '@/pages/matter/intake/schema/createMatterSchema';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import getMatter from '@/pages/matter/intake/helpers/getMatter';
 import getMatterMeta from '@/pages/matter/intake/helpers/getMatterMeta';
 import getContacts from '@/pages/matter/intake/helpers/getContacts';
 import searchContact from '@/pages/matter/intake/helpers/searchContact';
 import isArrayWithValues from '@/utils/isArrayWithValues';
+import { useParams } from 'react-router-dom';
+import updateMatter from '@/pages/matter/intake/helpers/updateMatter';
+import createMatter from '@/pages/matter/intake/helpers/createMatter';
+import { useNavigate } from 'react-router-dom';
 
-export default function UpdateMatterDialog({
-  open = false,
-  onClose = () => {},
-  onSubmit = () => {},
-  slug = '',
-}) {
+export default function Overview() {
+  const navigate = useNavigate();
+  const { slug } = useParams();
+  const queryClient = useQueryClient();
   const [selectedContactType, setSelectedContactType] = useState(null);
   const [searchContactQuery, setSearchContactQuery] = useState('');
+
+  const updateMatterMutation = useMutation({
+    mutationFn: updateMatter,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['matters'] });
+    },
+  });
+
+  const createMatterMutation = useMutation({
+    mutationFn: createMatter,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['matters'] });
+    },
+  });
 
   const { data: matter, isLoading } = useQuery({
     queryKey: ['matter', slug],
@@ -76,6 +84,16 @@ export default function UpdateMatterDialog({
     debouncedSearch(searchContactQuery, selectedContactType);
     return () => debouncedSearch.cancel();
   }, [searchContactQuery, selectedContactType]);
+
+  const handleCreateMatter = async (data) => {
+    console.log(data);
+    createMatterMutation.mutate({ data });
+  };
+
+  const handleUpdateMatter = async (slug, data) => {
+    console.log(slug, data);
+    updateMatterMutation.mutate({ slug, data });
+  };
 
   const {
     control,
@@ -163,13 +181,13 @@ export default function UpdateMatterDialog({
   console.log(getValues());
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-[#F5F5FA] rounded-lg w-full max-w-3xl p-6 space-y-6 max-h-[90vh] overflow-y-auto shadow-[0px_4px_24px_0px_#000000] no-scrollbar">
-        <DialogHeader>
-          <DialogTitle className="text-2xl text-[#40444D] text-center font-bold font-sans">
-            Update Task
-          </DialogTitle>
-        </DialogHeader>
+    <div className="flex items-center justify-center">
+      <div className="bg-[#F5F5FA] rounded-lg w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto no-scrollbar">
+        <div className="flex items-center justify-center">
+          <h1 className="text-2xl text-[#40444D] text-center font-bold font-sans">
+            Overview
+          </h1>
+        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
@@ -178,14 +196,13 @@ export default function UpdateMatterDialog({
         ) : (
           <form
             onSubmit={handleSubmit(() => {
-              onSubmit(slug, getValues());
-              onClose();
+              updateMatterMutation.mutate({ slug, data: getValues() });
             })}
-            className="space-y-4"
+            className="space-y-4 w-full"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {formFields.map(({ label, name, type, required, options }) => (
-                <div key={name}>
+                <div key={name} className="w-full">
                   {type !== 'checkbox' && (
                     <Label className="text-[#40444D] font-semibold mb-2">
                       {label}
@@ -200,9 +217,13 @@ export default function UpdateMatterDialog({
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
+                          className="w-full"
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder={`Select ${label}`} />
+                            <SelectValue
+                              className="w-full"
+                              placeholder={`Select ${label}`}
+                            />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectGroup>
@@ -281,6 +302,7 @@ export default function UpdateMatterDialog({
                             onValueChange={field.onChange}
                             value={field.value}
                             disabled={!selectedContactType}
+                            className="w-full"
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select Contact" />
@@ -315,6 +337,7 @@ export default function UpdateMatterDialog({
                     setSearchContactQuery(''); // reset search when type changes
                   }}
                   value={selectedContactType}
+                  className="w-full"
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select Contact Type" />
@@ -330,25 +353,26 @@ export default function UpdateMatterDialog({
               </div>
             </div>
 
-            <DialogFooter className="pt-4 flex justify-end gap-4">
-              <DialogClose asChild>
+            <div className="pt-4 flex justify-end gap-4">
+              <div>
                 <Button
                   type="button"
                   className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
+                  onClick={() => navigate(-1)}
                 >
                   Cancel
                 </Button>
-              </DialogClose>
+              </div>
               <Button
                 type="submit"
                 className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
               >
                 Update Matter
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         )}
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

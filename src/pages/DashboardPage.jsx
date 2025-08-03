@@ -4,7 +4,7 @@ import Navbar from '../components/dashboard/Navbar';
 import { Outlet } from 'react-router-dom';
 
 const DashboardPage = () => (
-  <div className="flex h-screen bg-[#F5F5FA]">
+  <div className="flex h-screen bg-[#F5F5FA] overflow-auto no-scrollbar">
     <Sidebar />
     <div className="flex-1 flex flex-col">
       <Navbar />

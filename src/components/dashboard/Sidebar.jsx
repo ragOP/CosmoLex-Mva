@@ -39,82 +39,94 @@ const sidebarItems = [
   //     type: 'link',
   //     iconType: 'link',
   // },
-  {
-    id: 'matter',
-    label: 'Matter',
-    type: 'tree',
-    iconType: 'tree',
-    treeData: [
-      {
-        id: '1',
-        label: 'Forms',
-        fileType: 'folder',
-        children: [
-          { id: '1.1', label: 'Claim Form', fileType: 'file' },
-          { id: '1.2', label: 'Renewal Form', fileType: 'file' },
-          { id: '1.3', label: 'Transfer of Ownership', fileType: 'file' },
-        ],
-      },
-      {
-        id: '2',
-        label: 'Policies',
-        fileType: 'folder',
-        children: [
-          { id: '2.1', label: 'Private Car Policy', fileType: 'file' },
-          { id: '2.2', label: 'Two Wheeler Policy', fileType: 'file' },
-          { id: '2.3', label: 'Commercial Vehicle Policy', fileType: 'file' },
-        ],
-      },
-      {
-        id: '3',
-        label: 'Claims',
-        fileType: 'folder',
-        children: [
-          { id: '3.1', label: 'New Claim', fileType: 'file' },
-          { id: '3.2', label: 'Claim Status', fileType: 'file' },
-          { id: '3.3', label: 'Claim History', fileType: 'file' },
-        ],
-      },
-      {
-        id: '4',
-        label: 'Reports',
-        fileType: 'folder',
-        children: [
-          { id: '4.1', label: 'Inspection Report', fileType: 'file' },
-          { id: '4.2', label: 'Accident Report', fileType: 'file' },
-        ],
-      },
-      {
-        id: '/dashboard/matter-intake',
-        label: 'Intake',
-        type: 'link',
-        iconType: 'link',
-        // children: [
-        //   { id: '/dashboard/matter-intake', label: 'Intake', fileType: 'link' },
-        //   // { id: '5.2', label: 'Intake Status', fileType: 'file' },
-        //   // { id: '5.3', label: 'Intake History', fileType: 'file' },
-        // ],
-      },
-    ],
-  },
+  // {
+  //   id: 'matter',
+  //   label: 'Matter',
+  //   type: 'tree',
+  //   iconType: 'tree',
+  //   treeData: [
+  //     {
+  //       id: '1',
+  //       label: 'Forms',
+  //       fileType: 'folder',
+  //       children: [
+  //         { id: '1.1', label: 'Claim Form', fileType: 'file' },
+  //         { id: '1.2', label: 'Renewal Form', fileType: 'file' },
+  //         { id: '1.3', label: 'Transfer of Ownership', fileType: 'file' },
+  //       ],
+  //     },
+  //     {
+  //       id: '2',
+  //       label: 'Policies',
+  //       fileType: 'folder',
+  //       children: [
+  //         { id: '2.1', label: 'Private Car Policy', fileType: 'file' },
+  //         { id: '2.2', label: 'Two Wheeler Policy', fileType: 'file' },
+  //         { id: '2.3', label: 'Commercial Vehicle Policy', fileType: 'file' },
+  //       ],
+  //     },
+  //     {
+  //       id: '3',
+  //       label: 'Claims',
+  //       fileType: 'folder',
+  //       children: [
+  //         { id: '3.1', label: 'New Claim', fileType: 'file' },
+  //         { id: '3.2', label: 'Claim Status', fileType: 'file' },
+  //         { id: '3.3', label: 'Claim History', fileType: 'file' },
+  //       ],
+  //     },
+  //     {
+  //       id: '4',
+  //       label: 'Reports',
+  //       fileType: 'folder',
+  //       children: [
+  //         { id: '4.1', label: 'Inspection Report', fileType: 'file' },
+  //         { id: '4.2', label: 'Accident Report', fileType: 'file' },
+  //       ],
+  //     },
+  //     {
+  //       id: '/dashboard/matter-intake',
+  //       label: 'Intake',
+  //       type: 'link',
+  //       iconType: 'link',
+  //       // children: [
+  //       //   { id: '/dashboard/matter-intake', label: 'Intake', fileType: 'link' },
+  //       //   // { id: '5.2', label: 'Intake Status', fileType: 'file' },
+  //       //   // { id: '5.3', label: 'Intake History', fileType: 'file' },
+  //       // ],
+  //     },
+  //   ],
+  // },
   {
     id: '/dashboard/tasks',
     label: 'Tasks',
     type: 'link',
     iconType: 'link',
   },
-
   {
-    id: '/dashboard/matter-intake',
-    label: 'Intake',
+    id: '/dashboard/inbox',
+    label: 'Inbox',
     type: 'link',
     iconType: 'link',
-    // children: [
-    //   { id: '/dashboard/matter-intake', label: 'Intake', fileType: 'link' },
-    //   // { id: '5.2', label: 'Intake Status', fileType: 'file' },
-    //   // { id: '5.3', label: 'Intake History', fileType: 'file' },
-    // ],
   },
+
+  // {
+  //   id: '/dashboard/matter-intake',
+  //   label: 'Intake',
+  //   type: 'link',
+  //   iconType: 'link',
+  // children: [
+  //   { id: '/dashboard/matter-intake', label: 'Intake', fileType: 'link' },
+  //   // { id: '5.2', label: 'Intake Status', fileType: 'file' },
+  //   // { id: '5.3', label: 'Intake History', fileType: 'file' },
+  // ],
+  // },
+  // {
+  //   id: '/dashboard/contacts',
+  //   label: 'Contacts',
+  //   type: 'link',
+  //   iconType: 'link',
+  // },
   // {
   //     id: 'crm',
   //     label: 'CRM',
@@ -146,6 +158,69 @@ const sidebarItems = [
   // },
 ];
 
+const inboxSidebarItems = [
+  {
+    id: '/dashboard/inbox/overview',
+    label: 'Overview',
+    type: 'link',
+    iconType: 'link',
+  },
+  {
+    id: '/dashboard/inbox/form',
+    label: 'Form',
+    type: 'link',
+    iconType: 'link',
+  },
+  {
+    id: '/dashboard/inbox/key-dates',
+    label: 'Key Dates',
+    type: 'link',
+    iconType: 'calendar',
+  },
+  {
+    id: '/dashboard/inbox/notes',
+    label: 'Notes',
+    type: 'link',
+    iconType: 'link',
+  },
+  {
+    id: '/dashboard/inbox/event',
+    label: 'Event',
+    type: 'link',
+    iconType: 'calendar',
+  },
+  {
+    id: '/dashboard/inbox/tasks',
+    label: 'Tasks',
+    type: 'link',
+    iconType: 'link',
+  },
+  {
+    id: '/dashboard/inbox/documentation',
+    label: 'Documentation',
+    type: 'link',
+    iconType: 'file',
+  },
+  {
+    id: '/dashboard/inbox/communication',
+    label: 'Communication',
+    type: 'link',
+    iconType: 'link',
+  },
+  {
+    id: '/dashboard/inbox/finance',
+    label: 'Finance',
+    type: 'link',
+    iconType: 'link',
+  },
+  {
+    id: '/dashboard/inbox/activity-logs',
+    label: 'Activity Logs',
+    type: 'link',
+    iconType: 'link',
+  },
+];
+
 function getIconForType(type) {
   return typeToIcon[type] || null;
 }
@@ -154,8 +229,15 @@ const Sidebar = ({ isDrawer }) => {
   const navigate = useNavigate();
   const [openTree, setOpenTree] = React.useState({});
   const [hovered, setHovered] = React.useState(null);
+  const [sidebarMode, setSidebarMode] = React.useState('default');
 
   const handleItemClick = (item) => {
+    if (item.label === 'Inbox') {
+      setSidebarMode('inbox');
+    } else {
+      setSidebarMode('default');
+    }
+
     if (item.type === 'tree') {
       setOpenTree((prev) => ({
         ...prev,
@@ -165,6 +247,9 @@ const Sidebar = ({ isDrawer }) => {
       navigate(item.id);
     }
   };
+
+  const itemsToRender =
+    sidebarMode === 'inbox' ? inboxSidebarItems : sidebarItems;
 
   return (
     <aside
@@ -176,7 +261,7 @@ const Sidebar = ({ isDrawer }) => {
         <img src="/brand-logo.png" alt="Logo" className="h-10 w-10" />
       </div>
       <div className="flex flex-col gap-2">
-        {sidebarItems.map((item) => (
+        {itemsToRender.map((item) => (
           <React.Fragment key={item.id}>
             <button
               className={`flex items-center w-full px-4 py-2 rounded transition font-medium text-gray-700 ${
