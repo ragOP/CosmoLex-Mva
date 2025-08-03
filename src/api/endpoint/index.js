@@ -34,4 +34,5 @@ export const endpoints = {
   updateContact: 'v2/matter/contacts/update',
   deleteContact: 'v2/matter/contacts/delete',
   storeCaseKeyDates: 'v2/matter/case-key-dates/store',
+  addForm: 'api/v2/matter/form/store',
 };
