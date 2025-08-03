@@ -51,9 +51,9 @@ const Form = () => {
   // Determine mode based on API response
   useEffect(() => {
     if (formResponse) {
-      if (formResponse.Apistatus === false && formResponse.message === "Case not found.") {
+      if (formResponse.response.Apistatus === false && formResponse.response.message === "Case not found.") {
         setMode('add');
-      } else if (formResponse.status === 200 && formResponse.data) {
+      } else if (formResponse.response.Apistatus && formResponse.response.data) {
         setMode('edit');
       } else {
         setMode('add');
@@ -86,9 +86,9 @@ const Form = () => {
   useEffect(() => {
     let initialData;
 
-    if (mode === 'edit' && formResponse?.status === 200 && formResponse?.data) {
+    if (mode === 'edit' && formResponse?.response.status === 200 && formResponse?.response.data) {
       // Use API data if form exists
-      const apiFormData = formResponse.data;
+      const apiFormData = formResponse.response.data;
 
       // Convert date fields from API format to form format
       const processedData = {};
