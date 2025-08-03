@@ -5,6 +5,11 @@ import getCaseKeyDates from '@/pages/matter/intake/helpers/getCaseKeyDates';
 import updateCaseKeyDates from '@/pages/matter/intake/helpers/updateCaseKeyDates';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import BreadCrumb from '@/components/BreadCrumb';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const CASE_TYPE_FIELDS = {
   'Auto Accident': [
@@ -161,21 +166,14 @@ const DateInput = ({ label, value, onChange }) => {
 
 const Card = ({ children, className = '' }) => (
   <div
-    className={`bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden ${className}`}
+    className={`bg-white/30 backdrop-blur-sm m-6 p-4 rounded-2xl border-none shadow-sm overflow-hidden ${className}`}
   >
     {children}
   </div>
 );
 
-const Chip = ({ label, className = '' }) => (
-  <span
-    className={`inline-block px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-medium ${className}`}
-  >
-    {label}
-  </span>
-);
-
 const KeyDates = () => {
+  const navigate = useNavigate();
   const [caseType, setCaseType] = useState(null);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -271,12 +269,16 @@ const KeyDates = () => {
 
   const renderField = (fieldName) => {
     return (
-      <DateInput
-        key={fieldName}
-        label={getFieldLabel(fieldName)}
-        value={formData[fieldName]}
-        onChange={(value) => handleFieldChange(fieldName, value)}
-      />
+      <div className="flex flex-col gap-2">
+        <Label>{getFieldLabel(fieldName)}</Label>
+        <Input
+          type="date"
+          key={fieldName}
+          value={formData[fieldName]}
+          onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+          // className="h-full"
+        />
+      </div>
     );
   };
 
@@ -314,31 +316,38 @@ const KeyDates = () => {
 
   return (
     <Card>
-      <div className="p-6 border-b border-gray-200">
-        <Chip label={caseType} />
-      </div>
-      <div className="p-6">
+      {/* <div className=""> */}
+      {/* <Chip label={caseType} /> */}
+      <BreadCrumb label={caseType} />
+      {/* </div> */}
+      <div className="bg-white/40 rounded-2xl p-6 flex flex-col justify-between gap-4 overflow-hidden">
         {fields.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              {fields.map((fieldName) => renderField(fieldName))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {fields.map((fieldName) => (
+                <div key={fieldName}>{renderField(fieldName)}</div>
+              ))}
             </div>
-            <div className="flex justify-end pt-4 border-t border-gray-200">
-              <button
+            <div className="pt-4 flex justify-end gap-4">
+              <Button
+                type="button"
+                className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
+                onClick={() => navigate(-1)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
                 onClick={handleSubmit}
                 disabled={submitting}
-                className={`px-6 py-3 rounded-lg text-sm font-medium text-white transition-colors duration-200 ${
-                  submitting
-                    ? 'bg-gray-400 cursor-not-allowed opacity-70'
-                    : 'bg-blue-600 hover:bg-blue-700 cursor-pointer'
-                }`}
+                className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
               >
                 {submitting
                   ? 'Submitting...'
                   : hasExistingData
                   ? 'Update'
                   : 'Submit'}
-              </button>
+              </Button>
             </div>
           </>
         ) : (
