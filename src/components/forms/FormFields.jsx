@@ -20,12 +20,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
 import { DesktopDateTimePicker } from '@mui/x-date-pickers/DesktopDateTimePicker';
 import { DesktopTimePicker } from '@mui/x-date-pickers/DesktopTimePicker';
-import OutlinedInputClasses from '@mui/material/OutlinedInput/outlinedInputClasses';
-import UncheckedCheckboxIcon from '../../icons/UncheckedCheckboxIcon';
-import CheckedCheckboxIcon from '../../icons/CheckedCheckboxIcon';
-import UncheckedRadioIcon from '../../icons/UncheckedRadioIcon';
-import CheckedRadioIcon from '../../icons/CheckedRadioIcon';
-import InfoIcon from '../../icons/InfoIcon';
+
+import { InfoIcon, X } from "lucide-react"
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import 'react-date-range/dist/styles.css'; // main css file
@@ -33,22 +29,21 @@ import 'react-date-range/dist/theme/default.css'; // theme css file
 import { DateRangePicker } from 'react-date-range';
 import { format } from 'date-fns';
 import { enUS } from 'date-fns/locale';
-import CloseIcon from '../../icons/CloseIcon';
 import dayjs from 'dayjs';
 import Paper from '@mui/material/Paper';
 import { styled } from '@mui/material/styles';
 import isArrayWithValues from '@/utils/isArrayWithValues';
 
-const StyledAutocompletePaper = styled(Paper)(({ theme }) => ({
+const StyledAutocompletePaper = styled(Paper)(() => ({
   borderRadius: '0.75rem',
   overflow: 'hidden',
   boxShadow: '0px 0px 4px rgba(0, 0, 0, 0.4)',
   border: '0.25px solid rgb(184, 182, 182)',
 }));
 
-const CustomField = ({
+const FormFields = ({
   label,
-  onChange = () => {},
+  onChange = () => { },
   options = [],
   value: _value = '',
   textFieldProps,
@@ -61,7 +56,6 @@ const CustomField = ({
   tooltip,
   inputFieldProps,
   helperTextProps,
-  autocompleteProps,
 }) => {
   const theme = useTheme();
   const mainBackgroundColor = backgroundColor ?? theme.palette.background.paper;
@@ -86,15 +80,22 @@ const CustomField = ({
 
   return (
     <>
-      <Box sx={sx}>
+      <Stack sx={sx}>
         {(label || labelRight) && (
-          <Stack direction="row" justifyContent="space-between">
+          <Stack direction="column" alignItems="flex-start" sx={{ gap: 1, width: '100%' }}>
             {(label || tooltip) && (
-              <Stack direction="row" alignItems="center" sx={{ gap: 1 }}>
+              <Stack direction="row" alignItems="center" sx={{ gap: 1, width: '100%' }}>
                 {label && (
                   <Typography
                     variant={'xlMedium'}
-                    sx={{ fontWeight: 400, fontSize: '0.8rem' }}
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: '0.875rem',
+                      color: '#374151',
+                      display: 'block',
+                      width: '100%',
+                      lineHeight: '1.25rem',
+                    }}
                     {...inputFieldProps}
                   >
                     {label}
@@ -148,6 +149,34 @@ const CustomField = ({
             {...textFieldProps}
           />
         )}
+        {type === 'textarea' && (
+          <TextField
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            size="small"
+            sx={{
+              mt: 1,
+              width: '100%',
+              '& .MuiInputBase-root': {
+                width: '100%',
+                minHeight: '120px'
+              }
+            }}
+            fullWidth
+            multiline
+            rows={4}
+            InputProps={{
+              style: {
+                backgroundColor: mainBackgroundColor,
+                borderRadius: '0.625rem',
+                width: '100%',
+                minHeight: '120px'
+              },
+            }}
+            error={error}
+            {...textFieldProps}
+          />
+        )}
         {type === 'dropdown' && (
           <Select
             value={value || ''}
@@ -189,7 +218,7 @@ const CustomField = ({
                     cursor: i?.disableProps?.disable
                       ? 'not-allowed'
                       : 'pointer',
-                    padding: '0.75rem 1.1rem',
+                    padding: '0.4rem 1.1rem',
                   }}
                 >
                   <Stack
@@ -198,7 +227,7 @@ const CustomField = ({
                     justifyContent={'space-between'}
                     width={'100%'}
                   >
-                    <Typography>{i.label}</Typography>
+                    <Typography sx={{ fontSize: '0.9rem' }}>{i.label}</Typography>
                     <Typography variant="lRegular">
                       {i?.disableProps?.disableText}
                     </Typography>
@@ -230,7 +259,7 @@ const CustomField = ({
                     borderRadius: '0.625rem',
                     marginTop: '0.5rem',
                     fieldset: { borderRadius: '0.625rem' },
-                    [`.${OutlinedInputClasses.root}`]: {
+                    '[`.${OutlinedInputClasses.root}`] .MuiOutlinedInput-root': {
                       height: '36px',
                     },
                     '& .MuiInputLabel-root': {
@@ -267,7 +296,7 @@ const CustomField = ({
                     borderRadius: '0.625rem',
                     marginTop: '0.5rem',
                     fieldset: { borderRadius: '0.625rem' },
-                    [`.${OutlinedInputClasses.root}`]: {
+                    '[`.${OutlinedInputClasses.root}`] .MuiOutlinedInput-root': {
                       height: '36px',
                     },
                     '& .MuiInputLabel-root': {
@@ -296,7 +325,7 @@ const CustomField = ({
                     borderRadius: '0.625rem',
                     marginTop: '0.5rem',
                     fieldset: { borderRadius: '0.625rem' },
-                    [`.${OutlinedInputClasses.root}`]: {
+                    '[`.${OutlinedInputClasses.root}`] .MuiOutlinedInput-root': {
                       height: '36px',
                     },
                     '& .MuiInputLabel-root': {
@@ -327,12 +356,12 @@ const CustomField = ({
             isOptionEqualToValue={(option, value) => {
               return option.value === value.value;
             }}
-            renderOption={(props, option, { selected }) => (
+            renderOption={(props, option) => (
               <li {...props}>
                 <Checkbox
                   disableRipple
-                  icon={<UncheckedCheckboxIcon />}
-                  checkedIcon={<CheckedCheckboxIcon />}
+                  // icon={<UncheckedCheckboxIcon />}
+                  // checkedIcon={<CheckedCheckboxIcon />}
                   style={{ marginRight: 8 }}
                   checked={value.some((it) => it?.value === option?.value)}
                 />
@@ -401,8 +430,8 @@ const CustomField = ({
               <MenuItem key={i.value} value={i.value}>
                 <Radio
                   disableRipple
-                  icon={<UncheckedRadioIcon />}
-                  checkedIcon={<CheckedRadioIcon />}
+                  // icon={<UncheckedRadioIcon />}
+                  // checkedIcon={<CheckedRadioIcon />}
                   checked={i.value === value}
                   onChange={(e) => onChange(e.target.value)}
                   value={value}
@@ -427,7 +456,7 @@ const CustomField = ({
             isOptionEqualToValue={(option, value) => {
               return option.value === value.value;
             }}
-            renderOption={(props, option, { selected }) => (
+            renderOption={(props, option) => (
               <li {...props}>{option.label}</li>
             )}
             {...textFieldProps}
@@ -540,9 +569,9 @@ const CustomField = ({
               value={
                 value?.startDate && value?.endDate
                   ? `${format(
-                      new Date(value.startDate),
-                      'dd/MM/yyyy'
-                    )} - ${format(new Date(value.endDate), 'dd/MM/yyyy')}`
+                    new Date(value.startDate),
+                    'dd/MM/yyyy'
+                  )} - ${format(new Date(value.endDate), 'dd/MM/yyyy')}`
                   : ''
               }
               size="small"
@@ -558,7 +587,7 @@ const CustomField = ({
               error={error}
               {...textFieldProps}
               onClick={handleOpenPopover}
-              // onClick={(e) => e.preventDefault()} // Prevent focus on the text field
+            // onClick={(e) => e.preventDefault()} // Prevent focus on the text field
             />
           </>
         )}
@@ -576,7 +605,7 @@ const CustomField = ({
             {helperText}
           </Typography>
         )}
-      </Box>
+      </Stack>
 
       <Popover
         open={open}
@@ -602,7 +631,7 @@ const CustomField = ({
 
             <IconButton onClick={handleClosePopover} sx={{ padding: '0.3rem' }}>
               <Tooltip title="Close">
-                <CloseIcon />
+                <X />
               </Tooltip>
             </IconButton>
           </Stack>
@@ -629,4 +658,4 @@ const CustomField = ({
   );
 };
 
-export default CustomField;
+export default FormFields;
