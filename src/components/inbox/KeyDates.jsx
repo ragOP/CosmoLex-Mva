@@ -143,7 +143,6 @@ const getFieldLabel = (fieldName) => {
   );
 };
 
-
 const DateInput = ({ label, value, onChange }) => {
   return (
     <div style={{ marginBottom: '16px' }}>
@@ -225,11 +224,11 @@ const KeyDates = () => {
         setLoading(true);
         setError(null);
         const matterResponse = await getMatter({ slug: slugId });
-        
+
         if (matterResponse) {
           setCaseType(matterResponse.case_type);
           const keyDatesResponse = await getCaseKeyDates(slugId);
-          
+
           const initialData = {};
           if (CASE_TYPE_FIELDS[matterResponse.case_type]) {
             CASE_TYPE_FIELDS[matterResponse.case_type].forEach((field) => {
@@ -404,7 +403,11 @@ const KeyDates = () => {
                   },
                 }}
               >
-              {submitting ? 'Submitting...' : hasExistingData ? 'Update' : 'Submit'}
+                {submitting
+                  ? 'Submitting...'
+                  : hasExistingData
+                  ? 'Update'
+                  : 'Submit'}
               </button>
             </div>
           </>
