@@ -84,6 +84,17 @@ const sidebarItems = [
           { id: '4.2', label: 'Accident Report', fileType: 'file' },
         ],
       },
+      {
+        id: '/dashboard/matter-intake',
+        label: 'Intake',
+        type: 'link',
+        iconType: 'link',
+        // children: [
+        //   { id: '/dashboard/matter-intake', label: 'Intake', fileType: 'link' },
+        //   // { id: '5.2', label: 'Intake Status', fileType: 'file' },
+        //   // { id: '5.3', label: 'Intake History', fileType: 'file' },
+        // ],
+      },
     ],
   },
   {
@@ -91,6 +102,18 @@ const sidebarItems = [
     label: 'Tasks',
     type: 'link',
     iconType: 'link',
+  },
+
+  {
+    id: '/dashboard/matter-intake',
+    label: 'Intake',
+    type: 'link',
+    iconType: 'link',
+    // children: [
+    //   { id: '/dashboard/matter-intake', label: 'Intake', fileType: 'link' },
+    //   // { id: '5.2', label: 'Intake Status', fileType: 'file' },
+    //   // { id: '5.3', label: 'Intake History', fileType: 'file' },
+    // ],
   },
   // {
   //     id: 'crm',

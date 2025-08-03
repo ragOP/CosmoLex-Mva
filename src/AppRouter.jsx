@@ -25,6 +25,7 @@ const UserManagementPage = () => <div>User Management Page</div>;
 const BulkImportPage = () => <div>Bulk Import Page</div>;
 const CalendarPage = lazy(() => import('./pages/calendar'));
 const TasksPage = lazy(() => import('./pages/tasks'));
+const MatterIntakePage = lazy(() => import('./pages/matter/intake'));
 
 const AppRouter = () => (
   <Router>
@@ -45,6 +46,7 @@ const AppRouter = () => (
           <Route path="bulk-import" element={<BulkImportPage />} />
           <Route path="calendar/:id" element={<CalendarPage />} />
           <Route path="tasks" element={<TasksPage />} />
+          <Route path="matter-intake" element={<MatterIntakePage />} />
         </Route>
         <Route path="/2fa" element={<TwoFactorPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />

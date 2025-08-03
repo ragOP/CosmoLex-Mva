@@ -24,4 +24,13 @@ export const endpoints = {
   updateTask: 'v2/task/update',
   updateTaskStatus: 'v2/task/update-status',
   deleteTask: 'v2/task/delete',
+  getMatterMeta: 'v2/matter/meta',
+  getMatters: 'v2/matter/list',
+  matterIntake: 'v2/matter/intake',
+  getContacts: 'v2/matter/contacts/list',
+  getContact: 'v2/matter/contacts/show',
+  createContact: 'v2/matter/contacts/store',
+  searchContact: 'v2/matter/contacts/search',
+  updateContact: 'v2/matter/contacts/update',
+  deleteContact: 'v2/matter/contacts/delete',
 };
