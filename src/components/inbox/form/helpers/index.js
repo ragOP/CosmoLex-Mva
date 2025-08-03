@@ -108,7 +108,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       type: 'section',
       gridSize: GRID_CONFIG.FULL_WIDTH,
     },
-    'What did the accident occur?': {
+    'When did the accident occur?': {
       key: 'accident_date',
       type: 'date',
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
@@ -121,12 +121,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.ACCIDENT_INFO,
     },
-    'When did the accident occur?': {
-      key: 'accident_date',
-      type: 'date',
-      gridSize: GRID_CONFIG.QUARTER_WIDTH,
-      section: SECTIONS.ACCIDENT_INFO,
-    },
+   
     'How did the accident occur?': {
       key: 'accident_details',
       type: 'textarea',
@@ -598,14 +593,46 @@ export const getInitialFormData = (caseType, matter = null, mode = 'add') => {
   const fields = getFormFields(caseType);
   const initialData = {};
 
-  fields.forEach((field) => {
+  fields.forEach(field => {
     // For edit mode, use existing matter data if available
     if (mode === 'edit' && matter && matter[field.name]) {
-      initialData[field.name] = matter[field.name];
-    }
+      // Handle date fields - keep in API format (YYYY-MM-DD) for storage
+      if (field.type === 'date') {
+        const dateValue = matter[field.name];
+        if (dateValue) {
+          // Ensure date is in YYYY-MM-DD format
+          const date = new Date(dateValue);
+          if (!isNaN(date.getTime())) {
+            initialData[field.name] = date.toISOString().split('T')[0];
+          } else {
+            initialData[field.name] = '';
+          }
+        } else {
+          initialData[field.name] = '';
+        }
+      } else {
+        initialData[field.name] = matter[field.name];
+      }
+    } 
     // For add mode, use matter data if available, otherwise use defaults
     else if (mode === 'add' && matter && matter[field.name]) {
-      initialData[field.name] = matter[field.name];
+      // Handle date fields - keep in API format (YYYY-MM-DD) for storage
+      if (field.type === 'date') {
+        const dateValue = matter[field.name];
+        if (dateValue) {
+          // Ensure date is in YYYY-MM-DD format
+          const date = new Date(dateValue);
+          if (!isNaN(date.getTime())) {
+            initialData[field.name] = date.toISOString().split('T')[0];
+          } else {
+            initialData[field.name] = '';
+          }
+        } else {
+          initialData[field.name] = '';
+        }
+      } else {
+        initialData[field.name] = matter[field.name];
+      }
     }
     // Initialize with default values based on field type
     else {
@@ -628,10 +655,7 @@ export const getInitialFormData = (caseType, matter = null, mode = 'add') => {
         case 'dropdown':
         case 'radio':
           // Use first option value if available, otherwise empty string
-          initialData[field.name] =
-            field.options && field.options.length > 0
-              ? field.options[0].value
-              : '';
+          initialData[field.name] = field.options && field.options.length > 0 ? field.options[0].value : '';
           break;
         case 'checkbox':
           initialData[field.name] = false;
@@ -649,20 +673,38 @@ export const getInitialFormData = (caseType, matter = null, mode = 'add') => {
  * Get form data for submission (filters out empty values if needed)
  * @param {object} formData - Current form data
  * @param {string} mode - 'add' or 'edit'
+ * @param {string} caseType - The case type to get field configurations
  * @returns {object} Formatted data for submission
  */
-export const getFormDataForSubmission = (formData, mode = 'add') => {
+export const getFormDataForSubmission = (formData, mode = 'add', caseType = 'Auto Accident') => {
   const submissionData = { ...formData };
-
-  // For add mode, you might want to filter out empty values
-  if (mode === 'add') {
-    Object.keys(submissionData).forEach((key) => {
-      if (submissionData[key] === '' || submissionData[key] === null) {
-        delete submissionData[key];
+  const fields = getFormFields(caseType);
+  
+  // Process each field for submission
+  Object.keys(submissionData).forEach(key => {
+    const value = submissionData[key];
+    const field = fields.find(f => f.name === key);
+    
+    // Handle date field formatting for API
+    if (field && field.type === 'date' && value) {
+      if (value instanceof Date) {
+        // Convert Date object to YYYY-MM-DD format
+        submissionData[key] = value.toISOString().split('T')[0];
+      } else if (typeof value === 'string') {
+        // Ensure string dates are in correct format
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+          submissionData[key] = date.toISOString().split('T')[0];
+        }
       }
-    });
-  }
-
+    }
+    
+    // For add mode, filter out empty values
+    if (mode === 'add' && (value === '' || value === null || value === undefined)) {
+      delete submissionData[key];
+    }
+  });
+  
   return submissionData;
 };
 
