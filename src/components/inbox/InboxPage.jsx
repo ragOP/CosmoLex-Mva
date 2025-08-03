@@ -19,11 +19,7 @@ const InboxPage = () => {
     console.log(location.pathname);
   }, [location]);
 
-  return (
-    <main className="flex-1 overflow-auto no-scrollbar">
-      <Outlet matter={matter} />
-    </main>
-  );
+  return <Outlet matter={matter} />;
 };
 
 export default InboxPage;
