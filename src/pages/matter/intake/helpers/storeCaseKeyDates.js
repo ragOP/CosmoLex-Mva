@@ -8,6 +8,7 @@ const storeCaseKeyDates = async (slugId, data) => {
       method: 'POST',
       data,
     });
+    // Nitin noob
     if (
       result.response &&
       (result.response.Apistatus === true || result.response.success === true)
