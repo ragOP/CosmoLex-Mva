@@ -29,7 +29,7 @@ const MatterIntakePage = lazy(() => import('./pages/matter/intake'));
 const Overview = lazy(() => import('./components/inbox/Overview'));
 const CreateIntake = lazy(() => import('./components/inbox/CreateIntake'));
 const InboxPage = lazy(() => import('./components/inbox/InboxPage'));
-const Form = lazy(() => import('./components/inbox/Form'));
+const Form = lazy(() => import('./components/inbox/form'));
 const KeyDates = lazy(() => import('./components/inbox/KeyDates'));
 
 const AppRouter = () => (
