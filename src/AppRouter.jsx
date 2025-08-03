@@ -51,7 +51,7 @@ const AppRouter = () => (
           <Route path="inbox/*">
             <Route index element={<MatterIntakePage />} />
             <Route path="overview/create" element={<CreateIntake />} />
-            <Route path="overview/:slug" element={<Overview />} />
+            <Route path="overview/" element={<Overview />} />
           </Route>
           {/* <Route path="matter-intake" element={<MatterIntakePage />} />
           <Route path="contacts" element={<ContactPage />} /> */}

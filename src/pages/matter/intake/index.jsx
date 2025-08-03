@@ -35,7 +35,9 @@ const TasksPage = () => {
       <MatterTable
         matters={matters || []}
         onRowClick={(params) => {
-          navigate(`/dashboard/inbox/overview/${params.row.slug}`);
+          navigate(`/dashboard/inbox/overview?slugId=${params.row.slug}`, {
+            state: { slug: params.row.slug },
+          });
         }}
       />
     </div>
@@ -43,3 +45,5 @@ const TasksPage = () => {
 };
 
 export default TasksPage;
+
+//    /dashboard/inbox/overview?slufgId=scbshdchsgvchgsdvg

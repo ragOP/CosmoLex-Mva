@@ -7,7 +7,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import * as React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import CustomRickTreeView from '../custom_tree_view/CustomRickTreeView';
 import { useLocation } from 'react-router-dom';
@@ -233,22 +233,28 @@ const Sidebar = ({ isDrawer }) => {
   const [hovered, setHovered] = React.useState(null);
   const [sidebarMode, setSidebarMode] = React.useState('default');
 
+  const itemsToRender =
+    sidebarMode === 'inbox' ? inboxSidebarItems : sidebarItems;
+
+  const activeItems = location.pathname
+    .split('/')
+    .filter((item) => item !== '');
+  const activeItem = itemsToRender.find((item) => {
+    return activeItems.includes(item.id.split('/').pop());
+  });
+
+  const searchParams = new URLSearchParams(location.search);
+  const slug = searchParams.get('slugId');
+
   React.useEffect(() => {
-    const path = location.pathname;
-    if (path === '/dashboard/inbox') {
+    if (slug) {
       setSidebarMode('inbox');
     } else {
       setSidebarMode('default');
     }
-  }, [location]);
+  }, [slug]);
 
   const handleItemClick = (item) => {
-    // if (item.label === 'Inbox') {
-    //   setSidebarMode('inbox');
-    // } else {
-    //   setSidebarMode('default');
-    // }
-
     if (item.type === 'tree') {
       setOpenTree((prev) => ({
         ...prev,
@@ -258,9 +264,6 @@ const Sidebar = ({ isDrawer }) => {
       navigate(item.id);
     }
   };
-
-  const itemsToRender =
-    sidebarMode === 'inbox' ? inboxSidebarItems : sidebarItems;
 
   return (
     <aside
@@ -276,10 +279,16 @@ const Sidebar = ({ isDrawer }) => {
           <React.Fragment key={item.id}>
             <button
               className={`flex items-center w-full px-4 py-2 rounded transition font-medium text-gray-700 ${
-                openTree === item.id || hovered === item.id ? 'text-white' : ''
+                openTree === item.id ||
+                hovered === item.id ||
+                activeItem?.id === item.id
+                  ? 'text-white'
+                  : ''
               }`}
               style={
-                openTree === item.id || hovered === item.id
+                openTree === item.id ||
+                hovered === item.id ||
+                activeItem?.id === item.id
                   ? {
                       background:
                         'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
