@@ -90,7 +90,7 @@ const FormFields = ({
                     variant={'xlMedium'}
                     sx={{
                       fontWeight: 600,
-                      fontSize: '0.875rem',
+                      fontSize: '0.85rem',
                       color: '#374151',
                       display: 'block',
                       width: '100%',
