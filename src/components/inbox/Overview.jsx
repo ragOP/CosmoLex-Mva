@@ -31,7 +31,10 @@ import BreadCrumb from '@/components/BreadCrumb';
 
 export default function Overview() {
   const navigate = useNavigate();
-  const { slug } = useParams();
+  // fetch query params
+  const searchParams = new URLSearchParams(window.location.search);
+  const slugId = searchParams.get('slugId');
+  console.log(slugId);
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [selectedContactType, setSelectedContactType] = useState(null);
@@ -47,9 +50,9 @@ export default function Overview() {
   });
 
   const { data: matter, isLoading } = useQuery({
-    queryKey: ['matter', slug],
-    queryFn: () => getMatter({ slug }),
-    enabled: !!slug,
+    queryKey: ['matter', slugId],
+    queryFn: () => getMatter({ slug: slugId }),
+    enabled: !!slugId,
   });
   const { data: matterMeta } = useQuery({
     queryKey: ['matterMeta'],
@@ -179,7 +182,7 @@ export default function Overview() {
         ) : (
           <form
             onSubmit={handleSubmit(() => {
-              updateMatterMutation.mutate({ slug, data: getValues() });
+              updateMatterMutation.mutate({ slugId, data: getValues() });
             })}
             className="space-y-4 w-full flex flex-col justify-between h-full overflow-hidden"
           >
