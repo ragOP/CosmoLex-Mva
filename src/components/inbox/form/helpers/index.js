@@ -46,8 +46,8 @@ const ANSWER_OPTIONS = {
 const GRID_CONFIG = {
   FULL_WIDTH: { size: { xs: 12 } }, // Full width (12 columns)
   HALF_WIDTH: { size: { xs: 12, sm: 6 } }, // Half width (6 columns on small+)
-  QUARTER_WIDTH: { size: { xs: 12, sm: 6, md: 6 } }, // Minimum 6 columns (2 per row)
-  THIRD_WIDTH: { size: { xs: 12, sm: 6, md: 6 } }, // Minimum 6 columns (2 per row)
+  QUARTER_WIDTH: { size: { xs: 12, sm: 6, md: 4 } }, // Minimum 6 columns (2 per row)
+  THIRD_WIDTH: { size: { xs: 12, sm: 6, md: 4 } }, // Minimum 6 columns (2 per row)
 };
 
 // Debug grid configuration
@@ -95,7 +95,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.PERSONAL_INFO,
     },
-    'What is the best cell phone number': {
+    'What is the best cell phone number to reach you at?': {
       key: 'contact_phone',
       type: 'text',
       maxLength: 50,
@@ -111,23 +111,24 @@ const CASE_TYPE_FIELD_MAPPERS = {
     'When did the accident occur?': {
       key: 'accident_date',
       type: 'date',
-      gridSize: GRID_CONFIG.HALF_WIDTH,
+      gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.ACCIDENT_INFO,
     },
     'Where did the accident occur?': {
       key: 'accident_location',
       type: 'text',
       maxLength: 255,
-      gridSize: GRID_CONFIG.FULL_WIDTH,
+      gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.ACCIDENT_INFO,
     },
+   
     'How did the accident occur?': {
       key: 'accident_details',
       type: 'textarea',
       gridSize: GRID_CONFIG.FULL_WIDTH,
       section: SECTIONS.ACCIDENT_INFO,
     },
-    'Were you a driver or passenger?': {
+    'What was your role (driver or passenger) when the incident occurred?': {
       key: 'incident_role',
       type: 'dropdown',
       answerOptions: ANSWER_OPTIONS.DRIVER_PASSENGER,
@@ -169,7 +170,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.ACCIDENT_INFO,
     },
-    'Have you spoken to anyone regarding this matter?': {
+    'Have you spoken to anyone regarding the accident?': {
       key: 'discussed_accident',
       type: 'dropdown',
       answerOptions: ANSWER_OPTIONS.YES_NO,
@@ -196,14 +197,14 @@ const CASE_TYPE_FIELD_MAPPERS = {
       gridSize: GRID_CONFIG.HALF_WIDTH,
       section: SECTIONS.VEHICLE_INFO,
     },
-    'What is the make/model of the other vehicle?': {
+    'What is the make/model of the other driver/At-fault vehicle?': {
       key: 'other_vehicle_make_model',
       type: 'text',
       maxLength: 255,
       gridSize: GRID_CONFIG.HALF_WIDTH,
       section: SECTIONS.VEHICLE_INFO,
     },
-    'How much damage was done to the other vehicle?': {
+    'How much damage was done to the other driver/At-fault vehicle?': {
       key: 'other_vehicle_damage',
       type: 'text',
       maxLength: 255,
@@ -237,7 +238,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       gridSize: GRID_CONFIG.HALF_WIDTH,
       section: SECTIONS.INSURANCE_INFO,
     },
-    'Do you have uninsured or underinsured motorist coverage?': {
+    'Do you have uninsured or underinsured motorist coverage (UM)?': {
       key: 'has_um_coverage',
       type: 'dropdown',
       answerOptions: ANSWER_OPTIONS.YES_NO,
@@ -270,20 +271,21 @@ const CASE_TYPE_FIELD_MAPPERS = {
       gridSize: GRID_CONFIG.FULL_WIDTH,
       section: SECTIONS.INJURY_INFO,
     },
-    'Have you received treatment?': {
+    'Have you received any treatment for your injuries?': {
       key: 'received_treatment',
       type: 'dropdown',
       answerOptions: ANSWER_OPTIONS.YES_NO,
-      gridSize: GRID_CONFIG.QUARTER_WIDTH,
+      gridSize: GRID_CONFIG.HALF_WIDTH,
       section: SECTIONS.INJURY_INFO,
     },
-    'Have you ever been involved in a car accident?': {
-      key: 'prior_similar_injury',
-      type: 'dropdown',
-      answerOptions: ANSWER_OPTIONS.YES_NO,
-      gridSize: GRID_CONFIG.QUARTER_WIDTH,
-      section: SECTIONS.INJURY_INFO,
-    },
+    'Have you ever been involved in accident before where you suffered similar injuries?':
+      {
+        key: 'prior_similar_injury',
+        type: 'dropdown',
+        answerOptions: ANSWER_OPTIONS.YES_NO,
+        gridSize: GRID_CONFIG.HALF_WIDTH,
+        section: SECTIONS.INJURY_INFO,
+      },
 
     // Lost Wages Section
     [SECTIONS.WAGES_INFO]: {
@@ -310,7 +312,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       type: 'section',
       gridSize: GRID_CONFIG.FULL_WIDTH,
     },
-    'Have you spoken to another attorney?': {
+    'Have you spoken to another attorney about this case?': {
       key: 'consulted_another_attorney',
       type: 'dropdown',
       answerOptions: ANSWER_OPTIONS.YES_NO,
@@ -354,7 +356,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.PERSONAL_INFO,
     },
-    'What is the best cell phone number': {
+    'What is the best cell phone number to reach you at?': {
       key: 'contact_phone',
       type: 'text',
       maxLength: 50,
@@ -440,7 +442,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.PERSONAL_INFO,
     },
-    'What is the best cell phone number': {
+    'What is the best cell phone number to reach you at?': {
       key: 'contact_phone',
       type: 'text',
       maxLength: 50,
@@ -456,37 +458,45 @@ const CASE_TYPE_FIELD_MAPPERS = {
       gridSize: GRID_CONFIG.HALF_WIDTH,
       section: 'Incident Details',
     },
-    'Location of Arrest': {
-      key: 'arrest_location',
+    'Which police department made the arrest?': {
+      key: 'arrest_department',
       type: 'text',
       maxLength: 255,
       gridSize: GRID_CONFIG.HALF_WIDTH,
       section: 'Incident Details',
     },
-    Charges: {
-      key: 'charges',
-      type: 'textarea',
-      gridSize: GRID_CONFIG.FULL_WIDTH,
+    'Do you have a court date scheduled?': {
+      key: 'court_date_scheduled',
+      type: 'dropdown',
+      answerOptions: ANSWER_OPTIONS.YES_NO,
+      gridSize: GRID_CONFIG.HALF_WIDTH,
       section: 'Incident Details',
     },
-    'Bail Amount': {
-      key: 'bail_amount',
-      type: 'text',
-      maxLength: 50,
-      gridSize: GRID_CONFIG.QUARTER_WIDTH,
-      section: 'Incident Details',
-    },
-    'Next Court Date': {
-      key: 'next_court_date',
+    'When is your court date?': {
+      key: 'court_date',
       type: 'date',
       gridSize: GRID_CONFIG.HALF_WIDTH,
       section: 'Incident Details',
     },
-    'Court Location': {
-      key: 'court_location',
-      type: 'text',
-      maxLength: 255,
+    'Do you already have an attorney or have you previously hired an attorney?':
+      {
+        key: 'has_or_had_attorney',
+        type: 'dropdown',
+        answerOptions: ANSWER_OPTIONS.YES_NO,
+        gridSize: GRID_CONFIG.HALF_WIDTH,
+        section: 'Incident Details',
+      },
+    'Do you have any prior convictions?': {
+      key: 'prior_convictions',
+      type: 'dropdown',
+      answerOptions: ANSWER_OPTIONS.YES_NO,
       gridSize: GRID_CONFIG.HALF_WIDTH,
+      section: 'Incident Details',
+    },
+    'Describe what happened:': {
+      key: 'incident_description',
+      type: 'textarea',
+      gridSize: GRID_CONFIG.FULL_WIDTH,
       section: 'Incident Details',
     },
   },
@@ -583,14 +593,46 @@ export const getInitialFormData = (caseType, matter = null, mode = 'add') => {
   const fields = getFormFields(caseType);
   const initialData = {};
 
-  fields.forEach((field) => {
+  fields.forEach(field => {
     // For edit mode, use existing matter data if available
     if (mode === 'edit' && matter && matter[field.name]) {
-      initialData[field.name] = matter[field.name];
-    }
+      // Handle date fields - keep in API format (YYYY-MM-DD) for storage
+      if (field.type === 'date') {
+        const dateValue = matter[field.name];
+        if (dateValue) {
+          // Ensure date is in YYYY-MM-DD format
+          const date = new Date(dateValue);
+          if (!isNaN(date.getTime())) {
+            initialData[field.name] = date.toISOString().split('T')[0];
+          } else {
+            initialData[field.name] = '';
+          }
+        } else {
+          initialData[field.name] = '';
+        }
+      } else {
+        initialData[field.name] = matter[field.name];
+      }
+    } 
     // For add mode, use matter data if available, otherwise use defaults
     else if (mode === 'add' && matter && matter[field.name]) {
-      initialData[field.name] = matter[field.name];
+      // Handle date fields - keep in API format (YYYY-MM-DD) for storage
+      if (field.type === 'date') {
+        const dateValue = matter[field.name];
+        if (dateValue) {
+          // Ensure date is in YYYY-MM-DD format
+          const date = new Date(dateValue);
+          if (!isNaN(date.getTime())) {
+            initialData[field.name] = date.toISOString().split('T')[0];
+          } else {
+            initialData[field.name] = '';
+          }
+        } else {
+          initialData[field.name] = '';
+        }
+      } else {
+        initialData[field.name] = matter[field.name];
+      }
     }
     // Initialize with default values based on field type
     else {
@@ -613,10 +655,7 @@ export const getInitialFormData = (caseType, matter = null, mode = 'add') => {
         case 'dropdown':
         case 'radio':
           // Use first option value if available, otherwise empty string
-          initialData[field.name] =
-            field.options && field.options.length > 0
-              ? field.options[0].value
-              : '';
+          initialData[field.name] = field.options && field.options.length > 0 ? field.options[0].value : '';
           break;
         case 'checkbox':
           initialData[field.name] = false;
@@ -634,20 +673,38 @@ export const getInitialFormData = (caseType, matter = null, mode = 'add') => {
  * Get form data for submission (filters out empty values if needed)
  * @param {object} formData - Current form data
  * @param {string} mode - 'add' or 'edit'
+ * @param {string} caseType - The case type to get field configurations
  * @returns {object} Formatted data for submission
  */
-export const getFormDataForSubmission = (formData, mode = 'add') => {
+export const getFormDataForSubmission = (formData, mode = 'add', caseType = 'Auto Accident') => {
   const submissionData = { ...formData };
-
-  // For add mode, you might want to filter out empty values
-  if (mode === 'add') {
-    Object.keys(submissionData).forEach((key) => {
-      if (submissionData[key] === '' || submissionData[key] === null) {
-        delete submissionData[key];
+  const fields = getFormFields(caseType);
+  
+  // Process each field for submission
+  Object.keys(submissionData).forEach(key => {
+    const value = submissionData[key];
+    const field = fields.find(f => f.name === key);
+    
+    // Handle date field formatting for API
+    if (field && field.type === 'date' && value) {
+      if (value instanceof Date) {
+        // Convert Date object to YYYY-MM-DD format
+        submissionData[key] = value.toISOString().split('T')[0];
+      } else if (typeof value === 'string') {
+        // Ensure string dates are in correct format
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+          submissionData[key] = date.toISOString().split('T')[0];
+        }
       }
-    });
-  }
-
+    }
+    
+    // For add mode, filter out empty values
+    if (mode === 'add' && (value === '' || value === null || value === undefined)) {
+      delete submissionData[key];
+    }
+  });
+  
   return submissionData;
 };
 
