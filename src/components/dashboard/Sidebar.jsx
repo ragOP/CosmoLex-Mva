@@ -272,7 +272,7 @@ const Sidebar = ({ isDrawer }) => {
 
   return (
     <aside
-      className={`bg-white shadow h-full w-64 flex-shrink-0 flex flex-col p-4 ${
+      className={`bg-transparent shadow h-full w-64 flex-shrink-0 flex flex-col p-4 ${
         isDrawer ? '' : 'hidden md:flex'
       }`}
     >

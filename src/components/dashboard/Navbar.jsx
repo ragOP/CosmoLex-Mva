@@ -16,10 +16,11 @@ export default function Navbar() {
     <header
       className="w-full h-20 flex items-center justify-between px-4 md:px-8 flex-nowrap"
       style={{
-        backdropFilter: 'blur(20px)',
+        // backdropFilter: 'blur(20px)',
         // boxShadow: '0px 4px 4px 0px #4D515A1F',
         fontFamily: 'Inter, sans-serif',
-        background: 'rgba(255,255,255,0.8)',
+        // background: 'rgba(255,255,255,0.8)',
+        background: 'transparent',
       }}
     >
       {/* Sidebar Icon (mobile only) */}
