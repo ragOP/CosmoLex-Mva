@@ -28,6 +28,8 @@ const TasksPage = lazy(() => import('./pages/tasks'));
 const MatterIntakePage = lazy(() => import('./pages/matter/intake'));
 const Overview = lazy(() => import('./components/inbox/Overview'));
 const CreateIntake = lazy(() => import('./components/inbox/CreateIntake'));
+const InboxPage = lazy(() => import('./components/inbox/InboxPage'));
+const Form = lazy(() => import('./components/inbox/Form'));
 
 const AppRouter = () => (
   <Router>
@@ -48,10 +50,11 @@ const AppRouter = () => (
           <Route path="bulk-import" element={<BulkImportPage />} />
           <Route path="calendar/:id" element={<CalendarPage />} />
           <Route path="tasks" element={<TasksPage />} />
-          <Route path="inbox/*">
-            <Route index element={<MatterIntakePage />} />
+          <Route path="inbox/*" element={<InboxPage />}>
+            {/* <Route index element={<MatterIntakePage />} /> */}
             <Route path="overview/create" element={<CreateIntake />} />
             <Route path="overview/" element={<Overview />} />
+            <Route path="form/" element={<Form />} />
           </Route>
           {/* <Route path="matter-intake" element={<MatterIntakePage />} />
           <Route path="contacts" element={<ContactPage />} /> */}
