@@ -10,6 +10,7 @@ import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import CustomRickTreeView from '../custom_tree_view/CustomRickTreeView';
+import { useLocation } from 'react-router-dom';
 
 const typeToIcon = {
   file: File,
@@ -227,16 +228,26 @@ function getIconForType(type) {
 
 const Sidebar = ({ isDrawer }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [openTree, setOpenTree] = React.useState({});
   const [hovered, setHovered] = React.useState(null);
   const [sidebarMode, setSidebarMode] = React.useState('default');
 
-  const handleItemClick = (item) => {
-    if (item.label === 'Inbox') {
+  React.useEffect(() => {
+    const path = location.pathname;
+    if (path === '/dashboard/inbox') {
       setSidebarMode('inbox');
     } else {
       setSidebarMode('default');
     }
+  }, [location]);
+
+  const handleItemClick = (item) => {
+    // if (item.label === 'Inbox') {
+    //   setSidebarMode('inbox');
+    // } else {
+    //   setSidebarMode('default');
+    // }
 
     if (item.type === 'tree') {
       setOpenTree((prev) => ({
