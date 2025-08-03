@@ -52,7 +52,7 @@ const AppRouter = () => (
           <Route path="calendar/:id" element={<CalendarPage />} />
           <Route path="tasks" element={<TasksPage />} />
           <Route path="inbox/*" element={<InboxPage />}>
-            {/* <Route index element={<MatterIntakePage />} /> */}
+            <Route index element={<MatterIntakePage />} />
             <Route path="overview/create" element={<CreateIntake />} />
             <Route path="overview/" element={<Overview />} />
             <Route path="form/" element={<Form />} />
