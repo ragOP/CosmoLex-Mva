@@ -21,14 +21,16 @@ const MatterTable = ({ matters = [], onRowClick }) => {
       field: 'id',
       headerName: 'ID',
       width: 70,
-      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      headerClassName:
+        'uppercase text-[#40444D] font-semibold text-xs bg-transparent border-none',
       cellClassName: 'text-[#6366F1]',
     },
     {
       field: 'case_role',
       headerName: 'Case Role',
       width: 130,
-      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      headerClassName:
+        'uppercase text-[#40444D] font-semibold text-xs bg-transparent',
       cellClassName: 'text-[#6366F1]',
     },
     {
@@ -98,12 +100,23 @@ const MatterTable = ({ matters = [], onRowClick }) => {
           getRowId={(row) => row.id}
           sx={{
             padding: 2,
-            border: '1px solid #E2E8F0',
+            border: 'none',
             borderRadius: '0.75rem',
             backdropFilter: 'blur(20px)',
             boxShadow: '0px 0.75rem 0.75rem 0px rgba(0, 0, 0, 0.1)',
             zIndex: 10,
             overflow: 'auto',
+            backgroundColor: 'transparent',
+            '& .MuiDataGrid-cell': {
+              backgroundColor: 'transparent',
+            },
+            '& .MuiDataGrid-row': {
+              backgroundColor: 'transparent',
+              borderRadius: '0.75rem',
+            },
+            '& .MuiDataGrid-columnHeaders': {
+              backgroundColor: '#f8fafc', // Replace this with your desired color
+            },
           }}
           disableRowSelectionOnClick
           disableSelectionOnClick
