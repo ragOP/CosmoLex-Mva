@@ -27,10 +27,14 @@ import updateMatter from '@/pages/matter/intake/helpers/updateMatter';
 import createMatter from '@/pages/matter/intake/helpers/createMatter';
 import { useNavigate } from 'react-router-dom';
 import CreateContactDialog from './CreateContactDialog';
+import BreadCrumb from '@/components/BreadCrumb';
 
 export default function Overview() {
   const navigate = useNavigate();
-  const { slug } = useParams();
+  // fetch query params
+  const searchParams = new URLSearchParams(window.location.search);
+  const slugId = searchParams.get('slugId');
+  console.log(slugId);
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [selectedContactType, setSelectedContactType] = useState(null);
@@ -46,9 +50,9 @@ export default function Overview() {
   });
 
   const { data: matter, isLoading } = useQuery({
-    queryKey: ['matter', slug],
-    queryFn: () => getMatter({ slug }),
-    enabled: !!slug,
+    queryKey: ['matter', slugId],
+    queryFn: () => getMatter({ slug: slugId }),
+    enabled: !!slugId,
   });
   const { data: matterMeta } = useQuery({
     queryKey: ['matterMeta'],
@@ -167,17 +171,10 @@ export default function Overview() {
     { label: 'Case Description', name: 'case_description', type: 'text' },
   ];
 
-  console.log(getValues());
-
   return (
-    <div className="flex items-center justify-center">
-      <div className="bg-[#F5F5FA] rounded-lg w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto no-scrollbar">
-        <div className="flex items-center justify-center">
-          <h1 className="text-2xl text-[#40444D] text-center font-bold font-sans">
-            Overview
-          </h1>
-        </div>
-
+    <div className="flex flex-col items-center justify-center bg-white/30 m-4 rounded-2xl h-full overflow-hidden no-scrollbar p-4">
+      <BreadCrumb label="Overview" />
+      <div className="backdrop-blur-sm bg-white/40 rounded-lg p-4 w-full h-full space-y-6 overflow-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="animate-spin" />
@@ -185,9 +182,9 @@ export default function Overview() {
         ) : (
           <form
             onSubmit={handleSubmit(() => {
-              updateMatterMutation.mutate({ slug, data: getValues() });
+              updateMatterMutation.mutate({ slugId, data: getValues() });
             })}
-            className="space-y-4 w-full"
+            className="space-y-4 w-full flex flex-col justify-between h-full overflow-hidden"
           >
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {formFields.map(({ label, name, type, required, options }) => (
@@ -208,11 +205,8 @@ export default function Overview() {
                           value={field.value}
                           className="w-full"
                         >
-                          <SelectTrigger>
-                            <SelectValue
-                              className="w-full"
-                              placeholder={`Select ${label}`}
-                            />
+                          <SelectTrigger className="w-full bg-white border-white">
+                            <SelectValue placeholder={`Select ${label}`} />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectGroup>
@@ -341,7 +335,7 @@ export default function Overview() {
                   value={selectedContactType}
                   className="w-full"
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full bg-white border-white">
                     <SelectValue placeholder="Select Contact Type" />
                   </SelectTrigger>
                   <SelectContent>

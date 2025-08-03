@@ -19,17 +19,7 @@ const InboxPage = () => {
     console.log(location.pathname);
   }, [location]);
 
-  return (
-    // <div className="flex h-screen bg-[#F5F5FA] overflow-auto no-scrollbar">
-    //   {/* <Sidebar /> */}
-    //   <div className="flex-1 flex flex-col">
-    //     <Navbar />
-    <main className="flex-1 overflow-auto no-scrollbar">
-      <Outlet matter={matter} />
-    </main>
-    //   </div>
-    // </div>
-  );
+  return <Outlet matter={matter} />;
 };
 
 export default InboxPage;
