@@ -17,16 +17,12 @@ const Form = () => {
 
   const searchParams = new URLSearchParams(window.location.search);
   const slugId = searchParams.get('slugId');
-  console.log("MATTER >>>>", matter, slugId);
 
   // Get case type from matter with proper default
   const caseType = matter?.case_type || "Auto Accident";
 
   // Mode state that depends on API response, not slugId
   const [mode, setMode] = useState('add');
-
-  console.log("FORM SLUG ID >>>>", slugId);
-  console.log("FORM MODE >>>>", mode);
 
   // Get form fields based on case type
   const formFields = getFormFields(caseType);
@@ -36,34 +32,25 @@ const Form = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch form data using TanStack Query
-  const { data: formResponse, isLoading, error } = useQuery({
+  const { data: formResponse = {}, isLoading, error } = useQuery({
     queryKey: ['form', slugId],
     queryFn: () => getForm({ slugId }),
     enabled: !!slugId, // Only fetch if slugId exists
     staleTime: 5 * 60 * 1000, // 5 minutes
     cacheTime: 10 * 60 * 1000, // 10 minutes
+    select: (data) => data?.response,
   });
 
-  console.log("FORM RESPONSE >>>>", formResponse);
-  console.log("FORM LOADING >>>>", isLoading);
-  console.log("FORM ERROR >>>>", error);
+  console.log(">>", formResponse, formResponse?.response?.Apistatus)
 
   // Determine mode based on API response
   useEffect(() => {
-    if (formResponse) {
-      if (formResponse.response.Apistatus === false && formResponse.response.message === "Case not found.") {
-        setMode('add');
-      } else if (formResponse.response.Apistatus && formResponse.response.data) {
-        setMode('edit');
-      } else {
-        setMode('add');
-      }
+    if (formResponse?.Apistatus) {
+      setMode('edit');
     } else {
       setMode('add');
     }
   }, [formResponse]);
-
-  console.log("FORM FIELDS >>>>", formResponse, formFields);
 
   // Date format conversion functions
   const formatDateForAPI = (dateValue) => {
@@ -82,13 +69,15 @@ const Form = () => {
     return date;
   };
 
+  console.log(">>", formResponse)
+
   // Initialize form data based on API response or defaults
   useEffect(() => {
     let initialData;
 
-    if (mode === 'edit' && formResponse?.response.status === 200 && formResponse?.response.data) {
+    if (mode === 'edit' && formResponse?.Apistatus) {
       // Use API data if form exists
-      const apiFormData = formResponse.response.data;
+      const apiFormData = formResponse?.data;
 
       // Convert date fields from API format to form format
       const processedData = {};
@@ -112,7 +101,6 @@ const Form = () => {
     setFormData(initialData);
   }, [formResponse, mode, caseType]);
 
-  console.log(">>>", formData);
 
   // Handle field value changes
   const handleFieldChange = (fieldName, value) => {
@@ -124,7 +112,6 @@ const Form = () => {
     if (field && field.type === 'date') {
       if (value instanceof Date) {
         // Convert Date object to string for storage
-        console.log("DATE VALUE >>>>", value);
         processedValue = formatDateForAPI(value);
       } else if (typeof value === 'string') {
         // Convert string to Date object for form display
@@ -149,7 +136,7 @@ const Form = () => {
     try {
       const submissionData = getFormDataForSubmission(formData, mode, caseType);
 
-      const apiResponse = mode === 'add' ? await createForm({ slug: slugId, formData: submissionData}) : await updateForm({ slug: slugId, formData: submissionData });
+      const apiResponse = mode === 'add' ? await createForm({ slug: slugId, formData: submissionData }) : await updateForm({ slug: slugId, formData: submissionData });
 
       if (apiResponse?.Apistatus) {
         toast.success(mode === 'edit' ? 'Form updated successfully!' : 'Form submitted successfully!');
