@@ -21,7 +21,7 @@ const Form = () => {
 
   // Get case type from matter with proper default
   const caseType = matter?.case_type || "Auto Accident";
-  
+
   // Mode state that depends on API response, not slugId
   const [mode, setMode] = useState('add');
 
@@ -34,7 +34,7 @@ const Form = () => {
   // Form state
   const [formData, setFormData] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Fetch form data using TanStack Query
   const { data: formResponse, isLoading, error } = useQuery({
     queryKey: ['form', slugId],
@@ -47,7 +47,7 @@ const Form = () => {
   console.log("FORM RESPONSE >>>>", formResponse);
   console.log("FORM LOADING >>>>", isLoading);
   console.log("FORM ERROR >>>>", error);
-  
+
   // Determine mode based on API response
   useEffect(() => {
     if (formResponse) {
@@ -64,7 +64,7 @@ const Form = () => {
   }, [formResponse]);
 
   console.log("FORM FIELDS >>>>", formResponse, formFields);
-  
+
   // Date format conversion functions
   const formatDateForAPI = (dateValue) => {
     if (!dateValue) return '';
@@ -89,20 +89,20 @@ const Form = () => {
     if (mode === 'edit' && formResponse?.status === 200 && formResponse?.data) {
       // Use API data if form exists
       const apiFormData = formResponse.data;
-      
+
       // Convert date fields from API format to form format
       const processedData = {};
       Object.keys(apiFormData).forEach(key => {
         const value = apiFormData[key];
         const field = formFields.find(f => f.name === key);
-        
+
         if (field && field.type === 'date' && value) {
           processedData[key] = formatDateForForm(value);
         } else {
           processedData[key] = value;
         }
       });
-      
+
       initialData = processedData;
     } else {
       // Use default initialization for add mode or when no data
@@ -148,13 +148,11 @@ const Form = () => {
 
     try {
       const submissionData = getFormDataForSubmission(formData, mode, caseType);
-      console.log("Form submitted:", { formData: submissionData, mode, slugId });
 
-      const apiResponse = mode === 'add' ? await createForm({ slug: slugId, formData: submissionData }) : await updateForm({ slug: slugId, formData: submissionData });
+      const apiResponse = mode === 'add' ? await createForm({ slug: slugId, formData: submissionData}) : await updateForm({ slug: slugId, formData: submissionData });
 
-      if (apiResponse?.status === 200) {
+      if (apiResponse?.Apistatus) {
         toast.success(mode === 'edit' ? 'Form updated successfully!' : 'Form submitted successfully!');
-        // Here you would typically navigate back or refresh
       } else {
         const errorMessage = apiResponse?.data?.message || "Form submission failed!";
         toast.error(errorMessage);
@@ -190,7 +188,7 @@ const Form = () => {
   // Get grid size class based on field configuration
   const getGridSize = (field) => {
     if (!field.gridSize) return { xs: 12, sm: 6, md: 6 };
-    
+
     switch (field.gridSize) {
       case 'FULL_WIDTH':
         return { xs: 12, sm: 12, md: 12 };
@@ -277,7 +275,7 @@ const Form = () => {
                       {sectionName}
                     </Typography>
                   )}
-                  
+
                   {/* Section Fields */}
                   <Grid container spacing={2}>
                     {sectionFields.map((field, index) => {
@@ -287,7 +285,7 @@ const Form = () => {
 
                       const isTextarea = field.type === 'textarea';
                       const gridProps = isTextarea ? { size: { xs: 12 } } : (field.gridSize || { size: { xs: 12 } });
-console.log(">>>", field)
+
                       return (
                         <Grid
                           key={index}

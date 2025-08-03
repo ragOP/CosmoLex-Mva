@@ -4,9 +4,9 @@ import { endpoints } from '@/api/endpoint';
 export const updateForm = async ({ slug, formData }) => {
   try {
     const apiResponse = await apiService({
-      endpoint: `${endpoints.addForm}/${slug}`,
+      endpoint: `${endpoints.updateForm}/${slug}`,
       method: 'PUT',
-      body: formData,
+      data: formData,
     });
 
     return apiResponse;
