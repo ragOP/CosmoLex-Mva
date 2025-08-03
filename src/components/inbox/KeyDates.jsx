@@ -145,64 +145,31 @@ const getFieldLabel = (fieldName) => {
 
 const DateInput = ({ label, value, onChange }) => {
   return (
-    <div style={{ marginBottom: '16px' }}>
-      <label
-        style={{
-          display: 'block',
-          marginBottom: '8px',
-          fontSize: '14px',
-          fontWeight: '500',
-          color: '#374151',
-        }}
-      >
+    <div className="mb-4">
+      <label className="block mb-2 text-sm font-medium text-gray-700">
         {label}
       </label>
       <input
         type="date"
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
-        style={{
-          width: '100%',
-          padding: '8px 12px',
-          border: '1px solid #d1d5db',
-          borderRadius: '8px',
-          fontSize: '14px',
-          backgroundColor: '#ffffff',
-          boxSizing: 'border-box',
-        }}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white box-border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
       />
     </div>
   );
 };
 
-const Card = ({ children, style = {} }) => (
+const Card = ({ children, className = '' }) => (
   <div
-    style={{
-      backgroundColor: '#ffffff',
-      borderRadius: '12px',
-      border: '1px solid #e5e7eb',
-      boxShadow:
-        '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-      overflow: 'hidden',
-      ...style,
-    }}
+    className={`bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden ${className}`}
   >
     {children}
   </div>
 );
 
-const Chip = ({ label, style = {} }) => (
+const Chip = ({ label, className = '' }) => (
   <span
-    style={{
-      display: 'inline-block',
-      padding: '4px 12px',
-      backgroundColor: '#1976d2',
-      color: '#ffffff',
-      borderRadius: '16px',
-      fontSize: '12px',
-      fontWeight: '500',
-      ...style,
-    }}
+    className={`inline-block px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-medium ${className}`}
   >
     {label}
   </span>
@@ -316,10 +283,8 @@ const KeyDates = () => {
   if (loading) {
     return (
       <Card>
-        <div style={{ padding: '24px' }}>
-          <div style={{ textAlign: 'center', color: '#6b7280' }}>
-            Loading key dates...
-          </div>
+        <div className="p-6">
+          <div className="text-center text-gray-500">Loading key dates...</div>
         </div>
       </Card>
     );
@@ -328,8 +293,8 @@ const KeyDates = () => {
   if (error) {
     return (
       <Card>
-        <div style={{ padding: '24px' }}>
-          <div style={{ color: '#dc2626', textAlign: 'center' }}>{error}</div>
+        <div className="p-6">
+          <div className="text-red-600 text-center">{error}</div>
         </div>
       </Card>
     );
@@ -338,10 +303,8 @@ const KeyDates = () => {
   if (!caseType) {
     return (
       <Card>
-        <div style={{ padding: '24px' }}>
-          <div style={{ color: '#dc2626', textAlign: 'center' }}>
-            No case type found
-          </div>
+        <div className="p-6">
+          <div className="text-red-600 text-center">No case type found</div>
         </div>
       </Card>
     );
@@ -351,57 +314,24 @@ const KeyDates = () => {
 
   return (
     <Card>
-      <div
-        style={{
-          padding: '24px',
-          borderBottom: '1px solid #e5e7eb',
-        }}
-      >
+      <div className="p-6 border-b border-gray-200">
         <Chip label={caseType} />
       </div>
-      <div style={{ padding: '24px' }}>
+      <div className="p-6">
         {fields.length > 0 ? (
           <>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                gap: '16px',
-                marginBottom: '24px',
-              }}
-            >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
               {fields.map((fieldName) => renderField(fieldName))}
             </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                paddingTop: '16px',
-                borderTop: '1px solid #e5e7eb',
-              }}
-            >
+            <div className="flex justify-end pt-4 border-t border-gray-200">
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                style={{
-                  backgroundColor: submitting ? '#9ca3af' : '#1976d2',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: submitting ? 'not-allowed' : 'pointer',
-                  transition: 'background-color 0.2s ease',
-                  opacity: submitting ? 0.7 : 1,
-                  '&:hover': {
-                    backgroundColor: submitting ? '#9ca3af' : '#1565c0',
-                  },
-                  '&:disabled': {
-                    opacity: 0.7,
-                    cursor: 'not-allowed',
-                  },
-                }}
+                className={`px-6 py-3 rounded-lg text-sm font-medium text-white transition-colors duration-200 ${
+                  submitting
+                    ? 'bg-gray-400 cursor-not-allowed opacity-70'
+                    : 'bg-blue-600 hover:bg-blue-700 cursor-pointer'
+                }`}
               >
                 {submitting
                   ? 'Submitting...'
@@ -412,13 +342,7 @@ const KeyDates = () => {
             </div>
           </>
         ) : (
-          <div
-            style={{
-              color: '#6b7280',
-              textAlign: 'center',
-              padding: '24px',
-            }}
-          >
+          <div className="text-gray-500 text-center py-6">
             No key dates configured for this case type.
           </div>
         )}
