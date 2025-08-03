@@ -47,10 +47,6 @@ export default function CreateMatterDialog({
     queryFn: getContacts,
   });
 
-  /**
-   *   "globalSearchBar": "john",
-  "contact_type": "client"
-   */
   const { data: searchContactData, refetch: refetchSearchContact } = useQuery({
     queryKey: ['searchContact', searchContactQuery, selectedContactType],
     queryFn: () =>
@@ -73,12 +69,6 @@ export default function CreateMatterDialog({
     debouncedSearch(searchContactQuery, selectedContactType);
     return () => debouncedSearch.cancel();
   }, [searchContactQuery, selectedContactType]);
-  console.log(selectedContactType);
-  console.log(searchContactQuery);
-
-  // console.log(matterMeta);
-  console.log(searchContactData);
-  // console.log(contacts);
 
   const {
     control,
@@ -98,20 +88,6 @@ export default function CreateMatterDialog({
       ad_campaign: '',
       case_description: '',
       contacts_id: '',
-      //   client_name: '',
-      //   task_type: '',
-      //   subject: '',
-      //   description: '',
-      //   due_date: '',
-      //   priority: '',
-      //   utbms_code: '',
-      //   billable: false,
-      //   notify_text: false,
-      //   add_calendar_event: false,
-      //   trigger_appointment_reminders: false,
-      //   status: 'Pending',
-      //   assigned_to: [],
-      //   reminders: [],
     },
     resolver: zodResolver(createMatterSchema),
   });

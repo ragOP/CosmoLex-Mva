@@ -21,18 +21,6 @@ const MatterTable = ({
 }) => {
   const [matterData, setMatterData] = useState([]);
 
-  /**
-   *  "case_role": "Plaintiff",
-            "case_type": "Auto Accident",
-            "case_status": "Pending",
-            "marketing_source": "Referral",
-            "assignee_id": 1,
-            "owner_id": 1,
-            "ad_campaign": "Q3 Boost",
-            "case_description": "Updated: only desciptio",
-            
-   */
-
   const columns = [
     {
       field: 'id',
@@ -97,90 +85,6 @@ const MatterTable = ({
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
     },
-    // {
-    //   field: 'client_name',
-    //   headerName: 'Client',
-    //   width: 130,
-    //   headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
-    //   cellClassName: 'text-[#6366F1]',
-    // },
-    // {
-    //   field: 'subject',
-    //   headerName: 'Subject',
-    //   flex: 1,
-    //   headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
-    //   cellClassName: 'text-[#6366F1]',
-    // },
-    // {
-    //   field: 'priority',
-    //   headerName: 'Priority',
-    //   width: 100,
-    //   headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
-    //   renderCell: (params) => {
-    //     const colorMap = {
-    //       High: 'destructive',
-    //       Medium: 'warning',
-    //       Low: 'secondary',
-    //     };
-    //     return (
-    //       <div className="w-full h-full flex items-center justify-start">
-    //         <Badge variant={colorMap[params.value] || 'outline'}>
-    //           {params.value}
-    //         </Badge>
-    //       </div>
-    //     );
-    //   },
-    // },
-    // {
-    //   field: 'due_date',
-    //   headerName: 'Due Date',
-    //   width: 130,
-    //   headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
-    //   renderCell: (params) => (
-    //     <span className="text-sm text-muted-foreground">
-    //       {formatDate(params.value)}
-    //     </span>
-    //   ),
-    // },
-    // {
-    //   field: 'assignees',
-    //   headerName: 'Assignees',
-    //   width: 200,
-    //   headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
-    //   renderCell: (params) => (
-    //     <div className="w-full h-full flex items-center justify-start">
-    //       <ScrollArea className="w-full">
-    //         <div className="text-sm text-muted-foreground">
-    //           {params.row.assignees.map((a) => a.first_name).join(', ')}
-    //         </div>
-    //       </ScrollArea>
-    //     </div>
-    //   ),
-    // },
-    // {
-    //   field: 'status',
-    //   headerName: 'Status',
-    //   width: 120,
-    //   headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
-    //   renderCell: (params) => (
-    //     <div className="w-full h-full flex items-center justify-start">
-    //       <Select
-    //         disabled={params.value === 'Completed'}
-    //         value={params.value}
-    //         onValueChange={(value) => handleUpdateMatter(params.id, value)}
-    //       >
-    //         <SelectTrigger className="w-[120px] h-8 text-xs">
-    //           <SelectValue />
-    //         </SelectTrigger>
-    //         <SelectContent>
-    //           <SelectItem value="Pending">Pending</SelectItem>
-    //           <SelectItem value="In Progress">In Progress</SelectItem>
-    //           <SelectItem value="Completed">Completed</SelectItem>
-    //         </SelectContent>
-    //       </Select>
-    //     </div>
-    //   ),
-    // },
     {
       field: 'edit',
       headerName: 'Edit',

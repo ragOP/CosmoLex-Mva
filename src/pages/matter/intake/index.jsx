@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import Button from '@/components/Button';
 import CreateMatterDialog from '@/components/matter/CreateMatterDialog';
-// import UpdateTaskDialog from '@/components/tasks/UpdateTaskDialog';
-// import ShowTaskDialog from '@/components/tasks/ShowTaskDialog';
+import UpdateMatterDialog from '@/components/matter/UpdateMatterDialog';
+import ShowMatterDialog from '@/components/matter/ShowMatterDialog';
 // import DeleteTaskDialog from '@/components/tasks/DeleteTaskDialog';
 import MatterTable from '@/components/matter/MatterTable';
 import createMatter from './helpers/createMatter';
 import { Loader2 } from 'lucide-react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import getMatters from './helpers/getMatters';
-// import getMatter from './helpers/getMatter';
+import getMatter from './helpers/getMatter';
 // import deleteMatter from './helpers/deleteMatter';
-// import updateMatter from './helpers/updateMatter';
+import updateMatter from './helpers/updateMatter';
 
 const TasksPage = () => {
   const [open, setOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const [selectedMatter, setSelectedMatter] = useState(null);
+  const [selectedMatterSlug, setSelectedMatterSlug] = useState(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
@@ -28,11 +28,12 @@ const TasksPage = () => {
     queryFn: getMatters,
   });
 
-  //   const { data: matter, isLoading: matterLoading } = useQuery({
-  //     queryKey: ['matter', selectedTaskId],
-  //     queryFn: () => getMatter(selectedTaskId),
-  //     enabled: !!selectedTaskId,
-  //   });
+  const { data: matter, isLoading: matterLoading } = useQuery({
+    queryKey: ['matter', selectedMatterSlug],
+    queryFn: () => getMatter({ slug: selectedMatterSlug }),
+    enabled: !!selectedMatterSlug,
+    onSuccess: (data) => setSelectedMatter(data),
+  });
 
   //   const updateMatterMutation = useMutation({
   //     mutationFn: updateMatter,
@@ -49,12 +50,12 @@ const TasksPage = () => {
   //     },
   //   });
 
-  //   const updateMatterMutation = useMutation({
-  //     mutationFn: updateMatter,
-  //     onSuccess: () => {
-  //       queryClient.invalidateQueries({ queryKey: ['matters'] });
-  //     },
-  //   });
+  const updateMatterMutation = useMutation({
+    mutationFn: updateMatter,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['matters'] });
+    },
+  });
 
   const createMatterMutation = useMutation({
     mutationFn: createMatter,
@@ -77,9 +78,10 @@ const TasksPage = () => {
     createMatterMutation.mutate({ data });
   };
 
-  //   const handleUpdateTask = async (id, data) => {
-  //     updateMatterMutation.mutate({ id, data });
-  //   };
+  const handleUpdateMatter = async (slug, data) => {
+    console.log(slug, data);
+    updateMatterMutation.mutate({ slug, data });
+  };
 
   if (isLoading) {
     return (
@@ -99,39 +101,38 @@ const TasksPage = () => {
       <MatterTable
         matters={matters || []}
         onRowClick={(params) => {
-          setSelectedTask(params.row);
+          setSelectedMatterSlug(params.row.slug);
           setShowViewDialog(true);
         }}
         handleEdit={(matter) => {
-          setSelectedTaskId(matter.id);
+          setSelectedMatterSlug(matter.slug);
           setShowUpdateDialog(true);
         }}
         handleDelete={(matter) => {
-          setSelectedTask(matter);
+          setSelectedMatter(matter);
           setShowDeleteConfirm(true);
         }}
       />
-      {/* <ShowTaskDialog
+      <ShowMatterDialog
         open={showViewDialog}
         onClose={() => setShowViewDialog(false)}
-        matter={selectedTask}
-      /> */}
+        matter={matter}
+      />
       <CreateMatterDialog
         open={open}
         onClose={() => setOpen(false)}
         onSubmit={handleCreateMatter}
       />
-      {/* <UpdateTaskDialog
+      <UpdateMatterDialog
         open={showUpdateDialog}
         onClose={() => setShowUpdateDialog(false)}
-        matter={matter || {}}
-        isLoading
         onSubmit={handleUpdateMatter}
+        slug={selectedMatterSlug}
       />
-      <DeleteMatterDialog
+      {/* <DeleteMatterDialog
         open={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
-        matter={selectedTask}
+        matter={selectedMatter}
         onConfirm={handleDelete}
       /> */}
     </div>

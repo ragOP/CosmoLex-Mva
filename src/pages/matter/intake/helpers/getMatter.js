@@ -13,7 +13,7 @@ const getMatter = async ({ slug }) => {
       result.response &&
       (result.response.Apistatus === true || result.response.success === true)
     ) {
-      return result.response;
+      return result.response.data;
     } else {
       console.error(
         'Matter API error:',
