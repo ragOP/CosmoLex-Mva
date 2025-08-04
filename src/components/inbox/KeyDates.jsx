@@ -215,7 +215,22 @@ const KeyDates = () => {
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    const fields = CASE_TYPE_FIELDS[caseType] || [];
+    const defaultFields = [
+      'case_created_date',
+      'case_opened_date',
+      'claim_filed_date',
+      'closed_date',
+      'complaint_filed',
+      'date_of_incident',
+      'discovery_due_date',
+      'lawsuit_filed_date',
+      'lead_created_date',
+      'mediation',
+      'sol_date',
+      'trial_date',
+    ];
+    
+    const fields = CASE_TYPE_FIELDS[caseType] || defaultFields;
     const submitData = {};
 
     fields.forEach((fieldName) => {
@@ -296,7 +311,22 @@ const KeyDates = () => {
     );
   }
 
-  const fields = CASE_TYPE_FIELDS[caseType] || [];
+  const defaultFields = [
+    'case_created_date',
+    'case_opened_date',
+    'claim_filed_date',
+    'closed_date',
+    'complaint_filed',
+    'date_of_incident',
+    'discovery_due_date',
+    'lawsuit_filed_date',
+    'lead_created_date',
+    'mediation',
+    'sol_date',
+    'trial_date',
+  ];
+  
+  const fields = CASE_TYPE_FIELDS[caseType] || defaultFields;
 
   return (
     <Card>
