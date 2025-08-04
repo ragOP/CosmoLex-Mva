@@ -48,6 +48,7 @@ export default function Overview() {
       navigate('/dashboard/inbox');
     },
   });
+  console.log(searchContactQuery, selectedContactType);
 
   const { data: matter, isLoading } = useQuery({
     queryKey: ['matter', slugId],
@@ -297,7 +298,7 @@ export default function Overview() {
                               disabled={!selectedContactType}
                               className="w-full"
                             >
-                              <SelectTrigger>
+                              <SelectTrigger className="w-full bg-white border-white">
                                 <SelectValue placeholder="Select Contact" />
                               </SelectTrigger>
                               <SelectContent>

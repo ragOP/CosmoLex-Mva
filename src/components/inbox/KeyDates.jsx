@@ -148,22 +148,6 @@ const getFieldLabel = (fieldName) => {
   );
 };
 
-const DateInput = ({ label, value, onChange }) => {
-  return (
-    <div className="mb-4">
-      <label className="block mb-2 text-sm font-medium text-gray-700">
-        {label}
-      </label>
-      <input
-        type="date"
-        value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white box-border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-      />
-    </div>
-  );
-};
-
 const Card = ({ children, className = '' }) => (
   <div
     className={`bg-white/30 backdrop-blur-sm m-6 p-4 rounded-2xl border-none shadow-sm overflow-hidden ${className}`}
