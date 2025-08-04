@@ -4,7 +4,7 @@ import {
   getInitialFormData,
   getFormDataForSubmission,
 } from './helpers';
-import { Button } from '@/components/ui/button';
+import Button from '@/components/button';
 import { Stack, Typography } from '@mui/material';
 import { Grid } from '@mui/material';
 import { useState, useEffect } from 'react';
@@ -14,6 +14,7 @@ import { createForm } from './helpers/createForm';
 import { getForm } from './helpers/getForm';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
+import BreadCrumb from '@/components/BreadCrumb';
 
 const Form = () => {
   // Get matter from context
@@ -263,31 +264,39 @@ const Form = () => {
           width: '100%',
           height: '100%',
           backgroundColor: '#fff',
-          borderRadius: 4,
+          borderRadius: '1rem',
+          backgroundColor: 'rgba(255, 255, 255, 0.3)',
         }}
       >
         {/* Form Header */}
         <Stack
           sx={{
             p: 2,
-            borderBottom: '1px solid #e5e7eb',
           }}
         >
-          <Typography
+          {/* <Typography
             variant="h5"
             sx={{
               fontWeight: 600,
               color: '#1f2937',
               fontSize: '1.25rem',
             }}
-          >
-            {getFormTitle()}
-          </Typography>
+          > */}
+          <BreadCrumb label={getFormTitle()} />
+          {/* {getFormTitle()} */}
+          {/* </Typography> */}
         </Stack>
 
         {/* Form Content */}
         <form onSubmit={handleSubmit}>
-          <Stack sx={{ p: 2 }}>
+          <Stack
+            sx={{
+              m: 2,
+              p: 2,
+              borderRadius: '1rem',
+              backgroundColor: 'rgba(255, 255, 255, 0.4)',
+            }}
+          >
             {isLoading ? (
               <Stack sx={{ textAlign: 'center', py: 4 }}>
                 <Typography
@@ -376,42 +385,43 @@ const Form = () => {
                 </Stack>
               ))
             )}
+
+            <Stack
+              sx={{
+                px: 2,
+                py: 2,
+
+                flexDirection: 'row',
+                justifyContent: 'flex-end',
+                gap: 2,
+              }}
+            >
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>{getSubmitButtonText()}</span>
+                  </div>
+                ) : (
+                  getSubmitButtonText()
+                )}
+              </Button>
+            </Stack>
           </Stack>
 
           {/* Fixed Action Buttons */}
-          <Stack
-            sx={{
-              borderTop: '1px solid #e5e7eb',
-              px: 2,
-              py: 2,
-              flexDirection: 'row',
-              justifyContent: 'flex-end',
-              gap: 2,
-            }}
-          >
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-100"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isSubmitting ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>{getSubmitButtonText()}</span>
-                </div>
-              ) : (
-                getSubmitButtonText()
-              )}
-            </Button>
-          </Stack>
         </form>
       </Stack>
     </Stack>
