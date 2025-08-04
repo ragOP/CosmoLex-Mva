@@ -5,6 +5,11 @@ import getCaseKeyDates from '@/pages/matter/intake/helpers/getCaseKeyDates';
 import updateCaseKeyDates from '@/pages/matter/intake/helpers/updateCaseKeyDates';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import BreadCrumb from '@/components/BreadCrumb';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const CASE_TYPE_FIELDS = {
   'Auto Accident': [
@@ -143,73 +148,16 @@ const getFieldLabel = (fieldName) => {
   );
 };
 
-
-const DateInput = ({ label, value, onChange }) => {
-  return (
-    <div style={{ marginBottom: '16px' }}>
-      <label
-        style={{
-          display: 'block',
-          marginBottom: '8px',
-          fontSize: '14px',
-          fontWeight: '500',
-          color: '#374151',
-        }}
-      >
-        {label}
-      </label>
-      <input
-        type="date"
-        value={value || ''}
-        onChange={(e) => onChange(e.target.value)}
-        style={{
-          width: '100%',
-          padding: '8px 12px',
-          border: '1px solid #d1d5db',
-          borderRadius: '8px',
-          fontSize: '14px',
-          backgroundColor: '#ffffff',
-          boxSizing: 'border-box',
-        }}
-      />
-    </div>
-  );
-};
-
-const Card = ({ children, style = {} }) => (
+const Card = ({ children, className = '' }) => (
   <div
-    style={{
-      backgroundColor: '#ffffff',
-      borderRadius: '12px',
-      border: '1px solid #e5e7eb',
-      boxShadow:
-        '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-      overflow: 'hidden',
-      ...style,
-    }}
+    className={`bg-white/30 backdrop-blur-sm m-6 p-4 rounded-2xl border-none shadow-sm overflow-hidden ${className}`}
   >
     {children}
   </div>
 );
 
-const Chip = ({ label, style = {} }) => (
-  <span
-    style={{
-      display: 'inline-block',
-      padding: '4px 12px',
-      backgroundColor: '#1976d2',
-      color: '#ffffff',
-      borderRadius: '16px',
-      fontSize: '12px',
-      fontWeight: '500',
-      ...style,
-    }}
-  >
-    {label}
-  </span>
-);
-
 const KeyDates = () => {
+  const navigate = useNavigate();
   const [caseType, setCaseType] = useState(null);
   const [formData, setFormData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -225,11 +173,11 @@ const KeyDates = () => {
         setLoading(true);
         setError(null);
         const matterResponse = await getMatter({ slug: slugId });
-        
+
         if (matterResponse) {
           setCaseType(matterResponse.case_type);
           const keyDatesResponse = await getCaseKeyDates(slugId);
-          
+
           const initialData = {};
           if (CASE_TYPE_FIELDS[matterResponse.case_type]) {
             CASE_TYPE_FIELDS[matterResponse.case_type].forEach((field) => {
@@ -267,7 +215,22 @@ const KeyDates = () => {
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    const fields = CASE_TYPE_FIELDS[caseType] || [];
+    const defaultFields = [
+      'case_created_date',
+      'case_opened_date',
+      'claim_filed_date',
+      'closed_date',
+      'complaint_filed',
+      'date_of_incident',
+      'discovery_due_date',
+      'lawsuit_filed_date',
+      'lead_created_date',
+      'mediation',
+      'sol_date',
+      'trial_date',
+    ];
+    
+    const fields = CASE_TYPE_FIELDS[caseType] || defaultFields;
     const submitData = {};
 
     fields.forEach((fieldName) => {
@@ -305,22 +268,24 @@ const KeyDates = () => {
 
   const renderField = (fieldName) => {
     return (
-      <DateInput
-        key={fieldName}
-        label={getFieldLabel(fieldName)}
-        value={formData[fieldName]}
-        onChange={(value) => handleFieldChange(fieldName, value)}
-      />
+      <div className="flex flex-col gap-2">
+        <Label>{getFieldLabel(fieldName)}</Label>
+        <Input
+          type="date"
+          key={fieldName}
+          value={formData[fieldName]}
+          onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+          // className="h-full"
+        />
+      </div>
     );
   };
 
   if (loading) {
     return (
       <Card>
-        <div style={{ padding: '24px' }}>
-          <div style={{ textAlign: 'center', color: '#6b7280' }}>
-            Loading key dates...
-          </div>
+        <div className="p-6">
+          <div className="text-center text-gray-500">Loading key dates...</div>
         </div>
       </Card>
     );
@@ -329,8 +294,8 @@ const KeyDates = () => {
   if (error) {
     return (
       <Card>
-        <div style={{ padding: '24px' }}>
-          <div style={{ color: '#dc2626', textAlign: 'center' }}>{error}</div>
+        <div className="p-6">
+          <div className="text-red-600 text-center">{error}</div>
         </div>
       </Card>
     );
@@ -339,83 +304,68 @@ const KeyDates = () => {
   if (!caseType) {
     return (
       <Card>
-        <div style={{ padding: '24px' }}>
-          <div style={{ color: '#dc2626', textAlign: 'center' }}>
-            No case type found
-          </div>
+        <div className="p-6">
+          <div className="text-red-600 text-center">No case type found</div>
         </div>
       </Card>
     );
   }
 
-  const fields = CASE_TYPE_FIELDS[caseType] || [];
+  const defaultFields = [
+    'case_created_date',
+    'case_opened_date',
+    'claim_filed_date',
+    'closed_date',
+    'complaint_filed',
+    'date_of_incident',
+    'discovery_due_date',
+    'lawsuit_filed_date',
+    'lead_created_date',
+    'mediation',
+    'sol_date',
+    'trial_date',
+  ];
+  
+  const fields = CASE_TYPE_FIELDS[caseType] || defaultFields;
 
   return (
     <Card>
-      <div
-        style={{
-          padding: '24px',
-          borderBottom: '1px solid #e5e7eb',
-        }}
-      >
-        <Chip label={caseType} />
-      </div>
-      <div style={{ padding: '24px' }}>
+      {/* <div className=""> */}
+      {/* <Chip label={caseType} /> */}
+      <BreadCrumb label={caseType} />
+      {/* </div> */}
+      <div className="bg-white/40 rounded-2xl p-6 flex flex-col justify-between gap-4 overflow-hidden">
         {fields.length > 0 ? (
           <>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                gap: '16px',
-                marginBottom: '24px',
-              }}
-            >
-              {fields.map((fieldName) => renderField(fieldName))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {fields.map((fieldName) => (
+                <div key={fieldName}>{renderField(fieldName)}</div>
+              ))}
             </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                paddingTop: '16px',
-                borderTop: '1px solid #e5e7eb',
-              }}
-            >
-              <button
+            <div className="pt-4 flex justify-end gap-4">
+              <Button
+                type="button"
+                className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
+                onClick={() => navigate(-1)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
                 onClick={handleSubmit}
                 disabled={submitting}
-                style={{
-                  backgroundColor: submitting ? '#9ca3af' : '#1976d2',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: submitting ? 'not-allowed' : 'pointer',
-                  transition: 'background-color 0.2s ease',
-                  opacity: submitting ? 0.7 : 1,
-                  '&:hover': {
-                    backgroundColor: submitting ? '#9ca3af' : '#1565c0',
-                  },
-                  '&:disabled': {
-                    opacity: 0.7,
-                    cursor: 'not-allowed',
-                  },
-                }}
+                className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
               >
-              {submitting ? 'Submitting...' : hasExistingData ? 'Update' : 'Submit'}
-              </button>
+                {submitting
+                  ? 'Submitting...'
+                  : hasExistingData
+                  ? 'Update'
+                  : 'Submit'}
+              </Button>
             </div>
           </>
         ) : (
-          <div
-            style={{
-              color: '#6b7280',
-              textAlign: 'center',
-              padding: '24px',
-            }}
-          >
+          <div className="text-gray-500 text-center py-6">
             No key dates configured for this case type.
           </div>
         )}

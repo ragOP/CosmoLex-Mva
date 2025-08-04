@@ -243,7 +243,7 @@ export default function CreateContactDialog({ open, setOpen }) {
   console.log(errors);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="bg-[#F5F5FA] rounded-lg w-full max-w-3xl p-6 space-y-6 max-h-[90vh] overflow-y-auto shadow-[0px_4px_24px_0px_#000000] no-scrollbar">
+      <DialogContent className="bg-[#F5F5FA] rounded-lg min-w-[60%] p-6 space-y-6 max-h-[90vh] overflow-y-auto shadow-[0px_4px_24px_0px_#000000] no-scrollbar">
         <DialogHeader>
           <DialogTitle className="text-2xl text-[#40444D] text-center font-bold font-sans">
             Create New Matter
@@ -264,7 +264,7 @@ export default function CreateContactDialog({ open, setOpen }) {
           })}
           className="space-y-4"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {formFields.map(({ label, name, type, required, options }) => (
               <div key={name} className="w-full">
                 {type != 'checkbox' && (
@@ -283,7 +283,7 @@ export default function CreateContactDialog({ open, setOpen }) {
                           onValueChange={field.onChange}
                           value={field.value}
                         >
-                          <SelectTrigger className="w-full">
+                          <SelectTrigger className="w-full bg-white border-white">
                             <SelectValue placeholder={`Select ${label}`} />
                           </SelectTrigger>
                           <SelectContent>
@@ -350,12 +350,12 @@ export default function CreateContactDialog({ open, setOpen }) {
                 )}
               </div>
             ))}
-            <div>
+            <div className="col-span-2">
               <h3 className="text-lg font-semibold">Addresses</h3>
               {addressFields.map((field, index) => (
                 <div
                   key={field.id}
-                  className="border p-4 my-2 rounded-lg space-y-2"
+                  className="border p-4 mb-2 rounded-lg space-y-2"
                 >
                   <div className="grid grid-cols-2 gap-4">
                     {[
@@ -388,7 +388,7 @@ export default function CreateContactDialog({ open, setOpen }) {
                           onValueChange={field.onChange}
                           value={field.value}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full bg-white border-white">
                             <SelectValue placeholder="Address Type" />
                           </SelectTrigger>
                           <SelectContent>

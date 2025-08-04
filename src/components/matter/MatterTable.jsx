@@ -21,17 +21,19 @@ const MatterTable = ({ matters = [], onRowClick }) => {
       field: 'id',
       headerName: 'ID',
       width: 70,
-      headerClassName:
-        'uppercase text-[#40444D] font-semibold text-xs bg-transparent border-none',
+      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
     },
     {
       field: 'case_role',
       headerName: 'Case Role',
       width: 130,
-      headerClassName:
-        'uppercase text-[#40444D] font-semibold text-xs bg-transparent',
+      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
     },
     {
       field: 'case_type',
@@ -39,6 +41,8 @@ const MatterTable = ({ matters = [], onRowClick }) => {
       width: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
     },
     {
       field: 'case_status',
@@ -46,6 +50,8 @@ const MatterTable = ({ matters = [], onRowClick }) => {
       width: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
     },
     {
       field: 'marketing_source',
@@ -53,6 +59,8 @@ const MatterTable = ({ matters = [], onRowClick }) => {
       width: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
     },
     {
       field: 'assignee_id',
@@ -60,6 +68,8 @@ const MatterTable = ({ matters = [], onRowClick }) => {
       width: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
     },
     {
       field: 'owner_id',
@@ -67,6 +77,8 @@ const MatterTable = ({ matters = [], onRowClick }) => {
       width: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
     },
     {
       field: 'ad_campaign',
@@ -74,6 +86,8 @@ const MatterTable = ({ matters = [], onRowClick }) => {
       width: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
     },
     {
       field: 'case_description',
@@ -81,6 +95,8 @@ const MatterTable = ({ matters = [], onRowClick }) => {
       width: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
     },
   ];
 
@@ -101,21 +117,81 @@ const MatterTable = ({ matters = [], onRowClick }) => {
           sx={{
             padding: 2,
             border: 'none',
-            borderRadius: '0.75rem',
+            borderRadius: '1rem',
             backdropFilter: 'blur(20px)',
-            boxShadow: '0px 0.75rem 0.75rem 0px rgba(0, 0, 0, 0.1)',
+            boxShadow: '0px 0.75rem 0.75rem rgba(0, 0, 0, 0.1)',
             zIndex: 10,
-            overflow: 'auto',
-            backgroundColor: 'transparent',
-            '& .MuiDataGrid-cell': {
-              backgroundColor: 'transparent',
-            },
-            '& .MuiDataGrid-row': {
-              backgroundColor: 'transparent',
-              borderRadius: '0.75rem',
-            },
+            overflow: 'hidden',
+            backgroundColor: 'rgba(255, 255, 255, 0.3)',
+
+            // HEADER CONTAINER
             '& .MuiDataGrid-columnHeaders': {
-              backgroundColor: '#f8fafc', // Replace this with your desired color
+              backgroundColor: 'black',
+              color: 'white',
+              borderRadius: '2rem',
+              overflow: 'hidden',
+              border: 'none',
+              marginBottom: '1rem',
+            },
+
+            // INDIVIDUAL HEADER CELLS
+            '& .MuiDataGrid-columnHeader': {
+              backgroundColor: 'white',
+              color: 'black',
+              border: 'none',
+            },
+            '& .MuiDataGrid-columnHeader:focus': {
+              outline: 'none',
+            },
+
+            '& .MuiDataGrid-columnHeader:focus-within': {
+              outline: 'none',
+              border: 'none',
+            },
+
+            // BODY CELLS
+            '& .MuiDataGrid-cell': {
+              border: 'none',
+              backgroundColor: 'transparent',
+              cursor: 'pointer',
+            },
+            '& .MuiDataGrid-cell:focus': {
+              outline: 'none',
+            },
+
+            '& .MuiDataGrid-cell:focus-within': {
+              outline: 'none',
+              border: 'none',
+            },
+
+            // ROWS
+            '& .MuiDataGrid-row': {
+              borderRadius: '2rem',
+              backgroundColor: 'white',
+              marginBottom: '0.5rem',
+              overflow: 'hidden',
+            },
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.3)',
+              // background:
+              //   'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
+              color: 'white',
+              transition: 'all 0.3s ease-in-out',
+            },
+
+            // FOOTER
+            '& .MuiDataGrid-footerContainer': {
+              backgroundColor: 'transparent',
+              borderBottomLeftRadius: '1rem',
+              borderBottomRightRadius: '1rem',
+            },
+
+            // TOOLBAR & SCROLLBAR
+            '& .MuiDataGrid-toolbarContainer': {
+              padding: '0.5rem 1rem',
+            },
+            '& .MuiDataGrid-scrollbar': {
+              display: 'none',
             },
           }}
           disableRowSelectionOnClick

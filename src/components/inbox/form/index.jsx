@@ -1,15 +1,20 @@
-import FormFields from "@/components/forms/FormFields";
-import { getFormFields, getInitialFormData, getFormDataForSubmission } from "./helpers";
-import { Button } from "@/components/ui/button";
+import FormFields from '@/components/forms/FormFields';
+import {
+  getFormFields,
+  getInitialFormData,
+  getFormDataForSubmission,
+} from './helpers';
+import Button from '@/components/Button';
 import { Stack, Typography } from '@mui/material';
 import { Grid } from '@mui/material';
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import { useMatter } from '../MatterContext';
-import { updateForm } from "./helpers/updateForm";
-import { createForm } from "./helpers/createForm";
-import { getForm } from "./helpers/getForm";
-import { toast } from "sonner";
+import { updateForm } from './helpers/updateForm';
+import { createForm } from './helpers/createForm';
+import { getForm } from './helpers/getForm';
+import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
+import BreadCrumb from '@/components/BreadCrumb';
 
 const Form = () => {
   // Get matter from context
@@ -19,7 +24,7 @@ const Form = () => {
   const slugId = searchParams.get('slugId');
 
   // Get case type from matter with proper default
-  const caseType = matter?.case_type || "Auto Accident";
+  const caseType = matter?.case_type || 'Auto Accident';
 
   // Mode state that depends on API response, not slugId
   const [mode, setMode] = useState('add');
@@ -81,9 +86,9 @@ const Form = () => {
 
       // Convert date fields from API format to form format
       const processedData = {};
-      Object.keys(apiFormData).forEach(key => {
+      Object.keys(apiFormData).forEach((key) => {
         const value = apiFormData[key];
-        const field = formFields.find(f => f.name === key);
+        const field = formFields.find((f) => f.name === key);
 
         if (field && field.type === 'date' && value) {
           processedData[key] = formatDateForForm(value);
@@ -104,7 +109,7 @@ const Form = () => {
 
   // Handle field value changes
   const handleFieldChange = (fieldName, value) => {
-    const field = formFields.find(f => f.name === fieldName);
+    const field = formFields.find((f) => f.name === fieldName);
 
     let processedValue = value;
 
@@ -122,9 +127,9 @@ const Form = () => {
       }
     }
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [fieldName]: processedValue
+      [fieldName]: processedValue,
     }));
   };
 
@@ -141,12 +146,13 @@ const Form = () => {
       if (apiResponse?.response?.Apistatus) {
         toast.success(mode === 'edit' ? 'Form updated successfully!' : 'Form submitted successfully!');
       } else {
-        const errorMessage = apiResponse?.data?.message || "Form submission failed!";
+        const errorMessage =
+          apiResponse?.data?.message || 'Form submission failed!';
         toast.error(errorMessage);
       }
     } catch (error) {
-      console.error("Form submission error:", error);
-      toast.error("Form submission failed!");
+      console.error('Form submission error:', error);
+      toast.error('Form submission failed!');
     } finally {
       setIsSubmitting(false);
     }
@@ -154,15 +160,15 @@ const Form = () => {
 
   // Handle form cancellation
   const handleCancel = () => {
-    console.log("Form cancelled:", { mode, slugId });
+    console.log('Form cancelled:', { mode, slugId });
     // Here you would typically navigate back
-    toast.info("Form cancelled!");
+    toast.info('Form cancelled!');
   };
 
   // Group fields by section
   const groupFieldsBySection = (fields) => {
     const sections = {};
-    fields.forEach(field => {
+    fields.forEach((field) => {
       const section = field.section || 'Other';
       if (!sections[section]) {
         sections[section] = [];
@@ -219,30 +225,55 @@ const Form = () => {
 
   return (
     <Stack sx={{ p: 4 }}>
-      <Stack sx={{ width: '100%', height: '100%', backgroundColor: '#fff', borderRadius: 4 }}>
+      <Stack
+        sx={{
+          width: '100%',
+          height: '100%',
+          borderRadius: '1rem',
+          backgroundColor: 'rgba(255, 255, 255, 0.3)',
+        }}
+      >
         {/* Form Header */}
-        <Stack sx={{
-          p: 2,
-          borderBottom: '1px solid #e5e7eb'
-        }}>
-          <Typography variant="h5" sx={{
-            fontWeight: 600,
-            color: '#1f2937',
-            fontSize: '1.25rem'
-          }}>
-            {getFormTitle()}
-          </Typography>
+        <Stack
+          sx={{
+            p: 2,
+            paddingBottom: 0,
+          }}
+        >
+          {/* <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 600,
+              color: '#1f2937',
+              fontSize: '1.25rem',
+            }}
+          > */}
+          <BreadCrumb label={getFormTitle()} />
+          {/* {getFormTitle()} */}
+          {/* </Typography> */}
         </Stack>
 
         {/* Form Content */}
         <form onSubmit={handleSubmit}>
-          <Stack sx={{ p: 2 }}>
+          <Stack
+            sx={{
+              m: 2,
+              mt: 0,
+              p: 2,
+              borderRadius: '1rem',
+              backgroundColor: 'rgba(255, 255, 255, 0.4)',
+            }}
+          >
             {isLoading ? (
               <Stack sx={{ textAlign: 'center', py: 4 }}>
-                <Typography sx={{ color: 'text.secondary', fontSize: '1.125rem', mb: 1 }}>
+                <Typography
+                  sx={{ color: 'text.secondary', fontSize: '1.125rem', mb: 1 }}
+                >
                   Loading form data...
                 </Typography>
-                <Typography sx={{ color: 'text.disabled', fontSize: '0.875rem' }}>
+                <Typography
+                  sx={{ color: 'text.disabled', fontSize: '0.875rem' }}
+                >
                   Please wait while we fetch the form data.
                 </Typography>
               </Stack>
@@ -256,7 +287,7 @@ const Form = () => {
                       sx={{
                         fontWeight: 600,
                         color: '#1f2937',
-                        fontSize: '1.125rem'
+                        fontSize: '1.125rem',
                       }}
                     >
                       {sectionName}
@@ -271,31 +302,37 @@ const Form = () => {
                       }
 
                       const isTextarea = field.type === 'textarea';
-                      const gridProps = isTextarea ? { size: { xs: 12 } } : (field.gridSize || { size: { xs: 12 } });
+                      const gridProps = isTextarea
+                        ? { size: { xs: 12 } }
+                        : field.gridSize || { size: { xs: 12 } };
 
                       return (
                         <Grid
                           key={index}
                           {...gridProps}
                           sx={{
-                            ...(isTextarea ? {
-                              pageBreakBefore: 'always',
-                              breakBefore: 'always',
-                              clear: 'both',
-                              display: 'block',
-                              width: '100%'
-                            } : {}),
+                            ...(isTextarea
+                              ? {
+                                  pageBreakBefore: 'always',
+                                  breakBefore: 'always',
+                                  clear: 'both',
+                                  display: 'block',
+                                  width: '100%',
+                                }
+                              : {}),
                             '&.MuiGrid-item': {
-                              flexBasis: 'auto'
-                            }
+                              flexBasis: 'auto',
+                            },
                           }}
                         >
-                          <Stack sx={{
-                            height: '100%',
-                            minHeight: isTextarea ? '100px' : '60px',
-                            mt: isTextarea ? 1 : 0,
-                            mb: isTextarea ? 1 : 0
-                          }}>
+                          <Stack
+                            sx={{
+                              height: '100%',
+                              minHeight: isTextarea ? '100px' : '60px',
+                              mt: isTextarea ? 1 : 0,
+                              mb: isTextarea ? 1 : 0,
+                            }}
+                          >
                             <FormFields
                               label={field.label}
                               type={field.type}
@@ -303,7 +340,9 @@ const Form = () => {
                               maxLength={field.maxLength}
                               required={field.required}
                               value={formData[field.name] || ''}
-                              onChange={(value) => handleFieldChange(field.name, value)}
+                              onChange={(value) =>
+                                handleFieldChange(field.name, value)
+                              }
                             />
                           </Stack>
                         </Grid>
@@ -313,40 +352,43 @@ const Form = () => {
                 </Stack>
               ))
             )}
+
+            <Stack
+              sx={{
+                px: 2,
+                py: 2,
+
+                flexDirection: 'row',
+                justifyContent: 'flex-end',
+                gap: 2,
+              }}
+            >
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>{getSubmitButtonText()}</span>
+                  </div>
+                ) : (
+                  getSubmitButtonText()
+                )}
+              </Button>
+            </Stack>
           </Stack>
 
           {/* Fixed Action Buttons */}
-          <Stack sx={{
-            borderTop: '1px solid #e5e7eb',
-            px: 2,
-            py: 2,
-            flexDirection: 'row',
-            justifyContent: 'flex-end',
-            gap: 2
-          }}>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-100"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-            >
-              {isSubmitting ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>{getSubmitButtonText()}</span>
-                </div>
-              ) : (
-                getSubmitButtonText()
-              )}
-            </Button>
-          </Stack>
         </form>
       </Stack>
     </Stack>

@@ -49,7 +49,7 @@ export default function Navbar() {
       </MuiDrawer>
       {/* Search Bar: show input on md+, icon on mobile */}
       <div className="flex-1 flex items-center min-w-0">
-        <div
+        {/* <div
           className="hidden md:flex items-center w-full max-w-xs rounded-sm bg-white px-4 py-2 shadow"
           style={{
             backdropFilter: 'blur(20px)',
@@ -65,7 +65,7 @@ export default function Navbar() {
             style={{ fontFamily: 'Inter, sans-serif' }}
           />
           <Search className="h-5 w-5 text-gray-400 ml-2" />
-        </div>
+        </div> */}
         <button
           className="flex md:hidden items-center justify-center p-2 ml-2 rounded bg-white shadow"
           style={{
