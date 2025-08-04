@@ -87,7 +87,7 @@ export default AppRouter;
 const ErrorPage = ({ pageName }) => (
   <div className="flex flex-col items-center justify-center h-full">
     <p className="text-red-500 text-2xl font-bold">
-      {pageName} is not configured yet
+      {pageName} has some technical issues, please try again later.
     </p>
   </div>
 );
