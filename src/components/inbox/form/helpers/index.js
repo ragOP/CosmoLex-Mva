@@ -699,6 +699,61 @@ export const getFormDataForSubmission = (formData, mode = 'add', caseType = 'Aut
       }
     }
     
+    // Handle time field formatting for API (H:i:s format)
+    if (field && field.type === 'time' && value) {
+      if (value instanceof Date) {
+        // Convert Date object to H:i:s format
+        const hours = value.getHours().toString().padStart(2, '0');
+        const minutes = value.getMinutes().toString().padStart(2, '0');
+        const seconds = value.getSeconds().toString().padStart(2, '0');
+        submissionData[key] = `${hours}:${minutes}:${seconds}`;
+      } else if (typeof value === 'string') {
+        // Handle string time values
+        if (value.includes(':')) {
+          // If it's already in time format, ensure it has seconds
+          const timeParts = value.split(':');
+          if (timeParts.length === 2) {
+            // Add seconds if missing
+            submissionData[key] = `${value}:00`;
+          } else if (timeParts.length === 3) {
+            // Already has seconds, use as is
+            submissionData[key] = value;
+          }
+        } else {
+          // Try to parse as Date and convert
+          const date = new Date(value);
+          if (!isNaN(date.getTime())) {
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const seconds = date.getSeconds().toString().padStart(2, '0');
+            submissionData[key] = `${hours}:${minutes}:${seconds}`;
+          }
+        }
+      }
+    }
+    
+    // Handle datetime field formatting for API
+    if (field && field.type === 'datetime' && value) {
+      if (value instanceof Date) {
+        // Convert Date object to YYYY-MM-DD H:i:s format
+        const dateStr = value.toISOString().split('T')[0];
+        const hours = value.getHours().toString().padStart(2, '0');
+        const minutes = value.getMinutes().toString().padStart(2, '0');
+        const seconds = value.getSeconds().toString().padStart(2, '0');
+        submissionData[key] = `${dateStr} ${hours}:${minutes}:${seconds}`;
+      } else if (typeof value === 'string') {
+        // Ensure string datetimes are in correct format
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+          const dateStr = date.toISOString().split('T')[0];
+          const hours = date.getHours().toString().padStart(2, '0');
+          const minutes = date.getMinutes().toString().padStart(2, '0');
+          const seconds = date.getSeconds().toString().padStart(2, '0');
+          submissionData[key] = `${dateStr} ${hours}:${minutes}:${seconds}`;
+        }
+      }
+    }
+    
     // For add mode, filter out empty values
     if (mode === 'add' && (value === '' || value === null || value === undefined)) {
       delete submissionData[key];
