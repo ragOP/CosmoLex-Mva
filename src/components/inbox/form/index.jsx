@@ -4,7 +4,7 @@ import {
   getInitialFormData,
   getFormDataForSubmission,
 } from './helpers';
-import Button from '@/components/button';
+import Button from '@/components/Button';
 import { Stack, Typography } from '@mui/material';
 import { Grid } from '@mui/material';
 import { useState, useEffect } from 'react';
@@ -263,7 +263,6 @@ const Form = () => {
         sx={{
           width: '100%',
           height: '100%',
-          backgroundColor: '#fff',
           borderRadius: '1rem',
           backgroundColor: 'rgba(255, 255, 255, 0.3)',
         }}
@@ -272,6 +271,7 @@ const Form = () => {
         <Stack
           sx={{
             p: 2,
+            paddingBottom: 0,
           }}
         >
           {/* <Typography
@@ -292,6 +292,7 @@ const Form = () => {
           <Stack
             sx={{
               m: 2,
+              mt: 0,
               p: 2,
               borderRadius: '1rem',
               backgroundColor: 'rgba(255, 255, 255, 0.4)',
@@ -400,14 +401,14 @@ const Form = () => {
                 type="button"
                 variant="outline"
                 onClick={handleCancel}
-                className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-100"
+                className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
               >
                 {isSubmitting ? (
                   <div className="flex items-center space-x-2">
