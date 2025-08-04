@@ -31,6 +31,13 @@ const CreateIntake = lazy(() => import('./components/inbox/CreateIntake'));
 const InboxPage = lazy(() => import('./components/inbox/InboxPage'));
 const Form = lazy(() => import('./components/inbox/form'));
 const KeyDates = lazy(() => import('./components/inbox/KeyDates'));
+const Notes = () => <ErrorPage pageName="Notes" />;
+const Event = () => <ErrorPage pageName="Event" />;
+const Tasks = () => <ErrorPage pageName="Tasks" />;
+const Documentation = () => <ErrorPage pageName="Documentation" />;
+const Communication = () => <ErrorPage pageName="Communication" />;
+const Finance = () => <ErrorPage pageName="Finance" />;
+const ActivityLogs = () => <ErrorPage pageName="Activity Logs" />;
 
 const AppRouter = () => (
   <Router>
@@ -57,6 +64,13 @@ const AppRouter = () => (
             <Route path="overview/" element={<Overview />} />
             <Route path="form/" element={<Form />} />
             <Route path="key-dates/" element={<KeyDates />} />
+            <Route path="notes/" element={<Notes />} />
+            <Route path="event/" element={<Event />} />
+            <Route path="tasks/" element={<Tasks />} />
+            <Route path="documentation/" element={<Documentation />} />
+            <Route path="communication/" element={<Communication />} />
+            <Route path="finance/" element={<Finance />} />
+            <Route path="activity-logs/" element={<ActivityLogs />} />
           </Route>
           {/* <Route path="matter-intake" element={<MatterIntakePage />} />
           <Route path="contacts" element={<ContactPage />} /> */}
@@ -69,3 +83,11 @@ const AppRouter = () => (
 );
 
 export default AppRouter;
+
+const ErrorPage = ({ pageName }) => (
+  <div className="flex flex-col items-center justify-center h-full">
+    <p className="text-red-500 text-2xl font-bold">
+      {pageName} is not configured yet
+    </p>
+  </div>
+);
