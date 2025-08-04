@@ -40,7 +40,6 @@ export default function Overview() {
   const [selectedContactType, setSelectedContactType] = useState(null);
   const [searchContactQuery, setSearchContactQuery] = useState('');
 
-  console.log(open);
   const updateMatterMutation = useMutation({
     mutationFn: updateMatter,
     onSuccess: () => {
@@ -48,6 +47,10 @@ export default function Overview() {
       navigate('/dashboard/inbox');
     },
   });
+
+  const handleUpdateMatter = () => {
+    updateMatterMutation.mutate({ slug: slugId, data: getValues() });
+  };
   console.log(searchContactQuery, selectedContactType);
 
   const { data: matter, isLoading } = useQuery({
@@ -183,7 +186,7 @@ export default function Overview() {
         ) : (
           <form
             onSubmit={handleSubmit(() => {
-              updateMatterMutation.mutate({ slugId, data: getValues() });
+              handleUpdateMatter();
             })}
             className="space-y-4 w-full flex flex-col justify-between overflow-hidden"
           >
