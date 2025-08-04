@@ -57,7 +57,7 @@ const Form = () => {
     }
   }, [formResponse]);
 
-  // Date format conversion functions
+  // Date and time format conversion functions
   const formatDateForAPI = (dateValue) => {
     if (!dateValue) return '';
     // Convert Date object or string to YYYY-MM-DD format
@@ -72,6 +72,27 @@ const Form = () => {
     const date = new Date(dateValue);
     if (isNaN(date.getTime())) return '';
     return date;
+  };
+
+  const formatTimeForAPI = (timeValue) => {
+    if (!timeValue) return '';
+    // Convert time to H:i:s format
+    if (timeValue instanceof Date) {
+      const hours = timeValue.getHours().toString().padStart(2, '0');
+      const minutes = timeValue.getMinutes().toString().padStart(2, '0');
+      const seconds = timeValue.getSeconds().toString().padStart(2, '0');
+      return `${hours}:${minutes}:${seconds}`;
+    } else if (typeof timeValue === 'string') {
+      if (timeValue.includes(':')) {
+        const timeParts = timeValue.split(':');
+        if (timeParts.length === 2) {
+          return `${timeValue}:00`;
+        } else if (timeParts.length === 3) {
+          return timeValue;
+        }
+      }
+    }
+    return timeValue;
   };
 
   console.log(">>", formResponse)
@@ -127,6 +148,30 @@ const Form = () => {
       }
     }
 
+    // Handle time field conversion
+    if (field && field.type === 'time') {
+      if (value instanceof Date) {
+        // Convert Date object to H:i:s format for storage
+        processedValue = formatTimeForAPI(value);
+      } else if (typeof value === 'string') {
+        // Ensure time is in correct format
+        if (value.includes(':')) {
+          const timeParts = value.split(':');
+          if (timeParts.length === 2) {
+            processedValue = `${value}:00`;
+          } else if (timeParts.length === 3) {
+            processedValue = value;
+          }
+        } else {
+          // Try to parse as Date and convert
+          const date = new Date(value);
+          if (!isNaN(date.getTime())) {
+            processedValue = formatTimeForAPI(date);
+          }
+        }
+      }
+    }
+
     setFormData((prev) => ({
       ...prev,
       [fieldName]: processedValue,
@@ -146,9 +191,31 @@ const Form = () => {
       if (apiResponse?.response?.Apistatus) {
         toast.success(mode === 'edit' ? 'Form updated successfully!' : 'Form submitted successfully!');
       } else {
-        const errorMessage =
-          apiResponse?.data?.message || 'Form submission failed!';
-        toast.error(errorMessage);
+        // Handle validation errors
+        if (apiResponse?.response?.Apistatus === false && apiResponse?.response?.errors) {
+          const errors = apiResponse.response.errors;
+          const errorMessages = [];
+          
+          Object.keys(errors).forEach(fieldName => {
+            const fieldErrors = errors[fieldName];
+            if (Array.isArray(fieldErrors)) {
+              fieldErrors.forEach(error => {
+                errorMessages.push(`${fieldName}: ${error}`);
+              });
+            }
+          });
+          
+          if (errorMessages.length > 0) {
+            errorMessages.forEach(message => {
+              toast.error(message);
+            });
+          } else {
+            toast.error(apiResponse?.response?.message || 'Validation failed!');
+          }
+        } else {
+          const errorMessage = apiResponse?.response?.message || 'Form submission failed!';
+          toast.error(errorMessage);
+        }
       }
     } catch (error) {
       console.error('Form submission error:', error);
