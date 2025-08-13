@@ -6,7 +6,7 @@ import {
   ListItemText,
   MenuItem,
   Radio,
-  Select,
+  // Select,
   TextField,
   Stack,
   IconButton,
@@ -15,13 +15,22 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
 import { DesktopDateTimePicker } from '@mui/x-date-pickers/DesktopDateTimePicker';
 import { DesktopTimePicker } from '@mui/x-date-pickers/DesktopTimePicker';
 
-import { InfoIcon, X } from "lucide-react"
+import { InfoIcon, X } from 'lucide-react';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import 'react-date-range/dist/styles.css'; // main css file
@@ -43,7 +52,7 @@ const StyledAutocompletePaper = styled(Paper)(() => ({
 
 const FormFields = ({
   label,
-  onChange = () => { },
+  onChange = () => {},
   options = [],
   value: _value = '',
   textFieldProps,
@@ -82,9 +91,17 @@ const FormFields = ({
     <>
       <Stack sx={sx}>
         {(label || labelRight) && (
-          <Stack direction="column" alignItems="flex-start" sx={{ gap: 1, width: '100%' }}>
+          <Stack
+            direction="column"
+            alignItems="flex-start"
+            sx={{ gap: 1, width: '100%' }}
+          >
             {(label || tooltip) && (
-              <Stack direction="row" alignItems="center" sx={{ gap: 1, width: '100%' }}>
+              <Stack
+                direction="row"
+                alignItems="center"
+                sx={{ gap: 1, width: '100%' }}
+              >
                 {label && (
                   <Typography
                     variant={'xlMedium'}
@@ -113,9 +130,26 @@ const FormFields = ({
           </Stack>
         )}
         {type === 'text' && (
-          <TextField
+          // <TextField
+          //   value={value}
+          //   onChange={(e) => onChange(e.target.value)}
+          //   size="small"
+          //   sx={{ mt: 1 }}
+          //   fullWidth
+          //   InputProps={{
+          //     style: {
+          //       height: '2.375rem',
+          //       backgroundColor: mainBackgroundColor,
+          //       borderRadius: '0.625rem',
+          //     },
+          //   }}
+          //   error={error}
+          //   {...textFieldProps}
+          // />
+          <Input
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            className="mt-1"
             size="small"
             sx={{ mt: 1 }}
             fullWidth
@@ -150,27 +184,53 @@ const FormFields = ({
           />
         )}
         {type === 'textarea' && (
-          <TextField
+          // <TextField
+          //   value={value}
+          //   onChange={(e) => onChange(e.target.value)}
+          //   size="small"
+          //   sx={{
+          //     mt: 1,
+          //     width: '100%',
+          //     '& .MuiInputBase-root': {
+          //       width: '100%',
+          //       minHeight: '120px',
+          //     },
+          //   }}
+          //   fullWidth
+          //   multiline
+          //   rows={4}
+          //   InputProps={{
+          //     style: {
+          //       backgroundColor: mainBackgroundColor,
+          //       borderRadius: '0.625rem',
+          //       width: '100%',
+          //       minHeight: '120px',
+          //     },
+          //   }}
+          //   error={error}
+          //   {...textFieldProps}
+          // />
+          <Textarea
             value={value}
             onChange={(e) => onChange(e.target.value)}
+            className="mt-1"
             size="small"
             sx={{
               mt: 1,
               width: '100%',
-              '& .MuiInputBase-root': {
+              '& .field-sizing-content': {
                 width: '100%',
-                minHeight: '120px'
-              }
+                minHeight: '120px',
+              },
             }}
             fullWidth
-            multiline
             rows={4}
             InputProps={{
               style: {
                 backgroundColor: mainBackgroundColor,
                 borderRadius: '0.625rem',
                 width: '100%',
-                minHeight: '120px'
+                minHeight: '120px',
               },
             }}
             error={error}
@@ -180,106 +240,102 @@ const FormFields = ({
         {type === 'dropdown' && (
           <Select
             value={value || ''}
-            size="small"
-            onChange={(e) => onChange(e.target.value)}
-            sx={{
-              mt: 1,
-              height: '2.375rem',
-              borderRadius: '0.625rem',
-              overflow: 'hidden',
-              backgroundColor: mainBackgroundColor,
-            }}
-            fullWidth
-            SelectDisplayProps={{
-              style: {
-                backgroundColor: mainBackgroundColor,
-                borderRadius: '0.625rem',
-              },
-            }}
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  borderRadius: '0.5rem',
-                  boxShadow: '0px 0px 2px 0px rgba(0, 0, 0, 0.40)',
-                  backgroundColor: '#fff',
-                  border: '0.25px solid rgb(184, 182, 182)',
-                },
-              },
-            }}
+            onValueChange={(val) => onChange(val)}
             {...textFieldProps}
           >
-            {isArrayWithValues(options) ? (
-              options?.map((i, index) => (
-                <MenuItem
-                  key={index}
-                  value={i.value}
-                  disabled={i?.disableProps?.disable || false}
-                  sx={{
-                    cursor: i?.disableProps?.disable
-                      ? 'not-allowed'
-                      : 'pointer',
-                    padding: '0.4rem 1.1rem',
-                  }}
-                >
-                  <Stack
-                    direction="row"
-                    alignItems={'center'}
-                    justifyContent={'space-between'}
-                    width={'100%'}
+            <SelectTrigger
+              className="mt-1 h-[2.375rem] rounded-[0.625rem] overflow-hidden w-full"
+              style={{ backgroundColor: mainBackgroundColor }}
+            >
+              <SelectValue placeholder="Select an option" />
+            </SelectTrigger>
+
+            <SelectContent className="rounded-md border border-[rgb(184,182,182)] shadow-sm bg-white">
+              {Array.isArray(options) && options.length > 0 ? (
+                options.map((i, index) => (
+                  <SelectItem
+                    key={index}
+                    value={i.value}
+                    disabled={i?.disableProps?.disable || false}
+                    className={`py-2 px-4 ${
+                      i?.disableProps?.disable
+                        ? 'cursor-not-allowed'
+                        : 'cursor-pointer'
+                    }`}
                   >
-                    <Typography sx={{ fontSize: '0.9rem' }}>{i.label}</Typography>
-                    <Typography variant="lRegular">
-                      {i?.disableProps?.disableText}
-                    </Typography>
-                  </Stack>
-                </MenuItem>
-              ))
-            ) : (
-              <MenuItem disabled>
-                <Typography>No options available</Typography>
-              </MenuItem>
-            )}
+                    <div className="flex items-center justify-between w-full">
+                      <span className="text-[0.9rem]">{i.label}</span>
+                      {i?.disableProps?.disableText && (
+                        <span className="text-sm">
+                          {i.disableProps.disableText}
+                        </span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-options" disabled>
+                  No options available
+                </SelectItem>
+              )}
+            </SelectContent>
           </Select>
         )}
         {type === 'date' && (
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DesktopDatePicker
-              value={value ? dayjs(value) : null}
-              format="DD/MM/YYYY"
-              onChange={(newValue) => {
-                const dayjsObject = dayjs(newValue);
-                const unixTimestamp = dayjsObject.unix();
-                onChange(new Date(unixTimestamp * 1000));
-              }}
-              autoFocus={false}
-              slotProps={{
-                textField: {
-                  sx: {
-                    width: '100%',
-                    borderRadius: '0.625rem',
-                    marginTop: '0.5rem',
-                    fieldset: { borderRadius: '0.625rem' },
-                  },
-                  InputProps: {
-                    style: {
-                      height: '2.375rem',
-                      backgroundColor: mainBackgroundColor,
-                      borderRadius: '0.625rem',
-                    },
-                  }
-                },
-                inputAdornment: {
-                  position: 'start',
-                },
-                popper: {
-                  sx: {
-                    zIndex: 9999,
-                  },
-                },
-              }}
-              {...textFieldProps}
-            />
-          </LocalizationProvider>
+          // <LocalizationProvider dateAdapter={AdapterDayjs}>
+          //   <DesktopDatePicker
+          //     value={value ? dayjs(value) : null}
+          //     format="DD/MM/YYYY"
+          //     onChange={(newValue) => {
+          //       const dayjsObject = dayjs(newValue);
+          //       const unixTimestamp = dayjsObject.unix();
+          //       onChange(new Date(unixTimestamp * 1000));
+          //     }}
+          //     autoFocus={false}
+          //     slotProps={{
+          //       textField: {
+          //         sx: {
+          //           width: '100%',
+          //           borderRadius: '0.625rem',
+          //           marginTop: '0.5rem',
+          //           fieldset: { borderRadius: '0.625rem' },
+          //         },
+          //         InputProps: {
+          //           style: {
+          //             height: '2.375rem',
+          //             backgroundColor: mainBackgroundColor,
+          //             borderRadius: '0.625rem',
+          //           },
+          //         },
+          //       },
+          //       inputAdornment: {
+          //         position: 'start',
+          //       },
+          //       popper: {
+          //         sx: {
+          //           zIndex: 9999,
+          //         },
+          //       },
+          //     }}
+          //     {...textFieldProps}
+          //   />
+          // </LocalizationProvider>
+
+          <Input
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="mt-1"
+            type={
+              type === 'date'
+                ? 'date'
+                : type === 'time'
+                ? 'time'
+                : type === 'datetime'
+                ? 'datetime-local'
+                : 'text'
+            }
+            {...textFieldProps}
+          />
         )}
         {type === 'time' && (
           <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -296,7 +352,7 @@ const FormFields = ({
                     width: '100%',
                     borderRadius: '0.625rem',
                     marginTop: '0.5rem',
-                    fieldset: { borderRadius: '0.625rem' }
+                    fieldset: { borderRadius: '0.625rem' },
                   },
                   InputProps: {
                     style: {
@@ -304,7 +360,7 @@ const FormFields = ({
                       backgroundColor: mainBackgroundColor,
                       borderRadius: '0.625rem',
                     },
-                  }
+                  },
                 },
                 inputAdornment: {
                   position: 'start',
@@ -326,7 +382,7 @@ const FormFields = ({
                     width: '100%',
                     borderRadius: '0.625rem',
                     marginTop: '0.5rem',
-                    fieldset: { borderRadius: '0.625rem' }
+                    fieldset: { borderRadius: '0.625rem' },
                   },
                   InputProps: {
                     style: {
@@ -334,7 +390,7 @@ const FormFields = ({
                       backgroundColor: mainBackgroundColor,
                       borderRadius: '0.625rem',
                     },
-                  }
+                  },
                 },
                 inputAdornment: {
                   position: 'start',
@@ -459,9 +515,7 @@ const FormFields = ({
             isOptionEqualToValue={(option, value) => {
               return option.value === value.value;
             }}
-            renderOption={(props, option) => (
-              <li {...props}>{option.label}</li>
-            )}
+            renderOption={(props, option) => <li {...props}>{option.label}</li>}
             {...textFieldProps}
             renderInput={(params) => (
               <TextField
@@ -572,9 +626,9 @@ const FormFields = ({
               value={
                 value?.startDate && value?.endDate
                   ? `${format(
-                    new Date(value.startDate),
-                    'dd/MM/yyyy'
-                  )} - ${format(new Date(value.endDate), 'dd/MM/yyyy')}`
+                      new Date(value.startDate),
+                      'dd/MM/yyyy'
+                    )} - ${format(new Date(value.endDate), 'dd/MM/yyyy')}`
                   : ''
               }
               size="small"
@@ -590,7 +644,7 @@ const FormFields = ({
               error={error}
               {...textFieldProps}
               onClick={handleOpenPopover}
-            // onClick={(e) => e.preventDefault()} // Prevent focus on the text field
+              // onClick={(e) => e.preventDefault()} // Prevent focus on the text field
             />
           </>
         )}

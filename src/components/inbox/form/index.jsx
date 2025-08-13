@@ -5,6 +5,11 @@ import {
   getFormDataForSubmission,
 } from './helpers';
 import Button from '@/components/button';
+import { Input } from '@/components/ui/input';
+import { Button as ShadCnBtn } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+
 import { Stack, Typography } from '@mui/material';
 import { Grid } from '@mui/material';
 import { useState, useEffect } from 'react';
@@ -15,6 +20,7 @@ import { getForm } from './helpers/getForm';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import BreadCrumb from '@/components/BreadCrumb';
+import { Loader2 } from 'lucide-react';
 
 const Form = () => {
   // Get matter from context
@@ -248,8 +254,16 @@ const Form = () => {
   // Show loading state
   if (isLoading) {
     return (
-      <Stack spacing={2} sx={{ p: 3 }}>
-        <Typography variant="h6">Loading form data...</Typography>
+      <Stack
+        spacing={2}
+        sx={{
+          p: 3,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Loader2 className="animate-spin" />
       </Stack>
     );
   }
@@ -302,7 +316,7 @@ const Form = () => {
                 <Typography
                   sx={{ color: 'text.secondary', fontSize: '1.125rem', mb: 1 }}
                 >
-                  Loading form data...
+                  <Loader2 className="animate-spin" />
                 </Typography>
                 <Typography
                   sx={{ color: 'text.disabled', fontSize: '0.875rem' }}
