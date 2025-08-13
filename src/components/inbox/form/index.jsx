@@ -51,6 +51,7 @@ const Form = () => {
     enabled: !!slugId, // Only fetch if slugId exists
     staleTime: 5 * 60 * 1000, // 5 minutes
     cacheTime: 10 * 60 * 1000, // 10 minutes
+    select: (data) => data?.response,
   });
 
   console.log('FORM RESPONSE >>>>', formResponse);
@@ -97,6 +98,8 @@ const Form = () => {
     return date;
   };
 
+  console.log('>>', formResponse);
+
   // Initialize form data based on API response or defaults
   useEffect(() => {
     let initialData;
@@ -107,7 +110,7 @@ const Form = () => {
       formResponse?.response.data
     ) {
       // Use API data if form exists
-      const apiFormData = formResponse.response.data;
+      const apiFormData = formResponse?.data;
 
       // Convert date fields from API format to form format
       const processedData = {};
