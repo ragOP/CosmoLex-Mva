@@ -51,7 +51,14 @@ const AppRouter = () => (
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/email-verify" element={<EmailVerifyPage />} />
-        <Route path="/dashboard/*" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>}>
+        <Route
+          path="/dashboard/*"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<DashboardHome />} />
           <Route path="dashboard-form" element={<DashboardForm />} />
           <Route path="matter" element={<MatterPage />} />
