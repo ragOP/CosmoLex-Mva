@@ -14,20 +14,20 @@ const getMatterMeta = async () => {
       (result.response.Apistatus === true || result.response.success === true)
     ) {
       const {
-        case_roles,
-        case_types,
-        case_statuses,
-        marketing_sources,
-        ad_campaigns,
+        case_role,
+        case_type,
+        case_status,
+        marketing_source,
+        ad_campaign_id,
         assignees,
         owners,
       } = result.response;
       return {
-        case_roles,
-        case_types,
-        case_statuses,
-        marketing_sources,
-        ad_campaigns,
+        case_role,
+        case_type,
+        case_status,
+        marketing_source,
+        ad_campaign_id,
         assignees,
         owners,
       };

@@ -29,6 +29,7 @@ export const endpoints = {
   matterIntake: 'v2/matter/intake',
   getContacts: 'v2/matter/contacts/list',
   getContact: 'v2/matter/contacts/show',
+  getContactMeta: 'v2/matter/contacts/meta',
   createContact: 'v2/matter/contacts/store',
   searchContact: 'v2/matter/contacts/search',
   updateContact: 'v2/matter/contacts/update',

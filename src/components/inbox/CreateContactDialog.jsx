@@ -283,7 +283,7 @@ export default function CreateContactDialog({ open, setOpen }) {
                           onValueChange={field.onChange}
                           value={field.value}
                         >
-                          <SelectTrigger className="w-full bg-white border-white">
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder={`Select ${label}`} />
                           </SelectTrigger>
                           <SelectContent>
@@ -388,7 +388,7 @@ export default function CreateContactDialog({ open, setOpen }) {
                           onValueChange={field.onChange}
                           value={field.value}
                         >
-                          <SelectTrigger className="w-full bg-white border-white">
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Address Type" />
                           </SelectTrigger>
                           <SelectContent>
@@ -441,6 +441,7 @@ export default function CreateContactDialog({ open, setOpen }) {
                   })
                 }
                 variant="outline"
+                className="w-full mt-2 bg-transparent hover:bg-gray-100 text-gray-700"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Address
