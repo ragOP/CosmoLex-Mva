@@ -1,17 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { Box } from '@mui/material';
-import formatDate from '@/utils/formatDate';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Pencil, Trash2 } from 'lucide-react';
 
 const MatterTable = ({ matters = [], onRowClick }) => {
   const [matterData, setMatterData] = useState([]);
@@ -63,7 +52,7 @@ const MatterTable = ({ matters = [], onRowClick }) => {
       align: 'center',
     },
     {
-      field: 'assignee_id',
+      field: 'assignee',
       headerName: 'Assignee',
       width: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
@@ -72,7 +61,7 @@ const MatterTable = ({ matters = [], onRowClick }) => {
       align: 'center',
     },
     {
-      field: 'owner_id',
+      field: 'owner',
       headerName: 'Owner',
       width: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',

@@ -116,9 +116,9 @@ export default function Overview() {
     if (matter) {
       reset({
         ...matter,
-        contacts_id: String(matter.contact.id) || '',
+        contacts_id: String(matter?.contact?.id) || '',
       });
-      setSelectedContactType(matter.contact.contact_type);
+      setSelectedContactType(matter?.contact?.contact_type);
     }
   }, [matter, reset]);
 
