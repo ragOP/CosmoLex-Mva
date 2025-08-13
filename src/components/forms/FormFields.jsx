@@ -298,6 +298,13 @@ const FormFields = ({
                     marginTop: '0.5rem',
                     fieldset: { borderRadius: '0.625rem' }
                   },
+                  InputProps: {
+                    style: {
+                      height: '2.375rem',
+                      backgroundColor: mainBackgroundColor,
+                      borderRadius: '0.625rem',
+                    },
+                  }
                 },
                 inputAdornment: {
                   position: 'start',
@@ -321,6 +328,13 @@ const FormFields = ({
                     marginTop: '0.5rem',
                     fieldset: { borderRadius: '0.625rem' }
                   },
+                  InputProps: {
+                    style: {
+                      height: '2.375rem',
+                      backgroundColor: mainBackgroundColor,
+                      borderRadius: '0.625rem',
+                    },
+                  }
                 },
                 inputAdornment: {
                   position: 'start',

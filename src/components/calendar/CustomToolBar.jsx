@@ -21,7 +21,7 @@ const CustomToolBar = ({
       justifyContent="space-between"
       alignItems="center"
       gap={2}
-      p={2}
+      // p={2}
     >
       {/* Left Group */}
       <Box display="flex" gap={2} alignItems="center">

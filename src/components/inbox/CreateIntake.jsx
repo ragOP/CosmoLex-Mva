@@ -153,11 +153,12 @@ export default function CreateIntake() {
   ];
 
   return (
-    <div className="flex items-center justify-center p-4">
-      <div className="bg-[#F5F5FA] rounded-lg w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto no-scrollbar">
-        <h1 className="text-2xl text-[#40444D] text-center font-bold font-sans">
-          Create Intake
-        </h1>
+    <div className="flex flex-col items-center justify-center p-4 bg-white/30">
+      <BreadCrumb label="Create Intake" />
+      <div className="bg-white/50 rounded-lg w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto no-scrollbar">
+        {/* <h1 className="text-2xl text-[#40444D] text-center font-bold font-sans">
+           
+        </h1> */}
 
         <form
           onSubmit={handleSubmit((data) => handleCreateIntake(data))}
