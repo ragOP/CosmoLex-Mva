@@ -22,12 +22,16 @@ import getMatterMeta from '@/pages/matter/intake/helpers/getMatterMeta';
 import getContacts from '@/pages/matter/intake/helpers/getContacts';
 import searchContact from '@/pages/matter/intake/helpers/searchContact';
 import isArrayWithValues from '@/utils/isArrayWithValues';
+import formatDate from '@/utils/formatDate';
 import { useParams } from 'react-router-dom';
 import updateMatter from '@/pages/matter/intake/helpers/updateMatter';
 import createMatter from '@/pages/matter/intake/helpers/createMatter';
 import { useNavigate } from 'react-router-dom';
 import CreateContactDialog from './CreateContactDialog';
 import BreadCrumb from '@/components/BreadCrumb';
+import getContactMeta from '@/pages/matter/intake/helpers/getContactMeta';
+import { X } from 'lucide-react';
+import { set } from 'date-fns';
 
 export default function Overview() {
   const navigate = useNavigate();
@@ -37,8 +41,12 @@ export default function Overview() {
   console.log(slugId);
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [selectedContactType, setSelectedContactType] = useState(null);
   const [searchContactQuery, setSearchContactQuery] = useState('');
+  const [showContactTable, setShowContactTable] = useState(false);
+  const [hoveredContact, setHoveredContact] = useState(null);
+  const [selectedContact, setSelectedContact] = useState(null);
 
   const updateMatterMutation = useMutation({
     mutationFn: updateMatter,
@@ -58,13 +66,17 @@ export default function Overview() {
     queryFn: () => getMatter({ slug: slugId }),
     enabled: !!slugId,
   });
+  const { data: contacts } = useQuery({
+    queryKey: ['contacts'],
+    queryFn: getContacts,
+  });
   const { data: matterMeta } = useQuery({
     queryKey: ['matterMeta'],
     queryFn: getMatterMeta,
   });
-  const { data: contacts } = useQuery({
-    queryKey: ['contacts'],
-    queryFn: getContacts,
+  const { data: contactMeta } = useQuery({
+    queryKey: ['contactMeta'],
+    queryFn: getContactMeta,
   });
 
   const { data: searchContactData, refetch: refetchSearchContact } = useQuery({
@@ -99,60 +111,81 @@ export default function Overview() {
     setValue,
   } = useForm({
     defaultValues: {
-      case_role: '',
-      case_type: '',
-      case_status: '',
-      marketing_source: '',
+      case_role_id: '',
+      case_type_id: '',
+      case_status_id: '',
+      marketing_source_id: '',
       assignee_id: '',
       owner_id: '',
-      ad_campaign: '',
+      ad_campaign_id: '',
       case_description: '',
-      contacts_id: '',
+      contact_id: '',
     },
     resolver: zodResolver(createMatterSchema),
   });
 
-  useEffect(() => {
-    if (matter) {
-      reset({
-        ...matter,
-        contacts_id: String(matter?.contact?.id) || '',
-      });
-      setSelectedContactType(matter?.contact?.contact_type);
-    }
-  }, [matter, reset]);
+  const contactType = contactMeta?.contact_type || [];
 
-  const contactType = [
-    { id: 1, name: 'Client' },
-    { id: 2, name: 'Attorney' },
-  ];
+  useEffect(() => {
+    const isAllDataLoaded = matter && contacts && contactMeta && matterMeta;
+
+    if (!isAllDataLoaded) return;
+
+    setLoading(true);
+
+    const formData = {
+      case_role_id: matter.case_role_id || '',
+      case_type_id: matter.case_type_id || '',
+      case_status_id: matter.case_status_id || '',
+      marketing_source_id: matter.marketing_source_id || '',
+      assignee_id: matter.assignee_id || '',
+      owner_id: matter.owner_id || '',
+      ad_campaign_id: matter.ad_campaign_id || '',
+      case_description: matter.case_description || '',
+      contact_id: matter.contact_id || '',
+    };
+
+    reset(formData);
+
+    if (matter.contact_id) {
+      const upcomingContact = contacts.find(
+        (contact) => contact.id === matter.contact_id
+      );
+      if (upcomingContact) {
+        setSelectedContact(upcomingContact);
+        setSelectedContactType(upcomingContact.contact_type);
+      }
+    }
+
+    setLoading(false);
+  }, [matter, contacts, contactMeta, matterMeta, reset]);
 
   const formFields = [
     {
       label: 'Case Role',
-      name: 'case_role',
+      name: 'case_role_id',
       type: 'select',
       required: true,
-      options: matterMeta?.case_roles || [],
+      options: matterMeta?.case_role || [],
     },
     {
       label: 'Case Type',
-      name: 'case_type',
+      name: 'case_type_id',
       type: 'select',
-      options: matterMeta?.case_types || [],
+      options: matterMeta?.case_type || [],
     },
     {
       label: 'Case Status',
-      name: 'case_status',
+      name: 'case_status_id',
       type: 'select',
       required: true,
-      options: matterMeta?.case_statuses || [],
+      options: matterMeta?.case_status || [],
     },
     {
       label: 'Marketing Source',
-      name: 'marketing_source',
+      name: 'marketing_source_id',
       type: 'select',
-      options: matterMeta?.marketing_sources || [],
+      options: matterMeta?.marketing_source || [],
     },
     {
       label: 'Assignee',
@@ -168,18 +201,19 @@ export default function Overview() {
     },
     {
       label: 'Ad Campaign',
-      name: 'ad_campaign',
+      name: 'ad_campaign_id',
       type: 'select',
-      options: matterMeta?.ad_campaigns || [],
+      options: matterMeta?.ad_campaign_id || [],
     },
     { label: 'Case Description', name: 'case_description', type: 'text' },
   ];
 
+  console.log('matterMeta', errors);
   return (
     <div className="flex flex-col items-center justify-center bg-white/30 m-4 rounded-2xl overflow-hidden no-scrollbar p-4">
       <BreadCrumb label="Overview" />
       <div className="backdrop-blur-sm bg-white/40 rounded-lg p-4 w-full space-y-6 overflow-hidden">
-        {isLoading ? (
+        {loading || isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="animate-spin" />
           </div>
@@ -188,11 +222,11 @@ export default function Overview() {
             onSubmit={handleSubmit(() => {
               handleUpdateMatter();
             })}
-            className="space-y-4 w-full flex flex-col justify-between overflow-hidden"
+            className="space-y-4 w-full flex flex-col justify-between overflow-hidden p-2"
           >
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {formFields.map(({ label, name, type, required, options }) => (
-                <div key={name} className="w-full">
+              {formFields.map(({ label, name, type, options, idx }) => (
+                <div key={idx} className="w-full">
                   {type !== 'checkbox' && (
                     <Label className="text-[#40444D] font-semibold mb-2">
                       {label}
@@ -205,11 +239,10 @@ export default function Overview() {
                       name={name}
                       render={({ field }) => (
                         <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          className="w-full"
+                          onValueChange={(val) => field.onChange(Number(val))}
+                          value={field.value?.toString() ?? ''}
                         >
-                          <SelectTrigger className="w-full bg-white border-white">
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder={`Select ${label}`} />
                           </SelectTrigger>
                           <SelectContent>
@@ -217,12 +250,7 @@ export default function Overview() {
                               {options.map((option) => (
                                 <SelectItem
                                   key={option.id}
-                                  value={
-                                    name === 'assignee_id' ||
-                                    name === 'owner_id'
-                                      ? option.id
-                                      : option.name
-                                  }
+                                  value={option.id.toString()}
                                 >
                                   {option.name}
                                 </SelectItem>
@@ -265,92 +293,209 @@ export default function Overview() {
                   )}
                 </div>
               ))}
+            </div>
 
-              <div className="relative space-y-2">
-                <Label className="text-[#40444D] font-semibold block">
-                  Search Contact
-                </Label>
+            {/* Contact Type Select */}
+            <div className="w-full space-y-2">
+              <Label className="text-[#40444D] font-semibold block">
+                Contact Type
+              </Label>
+              <Select onValueChange={setSelectedContactType}>
+                <SelectTrigger className="w-1/4">
+                  <SelectValue placeholder="Select Contact Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {contactType.map((c) => (
+                    <SelectItem key={c.id} value={c.name}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-                <Controller
-                  control={control}
-                  name="contacts_id"
-                  render={({ field }) => (
-                    <>
-                      <Input
-                        placeholder="Search by name or email..."
-                        value={searchContactQuery}
-                        onChange={(e) => setSearchContactQuery(e.target.value)}
-                        disabled={!selectedContactType}
-                      />
-                      <p className="text-[0.7rem] text-[#40444D] text-end">
-                        Don't have a contact?{' '}
-                        <span
-                          onClick={() => setOpen(true)}
-                          className="text-[#6366F1] cursor-pointer hover:underline"
-                        >
-                          Add a new contact
-                        </span>
-                      </p>
-
-                      {searchContactQuery ||
-                        (selectedContactType &&
-                          isArrayWithValues(searchContactData) && (
-                            <Select
-                              onValueChange={field.onChange}
-                              value={field.value}
-                              disabled={!selectedContactType}
-                              className="w-full"
-                            >
-                              <SelectTrigger className="w-full bg-white border-white">
-                                <SelectValue placeholder="Select Contact" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {searchContactData?.map((contact) => (
-                                  <SelectItem
-                                    key={contact.id}
-                                    value={contact.id}
-                                  >
-                                    {contact.prefix} {contact.first_name}
-                                    {contact.middle_name} {contact.last_name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ))}
-                    </>
-                  )}
-                />
-                {errors.contacts_id && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.contacts_id.message}
-                  </p>
+            {/* Search Contact */}
+            <div className="relative space-y-2">
+              <Label className="text-[#40444D] font-semibold block">
+                Search Contact
+              </Label>
+              <Controller
+                control={control}
+                name="contact_id"
+                render={() => (
+                  <>
+                    <Input
+                      placeholder="Search by name or email..."
+                      value={searchContactQuery}
+                      onChange={(e) => {
+                        setSearchContactQuery(e.target.value);
+                        setShowContactTable(true);
+                        setSelectedContact(null);
+                      }}
+                      className="w-1/2"
+                      disabled={!selectedContactType}
+                    />
+                  </>
                 )}
-              </div>
-
-              <div>
-                <Label className="text-[#40444D] font-semibold mb-2 block">
-                  Select Contact Type
-                </Label>
-                <Select
-                  onValueChange={(value) => {
-                    setSelectedContactType(value);
-                    setSearchContactQuery(''); // reset search when type changes
-                  }}
-                  value={selectedContactType}
-                  className="w-full"
+              />
+              <p className="text-[0.7rem] text-[#40444D] text-start w-1/2">
+                Don't have a contact?{' '}
+                <span
+                  onClick={() => setOpen(true)}
+                  className="text-[#6366F1] cursor-pointer hover:underline"
                 >
-                  <SelectTrigger className="w-full bg-white border-white">
-                    <SelectValue placeholder="Select Contact Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {contactType.map((contact) => (
-                      <SelectItem key={contact.id} value={contact.name}>
-                        {contact.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  Add a new contact
+                </span>
+              </p>
+              {searchContactQuery && showContactTable && !selectedContact && (
+                <div
+                  className="flex w-full mt-4"
+                  style={{ minHeight: '220px' }}
+                >
+                  <div className="w-1/2 border rounded-lg bg-transparent shadow p-2 overflow-y-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="bg-gray-100">
+                          <th className="py-2 px-2">Name</th>
+                          <th className="py-2 px-2">Type</th>
+                          <th className="py-2 px-2">Email</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {searchContactData?.length > 0 ? (
+                          searchContactData
+                            .filter(
+                              (c) =>
+                                c.contact_name
+                                  .toLowerCase()
+                                  .includes(searchContactQuery.toLowerCase()) ||
+                                c.primary_email
+                                  .toLowerCase()
+                                  .includes(searchContactQuery.toLowerCase())
+                            )
+                            .map((contact) => (
+                              <tr
+                                key={contact.id}
+                                className={`cursor-pointer hover:bg-indigo-100 transition duration-300 ease-in-out ${
+                                  hoveredContact?.id === contact.id
+                                    ? 'bg-indigo-50'
+                                    : ''
+                                }`}
+                                onMouseEnter={() => setHoveredContact(contact)}
+                                onMouseLeave={() => setHoveredContact(null)}
+                                onClick={() => {
+                                  setSelectedContact(contact);
+                                  setShowContactTable(false);
+                                  setValue('contact_id', contact.id);
+                                }}
+                              >
+                                <td className="py-2 px-2">
+                                  {contact.contact_name}
+                                </td>
+                                <td className="py-2 px-2">
+                                  {contact.contact_type}
+                                </td>
+                                <td className="py-2 px-2">
+                                  {contact.primary_email}
+                                </td>
+                              </tr>
+                            ))
+                        ) : (
+                          <tr>
+                            <td colSpan={3} className="py-2 px-2 text-center">
+                              No contacts found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="w-1/2 pl-4">
+                    {hoveredContact && (
+                      <div className="border rounded-lg bg-transparent shadow p-4">
+                        <h2 className="font-bold text-lg mb-2">
+                          Contact Preview
+                        </h2>
+                        <p>
+                          <span className="font-semibold">Name:</span>{' '}
+                          {hoveredContact?.contact_name}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Type:</span>{' '}
+                          {hoveredContact?.contact_type}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Email:</span>{' '}
+                          {hoveredContact?.primary_email}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Phone:</span>{' '}
+                          {hoveredContact?.phone}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Address:</span>{' '}
+                          {hoveredContact?.primary_address}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Created:</span>{' '}
+                          {formatDate(hoveredContact?.date_created)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {selectedContact && (
+                <div className="w-full mt-4">
+                  <div className="relative border rounded-lg bg-transparent shadow p-4">
+                    <h2 className="font-bold text-lg mb-2">Selected Contact</h2>
+                    <Button
+                      variant={'ghost'}
+                      type="icon"
+                      size={12}
+                      className="absolute top-2 right-2 p-2 rounded-full hover:bg-red-500 hover:text-white transition-colors duration-200 cursor-pointer"
+                      onClick={() => {
+                        setSelectedContact(null);
+                        setValue('contact_id', '');
+                        setShowContactTable(true);
+                      }}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                    <p>
+                      <span className="font-semibold">Name:</span>{' '}
+                      {selectedContact.contact_name}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Type:</span>{' '}
+                      {selectedContact.contact_type}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Email:</span>{' '}
+                      {selectedContact.primary_email}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Phone:</span>{' '}
+                      {selectedContact.phone}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Address:</span>{' '}
+                      {selectedContact.primary_address}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Created:</span>{' '}
+                      {selectedContact.date_created}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {errors.contact_id && (
+                <p className="text-xs text-red-500">
+                  {errors.contact_id.message || 'Contact is required.'}
+                </p>
+              )}
             </div>
 
             <div className="pt-4 flex justify-end gap-4">
