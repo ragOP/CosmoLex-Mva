@@ -23,6 +23,7 @@ import createMatter from '@/pages/matter/intake/helpers/createMatter';
 import { useNavigate } from 'react-router-dom';
 import CreateContactDialog from './CreateContactDialog';
 import { X } from 'lucide-react';
+import BreadCrumb from '@/components/BreadCrumb';
 
 export default function CreateIntake() {
   const navigate = useNavigate();
@@ -33,37 +34,6 @@ export default function CreateIntake() {
   const [showContactTable, setShowContactTable] = useState(false);
   const [hoveredContact, setHoveredContact] = useState(null);
   const [selectedContact, setSelectedContact] = useState(null);
-
-  console.log('searchContactQuery: ', searchContactQuery);
-  // const dummyContacts = [
-  //   {
-  //     id: 1,
-  //     contact_name: 'Doe John',
-  //     contact_type: 'Accounting',
-  //     date_created: '2025-08-13 05:49:15 AM',
-  //     primary_email: 'john@example.com',
-  //     phone: '123-456-7890',
-  //     primary_address: 'Main St',
-  //   },
-  //   {
-  //     id: 2,
-  //     contact_name: 'Smith Jane',
-  //     contact_type: 'Attorney',
-  //     date_created: '2025-08-12 10:15:00 AM',
-  //     primary_email: 'jane@example.com',
-  //     phone: '987-654-3210',
-  //     primary_address: 'Elm St',
-  //   },
-  //   {
-  //     id: 3,
-  //     contact_name: 'Johnson Alice',
-  //     contact_type: 'Client',
-  //     date_created: '2025-08-10 02:30:00 PM',
-  //     primary_email: 'alice@example.com',
-  //     phone: '555-123-4567',
-  //     primary_address: 'Oak St',
-  //   },
-  // ];
 
   const createMatterMutation = useMutation({
     mutationFn: createMatter,
@@ -105,7 +75,7 @@ export default function CreateIntake() {
   useEffect(() => {
     debouncedSearch(searchContactQuery, selectedContactType);
     return () => debouncedSearch.cancel();
-  }, [searchContactQuery, selectedContactType]);
+  }, [searchContactQuery, selectedContactType, debouncedSearch]);
 
   const handleCreateIntake = (data) => {
     createMatterMutation.mutate({ data });
@@ -182,7 +152,6 @@ export default function CreateIntake() {
     { label: 'Case Description', name: 'case_description', type: 'text' },
   ];
 
-  console.log('errors:', errors);
   return (
     <div className="flex items-center justify-center p-4">
       <div className="bg-[#F5F5FA] rounded-lg w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto no-scrollbar">
@@ -195,7 +164,7 @@ export default function CreateIntake() {
           className="space-y-4 w-full"
         >
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {formFields.map(({ label, name, type, required, options }) => (
+            {formFields.map(({ label, name, type, options }) => (
               <div key={name} className="w-full">
                 {type !== 'checkbox' && (
                   <Label className="text-[#40444D] font-semibold mb-2">
@@ -284,7 +253,7 @@ export default function CreateIntake() {
             <Controller
               control={control}
               name="contact_id"
-              render={({ field }) => (
+              render={() => (
                 <>
                   <Input
                     placeholder="Search by name or email..."
@@ -321,47 +290,51 @@ export default function CreateIntake() {
                       </tr>
                     </thead>
                     <tbody>
-                      {
-                        // dummyContacts
-                        searchContactData?.length > 0 &&
-                          searchContactData
-                            .filter(
-                              (c) =>
-                                c.contact_name
-                                  .toLowerCase()
-                                  .includes(searchContactQuery.toLowerCase()) ||
-                                c.primary_email
-                                  .toLowerCase()
-                                  .includes(searchContactQuery.toLowerCase())
-                            )
-                            .map((contact) => (
-                              <tr
-                                key={contact.id}
-                                className={`cursor-pointer hover:bg-indigo-100 transition duration-300 ease-in-out ${
-                                  hoveredContact?.id === contact.id
-                                    ? 'bg-indigo-50'
-                                    : ''
-                                }`}
-                                onMouseEnter={() => setHoveredContact(contact)}
-                                onMouseLeave={() => setHoveredContact(null)}
-                                onClick={() => {
-                                  setSelectedContact(contact);
-                                  setShowContactTable(false);
-                                  setValue('contact_id', contact.id);
-                                }}
-                              >
-                                <td className="py-2 px-2">
-                                  {contact.contact_name}
-                                </td>
-                                <td className="py-2 px-2">
-                                  {contact.contact_type}
-                                </td>
-                                <td className="py-2 px-2">
-                                  {contact.primary_email}
-                                </td>
-                              </tr>
-                            ))
-                      }
+                      {searchContactData?.length > 0 ? (
+                        searchContactData
+                          .filter(
+                            (c) =>
+                              c.contact_name
+                                .toLowerCase()
+                                .includes(searchContactQuery.toLowerCase()) ||
+                              c.primary_email
+                                .toLowerCase()
+                                .includes(searchContactQuery.toLowerCase())
+                          )
+                          .map((contact) => (
+                            <tr
+                              key={contact.id}
+                              className={`cursor-pointer hover:bg-indigo-100 transition duration-300 ease-in-out ${
+                                hoveredContact?.id === contact.id
+                                  ? 'bg-indigo-50'
+                                  : ''
+                              }`}
+                              onMouseEnter={() => setHoveredContact(contact)}
+                              onMouseLeave={() => setHoveredContact(null)}
+                              onClick={() => {
+                                setSelectedContact(contact);
+                                setShowContactTable(false);
+                                setValue('contact_id', contact.id);
+                              }}
+                            >
+                              <td className="py-2 px-2">
+                                {contact.contact_name}
+                              </td>
+                              <td className="py-2 px-2">
+                                {contact.contact_type}
+                              </td>
+                              <td className="py-2 px-2">
+                                {contact.primary_email}
+                              </td>
+                            </tr>
+                          ))
+                      ) : (
+                        <tr>
+                          <td colSpan={3} className="py-2 px-2 text-center">
+                            No contacts found
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
