@@ -18,6 +18,7 @@ const CalendarPage = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [event, setEvent] = useState(null);
   const [events, setEvents] = useState([]);
+  const [selectedDateRange, setSelectedDateRange] = useState(null);
 
   const handleShowEvent = async (event) => {
     const res = await getEvent(event.id);
@@ -50,6 +51,10 @@ const CalendarPage = () => {
     }
   };
 
+  const handleDateRangeSelect = (dateRange) => {
+    setSelectedDateRange(dateRange);
+  };
+
   useEffect(() => {
     setSelectedUser(params.id || 1);
     getEventsUserList().then((usersData) => {
@@ -75,6 +80,7 @@ const CalendarPage = () => {
         users={users}
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
+        onDateRangeSelect={handleDateRangeSelect}
       />
 
       <EventPreviewDialog
@@ -91,6 +97,7 @@ const CalendarPage = () => {
           handleCreateEvent(data);
           setOpen(false);
         }}
+        selectedDateRange={selectedDateRange}
       />
     </div>
   );
