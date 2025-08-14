@@ -1,13 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogClose,
-} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -20,11 +12,22 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2 } from 'lucide-react';
 import { taskSchema } from '@/pages/tasks/schema/createTaskSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import getEventsUserList from '@/pages/calendar/helpers/getEventsUserList';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Stack,
+  Divider,
+  IconButton,
+  Tooltip,
+  Switch,
+} from '@mui/material';
+import { Plus, Trash2, X } from 'lucide-react';
 
 const formFields = [
   { label: 'Client Name', name: 'client_name', type: 'text', required: true },
@@ -65,6 +68,8 @@ export default function CreateTaskDialog({
   onClose = () => {},
   onSubmit = () => {},
 }) {
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [assignedToDialogOpen, setAssignedToDialogOpen] = useState(false);
   const { data: users } = useQuery({
     queryKey: ['users'],
     queryFn: getEventsUserList,
@@ -114,203 +119,87 @@ export default function CreateTaskDialog({
     name: 'assigned_to',
   });
 
+  const [newReminder, setNewReminder] = useState({
+    sound: '',
+    value: '',
+    timing: '',
+    relative_to: '',
+  });
+  const [newAssignedTo, setNewAssignedTo] = useState({
+    email: '',
+    role: '',
+    status: '',
+    comment: '',
+    address_type: '',
+    is_primary: false,
+  });
+
+  const handleAddReminderSubmit = () => {
+    appendReminder(newReminder);
+    setNewReminder({
+      sound: '',
+      value: '',
+      timing: '',
+      relative_to: '',
+    });
+    setReminderDialogOpen(false);
+  };
+
+  const handleAddAssignedToSubmit = () => {
+    appendAssignedTo(newAssignedTo);
+    setNewAssignedTo({
+      email: '',
+      role: '',
+      status: '',
+      comment: '',
+      address_type: '',
+      is_primary: false,
+    });
+    setAssignedToDialogOpen(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-[#F5F5FA] rounded-lg w-full max-w-3xl p-6 space-y-6 max-h-[90vh] overflow-y-auto shadow-[0px_4px_24px_0px_#000000] no-scrollbar">
-        <DialogHeader>
-          <DialogTitle className="text-2xl text-[#40444D] text-center font-bold font-sans">
-            Create New Task
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+        <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000] ">
+          <div className="flex items-center justify-between p-4">
+            <h1 className="text-xl text-[#40444D] text-center font-bold font-sans ">
+              Create New Contact
+            </h1>
+            <IconButton onClick={onClose}>
+              <X className="text-black" />
+            </IconButton>
+          </div>
 
-        <form
-          onSubmit={handleSubmit(() => {
-            onSubmit(getValues());
-            reset();
-            onClose();
-          })}
-          className="space-y-4"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {formFields.map(({ label, name, type, required, options }) => (
-              <div key={name}>
-                {type != 'checkbox' && (
-                  <Label className="text-[#40444D] font-semibold mb-2">
-                    {label}
-                  </Label>
-                )}
+          <Divider />
 
-                {type === 'select' ? (
-                  <Controller
-                    control={control}
-                    name={name}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={`Select ${label}`} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {options.map((option) => (
-                              <SelectItem key={option} value={option}>
-                                {option}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                ) : type === 'checkbox' ? (
-                  <div className="flex items-center space-x-2">
+          <div className="space-y-4 flex-1 overflow-auto p-4 no-scrollbar">
+            <div className="flex flex-wrap gap-4 overflow-auto">
+              {formFields.map(({ label, name, type, required, options }) => (
+                <div key={name} className="w-full md:w-[49%]">
+                  {type != 'checkbox' && (
+                    <Label className="text-[#40444D] font-semibold mb-2">
+                      {label}
+                    </Label>
+                  )}
+
+                  {type === 'select' ? (
                     <Controller
                       control={control}
                       name={name}
-                      render={({ field }) => (
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          className={`border ${
-                            errors[name] ? 'border-red-500' : ''
-                          }`}
-                        />
-                      )}
-                    />
-                    <Label className="text-[#40444D] font-semibold">
-                      {label}
-                    </Label>
-                  </div>
-                ) : (
-                  <Controller
-                    control={control}
-                    name={name}
-                    render={({ field }) => <Input type={type} {...field} />}
-                  />
-                )}
-                {errors[name] && (
-                  <p className="text-xs text-red-500">{errors[name].message}</p>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div>
-            <div className="flex justify-between items-center">
-              <Label className="text-[#40444D] font-semibold">Reminders</Label>
-              <div
-                className="p-1 rounded-full hover:bg-[#6366F1] hover:text-white transition-all duration-300 ease-in-out"
-                onClick={() =>
-                  appendReminder({ type: 'email', scheduled_at: '' })
-                }
-              >
-                <Plus className="h-5 w-5" />
-              </div>
-            </div>
-
-            <div className="space-y-2 mt-2">
-              {reminderFields.map((field, index) => (
-                <div key={field.id} className="flex items-center space-x-2">
-                  <Controller
-                    control={control}
-                    name={`reminders.${index}.type`}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            <SelectItem value="email">Email</SelectItem>
-                            <SelectItem value="text">Text</SelectItem>
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  <Controller
-                    control={control}
-                    name={`reminders.${index}.scheduled_at`}
-                    render={({ field }) => (
-                      <Input
-                        type="datetime-local"
-                        className="w-full"
-                        {...field}
-                        value={field.value || ''} // Prevent uncontrolled to controlled warning
-                      />
-                    )}
-                  />
-
-                  <div className="flex items-center justify-end w-20 ">
-                    <Trash2
-                      className="text-[#6366F1] hover:text-red-500 transition-all duration-300 ease-in-out h-5 w-5 cursor-pointer"
-                      onClick={() => removeReminder(index)}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div>
-              <div className="flex justify-between items-center">
-                <div className="flex flex-col items-start space-y-2">
-                  <Label className="text-[#40444D] font-semibold">
-                    Assigned To
-                  </Label>
-                  {errors.assigned_to && (
-                    <p className="text-xs text-red-500">
-                      {errors.assigned_to.message}
-                    </p>
-                  )}
-                </div>
-                <div
-                  className="p-1 rounded-full hover:bg-[#6366F1] hover:text-white transition-all duration-300 ease-in-out"
-                  onClick={() => appendAssignedTo([users[0].id])}
-                >
-                  <Plus className="h-5 w-5" />
-                </div>
-              </div>
-
-              <div className="space-y-2 mt-2">
-                {assignedToFields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="flex flex-1 items-center space-x-2 w-full"
-                  >
-                    {/* Select between user array from dropdown */}
-                    <Controller
-                      control={control}
-                      name={`assigned_to.${index}`}
                       render={({ field }) => (
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                         >
-                          <SelectTrigger
-                            className={`w-full
-                              ${
-                                errors.assigned_to?.message
-                                  ? 'border-red-500'
-                                  : ''
-                              }
-                              `}
-                          >
-                            <SelectValue placeholder="Select User" />
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder={`Select ${label}`} />
                           </SelectTrigger>
-                          <SelectContent className="w-full">
+                          <SelectContent>
                             <SelectGroup>
-                              {users?.map((user) => (
-                                <SelectItem
-                                  key={user.id}
-                                  value={user.id}
-                                  className="w-full"
-                                >
-                                  {user.name}
+                              {options.map((option) => (
+                                <SelectItem key={option} value={option}>
+                                  {option}
                                 </SelectItem>
                               ))}
                             </SelectGroup>
@@ -318,36 +207,251 @@ export default function CreateTaskDialog({
                         </Select>
                       )}
                     />
-                    <div className="flex items-center justify-end w-20 ">
-                      <Trash2
-                        className="text-[#6366F1] hover:text-red-500 transition-all duration-300 ease-in-out h-5 w-5 cursor-pointer"
-                        onClick={() => removeAssignedTo(index)}
+                  ) : type === 'checkbox' ? (
+                    <div className="flex items-center space-x-2">
+                      <Label className="text-[#40444D] font-semibold">
+                        {label}:{' '}
+                      </Label>
+                      <Controller
+                        control={control}
+                        name={name}
+                        render={({ field }) => (
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        )}
                       />
                     </div>
+                  ) : (
+                    <Controller
+                      control={control}
+                      name={name}
+                      render={({ field }) => <Input type={type} {...field} />}
+                    />
+                  )}
+                  {errors[name] && (
+                    <p className="text-xs text-red-500">
+                      {errors[name].message}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-4 overflow-auto">
+              <div className="w-full">
+                <h3 className="text-lg font-semibold mb-1">Reminders</h3>
+                {reminderFields.map((reminder, idx) => (
+                  <div
+                    key={reminder.id}
+                    className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
+                  >
+                    <p className="text-sm">
+                      {reminder.sound}, {reminder.value}, {reminder.timing},{' '}
+                      {reminder.relative_to}
+                    </p>
+                    <Tooltip arrow title="Remove Reminder">
+                      <IconButton
+                        type="button"
+                        onClick={() => removeReminder(idx)}
+                        variant="ghost"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </IconButton>
+                    </Tooltip>
                   </div>
                 ))}
+
+                <Button
+                  type="button"
+                  onClick={() => setReminderDialogOpen(true)}
+                  variant="outline"
+                  className="w-fit mt-2 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Reminder
+                </Button>
+              </div>
+
+              <div className="w-full">
+                <h3 className="text-lg font-semibold mb-1">Assigned To</h3>
+                {assignedToFields.map((assignedTo, idx) => (
+                  <div
+                    key={assignedTo.id}
+                    className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
+                  >
+                    <p className="text-sm">
+                      {assignedTo.user}, {assignedTo.role}, {assignedTo.status},{' '}
+                      {assignedTo.comment}
+                    </p>
+                    <Tooltip arrow title="Remove Assigned To">
+                      <IconButton
+                        type="button"
+                        onClick={() => removeAssignedTo(idx)}
+                        variant="ghost"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </IconButton>
+                    </Tooltip>
+                  </div>
+                ))}
+
+                <Button
+                  type="button"
+                  onClick={() => setAssignedToDialogOpen(true)}
+                  variant="outline"
+                  className="w-fit mt-2 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Assigned To
+                </Button>
               </div>
             </div>
           </div>
+          <Divider />
 
-          <DialogFooter className="pt-4 flex justify-end gap-4">
-            <DialogClose asChild>
-              <Button
-                type="button"
-                className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
-              >
-                Cancel
-              </Button>
-            </DialogClose>
+          <div className="flex items-center justify-end p-4 gap-2">
+            <Button
+              type="button"
+              className="bg-gray-300 text-black hover:bg-gray-400"
+              onClick={onClose}
+            >
+              Cancel
+            </Button>
             <Button
               type="submit"
-              className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
+              onClick={() => onSubmit()}
+              className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
             >
               Create Task
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </Stack>
+      </Dialog>
+
+      {/* Reminder Dialog */}
+      <Dialog
+        open={reminderDialogOpen}
+        onClose={() => setReminderDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <Stack className="bg-[#F5F5FA] rounded-lg p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-center">Add Reminder</h1>
+            <IconButton onClick={() => setReminderDialogOpen(false)}>
+              <X className="text-black" />
+            </IconButton>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { label: 'Sound', name: 'sound', type: 'text' },
+              { label: 'Value', name: 'value', type: 'number' },
+              { label: 'Timing', name: 'timing', type: 'date' },
+              { label: 'Relative To', name: 'relative_to', type: 'text' },
+            ].map(({ label, name, type }) => (
+              <div key={name} className="w-full">
+                <Label className="text-[#40444D] font-semibold mb-2">
+                  {label}
+                </Label>
+                <Controller
+                  control={control}
+                  name={name}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      type={type}
+                      value={field.value}
+                      onChange={(e) => setValue(name, e.target.value)}
+                      placeholder={name.replace('_', ' ')}
+                    />
+                  )}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-end p-4 gap-2">
+            <Button
+              type="button"
+              className="bg-gray-300 text-black hover:bg-gray-400"
+              onClick={() => setReminderDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
+              onClick={handleAddReminderSubmit}
+            >
+              Save Reminder
+            </Button>
+          </div>
+        </Stack>
+      </Dialog>
+
+      {/* Assigned To Dialog */}
+      <Dialog
+        open={assignedToDialogOpen}
+        onClose={() => setAssignedToDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <Stack className="bg-[#F5F5FA] rounded-lg p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-center">Add Assigned To</h1>
+            <IconButton onClick={() => setAssignedToDialogOpen(false)}>
+              <X className="text-black" />
+            </IconButton>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { label: 'User', name: 'user', type: 'text' },
+              { label: 'Role', name: 'role', type: 'text' },
+              { label: 'Status', name: 'status', type: 'text' },
+            ].map(({ label, name, type }) => (
+              <div key={name} className="w-full">
+                <Label className="text-[#40444D] font-semibold mb-2">
+                  {label}
+                </Label>
+                <Controller
+                  control={control}
+                  name={name}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      type={type}
+                      value={field.value}
+                      onChange={(e) => setValue(name, e.target.value)}
+                      placeholder={name.replace('_', ' ')}
+                    />
+                  )}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-end p-4 gap-2">
+            <Button
+              type="button"
+              className="bg-gray-300 text-black hover:bg-gray-400"
+              onClick={() => setAssignedToDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
+              onClick={handleAddAssignedToSubmit}
+            >
+              Save Assigned To
+            </Button>
+          </div>
+        </Stack>
+      </Dialog>
+    </>
   );
 }
