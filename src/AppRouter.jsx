@@ -66,7 +66,14 @@ const AppRouter = () => (
           <Route path="bulk-import" element={<BulkImportPage />} />
           <Route path="calendar/:id" element={<CalendarPage />} />
           <Route path="tasks" element={<TasksPage />} />
-          <Route path="inbox/*" element={<InboxPage />}>
+          <Route
+            path="inbox/*"
+            element={
+              <ProtectedRoute>
+                <InboxPage />
+              </ProtectedRoute>
+            }
+          >
             <Route index element={<MatterIntakePage />} />
             <Route path="overview/create" element={<CreateIntake />} />
             <Route path="overview/" element={<Overview />} />

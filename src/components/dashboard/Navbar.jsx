@@ -5,21 +5,42 @@ import {
   SlidersHorizontal,
   ChevronDown,
   MenuSquare,
+  Loader2,
+  Plus,
+  Share2,
+  Settings,
+  LogOut,
 } from 'lucide-react';
 import Sidebar from './Sidebar';
 import MuiDrawer from '@mui/material/Drawer';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useNavigate } from 'react-router-dom';
 
 export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [loadingLogout, setLoadingLogout] = React.useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    setLoadingLogout(true);
+    setTimeout(() => {
+      // clear auth (example)
+      localStorage.removeItem('authToken');
+      navigate('/login');
+    }, 1500);
+  };
 
   return (
     <header
       className="w-full h-20 flex items-center justify-between px-4 md:px-8 flex-nowrap"
       style={{
-        // backdropFilter: 'blur(20px)',
-        // boxShadow: '0px 4px 4px 0px #4D515A1F',
         fontFamily: 'Inter, sans-serif',
-        // background: 'rgba(255,255,255,0.8)',
         background: 'transparent',
       }}
     >
@@ -47,25 +68,9 @@ export default function Navbar() {
       >
         <Sidebar isDrawer={true} />
       </MuiDrawer>
-      {/* Search Bar: show input on md+, icon on mobile */}
+
+      {/* Search Icon (mobile) */}
       <div className="flex-1 flex items-center min-w-0">
-        {/* <div
-          className="hidden md:flex items-center w-full max-w-xs rounded-sm bg-white px-4 py-2 shadow"
-          style={{
-            backdropFilter: 'blur(20px)',
-            boxShadow: '0px 4px 4px 0px #4D515A1F',
-            background:
-              'linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%)',
-          }}
-        >
-          <input
-            type="text"
-            placeholder="Search"
-            className="flex-1 bg-transparent outline-none border-none text-gray-700 placeholder-gray-400 font-medium text-base"
-            style={{ fontFamily: 'Inter, sans-serif' }}
-          />
-          <Search className="h-5 w-5 text-gray-400 ml-2" />
-        </div> */}
         <button
           className="flex md:hidden items-center justify-center p-2 ml-2 rounded bg-white shadow"
           style={{
@@ -77,44 +82,44 @@ export default function Navbar() {
           <Search className="h-5 w-5 text-gray-700" />
         </button>
       </div>
+
       {/* Right Side */}
       <div className="flex items-center gap-4 ml-2 md:ml-8 flex-shrink-0">
-        <button
-          className="rounded-sm bg-white p-2 shadow flex items-center justify-center"
-          style={{
-            backdropFilter: 'blur(20px)',
-            boxShadow: '0px 4px 4px 0px #4D515A1F',
-          }}
-        >
+        <button className="rounded-sm bg-white p-2 shadow flex items-center justify-center">
           <Home className="h-5 w-5 text-gray-500" />
         </button>
-        <button
-          className="rounded-sm bg-white p-2 shadow flex items-center justify-center"
-          style={{
-            backdropFilter: 'blur(20px)',
-            boxShadow: '0px 4px 4px 0px #4D515A1F',
-          }}
-        >
+        <button className="rounded-sm bg-white p-2 shadow flex items-center justify-center">
           <SlidersHorizontal className="h-5 w-5 text-gray-500" />
         </button>
-        <div className="flex items-center gap-2 ml-4">
-          <img
-            src="https://randomuser.me/api/portraits/men/32.jpg"
-            alt="User Avatar"
-            className="h-8 w-8 rounded-full object-cover shadow"
-            style={{
-              backdropFilter: 'blur(20px)',
-              boxShadow: '0px 4px 4px 0px #4D515A1F',
-            }}
-          />
-          <span
-            className="font-medium text-gray-700"
-            style={{ fontFamily: 'Inter, sans-serif' }}
-          >
-            Shibtain
-          </span>
-          <ChevronDown className="h-4 w-4 text-gray-400" />
-        </div>
+
+        {/* Profile Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 ml-4 rounded p-1 hover:cursor-pointer hover:bg-gray-100 transition">
+              <img
+                src="https://randomuser.me/api/portraits/men/32.jpg"
+                alt="User Avatar"
+                className="h-8 w-8 rounded-full object-cover shadow"
+              />
+              <span className="font-medium text-gray-700">Shibtain</span>
+              <ChevronDown className="h-4 w-4 text-gray-400" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-48">
+            <DropdownMenuItem
+              onClick={handleLogout}
+              disabled={loadingLogout}
+              className="text-red-600 focus:text-red-600"
+            >
+              {loadingLogout ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <LogOut className="mr-2 h-4 w-4" />
+              )}
+              {loadingLogout ? 'Logging out...' : 'Logout'}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

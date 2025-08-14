@@ -236,14 +236,13 @@ const Sidebar = ({ isDrawer }) => {
   const itemsToRender =
     sidebarMode === 'inbox' ? inboxSidebarItems : sidebarItems;
 
-  const activeItems = location.pathname
-    .split('/')
-    .filter((item) => item !== '');
-  const activeItem = itemsToRender.find((item) => {
-    return activeItems.includes(item.id.split('/').pop());
-  });
+  // const activeItems = location.pathname
+  //   .split('/')
+  //   .filter((item) => item !== '');
+  const activeItem = itemsToRender
+    .filter((item) => location.pathname.startsWith(item.id))
+    .sort((a, b) => b.id.length - a.id.length)[0];
 
-  let lastSlug = '';
   const searchParams = new URLSearchParams(location.search);
   const slug = searchParams.get('slugId');
 
