@@ -22,7 +22,7 @@ import searchContact from '@/pages/matter/intake/helpers/searchContact';
 import createMatter from '@/pages/matter/intake/helpers/createMatter';
 import { useNavigate } from 'react-router-dom';
 import CreateContactDialog from './CreateContactDialog';
-import { X } from 'lucide-react';
+import { Edit, X, ChevronDown, ChevronRight, Plus } from 'lucide-react';
 import BreadCrumb from '@/components/BreadCrumb';
 
 export default function CreateIntake() {
@@ -34,12 +34,18 @@ export default function CreateIntake() {
   const [showContactTable, setShowContactTable] = useState(false);
   const [hoveredContact, setHoveredContact] = useState(null);
   const [selectedContact, setSelectedContact] = useState(null);
+  const [isEventsCollapsed, setIsEventsCollapsed] = useState(false);
 
   const createMatterMutation = useMutation({
     mutationFn: createMatter,
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['matters'] });
-      navigate('/dashboard/inbox');
+      console.log("DATA", data);
+      if (data && data.slug) {
+        navigate(`/dashboard/inbox/overview?slugId=${data.slug}`);
+      } else {
+        navigate('/dashboard/inbox');
+      }
     },
   });
 
@@ -163,7 +169,7 @@ export default function CreateIntake() {
 
           <form
             onSubmit={handleSubmit((data) => handleCreateIntake(data))}
-            className="space-y-4 w-full h-full flex flex-col justify-between"
+            className="space-y-4 w-full h-full flex flex-col"
           >
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -209,9 +215,8 @@ export default function CreateIntake() {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            className={`border ${
-                              errors[name] ? 'border-red-500' : ''
-                            }`}
+                            className={`border ${errors[name] ? 'border-red-500' : ''
+                              }`}
                           />
                         )}
                       />
@@ -231,218 +236,263 @@ export default function CreateIntake() {
                 ))}
               </div>
 
+
+
               {/* Contact Type Select */}
-              <div className="w-full space-y-2">
-                <Label className="text-[#40444D] font-semibold block">
-                  Contact Type
-                </Label>
-                <Select onValueChange={setSelectedContactType}>
-                  <SelectTrigger className="w-1/4">
-                    <SelectValue placeholder="Select Contact Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {contactType.map((c) => (
-                      <SelectItem key={c.id} value={c.name}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
 
-              {/* Search Contact */}
-              <div className="relative space-y-2">
-                <Label className="text-[#40444D] font-semibold block">
-                  Search Contact
-                </Label>
-                <Controller
-                  control={control}
-                  name="contact_id"
-                  render={() => (
-                    <>
-                      <Input
-                        placeholder="Search by name or email..."
-                        value={searchContactQuery}
-                        onChange={(e) => {
-                          setSearchContactQuery(e.target.value);
-                          setShowContactTable(true);
-                          setSelectedContact(null);
-                        }}
-                        className="w-1/2"
-                        disabled={!selectedContactType}
-                      />
-                    </>
-                  )}
-                />
-                <p className="text-[0.7rem] text-[#40444D] text-start w-1/2">
-                  Don't have a contact?{' '}
-                  <span
-                    onClick={() => setOpen(true)}
-                    className="text-[#6366F1] cursor-pointer hover:underline"
-                  >
-                    Add a new contact
-                  </span>
-                </p>
-                {searchContactQuery && showContactTable && !selectedContact && (
-                  <div
-                    className="flex w-full mt-4"
-                    style={{ minHeight: '220px' }}
-                  >
-                    <div className="w-1/2 border rounded-lg bg-transparent shadow p-2 overflow-y-auto">
-                      <table className="w-full text-left">
-                        <thead>
-                          <tr className="bg-gray-100">
-                            <th className="py-2 px-2">Name</th>
-                            <th className="py-2 px-2">Type</th>
-                            <th className="py-2 px-2">Email</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {searchContactData?.length > 0 ? (
-                            searchContactData
-                              .filter(
-                                (c) =>
-                                  c.contact_name
-                                    .toLowerCase()
-                                    .includes(
-                                      searchContactQuery.toLowerCase()
-                                    ) ||
-                                  c.primary_email
-                                    .toLowerCase()
-                                    .includes(searchContactQuery.toLowerCase())
-                              )
-                              .map((contact) => (
-                                <tr
-                                  key={contact.id}
-                                  className={`cursor-pointer hover:bg-indigo-100 transition duration-300 ease-in-out ${
-                                    hoveredContact?.id === contact.id
-                                      ? 'bg-indigo-50'
-                                      : ''
-                                  }`}
-                                  onMouseEnter={() =>
-                                    setHoveredContact(contact)
-                                  }
-                                  onMouseLeave={() => setHoveredContact(null)}
-                                  onClick={() => {
-                                    setSelectedContact(contact);
-                                    setShowContactTable(false);
-                                    setValue('contact_id', contact.id);
-                                  }}
-                                >
-                                  <td className="py-2 px-2">
-                                    {contact.contact_name}
-                                  </td>
-                                  <td className="py-2 px-2">
-                                    {contact.contact_type}
-                                  </td>
-                                  <td className="py-2 px-2">
-                                    {contact.primary_email}
-                                  </td>
-                                </tr>
-                              ))
-                          ) : (
-                            <tr>
-                              <td colSpan={3} className="py-2 px-2 text-center">
-                                No contacts found
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="w-1/2 pl-4">
-                      {hoveredContact && (
-                        <div className="border rounded-lg bg-transparent shadow p-4">
-                          <h2 className="font-bold text-lg mb-2">
-                            Contact Preview
-                          </h2>
-                          <p>
-                            <span className="font-semibold">Name:</span>{' '}
-                            {hoveredContact?.contact_name}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Type:</span>{' '}
-                            {hoveredContact?.contact_type}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Email:</span>{' '}
-                            {hoveredContact?.primary_email}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Phone:</span>{' '}
-                            {hoveredContact?.phone}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Address:</span>{' '}
-                            {hoveredContact?.primary_address}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Created:</span>{' '}
-                            {hoveredContact?.date_created}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+              <div className={`flex gap-4 w-full ${selectedContact ? 'hidden' : ''}`}>
+                <div className="w-[24vw] space-y-2">
+                  <Label className="text-[#40444D] w-full font-semibold block">
+                    Contact Type
+                  </Label>
+                  <Select onValueChange={setSelectedContactType}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select Contact Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {contactType.map((c) => (
+                        <SelectItem key={c.id} value={c.name}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                {selectedContact && (
-                  <div className="w-full mt-4">
-                    <div className="relative border rounded-lg bg-transparent shadow p-4">
-                      <h2 className="font-bold text-lg mb-2">
-                        Selected Contact
-                      </h2>
-                      <Button
-                        variant={'ghost'}
-                        type="icon"
-                        size={12}
-                        className="absolute top-2 right-2 p-2 rounded-full hover:bg-red-500 hover:text-white transition-colors duration-200 cursor-pointer"
-                        onClick={() => {
-                          setSelectedContact(null);
-                          setValue('contact_id', '');
-                          setShowContactTable(true);
-                        }}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                      <p>
-                        <span className="font-semibold">Name:</span>{' '}
-                        {selectedContact.contact_name}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Type:</span>{' '}
-                        {selectedContact.contact_type}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Email:</span>{' '}
-                        {selectedContact.primary_email}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Phone:</span>{' '}
-                        {selectedContact.phone}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Address:</span>{' '}
-                        {selectedContact.primary_address}
-                      </p>
-                      <p>
-                        <span className="font-semibold">Created:</span>{' '}
-                        {selectedContact.date_created}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {errors.contact_id && (
-                  <p className="text-xs text-red-500">
-                    {errors.contact_id.message || 'Contact is required.'}
+                {/* Search Contact */}
+                <div className="w-full  space-y-2">
+                  <Label className="text-[#40444D] font-semibold block">
+                    Search Contact
+                  </Label>
+                  <Controller
+                    control={control}
+                    name="contact_id"
+                    render={() => (
+                      <>
+                        <Input
+                          placeholder="Search by name or email..."
+                          value={searchContactQuery}
+                          onChange={(e) => {
+                            setSearchContactQuery(e.target.value);
+                            setShowContactTable(true);
+                            setSelectedContact(null);
+                          }}
+                          className="w-1/2 bg-white"
+                          disabled={!selectedContactType}
+                        />
+                      </>
+                    )}
+                  />
+                  <p className="text-[0.7rem] text-[#40444D] text-start w-1/2">
+                    Don't have a contact?{' '}
+                    <span
+                      onClick={() => setOpen(true)}
+                      className="text-[#6366F1] cursor-pointer hover:underline"
+                    >
+                      Add a new contact
+                    </span>
                   </p>
-                )}
+
+                </div>
               </div>
+
+              {searchContactQuery && showContactTable && !selectedContact && (
+                <div
+                  className="flex w-full mt-4"
+                  style={{ minHeight: '220px' }}
+                >
+                  <div className="w-1/2 border rounded-lg bg-white shadow overflow-y-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="bg-gray-100">
+                          <th className="py-2 px-4">Name</th>
+                          <th className="py-2 px-2">Case Type</th>
+                          <th className="py-2 px-2">Email</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {searchContactData?.length > 0 ? (
+                          searchContactData
+                            .filter(
+                              (c) =>
+                                c.contact_name
+                                  .toLowerCase()
+                                  .includes(
+                                    searchContactQuery.toLowerCase()
+                                  ) ||
+                                c.primary_email
+                                  .toLowerCase()
+                                  .includes(searchContactQuery.toLowerCase())
+                            )
+                            .map((contact) => (
+                              <tr
+                                key={contact.id}
+                                className={`cursor-pointer hover:bg-indigo-100 transition duration-300 ease-in-out ${hoveredContact?.id === contact.id
+                                  ? 'bg-indigo-50'
+                                  : ''
+                                  }`}
+                                onMouseEnter={() =>
+                                  setHoveredContact(contact)
+                                }
+                                onMouseLeave={() => setHoveredContact(null)}
+                                onClick={() => {
+                                  setSelectedContact(contact);
+                                  setShowContactTable(false);
+                                  setValue('contact_id', contact.id);
+                                }}
+                              >
+                                <td className="py-2 px-4">
+                                  {contact.contact_name}
+                                </td>
+                                <td className="py-2 px-2">
+                                  {contact.contact_type}
+                                </td>
+                                <td className="py-2 px-2">
+                                  {contact.primary_email}
+                                </td>
+                              </tr>
+                            ))
+                        ) : (
+                          <tr>
+                            <td colSpan={3} className="py-2 px-2 text-center">
+                              No contacts found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="w-1/2 pl-4">
+                    {hoveredContact && (
+                      <div className="border rounded-lg bg-white shadow p-4">
+                        <h2 className="font-bold text-lg mb-2">
+                          Contact Preview
+                        </h2>
+                        <p>
+                          <span className="font-semibold">Name:</span>{' '}
+                          {hoveredContact?.contact_name}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Case Type:</span>{' '}
+                          {hoveredContact?.contact_type}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Email:</span>{' '}
+                          {hoveredContact?.primary_email}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Phone:</span>{' '}
+                          {hoveredContact?.phone}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Address:</span>{' '}
+                          {hoveredContact?.primary_address}
+                        </p>
+                        <p>
+                          <span className="font-semibold">Created:</span>{' '}
+                          {hoveredContact?.date_created}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {selectedContact && (
+                <div className="w-full mt-4">
+                  <div className="relative border rounded-lg bg-white shadow p-4">
+                    <h2 className="font-bold text-lg mb-2">
+                      Selected Contact
+                    </h2>
+                    <Button
+                      variant={'ghost'}
+                      type="icon"
+                      className="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-500 hover:text-white transition-colors duration-200 cursor-pointer"
+                      onClick={() => {
+                        setSelectedContact(null);
+                        setValue('contact_id', '');
+                        setShowContactTable(true);
+                      }}
+                    >
+                      <Edit className="w-8 h-8" />
+                    </Button>
+                    <p>
+                      <span className="font-semibold">Name:</span>{' '}
+                      {selectedContact.contact_name}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Type:</span>{' '}
+                      {selectedContact.contact_type}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Email:</span>{' '}
+                      {selectedContact.primary_email}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Phone:</span>{' '}
+                      {selectedContact.phone}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Address:</span>{' '}
+                      {selectedContact.primary_address}
+                    </p>
+                    <p>
+                      <span className="font-semibold">Created:</span>{' '}
+                      {selectedContact.date_created}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {errors.contact_id && (
+                <p className="text-xs text-red-500">
+                  {errors.contact_id.message || 'Contact is required.'}
+                </p>
+              )}
+
+            </div>
+
+            {/* Upcoming Events */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div
+                className="flex items-center justify-between cursor-pointer mb-2"
+                onClick={() => setIsEventsCollapsed(!isEventsCollapsed)}
+              >
+                <span className="text-lg font-semibold text-gray-800">Upcoming Events</span>
+                <div className="text-gray-500 hover:text-gray-700 transition-colors">
+                  {isEventsCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
+              </div>
+
+              {!isEventsCollapsed && (
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Event</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Date</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Time</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white">
+                      <tr>
+                        <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                          <div className="flex flex-col items-center">
+                            <div className="text-4xl mb-2">📅</div>
+                            <p className="text-sm font-medium">No upcoming events</p>
+                            <p className="text-xs text-gray-400">Events will appear here when scheduled</p>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
             {/* Buttons */}
-            <div className="pt-4 flex justify-end gap-4">
+            <div className="pt-4 flex justify-end gap-4 pb-4">
               <Button
                 type="button"
                 className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"

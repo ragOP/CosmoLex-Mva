@@ -6,15 +6,17 @@ import ShowTaskDialog from '@/components/tasks/ShowTaskDialog';
 import DeleteTaskDialog from '@/components/tasks/DeleteTaskDialog';
 import TaskTable from '@/components/tasks/TaskTable';
 import createTask from './helpers/createTask';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import getTasks from './helpers/getTasks';
 import getTask from './helpers/getTask';
 import updateTaskStatus from './helpers/updateTaskStatus';
 import deleteTask from './helpers/deleteTask';
 import updateTask from './helpers/updateTask';
+import { useNavigate } from 'react-router-dom';
 
 const TasksPage = () => {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
@@ -99,6 +101,8 @@ const TasksPage = () => {
         <Button
           onClick={() => setOpen(true)}
           className="cursor-pointer max-w-48"
+          icon={Plus}
+          iconPosition='left'
         >
           Create Task
         </Button>

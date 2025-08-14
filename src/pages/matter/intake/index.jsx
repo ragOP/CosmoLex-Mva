@@ -1,7 +1,7 @@
 import React from 'react';
 import Button from '@/components/Button';
 import MatterTable from '@/components/matter/MatterTable';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import getMatters from './helpers/getMatters';
 import { useNavigate } from 'react-router-dom';
@@ -29,6 +29,8 @@ const TasksPage = () => {
         <Button
           onClick={() => navigate(`/dashboard/inbox/overview/create`)}
           className="cursor-pointer max-w-48"
+          icon={Plus}
+          iconPosition='left'
         >
           Create Matter
         </Button>

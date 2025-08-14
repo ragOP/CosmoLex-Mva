@@ -24,21 +24,30 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createMatterSchema } from '@/pages/matter/intake/schema/createMatterSchema';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import getMatter from '@/pages/matter/intake/helpers/getMatter';
 import getMatterMeta from '@/pages/matter/intake/helpers/getMatterMeta';
-import getContacts from '@/pages/matter/intake/helpers/getContacts';
 import searchContact from '@/pages/matter/intake/helpers/searchContact';
+import updateMatter from '@/pages/matter/intake/helpers/updateMatter';
 import isArrayWithValues from '@/utils/isArrayWithValues';
 
 export default function UpdateMatterDialog({
   open = false,
   onClose = () => {},
-  onSubmit = () => {},
   slug = '',
 }) {
+  const queryClient = useQueryClient();
   const [selectedContactType, setSelectedContactType] = useState(null);
   const [searchContactQuery, setSearchContactQuery] = useState('');
+
+  const updateMatterMutation = useMutation({
+    mutationFn: updateMatter,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['matters'] });
+      queryClient.invalidateQueries({ queryKey: ['matter', slug] });
+      onClose();
+    },
+  });
 
   const { data: matter, isLoading } = useQuery({
     queryKey: ['matter', slug],
@@ -48,10 +57,6 @@ export default function UpdateMatterDialog({
   const { data: matterMeta } = useQuery({
     queryKey: ['matterMeta'],
     queryFn: getMatterMeta,
-  });
-  const { data: contacts } = useQuery({
-    queryKey: ['contacts'],
-    queryFn: getContacts,
   });
 
   const { data: searchContactData, refetch: refetchSearchContact } = useQuery({
@@ -83,7 +88,6 @@ export default function UpdateMatterDialog({
     formState: { errors },
     getValues,
     reset,
-    setValue,
   } = useForm({
     defaultValues: {
       case_role: '',
@@ -177,14 +181,13 @@ export default function UpdateMatterDialog({
           </div>
         ) : (
           <form
-            onSubmit={handleSubmit(() => {
-              onSubmit(slug, getValues());
-              onClose();
+            onSubmit={handleSubmit((data) => {
+              updateMatterMutation.mutate({ slug, data });
             })}
             className="space-y-4"
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {formFields.map(({ label, name, type, required, options }) => (
+              {formFields.map(({ label, name, type, options }) => (
                 <div key={name}>
                   {type !== 'checkbox' && (
                     <Label className="text-[#40444D] font-semibold mb-2">
@@ -342,8 +345,13 @@ export default function UpdateMatterDialog({
               <Button
                 type="submit"
                 className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
+                disabled={updateMatterMutation.isPending}
               >
-                Update Matter
+                {updateMatterMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  'Update Matter'
+                )}
               </Button>
             </DialogFooter>
           </form>
