@@ -4,8 +4,8 @@
 // Common answer options with label and value structure
 const ANSWER_OPTIONS = {
   YES_NO: [
-    { label: 'Yes', value: 'yes' },
-    { label: 'No', value: 'no' },
+    { label: 'Yes', value: true },
+    { label: 'No', value: false },
   ],
   DRIVER_PASSENGER: [
     { label: 'Driver', value: 'Driver' },
@@ -121,7 +121,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.ACCIDENT_INFO,
     },
-   
+
     'How did the accident occur?': {
       key: 'accident_details',
       type: 'textarea',
@@ -593,7 +593,7 @@ export const getInitialFormData = (caseType, matter = null, mode = 'add') => {
   const fields = getFormFields(caseType);
   const initialData = {};
 
-  fields.forEach(field => {
+  fields.forEach((field) => {
     // For edit mode, use existing matter data if available
     if (mode === 'edit' && matter && matter[field.name]) {
       // Handle date fields - keep in API format (YYYY-MM-DD) for storage
@@ -613,7 +613,7 @@ export const getInitialFormData = (caseType, matter = null, mode = 'add') => {
       } else {
         initialData[field.name] = matter[field.name];
       }
-    } 
+    }
     // For add mode, use matter data if available, otherwise use defaults
     else if (mode === 'add' && matter && matter[field.name]) {
       // Handle date fields - keep in API format (YYYY-MM-DD) for storage
@@ -655,7 +655,10 @@ export const getInitialFormData = (caseType, matter = null, mode = 'add') => {
         case 'dropdown':
         case 'radio':
           // Use first option value if available, otherwise empty string
-          initialData[field.name] = field.options && field.options.length > 0 ? field.options[0].value : '';
+          initialData[field.name] =
+            field.options && field.options.length > 0
+              ? field.options[0].value
+              : '';
           break;
         case 'checkbox':
           initialData[field.name] = false;
@@ -676,15 +679,19 @@ export const getInitialFormData = (caseType, matter = null, mode = 'add') => {
  * @param {string} caseType - The case type to get field configurations
  * @returns {object} Formatted data for submission
  */
-export const getFormDataForSubmission = (formData, mode = 'add', caseType = 'Auto Accident') => {
+export const getFormDataForSubmission = (
+  formData,
+  mode = 'add',
+  caseType = 'Auto Accident'
+) => {
   const submissionData = { ...formData };
   const fields = getFormFields(caseType);
-  
+
   // Process each field for submission
-  Object.keys(submissionData).forEach(key => {
+  Object.keys(submissionData).forEach((key) => {
     const value = submissionData[key];
-    const field = fields.find(f => f.name === key);
-    
+    const field = fields.find((f) => f.name === key);
+
     // Handle date field formatting for API
     if (field && field.type === 'date' && value) {
       if (value instanceof Date) {
@@ -698,7 +705,7 @@ export const getFormDataForSubmission = (formData, mode = 'add', caseType = 'Aut
         }
       }
     }
-    
+
     // Handle time field formatting for API (H:i:s format)
     if (field && field.type === 'time' && value) {
       if (value instanceof Date) {
@@ -731,7 +738,7 @@ export const getFormDataForSubmission = (formData, mode = 'add', caseType = 'Aut
         }
       }
     }
-    
+
     // Handle datetime field formatting for API
     if (field && field.type === 'datetime' && value) {
       if (value instanceof Date) {
@@ -753,13 +760,16 @@ export const getFormDataForSubmission = (formData, mode = 'add', caseType = 'Aut
         }
       }
     }
-    
+
     // For add mode, filter out empty values
-    if (mode === 'add' && (value === '' || value === null || value === undefined)) {
+    if (
+      mode === 'add' &&
+      (value === '' || value === null || value === undefined)
+    ) {
       delete submissionData[key];
     }
   });
-  
+
   return submissionData;
 };
 

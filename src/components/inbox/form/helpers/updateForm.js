@@ -9,7 +9,7 @@ export const updateForm = async ({ slug, formData }) => {
       data: formData,
     });
 
-    return apiResponse;
+    return apiResponse?.response;
   } catch (error) {
     console.error(error);
   }

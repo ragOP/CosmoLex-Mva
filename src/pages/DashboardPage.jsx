@@ -5,7 +5,7 @@ import { Outlet } from 'react-router-dom';
 
 const DashboardPage = () => (
   <div
-    className="flex h-screen overflow-auto no-scrollbar bg-transparent"
+    className="flex h-screen overflow-hidden no-scrollbar bg-transparent"
     style={{
       // background: "linear-gradient(90deg,rgba(235, 233, 254, 1) 0%, rgba(253, 253, 253, 1) 50%, rgba(254, 246, 232, 1) 100%)",
       backgroundImage: `url("/dashboard-bg.png")`,

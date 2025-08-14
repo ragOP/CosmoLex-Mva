@@ -28,16 +28,12 @@ const Form = () => {
 
   const searchParams = new URLSearchParams(window.location.search);
   const slugId = searchParams.get('slugId');
-  console.log('MATTER >>>>', matter, slugId);
 
   // Get case type from matter with proper default
   const caseType = matter?.case_type || 'Auto Accident';
 
   // Mode state that depends on API response, not slugId
   const [mode, setMode] = useState('add');
-
-  console.log('FORM SLUG ID >>>>', slugId);
-  console.log('FORM MODE >>>>', mode);
 
   // Get form fields based on case type
   const formFields = getFormFields(caseType);
@@ -59,10 +55,6 @@ const Form = () => {
     cacheTime: 10 * 60 * 1000, // 10 minutes
   });
 
-  console.log('FORM RESPONSE >>>>', formResponse);
-  console.log('FORM LOADING >>>>', isLoading);
-  console.log('FORM ERROR >>>>', error);
-
   // Determine mode based on API response
   useEffect(() => {
     if (formResponse) {
@@ -83,8 +75,6 @@ const Form = () => {
       setMode('add');
     }
   }, [formResponse]);
-
-  console.log('FORM FIELDS >>>>', formResponse, formFields);
 
   // Date format conversion functions
   const formatDateForAPI = (dateValue) => {
@@ -137,8 +127,6 @@ const Form = () => {
     setFormData(initialData);
   }, [formResponse, mode, caseType]);
 
-  console.log('>>>', formData);
-
   // Handle field value changes
   const handleFieldChange = (fieldName, value) => {
     const field = formFields.find((f) => f.name === fieldName);
@@ -149,7 +137,6 @@ const Form = () => {
     if (field && field.type === 'date') {
       if (value instanceof Date) {
         // Convert Date object to string for storage
-        console.log('DATE VALUE >>>>', value);
         processedValue = formatDateForAPI(value);
       } else if (typeof value === 'string') {
         // Convert string to Date object for form display
@@ -272,7 +259,7 @@ const Form = () => {
   const sections = groupFieldsBySection(formFields);
 
   return (
-    <Stack sx={{ p: 4 }}>
+    <div className="flex flex-col items-center justify-center rounded-2xl overflow-hidden no-scrollbar p-4">
       <Stack
         sx={{
           width: '100%',
@@ -286,19 +273,10 @@ const Form = () => {
         <Stack
           sx={{
             p: 2,
+            pb: 0,
           }}
         >
-          {/* <Typography
-            variant="h5"
-            sx={{
-              fontWeight: 600,
-              color: '#1f2937',
-              fontSize: '1.25rem',
-            }}
-          > */}
           <BreadCrumb label={getFormTitle()} />
-          {/* {getFormTitle()} */}
-          {/* </Typography> */}
         </Stack>
 
         {/* Form Content */}
@@ -306,6 +284,7 @@ const Form = () => {
           <Stack
             sx={{
               m: 2,
+              mt: 0,
               p: 2,
               borderRadius: '1rem',
               backgroundColor: 'rgba(255, 255, 255, 0.4)',
@@ -399,29 +378,19 @@ const Form = () => {
                 </Stack>
               ))
             )}
-
-            <Stack
-              sx={{
-                px: 2,
-                py: 2,
-
-                flexDirection: 'row',
-                justifyContent: 'flex-end',
-                gap: 2,
-              }}
-            >
+            <div className="flex items-end justify-end gap-2 p-2 ">
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleCancel}
-                className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-100"
+                className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer max-w-48"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer max-w-48"
               >
                 {isSubmitting ? (
                   <div className="flex items-center space-x-2">
@@ -432,13 +401,11 @@ const Form = () => {
                   getSubmitButtonText()
                 )}
               </Button>
-            </Stack>
+            </div>
           </Stack>
-
-          {/* Fixed Action Buttons */}
         </form>
       </Stack>
-    </Stack>
+    </div>
   );
 };
 
