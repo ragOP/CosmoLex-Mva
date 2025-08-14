@@ -358,7 +358,7 @@ export default function Overview() {
                       <thead>
                         <tr className="bg-gray-100">
                           <th className="py-2 px-2">Name</th>
-                          <th className="py-2 px-2">Type</th>
+                          <th className="py-2 px-2">Case Type</th>
                           <th className="py-2 px-2">Email</th>
                         </tr>
                       </thead>
@@ -422,7 +422,7 @@ export default function Overview() {
                           {hoveredContact?.contact_name}
                         </p>
                         <p>
-                          <span className="font-semibold">Type:</span>{' '}
+                          <span className="font-semibold">Case Type:</span>{' '}
                           {hoveredContact?.contact_type}
                         </p>
                         <p>
@@ -469,7 +469,7 @@ export default function Overview() {
                       {selectedContact.contact_name}
                     </p>
                     <p>
-                      <span className="font-semibold">Type:</span>{' '}
+                      <span className="font-semibold">Case Type:</span>{' '}
                       {selectedContact.contact_type}
                     </p>
                     <p>
