@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const contactSchema = z.object({
   nature: z.string().min(1, 'Nature is required'),
-  contact_type: z.string().min(1, 'Contact type is required'),
+  contact_type: z.number().min(1, 'Contact type is required'),
   prefix: z.string().min(1, 'Prefix is required'),
   first_name: z.string().min(1, 'First name is required'),
   middle_name: z.string().min(1, 'Middle name is required'),

@@ -25,10 +25,18 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2 } from 'lucide-react';
 import { contactSchema } from '@/pages/matter/intake/schema/contactSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import createContact from '@/pages/matter/intake/helpers/createContact';
+import getContactMeta from '@/pages/matter/intake/helpers/getContactMeta';
+import { toast } from 'sonner';
 
 export default function CreateContactDialog({ open, setOpen }) {
+  const { data: contactMeta } = useQuery({
+    queryKey: ['contactMeta'],
+    queryFn: getContactMeta,
+  });
+  console.log('Contact Meta:', contactMeta);
+
   const {
     control,
     handleSubmit,
@@ -94,11 +102,6 @@ export default function CreateContactDialog({ open, setOpen }) {
     name: 'addresses',
   });
 
-  const contactType = [
-    { id: 1, name: 'Client' },
-    { id: 2, name: 'Attorney' },
-  ];
-
   const formFields = [
     {
       label: 'Nature',
@@ -115,14 +118,14 @@ export default function CreateContactDialog({ open, setOpen }) {
       name: 'contact_type',
       type: 'select',
       required: true,
-      options: contactType,
+      options: contactMeta?.contact_type || [],
     },
     {
       label: 'Prefix',
       name: 'prefix',
       type: 'select',
       required: true,
-      options: ['Mr', 'Mrs', 'Ms', 'Dr', 'Rev', 'Prof', 'Other'],
+      options: contactMeta?.prefix || [],
     },
     { label: 'First Name', name: 'first_name', type: 'text', required: true },
     { label: 'Middle Name', name: 'middle_name', type: 'text', required: true },
@@ -151,7 +154,7 @@ export default function CreateContactDialog({ open, setOpen }) {
       name: 'gender',
       type: 'select',
       required: true,
-      options: ['M', 'F', 'Other'],
+      options: contactMeta?.gender || [],
     },
     { label: 'Alias', name: 'alias', type: 'text', required: false },
     {
@@ -159,7 +162,7 @@ export default function CreateContactDialog({ open, setOpen }) {
       name: 'marital_status',
       type: 'select',
       required: false,
-      options: ['Single', 'Married', 'Divorced', 'Widowed'],
+      options: contactMeta?.marital_status || [],
     },
     { label: 'Company Name', name: 'company_name', type: 'text' },
     { label: 'Job Title', name: 'job_title', type: 'text' },
@@ -246,16 +249,9 @@ export default function CreateContactDialog({ open, setOpen }) {
       <DialogContent className="bg-[#F5F5FA] rounded-lg min-w-[60%] p-6 space-y-6 max-h-[90vh] overflow-y-auto shadow-[0px_4px_24px_0px_#000000] no-scrollbar">
         <DialogHeader>
           <DialogTitle className="text-2xl text-[#40444D] text-center font-bold font-sans">
-            Create New Matter
+            Create New Contact
           </DialogTitle>
         </DialogHeader>
-
-        {/* <div className="bg-[#F5F5FA] rounded-lg w-full p-6 space-y-6 h-full overflow-y-auto no-scrollbar">
-        <div>
-          <h1 className="text-2xl text-[#40444D] text-center font-bold font-sans">
-            Create New Matter
-          </h1>
-        </div> */}
 
         <form
           onSubmit={handleSubmit(() => {
@@ -291,9 +287,13 @@ export default function CreateContactDialog({ open, setOpen }) {
                               {options.map((option, index) => (
                                 <SelectItem
                                   key={option.id || index}
-                                  value={option.name || option}
+                                  value={
+                                    name === 'contact_type'
+                                      ? Number(option.id)
+                                      : option.name
+                                  }
                                 >
-                                  {option.name || option}
+                                  {option.name}
                                 </SelectItem>
                               ))}
                             </SelectGroup>
@@ -367,17 +367,24 @@ export default function CreateContactDialog({ open, setOpen }) {
                       'zip',
                       'country',
                     ].map((key) => (
-                      <Controller
-                        key={key}
-                        name={`addresses.${index}.${key}`}
-                        control={control}
-                        render={({ field }) => (
-                          <Input
-                            placeholder={key.replace('_', ' ')}
-                            {...field}
-                          />
+                      <div key={key} className="w-full">
+                        <Controller
+                          key={key}
+                          name={`addresses.${index}.${key}`}
+                          control={control}
+                          render={({ field }) => (
+                            <Input
+                              placeholder={key.replace('_', ' ')}
+                              {...field}
+                            />
+                          )}
+                        />
+                        {errors.addresses?.[index]?.[key]?.message && (
+                          <p className="text-xs text-red-500">
+                            {errors.addresses[index][key].message}
+                          </p>
                         )}
-                      />
+                      </div>
                     ))}
 
                     <Controller
@@ -392,8 +399,14 @@ export default function CreateContactDialog({ open, setOpen }) {
                             <SelectValue placeholder="Address Type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Home">Home</SelectItem>
-                            <SelectItem value="Work">Work</SelectItem>
+                            {/* <SelectItem value="Home">Home</SelectItem>
+                            <SelectItem value="Work">Work</SelectItem> */}
+
+                            {contactMeta?.address_type?.map((type) => (
+                              <SelectItem key={type.id} value={type.id}>
+                                {type.name}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       )}
@@ -441,7 +454,7 @@ export default function CreateContactDialog({ open, setOpen }) {
                   })
                 }
                 variant="outline"
-                className="w-full mt-2 bg-transparent hover:bg-gray-100 text-gray-700"
+                className="w-full mt-2 bg-white hover:bg-gray-100 text-gray-700"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Address
@@ -454,6 +467,7 @@ export default function CreateContactDialog({ open, setOpen }) {
             <Button
               type="button"
               className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
+              onClick={() => setOpen(false)}
             >
               Cancel
             </Button>

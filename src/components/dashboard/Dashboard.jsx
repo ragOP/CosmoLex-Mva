@@ -25,7 +25,7 @@ import {
   FileIcon,
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
-import { DataGrid, gridPageCountSelector } from '@mui/x-data-grid';
+import { DataGrid, gridPageCountSelector, Toolbar } from '@mui/x-data-grid';
 import { useNavigate } from 'react-router-dom';
 
 const data = {
@@ -260,7 +260,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex flex-col space-y-6 overflow-y-auto overflow-x-hidden no-scrollbar">
+    <div className="flex flex-col space-y-6 overflow-y-auto overflow-x-hidden no-scrollbar p-4">
       <div className="flex justify-between items-center">
         <h2 className="text-[32px] text-[#1E293B] font-bold font-sans">
           Dashboard
@@ -296,181 +296,192 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 lg:grid-rows-2 gap-6 overflow-x-auto w-full overflow-hidden no-scrollbar">
-        <div className="w-full border border-[#E2E8F0] shadow-[0px_4px_24px_0px #000000] col-span-3 h-[25rem] bg-white rounded-lg px-4 py-6 lg:p-6 no-scrollbar">
-          <div>
-            <h1 className="text-xl text-[#40444D] font-semibold font-sans">
-              Vehicle Transaction
-            </h1>
-          </div>
-          <ResponsiveContainer width="100%" height="100%" className="py-5">
-            <ComposedChart
-              width={500}
-              height={400}
-              data={figmaEarningData}
-              margin={{
-                top: 10,
-                right: 30,
-                left: 0,
-                bottom: 0,
-              }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip content={renderTooltipWithoutRange} />
-              <Area
-                type="monotone"
-                dataKey="accident_benefit_claim"
-                stroke="none"
-                // fill="#cccccc"
-                connectNulls
-                dot
-                activeDot={{ r: 8 }}
-                style={{
-                  // background: 'linear-gradient(#3032F2 100%, #5D5FEF00 0%)',
-                  fill: '#9698f6',
-                  stroke: '#cccccc',
-                  strokeWidth: 2,
+        <div className="col-span-3 p-4 bg-white/30 backdrop-blur-sm rounded-lg">
+          <div className="w-full border border-[#E2E8F0] shadow-[0px_4px_24px_0px #000000] h-[25rem] bg-white/50 backdrop-blur-sm rounded-lg px-4 py-6 lg:p-6 no-scrollbar">
+            <div>
+              <h1 className="text-xl text-[#40444D] font-semibold font-sans">
+                Vehicle Transaction
+              </h1>
+            </div>
+            <ResponsiveContainer width="100%" height="100%" className="py-5">
+              <ComposedChart
+                width={500}
+                height={400}
+                data={figmaEarningData}
+                margin={{
+                  top: 10,
+                  right: 30,
+                  left: 0,
+                  bottom: 0,
                 }}
-              />
-              <Area
-                type="monotone"
-                dataKey="bodily_injury_claim"
-                stroke="none"
-                // fill="#cccccc"
-                connectNulls
-                dot
-                activeDot={{ r: 8 }}
-                style={{
-                  // background: 'linear-gradient(#3032F2 100%, #5D5FEF00 0%)',
-                  fill: '#6be2f4',
-                  stroke: '#cccccc',
-                  strokeWidth: 2,
-                }}
-              />
-              <Area
-                type="monotone"
-                dataKey="property_damage_claim"
-                stroke="none"
-                // fill="#cccccc"
-                connectNulls
-                dot={true}
-                activeDot={true}
-                style={{
-                  // background: 'linear-gradient(#3032F2 100%, #5D5FEF00 0%)',
-                  fill: '#6b7280',
-                  stroke: '#cccccc',
-                  strokeWidth: 2,
-                }}
-              />
-              {/* <Line type="natural" dataKey="no_of_renewal" stroke="#ff00ff" connectNulls />
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip content={renderTooltipWithoutRange} />
+                <Area
+                  type="monotone"
+                  dataKey="accident_benefit_claim"
+                  stroke="none"
+                  // fill="#cccccc"
+                  connectNulls
+                  dot
+                  activeDot={{ r: 8 }}
+                  style={{
+                    // background: 'linear-gradient(#3032F2 100%, #5D5FEF00 0%)',
+                    fill: '#9698f6',
+                    stroke: '#cccccc',
+                    strokeWidth: 2,
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="bodily_injury_claim"
+                  stroke="none"
+                  // fill="#cccccc"
+                  connectNulls
+                  dot
+                  activeDot={{ r: 8 }}
+                  style={{
+                    // background: 'linear-gradient(#3032F2 100%, #5D5FEF00 0%)',
+                    fill: '#6be2f4',
+                    stroke: '#cccccc',
+                    strokeWidth: 2,
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="property_damage_claim"
+                  stroke="none"
+                  // fill="#cccccc"
+                  connectNulls
+                  dot={true}
+                  activeDot={true}
+                  style={{
+                    // background: 'linear-gradient(#3032F2 100%, #5D5FEF00 0%)',
+                    fill: '#6b7280',
+                    stroke: '#cccccc',
+                    strokeWidth: 2,
+                  }}
+                />
+                {/* <Line type="natural" dataKey="no_of_renewal" stroke="#ff00ff" connectNulls />
                             <Line type="natural" dataKey="no_of_transfer_of_ownership" stroke="#ff00ff" connectNulls /> */}
-              <Legend content={renderLegendWithoutRange} />
-            </ComposedChart>
-          </ResponsiveContainer>
+                <Legend content={renderLegendWithoutRange} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        <div className="w-full border border-[#E2E8F0] shadow-[0px_4px_24px_0px #000000] col-span-2 h-[25rem] bg-white rounded-lg p-6">
-          <h1 className="text-xl text-[#40444D] font-semibold font-sans">
-            Inspection Compliance
-          </h1>
-          {/* <div className='border border-[#25282D] rounded-md p-2'> */}
-          <ResponsiveContainer width="100%" height="100%" className="py-5">
-            <ComposedChart
-              width={500}
-              height={300}
-              data={figmaInspectionData}
-              margin={{
-                top: 5,
-                right: 30,
-                left: 20,
-                bottom: 5,
-              }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" tick={{ fill: '#25282D' }} />
-              <YAxis tick={{ fill: '#25282D' }} />
-              <Tooltip
-                contentStyle={{ background: '#fff', border: '1px solid #ccc' }}
-                cursorStyle={{
-                  stroke: '#ccc',
-                  strokeWidth: 1,
-                  strokeDasharray: '3 3',
+        <div className="col-span-2 p-4 bg-white/30 backdrop-blur-sm rounded-lg">
+          <div className="w-full border border-[#E2E8F0] shadow-[0px_4px_24px_0px #000000] h-[25rem] bg-white/50 backdrop-blur-sm rounded-lg p-6">
+            <h1 className="text-xl text-[#40444D] font-semibold font-sans">
+              Inspection Compliance
+            </h1>
+            {/* <div className='border border-[#25282D] rounded-md p-2'> */}
+            <ResponsiveContainer width="100%" height="100%" className="py-5">
+              <ComposedChart
+                width={500}
+                height={300}
+                data={figmaInspectionData}
+                margin={{
+                  top: 5,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
                 }}
-              />
-              <Legend content={renderLegendWithoutRange} />
-              <Line
-                type="natural"
-                dataKey="insurance_examinations"
-                stroke="#9698f6"
-                connectNulls
-              />
-              <Line
-                type="natural"
-                dataKey="inform_to_ab_insurance"
-                stroke="#9698f6"
-                connectNulls
-              />
-              <Line
-                type="natural"
-                dataKey="inform_to_bi_insurance"
-                stroke="#9698f6"
-                connectNulls
-              />
-            </ComposedChart>
-          </ResponsiveContainer>
-          {/* </div> */}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={{ fill: '#25282D' }} />
+                <YAxis tick={{ fill: '#25282D' }} />
+                <Tooltip
+                  contentStyle={{
+                    background: '#fff',
+                    border: '1px solid #ccc',
+                  }}
+                  cursorStyle={{
+                    stroke: '#ccc',
+                    strokeWidth: 1,
+                    strokeDasharray: '3 3',
+                  }}
+                />
+                <Legend content={renderLegendWithoutRange} />
+                <Line
+                  type="natural"
+                  dataKey="insurance_examinations"
+                  stroke="#9698f6"
+                  connectNulls
+                />
+                <Line
+                  type="natural"
+                  dataKey="inform_to_ab_insurance"
+                  stroke="#9698f6"
+                  connectNulls
+                />
+                <Line
+                  type="natural"
+                  dataKey="inform_to_bi_insurance"
+                  stroke="#9698f6"
+                  connectNulls
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+            {/* </div> */}
+          </div>
         </div>
 
-        <div className="w-full border border-[#E2E8F0] shadow-[0px_4px_24px_0px #000000] col-span-2 bg-white rounded-lg p-6 h-[25rem]">
-          <h1 className="text-xl text-[#40444D] font-semibold font-sans mb-4">
-            Files Breakdown Overview
-          </h1>
-          <CustomRadarGraph
-            data={filesBreakdownData}
-            dataKeys={['Active', 'Closed', 'Settled']}
-            colors={{
-              Active: '#9698f6',
-              Closed: '#9698f6',
-              Settled: '#9698f6',
-            }}
-          />
-        </div>
-
-        <div className="w-full border border-[#E2E8F0] shadow-[0px_4px_24px_0px #000000] col-span-3 h-[25rem] bg-white rounded-lg p-6">
-          <h1 className="text-xl text-[#40444D] font-semibold font-sans mb-4">
-            Claims Type Distribution
-          </h1>
-          <ResponsiveContainer width="100%" height={300} className="py-5">
-            <BarChart
+        <div className="col-span-2 p-4 bg-white/30 backdrop-blur-sm rounded-lg">
+          <div className="w-full border border-[#E2E8F0] shadow-[0px_4px_24px_0px #000000] bg-white/50 backdrop-blur-sm rounded-lg p-6 h-[25rem]">
+            <h1 className="text-xl text-[#40444D] font-semibold font-sans mb-4">
+              Files Breakdown Overview
+            </h1>
+            <CustomRadarGraph
               data={filesBreakdownData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="category" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="Active" fill="#9698f6" />
-              <Bar dataKey="Closed" fill="#6be2f4" />
-              <Bar dataKey="Settled" fill="#6b7280" />
-            </BarChart>
-          </ResponsiveContainer>
+              dataKeys={['Active', 'Closed', 'Settled']}
+              colors={{
+                Active: '#9698f6',
+                Closed: '#9698f6',
+                Settled: '#9698f6',
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="col-span-3 p-4 bg-white/30 backdrop-blur-sm rounded-lg">
+          <div className="w-full border border-[#E2E8F0] shadow-[0px_4px_24px_0px #000000] h-[25rem] bg-white/50 backdrop-blur-sm rounded-lg p-6">
+            <h1 className="text-xl text-[#40444D] font-semibold font-sans mb-4">
+              Claims Type Distribution
+            </h1>
+            <ResponsiveContainer width="100%" height={300} className="py-5">
+              <BarChart
+                data={filesBreakdownData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="category" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="Active" fill="#9698f6" />
+                <Bar dataKey="Closed" fill="#6be2f4" />
+                <Bar dataKey="Settled" fill="#6b7280" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
       {/* Table component */}
       <div className="w-full h-full overflow-x-auto no-scrollbar">
         <div
-          className="w-full bg-white rounded-lg p-6 overflow-x-hidden no-scrollbar"
+          className="w-full p-4 overflow-x-hidden no-scrollbar"
           style={{
             backdropFilter: 'blur(20px)',
             boxShadow: '0px 1px 0px 0px #0000000D',
           }}
         >
-          <h1 className="text-xl text-[#40444D] font-semibold font-sans">
+          {/* <h1 className="text-xl text-[#40444D] font-semibold font-sans">
             Pending Documents ({pendingDocumentsRows.length})
-          </h1>
+          </h1> */}
           <div className="w-full overflow-x-auto">
             <div className="min-w-[300px] max-w-full">
               <DataGrid
@@ -479,9 +490,88 @@ const Dashboard = () => {
                 columns={pendingDocumentsColumns}
                 pageSize={5}
                 rowsPerPageOptions={[5]}
+                components={{
+                  Toolbar: CustomHeader, // Heading now part of table's header area
+                }}
                 sx={{
                   padding: 2,
                   border: 'none',
+                  borderRadius: '1rem',
+                  backdropFilter: 'blur(20px)',
+                  boxShadow: '0px 0.75rem 0.75rem rgba(0, 0, 0, 0.1)',
+                  zIndex: 10,
+                  overflow: 'hidden',
+                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
+
+                  // HEADER CONTAINER
+                  '& .MuiDataGrid-columnHeaders': {
+                    backgroundColor: 'black',
+                    color: 'white',
+                    borderRadius: '2rem',
+                    overflow: 'hidden',
+                    border: 'none',
+                    marginBottom: '1rem',
+                  },
+
+                  // INDIVIDUAL HEADER CELLS
+                  '& .MuiDataGrid-columnHeader': {
+                    backgroundColor: 'white',
+                    color: 'black',
+                    border: 'none',
+                  },
+                  '& .MuiDataGrid-columnHeader:focus': {
+                    outline: 'none',
+                  },
+
+                  '& .MuiDataGrid-columnHeader:focus-within': {
+                    outline: 'none',
+                    border: 'none',
+                  },
+
+                  // BODY CELLS
+                  '& .MuiDataGrid-cell': {
+                    border: 'none',
+                    backgroundColor: 'transparent',
+                    cursor: 'pointer',
+                  },
+                  '& .MuiDataGrid-cell:focus': {
+                    outline: 'none',
+                  },
+
+                  '& .MuiDataGrid-cell:focus-within': {
+                    outline: 'none',
+                    border: 'none',
+                  },
+
+                  // ROWS
+                  '& .MuiDataGrid-row': {
+                    borderRadius: '2rem',
+                    backgroundColor: 'white',
+                    marginBottom: '0.5rem',
+                    overflow: 'hidden',
+                  },
+                  '& .MuiDataGrid-row:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    // background:
+                    //   'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
+                    color: 'white',
+                    transition: 'all 0.3s ease-in-out',
+                  },
+
+                  // FOOTER
+                  '& .MuiDataGrid-footerContainer': {
+                    backgroundColor: 'transparent',
+                    borderBottomLeftRadius: '1rem',
+                    borderBottomRightRadius: '1rem',
+                  },
+
+                  // TOOLBAR & SCROLLBAR
+                  '& .MuiDataGrid-toolbarContainer': {
+                    padding: '0.5rem 1rem',
+                  },
+                  '& .MuiDataGrid-scrollbar': {
+                    display: 'none',
+                  },
                 }}
               />
             </div>
@@ -496,26 +586,28 @@ export default Dashboard;
 
 const DashboardCard = ({ item }) => {
   return (
-    <div
-      key={item.id}
-      className="flex flex-col items-center justify-center bg-[#fafafc] border-2 border-white p-3 shadow rounded-md space-y-3 "
-    >
-      <div className="flex items-center justify-between w-full">
-        <h3 className="text-base text-[#4e5564] font-semibold font-sans uppercase">
-          {item.title}
-        </h3>
-        <span className="text-[16px] text-[#22d3ee] font-semibold font-sans">
-          {item.percentage}
-        </span>
-      </div>
-      <h2 className="text-[30px] text-[#40444d] font-medium font-sans text-start w-full">
-        {item.total}
-      </h2>
-      <div className="flex items-end justify-between w-full">
-        <span className="text-[#6366F1] text-base font-medium font-sans cursor-pointer hover:underline">
-          View net <span className="lowercase">{item.title}</span>
-        </span>
-        {item.icon}
+    <div className="bg-white/30 backdrop-blur-sm p-4 rounded-md">
+      <div
+        key={item.id}
+        className="flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm p-3 shadow rounded-md space-y-3 "
+      >
+        <div className="flex items-center justify-between w-full">
+          <h3 className="text-base text-[#4e5564] font-semibold font-sans uppercase">
+            {item.title}
+          </h3>
+          <span className="text-[16px] text-[#22d3ee] font-semibold font-sans">
+            {item.percentage}
+          </span>
+        </div>
+        <h2 className="text-[30px] text-[#40444d] font-medium font-sans text-start w-full">
+          {item.total}
+        </h2>
+        <div className="flex items-end justify-between w-full">
+          <span className="text-[#6366F1] text-base font-medium font-sans cursor-pointer hover:underline">
+            View net <span className="lowercase">{item.title}</span>
+          </span>
+          {item.icon}
+        </div>
       </div>
     </div>
   );
@@ -528,3 +620,19 @@ const snakeCaseToTitleCase = (str) => {
     .replace(/\b\w/g, (char) => char.toUpperCase());
   return words;
 };
+
+function CustomHeader() {
+  return (
+    <Toolbar
+      sx={{
+        backgroundColor: 'black',
+        color: 'white',
+        padding: '0.75rem 1rem',
+        fontWeight: 'bold',
+        fontSize: '1.25rem',
+      }}
+    >
+      Pending Documents
+    </Toolbar>
+  );
+}
