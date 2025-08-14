@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import getMatter from '@/pages/matter/intake/helpers/getMatter';
+import { Loader2 } from 'lucide-react';
 import storeCaseKeyDates from '@/pages/matter/intake/helpers/storeCaseKeyDates';
 import getCaseKeyDates from '@/pages/matter/intake/helpers/getCaseKeyDates';
 import updateCaseKeyDates from '@/pages/matter/intake/helpers/updateCaseKeyDates';
@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useMatter } from './MatterContext';
+import isArrayWithValues from '@/utils/isArrayWithValues';
 
 const CASE_TYPE_FIELDS = {
   'Auto Accident': [
@@ -167,25 +169,30 @@ const KeyDates = () => {
   const [searchParams] = useSearchParams();
   const slugId = searchParams.get('slugId');
 
+  const { matter, matterMeta } = useMatter();
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const matterResponse = await getMatter({ slug: slugId });
 
-        if (matterResponse) {
-          setCaseType(matterResponse.case_type);
+        if (matter) {
+          const caseType = matterMeta?.case_type?.find(
+            (type) => type.id === matter.case_type_id
+          )?.name;
+          setCaseType(caseType);
           const keyDatesResponse = await getCaseKeyDates(slugId);
+          console.log('Key Dates Response:', keyDatesResponse);
 
           const initialData = {};
-          if (CASE_TYPE_FIELDS[matterResponse.case_type]) {
-            CASE_TYPE_FIELDS[matterResponse.case_type].forEach((field) => {
+          if (CASE_TYPE_FIELDS[caseType]) {
+            CASE_TYPE_FIELDS[caseType].forEach((field) => {
               if (keyDatesResponse && keyDatesResponse[field]) {
                 initialData[field] = keyDatesResponse[field];
                 setHasExistingData(true);
               } else {
-                initialData[field] = matterResponse[field] || '';
+                initialData[field] = null;
               }
             });
           }
@@ -204,7 +211,7 @@ const KeyDates = () => {
     if (slugId) {
       fetchData();
     }
-  }, [slugId]);
+  }, [matter, matterMeta]);
 
   const handleFieldChange = (fieldName, value) => {
     setFormData((prev) => ({
@@ -229,7 +236,7 @@ const KeyDates = () => {
       'sol_date',
       'trial_date',
     ];
-    
+
     const fields = CASE_TYPE_FIELDS[caseType] || defaultFields;
     const submitData = {};
 
@@ -281,26 +288,6 @@ const KeyDates = () => {
     );
   };
 
-  if (loading) {
-    return (
-      <Card>
-        <div className="p-6">
-          <div className="text-center text-gray-500">Loading key dates...</div>
-        </div>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <div className="p-6">
-          <div className="text-red-600 text-center">{error}</div>
-        </div>
-      </Card>
-    );
-  }
-
   if (!caseType) {
     return (
       <Card>
@@ -325,17 +312,18 @@ const KeyDates = () => {
     'sol_date',
     'trial_date',
   ];
-  
+
   const fields = CASE_TYPE_FIELDS[caseType] || defaultFields;
 
   return (
     <Card>
-      {/* <div className=""> */}
-      {/* <Chip label={caseType} /> */}
       <BreadCrumb label={caseType} />
-      {/* </div> */}
       <div className="bg-white/40 rounded-2xl p-6 flex flex-col justify-between gap-4 overflow-hidden">
-        {fields.length > 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center h-full w-full">
+            <Loader2 className="animate-spin" />
+          </div>
+        ) : isArrayWithValues(fields) && fields.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {fields.map((fieldName) => (

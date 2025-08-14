@@ -21,17 +21,13 @@ import getMatter from '@/pages/matter/intake/helpers/getMatter';
 import getMatterMeta from '@/pages/matter/intake/helpers/getMatterMeta';
 import getContacts from '@/pages/matter/intake/helpers/getContacts';
 import searchContact from '@/pages/matter/intake/helpers/searchContact';
-import isArrayWithValues from '@/utils/isArrayWithValues';
 import formatDate from '@/utils/formatDate';
-import { useParams } from 'react-router-dom';
 import updateMatter from '@/pages/matter/intake/helpers/updateMatter';
-import createMatter from '@/pages/matter/intake/helpers/createMatter';
 import { useNavigate } from 'react-router-dom';
 import CreateContactDialog from './CreateContactDialog';
 import BreadCrumb from '@/components/BreadCrumb';
 import getContactMeta from '@/pages/matter/intake/helpers/getContactMeta';
 import { X } from 'lucide-react';
-import { set } from 'date-fns';
 
 export default function Overview() {
   const navigate = useNavigate();

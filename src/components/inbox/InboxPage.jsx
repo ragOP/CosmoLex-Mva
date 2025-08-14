@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import getMatter from '@/pages/matter/intake/helpers/getMatter';
+import getMatterMeta from '@/pages/matter/intake/helpers/getMatterMeta';
 import { MatterProvider } from './MatterContext';
 
 const InboxPage = () => {
@@ -16,15 +17,20 @@ const InboxPage = () => {
     queryFn: () => getMatter({ slug: slugId }),
     enabled: !!slugId,
   });
+  const { data: matterMeta } = useQuery({
+    queryKey: ['matterMeta', slugId],
+    queryFn: () => getMatterMeta({ slug: slugId }),
+  });
 
-  console.log("MATTER >>>>", matter);
+  console.log('MATTER >>>>', matter);
+  console.log('MATTER META >>>>', matterMeta);
 
   React.useEffect(() => {
     console.log(location.pathname);
   }, [location]);
 
   return (
-    <MatterProvider matter={matter}>
+    <MatterProvider matter={matter} matterMeta={matterMeta}>
       <Outlet />
     </MatterProvider>
   );

@@ -12,12 +12,12 @@ export const useMatter = () => {
   return context;
 };
 
-export const MatterProvider = ({ children, matter }) => {
+export const MatterProvider = ({ children, matter, matterMeta }) => {
   return (
-    <MatterContext.Provider value={{ matter }}>
+    <MatterContext.Provider value={{ matter, matterMeta }}>
       {children}
     </MatterContext.Provider>
   );
 };
 
-export default MatterContext; 
+export default MatterContext;
