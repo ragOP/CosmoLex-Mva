@@ -81,7 +81,7 @@ export default function Overview() {
       searchContact({
         data: {
           globalSearchBar: searchContactQuery,
-          contact_type: selectedContactType,
+          contact_type_id: selectedContactType,
         },
       }),
     enabled: false,
@@ -296,13 +296,18 @@ export default function Overview() {
               <Label className="text-[#40444D] font-semibold block">
                 Contact Type
               </Label>
-              <Select onValueChange={setSelectedContactType}>
+              <Select
+                onValueChange={setSelectedContactType}
+                value={contactType
+                  .find((c) => c.id === selectedContactType)
+                  ?.name?.toString()}
+              >
                 <SelectTrigger className="w-1/4">
                   <SelectValue placeholder="Select Contact Type" />
                 </SelectTrigger>
                 <SelectContent>
                   {contactType.map((c) => (
-                    <SelectItem key={c.id} value={c.name}>
+                    <SelectItem key={c.id} value={c.id}>
                       {c.name}
                     </SelectItem>
                   ))}

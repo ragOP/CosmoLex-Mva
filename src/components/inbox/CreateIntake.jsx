@@ -40,7 +40,7 @@ export default function CreateIntake() {
     mutationFn: createMatter,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['matters'] });
-      console.log("DATA", data);
+      console.log('DATA', data);
       if (data && data.slug) {
         navigate(`/dashboard/inbox/overview?slugId=${data.slug}`);
       } else {
@@ -66,7 +66,7 @@ export default function CreateIntake() {
         searchContact({
           data: {
             globalSearchBar: searchContactQuery,
-            contact_type: selectedContactType,
+            contact_type_id: selectedContactType,
           },
         }),
       enabled: false,
@@ -215,8 +215,9 @@ export default function CreateIntake() {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            className={`border ${errors[name] ? 'border-red-500' : ''
-                              }`}
+                            className={`border ${
+                              errors[name] ? 'border-red-500' : ''
+                            }`}
                           />
                         )}
                       />
@@ -236,11 +237,13 @@ export default function CreateIntake() {
                 ))}
               </div>
 
-
-
               {/* Contact Type Select */}
 
-              <div className={`flex gap-4 w-full ${selectedContact ? 'hidden' : ''}`}>
+              <div
+                className={`flex gap-4 w-full ${
+                  selectedContact ? 'hidden' : ''
+                }`}
+              >
                 <div className="w-[24vw] space-y-2">
                   <Label className="text-[#40444D] w-full font-semibold block">
                     Contact Type
@@ -292,7 +295,6 @@ export default function CreateIntake() {
                       Add a new contact
                     </span>
                   </p>
-
                 </div>
               </div>
 
@@ -317,9 +319,7 @@ export default function CreateIntake() {
                               (c) =>
                                 c.contact_name
                                   .toLowerCase()
-                                  .includes(
-                                    searchContactQuery.toLowerCase()
-                                  ) ||
+                                  .includes(searchContactQuery.toLowerCase()) ||
                                 c.primary_email
                                   .toLowerCase()
                                   .includes(searchContactQuery.toLowerCase())
@@ -327,13 +327,12 @@ export default function CreateIntake() {
                             .map((contact) => (
                               <tr
                                 key={contact.id}
-                                className={`cursor-pointer hover:bg-indigo-100 transition duration-300 ease-in-out ${hoveredContact?.id === contact.id
-                                  ? 'bg-indigo-50'
-                                  : ''
-                                  }`}
-                                onMouseEnter={() =>
-                                  setHoveredContact(contact)
-                                }
+                                className={`cursor-pointer hover:bg-indigo-100 transition duration-300 ease-in-out ${
+                                  hoveredContact?.id === contact.id
+                                    ? 'bg-indigo-50'
+                                    : ''
+                                }`}
+                                onMouseEnter={() => setHoveredContact(contact)}
                                 onMouseLeave={() => setHoveredContact(null)}
                                 onClick={() => {
                                   setSelectedContact(contact);
@@ -401,9 +400,7 @@ export default function CreateIntake() {
               {selectedContact && (
                 <div className="w-full mt-4">
                   <div className="relative border rounded-lg bg-white shadow p-4">
-                    <h2 className="font-bold text-lg mb-2">
-                      Selected Contact
-                    </h2>
+                    <h2 className="font-bold text-lg mb-2">Selected Contact</h2>
                     <Button
                       variant={'ghost'}
                       type="icon"
@@ -449,7 +446,6 @@ export default function CreateIntake() {
                   {errors.contact_id.message || 'Contact is required.'}
                 </p>
               )}
-
             </div>
 
             {/* Upcoming Events */}
@@ -458,9 +454,15 @@ export default function CreateIntake() {
                 className="flex items-center justify-between cursor-pointer mb-2"
                 onClick={() => setIsEventsCollapsed(!isEventsCollapsed)}
               >
-                <span className="text-lg font-semibold text-gray-800">Upcoming Events</span>
+                <span className="text-lg font-semibold text-gray-800">
+                  Upcoming Events
+                </span>
                 <div className="text-gray-500 hover:text-gray-700 transition-colors">
-                  {isEventsCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  {isEventsCollapsed ? (
+                    <ChevronRight className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
                 </div>
               </div>
 
@@ -469,19 +471,34 @@ export default function CreateIntake() {
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Event</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Date</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Time</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                          Event
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                          Date
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                          Time
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                          Status
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white">
                       <tr>
-                        <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                        <td
+                          colSpan={4}
+                          className="px-4 py-8 text-center text-gray-500"
+                        >
                           <div className="flex flex-col items-center">
                             <div className="text-4xl mb-2">📅</div>
-                            <p className="text-sm font-medium">No upcoming events</p>
-                            <p className="text-xs text-gray-400">Events will appear here when scheduled</p>
+                            <p className="text-sm font-medium">
+                              No upcoming events
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              Events will appear here when scheduled
+                            </p>
                           </div>
                         </td>
                       </tr>
