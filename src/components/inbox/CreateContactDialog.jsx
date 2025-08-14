@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import debounce from 'lodash.debounce';
+import React, { useState } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -9,33 +8,34 @@ import {
   SelectTrigger,
   SelectValue,
   SelectContent,
-  SelectGroup,
   SelectItem,
+  SelectGroup,
 } from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2 } from 'lucide-react';
-import { contactSchema } from '@/pages/matter/intake/schema/contactSchema';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { Plus, Trash2, X } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import createContact from '@/pages/matter/intake/helpers/createContact';
 import getContactMeta from '@/pages/matter/intake/helpers/getContactMeta';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Stack,
+  Divider,
+  IconButton,
+  Tooltip,
+  Switch,
+} from '@mui/material';
 
 export default function CreateContactDialog({ open, setOpen }) {
   const { data: contactMeta } = useQuery({
     queryKey: ['contactMeta'],
     queryFn: getContactMeta,
   });
-  console.log('Contact Meta:', contactMeta);
+
+  const [addressDialogOpen, setAddressDialogOpen] = useState(false);
 
   const {
     control,
@@ -47,7 +47,7 @@ export default function CreateContactDialog({ open, setOpen }) {
   } = useForm({
     defaultValues: {
       nature: '',
-      contact_type: '',
+      contact_type_id: '',
       prefix: '',
       first_name: '',
       middle_name: '',
@@ -77,22 +77,10 @@ export default function CreateContactDialog({ open, setOpen }) {
       firm_id: '',
       created_by: '',
       ad_campaign: '',
-      addresses: [
-        {
-          address_1: '',
-          address_2: '',
-          city: '',
-          county: '',
-          state: '',
-          zip: '',
-          country: '',
-          is_primary: false,
-          address_type: '',
-        },
-      ],
+      addresses: [],
     },
-    resolver: zodResolver(contactSchema),
   });
+
   const {
     fields: addressFields,
     append,
@@ -107,7 +95,6 @@ export default function CreateContactDialog({ open, setOpen }) {
       label: 'Nature',
       name: 'nature',
       type: 'select',
-      required: true,
       options: [
         { id: 1, name: 'Individual' },
         { id: 2, name: 'Business' },
@@ -115,53 +102,31 @@ export default function CreateContactDialog({ open, setOpen }) {
     },
     {
       label: 'Contact Type',
-      name: 'contact_type',
+      name: 'contact_type_id',
       type: 'select',
-      required: true,
       options: contactMeta?.contact_type || [],
     },
     {
       label: 'Prefix',
       name: 'prefix',
       type: 'select',
-      required: true,
       options: contactMeta?.prefix || [],
     },
     { label: 'First Name', name: 'first_name', type: 'text', required: true },
-    { label: 'Middle Name', name: 'middle_name', type: 'text', required: true },
+    { label: 'Middle Name', name: 'middle_name', type: 'text' },
     { label: 'Last Name', name: 'last_name', type: 'text', required: true },
-    {
-      label: 'Suffix',
-      name: 'suffix',
-      type: 'select',
-      required: true,
-      options: [
-        'Jr',
-        'Sr',
-        'II',
-        'III',
-        'IV',
-        'V',
-        'VI',
-        'VII',
-        'VIII',
-        'IX',
-        'X',
-      ],
-    },
+    { label: 'Suffix', name: 'suffix', type: 'text' },
     {
       label: 'Gender',
       name: 'gender',
       type: 'select',
-      required: true,
       options: contactMeta?.gender || [],
     },
-    { label: 'Alias', name: 'alias', type: 'text', required: false },
+    { label: 'Alias', name: 'alias', type: 'text' },
     {
       label: 'Marital Status',
       name: 'marital_status',
       type: 'select',
-      required: false,
       options: contactMeta?.marital_status || [],
     },
     { label: 'Company Name', name: 'company_name', type: 'text' },
@@ -174,121 +139,120 @@ export default function CreateContactDialog({ open, setOpen }) {
     { label: 'Fax', name: 'fax', type: 'text' },
     { label: 'Primary Email', name: 'primary_email', type: 'text' },
     { label: 'Secondary Email', name: 'secondary_email', type: 'text' },
-    {
-      label: 'When to Contact',
-      name: 'when_to_contact',
-      type: 'select',
-      options: ['Morning', 'Afternoon', 'Evening'],
-    },
-    {
-      label: 'Contact Preference',
-      name: 'contact_preference',
-      type: 'select',
-      options: ['Phone', 'Email', 'SMS'],
-    },
-    {
-      label: 'Language',
-      name: 'language',
-      type: 'text',
-    },
-    {
-      label: "Driver's License",
-      name: 'drivers_license',
-      type: 'text',
-    },
-    {
-      label: 'Date of Birth',
-      name: 'date_of_birth',
-      type: 'date',
-    },
-    {
-      label: 'Date of Death',
-      name: 'date_of_death',
-      type: 'date',
-    },
-    {
-      label: 'Date of Bankruptcy',
-      name: 'date_of_bankruptcy',
-      type: 'date',
-    },
-    {
-      label: 'Notes',
-      name: 'notes',
-      type: 'text',
-    },
-    {
-      label: 'Firm ID',
-      name: 'firm_id',
-      type: 'number',
-    },
-    {
-      label: 'Created By',
-      name: 'created_by',
-      type: 'number',
-    },
+    { label: 'When to Contact', name: 'when_to_contact', type: 'text' },
+    { label: 'Contact Preference', name: 'contact_preference', type: 'text' },
+    { label: 'Language', name: 'language', type: 'text' },
+    { label: "Driver's License", name: 'drivers_license', type: 'text' },
+    { label: 'Date of Birth', name: 'date_of_birth', type: 'date' },
+    { label: 'Date of Death', name: 'date_of_death', type: 'date' },
+    { label: 'Date of Bankruptcy', name: 'date_of_bankruptcy', type: 'date' },
+    { label: 'Notes', name: 'notes', type: 'text' },
   ];
 
   const createContactMutation = useMutation({
     mutationFn: createContact,
     onSuccess: () => {
       toast.success('Contact created successfully');
+      setOpen(false);
     },
     onError: (error) => {
       toast.error(error?.response?.data?.message || 'Failed to create contact');
     },
   });
 
-  const onSubmit = async (data) => {
-    console.log(data);
+  const onSubmit = (data) => {
     createContactMutation.mutate({ data });
   };
 
-  console.log(errors);
+  // Nested Address Dialog form state
+  const [newAddress, setNewAddress] = useState({
+    address_1: '',
+    address_2: '',
+    city: '',
+    county: '',
+    state: '',
+    zip: '',
+    country: '',
+    is_primary: false,
+    address_type: '',
+  });
+
+  const handleAddAddressSubmit = () => {
+    append(newAddress);
+    setNewAddress({
+      address_1: '',
+      address_2: '',
+      city: '',
+      county: '',
+      state: '',
+      zip: '',
+      country: '',
+      is_primary: false,
+      address_type: '',
+    });
+    setAddressDialogOpen(false);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="bg-[#F5F5FA] rounded-lg min-w-[60%] p-6 space-y-6 max-h-[90vh] overflow-y-auto shadow-[0px_4px_24px_0px_#000000] no-scrollbar">
-        <DialogHeader>
-          <DialogTitle className="text-2xl text-[#40444D] text-center font-bold font-sans">
-            Create New Contact
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      {/* Main Contact Form Dialog */}
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000] ">
+          <div className="flex items-center justify-between p-4">
+            <h1 className="text-xl text-[#40444D] text-center font-bold font-sans ">
+              Create New Contact
+            </h1>
+            <IconButton onClick={() => setOpen(false)}>
+              <X className="text-black" />
+            </IconButton>
+          </div>
 
-        <form
-          onSubmit={handleSubmit(() => {
-            onSubmit(getValues());
-            reset();
-          })}
-          className="space-y-4"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {formFields.map(({ label, name, type, required, options }) => (
-              <div key={name} className="w-full">
-                {type != 'checkbox' && (
-                  <Label className="text-[#40444D] font-semibold mb-2">
-                    {label}
-                  </Label>
-                )}
+          <Divider />
 
-                {type === 'select' ? (
-                  <Controller
-                    control={control}
-                    name={name}
-                    render={({ field }) => (
-                      <>
+          <div className="space-y-4 flex-1 overflow-auto p-4 no-scrollbar">
+            <div className="flex flex-wrap  gap-4 overflow-auto">
+              {formFields.map(({ label, name, type, required, options }) => (
+                <div key={name} className="w-full md:w-[49%]">
+                  {type !== 'checkbox' && (
+                    <Label className="text-[#40444D] font-semibold mb-2">
+                      {label}
+                    </Label>
+                  )}
+
+                  {type === 'select' ? (
+                    <Controller
+                      control={control}
+                      name={name}
+                      render={({ field }) => (
                         <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
+                          onValueChange={(val) => {
+                            if (name === 'contact_type_id') {
+                              setValue('contact_type_id', Number(val));
+                            } else {
+                              field.onChange(val);
+                            }
+                          }}
+                          value={field.value?.toString() ?? ''}
                         >
                           <SelectTrigger className="w-full">
                             <SelectValue placeholder={`Select ${label}`} />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent
+                            position="popper"
+                            portal={false}
+                            className="z-[9999]"
+                          >
                             <SelectGroup>
                               {options.map((option, index) => (
                                 <SelectItem
                                   key={option.id || index}
                                   value={
-                                    name === 'contact_type'
+                                    name === 'contact_type_id'
                                       ? Number(option.id)
                                       : option.name
                                   }
@@ -299,16 +263,9 @@ export default function CreateContactDialog({ open, setOpen }) {
                             </SelectGroup>
                           </SelectContent>
                         </Select>
-                        {errors[name] && (
-                          <p className="text-xs text-red-500">
-                            {errors[name].message}
-                          </p>
-                        )}
-                      </>
-                    )}
-                  />
-                ) : type === 'checkbox' ? (
-                  <>
+                      )}
+                    />
+                  ) : type === 'checkbox' ? (
                     <div className="flex items-center space-x-2">
                       <Controller
                         control={control}
@@ -317,170 +274,175 @@ export default function CreateContactDialog({ open, setOpen }) {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
-                            className={`border ${
-                              errors[name] ? 'border-red-500' : ''
-                            }`}
                           />
                         )}
                       />
-                      <Label className="text-[#40444D] font-semibold">
-                        {label}
-                      </Label>
+                      <Label>{label}</Label>
                     </div>
-                    {errors[name] && (
-                      <p className="text-xs text-red-500">
-                        {errors[name].message}
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <>
+                  ) : (
                     <Controller
                       control={control}
                       name={name}
                       render={({ field }) => <Input type={type} {...field} />}
                     />
-
-                    {errors[name] && (
-                      <p className="text-xs text-red-500">
-                        {errors[name].message}
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
-            ))}
-            <div className="col-span-2">
-              <h3 className="text-lg font-semibold">Addresses</h3>
-              {addressFields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="border p-4 mb-2 rounded-lg space-y-2"
-                >
-                  <div className="grid grid-cols-2 gap-4">
-                    {[
-                      'address_1',
-                      'address_2',
-                      'city',
-                      'county',
-                      'state',
-                      'zip',
-                      'country',
-                    ].map((key) => (
-                      <div key={key} className="w-full">
-                        <Controller
-                          key={key}
-                          name={`addresses.${index}.${key}`}
-                          control={control}
-                          render={({ field }) => (
-                            <Input
-                              placeholder={key.replace('_', ' ')}
-                              {...field}
-                            />
-                          )}
-                        />
-                        {errors.addresses?.[index]?.[key]?.message && (
-                          <p className="text-xs text-red-500">
-                            {errors.addresses[index][key].message}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-
-                    <Controller
-                      name={`addresses.${index}.address_type`}
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Address Type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {/* <SelectItem value="Home">Home</SelectItem>
-                            <SelectItem value="Work">Work</SelectItem> */}
-
-                            {contactMeta?.address_type?.map((type) => (
-                              <SelectItem key={type.id} value={type.id}>
-                                {type.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-
-                    <Controller
-                      name={`addresses.${index}.is_primary`}
-                      control={control}
-                      render={({ field }) => (
-                        <div className="flex items-center gap-2">
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                          <Label>Is Primary?</Label>
-                        </div>
-                      )}
-                    />
-                  </div>
-
-                  <Button
-                    type="button"
-                    onClick={() => remove(index)}
-                    className="text-red-600 hover:bg-red-100"
-                    variant="ghost"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" /> Remove Address
-                  </Button>
+                  )}
                 </div>
               ))}
 
-              <Button
-                type="button"
-                onClick={() =>
-                  append({
-                    address_1: '',
-                    address_2: '',
-                    city: '',
-                    county: '',
-                    state: '',
-                    zip: '',
-                    country: '',
-                    is_primary: false,
-                    address_type: '',
-                  })
-                }
-                variant="outline"
-                className="w-full mt-2 bg-white hover:bg-gray-100 text-gray-700"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Address
-              </Button>
+              {/* Address Section */}
+              <div className="w-full">
+                <h3 className="text-lg font-semibold mb-1">Addresses</h3>
+                {addressFields.map((addr, idx) => (
+                  <div
+                    key={addr.id}
+                    className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
+                  >
+                    <p className="text-sm">
+                      {addr.address_1}, {addr.city}, {addr.state}
+                    </p>
+                    <Tooltip arrow title="Remove Address">
+                      <IconButton
+                        type="button"
+                        onClick={() => remove(idx)}
+                        variant="ghost"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </IconButton>
+                    </Tooltip>
+                  </div>
+                ))}
+
+                <Button
+                  type="button"
+                  onClick={() => setAddressDialogOpen(true)}
+                  variant="outline"
+                  className="w-fit mt-2 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Address
+                </Button>
+              </div>
             </div>
           </div>
-
-          {/* <div className="pt-4 flex justify-end gap-4"> */}
-          <DialogFooter asChild>
+          <Divider />
+          <div className="flex items-center justify-end p-4 gap-2">
             <Button
               type="button"
-              className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
+              className="bg-gray-300 text-black hover:bg-gray-400"
               onClick={() => setOpen(false)}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
+              className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
             >
-              Create Task
+              Create Contact
             </Button>
-          </DialogFooter>
-        </form>
-        {/* </div> */}
-      </DialogContent>
-    </Dialog>
+          </div>
+        </Stack>
+      </Dialog>
+
+      {/* Nested Address Dialog */}
+      <Dialog
+        open={addressDialogOpen}
+        onClose={() => setAddressDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <Stack className="bg-[#F5F5FA] rounded-lg p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-center">Add Address</h1>
+            <IconButton onClick={() => setAddressDialogOpen(false)}>
+              <X className="text-black" />
+            </IconButton>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              'address_1',
+              'address_2',
+              'city',
+              'county',
+              'state',
+              'zip',
+              'country',
+            ].map((key) => (
+              <div key={key} className="w-full">
+                <Label className="text-[#40444D] font-semibold mb-2">
+                  {key.replace('_', ' ')}
+                </Label>
+                <Input
+                  value={newAddress[key]}
+                  onChange={(e) =>
+                    setNewAddress({ ...newAddress, [key]: e.target.value })
+                  }
+                  placeholder={key.replace('_', ' ')}
+                />
+              </div>
+            ))}
+
+            {/* Address Type */}
+            <div className="w-full">
+              <Label className="text-[#40444D] font-semibold mb-2">
+                Address Type
+              </Label>
+              <Select
+                onValueChange={(val) =>
+                  setNewAddress({ ...newAddress, address_type: val })
+                }
+                value={newAddress.address_type}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Address Type" />
+                </SelectTrigger>
+                <SelectContent
+                  position="popper"
+                  portal={false}
+                  className="z-[9999]"
+                >
+                  {contactMeta?.address_type?.map((type) => (
+                    <SelectItem key={type.id} value={type.id}>
+                      {type.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Is Primary */}
+            <div className="flex items-center gap-2">
+              <Label>Is Primary: </Label>
+              <Switch
+                checked={newAddress.is_primary}
+                onChange={(e) =>
+                  setNewAddress({
+                    ...newAddress,
+                    is_primary: e.target.checked,
+                  })
+                }
+              />
+            </div>
+          </div>
+
+          <DialogActions>
+            <Button
+              type="button"
+              className="bg-gray-300 text-black hover:bg-gray-400"
+              onClick={() => setAddressDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
+              onClick={handleAddAddressSubmit}
+            >
+              Save Address
+            </Button>
+          </DialogActions>
+        </Stack>
+      </Dialog>
+    </>
   );
 }

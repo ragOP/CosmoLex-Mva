@@ -21,11 +21,14 @@ const createContact = async ({ data }) => {
         'Contact API error:',
         result.response?.message || 'Failed to create contact'
       );
-      return null;
+      throw new Error(
+        'Contact API error:',
+        result.response?.message || 'Failed to create contact'
+      );
     }
   } catch (error) {
-    console.error('Contact create error:', error);
-    return null;
+    console.error(error);
+    throw error;
   }
 };
 
