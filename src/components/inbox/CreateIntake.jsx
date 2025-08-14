@@ -22,7 +22,7 @@ import searchContact from '@/pages/matter/intake/helpers/searchContact';
 import createMatter from '@/pages/matter/intake/helpers/createMatter';
 import { useNavigate } from 'react-router-dom';
 import CreateContactDialog from './CreateContactDialog';
-import { Edit, X } from 'lucide-react';
+import { Edit, X, ChevronDown, ChevronRight, Plus } from 'lucide-react';
 import BreadCrumb from '@/components/BreadCrumb';
 
 export default function CreateIntake() {
@@ -34,6 +34,7 @@ export default function CreateIntake() {
   const [showContactTable, setShowContactTable] = useState(false);
   const [hoveredContact, setHoveredContact] = useState(null);
   const [selectedContact, setSelectedContact] = useState(null);
+  const [isEventsCollapsed, setIsEventsCollapsed] = useState(false);
 
   const createMatterMutation = useMutation({
     mutationFn: createMatter,
@@ -168,7 +169,7 @@ export default function CreateIntake() {
 
           <form
             onSubmit={handleSubmit((data) => handleCreateIntake(data))}
-            className="space-y-4 w-full h-full flex flex-col justify-between"
+            className="space-y-4 w-full h-full flex flex-col"
           >
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -234,6 +235,8 @@ export default function CreateIntake() {
                   </div>
                 ))}
               </div>
+
+
 
               {/* Contact Type Select */}
 
@@ -447,6 +450,45 @@ export default function CreateIntake() {
                 </p>
               )}
 
+            </div>
+
+            {/* Upcoming Events */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div
+                className="flex items-center justify-between cursor-pointer mb-2"
+                onClick={() => setIsEventsCollapsed(!isEventsCollapsed)}
+              >
+                <span className="text-lg font-semibold text-gray-800">Upcoming Events</span>
+                <div className="text-gray-500 hover:text-gray-700 transition-colors">
+                  {isEventsCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </div>
+              </div>
+
+              {!isEventsCollapsed && (
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Event</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Date</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Time</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white">
+                      <tr>
+                        <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
+                          <div className="flex flex-col items-center">
+                            <div className="text-4xl mb-2">📅</div>
+                            <p className="text-sm font-medium">No upcoming events</p>
+                            <p className="text-xs text-gray-400">Events will appear here when scheduled</p>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
             {/* Buttons */}
