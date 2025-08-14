@@ -97,7 +97,7 @@ const TasksPage = () => {
           Showing {tasks?.tasks?.length || 0} tasks
         </p>
         <Button
-          onClick={() => navigate(`/dashboard/inbox/overview/create`)}
+          onClick={() => setOpen(true)}
           className="cursor-pointer max-w-48"
         >
           Create Task

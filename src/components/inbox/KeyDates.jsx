@@ -275,12 +275,16 @@ const KeyDates = () => {
 
   const renderField = (fieldName) => {
     return (
-      <div className="flex flex-col gap-2">
-        <Label>{getFieldLabel(fieldName)}</Label>
+      <div className="flex gap-2 w-full items-center justify-between">
+        <Label className="text-nowrap w-[40%] font-medium">
+          {getFieldLabel(fieldName)}:
+        </Label>
         <Input
           type="date"
+          className="w-[60%]"
           key={fieldName}
           value={formData[fieldName]}
+          placeholder="Select Date"
           onChange={(e) => handleFieldChange(fieldName, e.target.value)}
           // className="h-full"
         />
@@ -325,7 +329,7 @@ const KeyDates = () => {
           </div>
         ) : isArrayWithValues(fields) && fields.length > 0 ? (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {fields.map((fieldName) => (
                 <div key={fieldName}>{renderField(fieldName)}</div>
               ))}
