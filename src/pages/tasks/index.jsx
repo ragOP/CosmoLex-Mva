@@ -91,9 +91,17 @@ const TasksPage = () => {
   }
 
   return (
-    <div className="flex flex-col gap-4 h-full w-full">
-      <div className="flex justify-end w-[10%]">
-        <Button onClick={() => setOpen(true)}>Create Task</Button>
+    <div className="flex flex-col gap-4 h-full w-full p-4">
+      <div className="flex justify-between w-full items-center">
+        <p className="text-2xl font-bold">
+          Showing {tasks?.tasks?.length || 0} tasks
+        </p>
+        <Button
+          onClick={() => navigate(`/dashboard/inbox/overview/create`)}
+          className="cursor-pointer max-w-48"
+        >
+          Create Task
+        </Button>
       </div>
       <TaskTable
         tasks={tasks?.tasks || []}

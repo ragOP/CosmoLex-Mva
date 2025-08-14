@@ -28,6 +28,8 @@ const TaskTable = ({
       width: 70,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
     },
     {
       field: 'client_name',
@@ -35,6 +37,8 @@ const TaskTable = ({
       width: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
     },
     {
       field: 'subject',
@@ -42,12 +46,17 @@ const TaskTable = ({
       flex: 1,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
     },
     {
       field: 'priority',
       headerName: 'Priority',
       width: 100,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
       renderCell: (params) => {
         const colorMap = {
           High: 'destructive',
@@ -68,6 +77,9 @@ const TaskTable = ({
       headerName: 'Due Date',
       width: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
       renderCell: (params) => (
         <span className="text-sm text-muted-foreground">
           {formatDate(params.value)}
@@ -79,6 +91,9 @@ const TaskTable = ({
       headerName: 'Assignees',
       width: 200,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-start">
           <ScrollArea className="w-full">
@@ -94,6 +109,9 @@ const TaskTable = ({
       headerName: 'Status',
       width: 120,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-start">
           <Select
@@ -118,6 +136,9 @@ const TaskTable = ({
       headerName: 'Edit',
       width: 80,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-center">
           <Pencil
@@ -135,6 +156,9 @@ const TaskTable = ({
       headerName: 'Delete',
       width: 80,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-center">
           <Trash2
@@ -165,11 +189,83 @@ const TaskTable = ({
           getRowId={(row) => row.id}
           sx={{
             padding: 2,
-            border: '1px solid #E2E8F0',
-            borderRadius: '0.75rem',
+            border: 'none',
+            borderRadius: '1rem',
             backdropFilter: 'blur(20px)',
-            boxShadow: '0px 0.75rem 0.75rem 0px rgba(0, 0, 0, 0.1)',
+            boxShadow: '0px 0.75rem 0.75rem rgba(0, 0, 0, 0.1)',
             zIndex: 10,
+            overflow: 'hidden',
+            backgroundColor: 'rgba(255, 255, 255, 0.3)',
+
+            // HEADER CONTAINER
+            '& .MuiDataGrid-columnHeaders': {
+              backgroundColor: 'black',
+              color: 'white',
+              borderRadius: '2rem',
+              overflow: 'hidden',
+              border: 'none',
+              marginBottom: '1rem',
+            },
+
+            // INDIVIDUAL HEADER CELLS
+            '& .MuiDataGrid-columnHeader': {
+              backgroundColor: 'white',
+              color: 'black',
+              border: 'none',
+            },
+            '& .MuiDataGrid-columnHeader:focus': {
+              outline: 'none',
+            },
+
+            '& .MuiDataGrid-columnHeader:focus-within': {
+              outline: 'none',
+              border: 'none',
+            },
+
+            // BODY CELLS
+            '& .MuiDataGrid-cell': {
+              border: 'none',
+              backgroundColor: 'transparent',
+              cursor: 'pointer',
+            },
+            '& .MuiDataGrid-cell:focus': {
+              outline: 'none',
+            },
+
+            '& .MuiDataGrid-cell:focus-within': {
+              outline: 'none',
+              border: 'none',
+            },
+
+            // ROWS
+            '& .MuiDataGrid-row': {
+              borderRadius: '2rem',
+              backgroundColor: 'white',
+              marginBottom: '0.5rem',
+              overflow: 'hidden',
+            },
+            '& .MuiDataGrid-row:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.3)',
+              // background:
+              //   'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
+              color: 'white',
+              transition: 'all 0.3s ease-in-out',
+            },
+
+            // FOOTER
+            '& .MuiDataGrid-footerContainer': {
+              backgroundColor: 'transparent',
+              borderBottomLeftRadius: '1rem',
+              borderBottomRightRadius: '1rem',
+            },
+
+            // TOOLBAR & SCROLLBAR
+            '& .MuiDataGrid-toolbarContainer': {
+              padding: '0.5rem 1rem',
+            },
+            '& .MuiDataGrid-scrollbar': {
+              display: 'none',
+            },
           }}
           disableRowSelectionOnClick
           disableSelectionOnClick
