@@ -5,9 +5,11 @@ import {
   Folder,
   TextSearch,
   Calendar,
+  CheckSquare,
+  Inbox
 } from 'lucide-react';
 import * as React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import CustomRickTreeView from '../custom_tree_view/CustomRickTreeView';
 import { useLocation } from 'react-router-dom';
@@ -19,6 +21,8 @@ const typeToIcon = {
   link: LayoutDashboardIcon,
   data: TextSearch,
   calendar: Calendar,
+  tasks: CheckSquare,
+  inbox: Inbox,
 };
 
 const sidebarItems = [
@@ -102,13 +106,13 @@ const sidebarItems = [
     id: '/dashboard/tasks',
     label: 'Tasks',
     type: 'link',
-    iconType: 'link',
+    iconType: 'tasks',
   },
   {
     id: '/dashboard/inbox',
     label: 'Inbox',
     type: 'link',
-    iconType: 'link',
+    iconType: 'inbox',
   },
 
   // {
@@ -275,8 +279,9 @@ const Sidebar = ({ isDrawer }) => {
         isDrawer ? '' : 'hidden md:flex'
       }`}
     >
-      <div className="flex p-4">
+      <div className="flex p-4 mb-4">
         <img src="/brand-logo.png" alt="Logo" className="h-10 w-10" />
+        <span className="text-xl font-bold text-gray-800 ml-3 self-center">MVA</span>
       </div>
       <div className="flex flex-col gap-2">
         {itemsToRender.map((item) => (
@@ -303,8 +308,8 @@ const Sidebar = ({ isDrawer }) => {
               onMouseEnter={() => setHovered(item.id)}
               onMouseLeave={() => setHovered(null)}
             >
-              {getIconForType(item.type) &&
-                React.createElement(getIconForType(item.type), {
+              {getIconForType(item.iconType) &&
+                React.createElement(getIconForType(item.iconType), {
                   className: 'mr-3 h-5 w-5',
                 })}
               {item.label}
