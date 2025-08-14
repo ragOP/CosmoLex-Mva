@@ -6,7 +6,7 @@ import {
   TextSearch,
   Calendar,
   CheckSquare,
-  Inbox
+  Inbox,
 } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -279,9 +279,14 @@ const Sidebar = ({ isDrawer }) => {
         isDrawer ? '' : 'hidden md:flex'
       }`}
     >
-      <div className="flex p-4 mb-4">
+      <div
+        onClick={() => navigate('/dashboard')}
+        className="flex p-4 mb-4 cursor-pointer hover:scale-102 transition"
+      >
         <img src="/brand-logo.png" alt="Logo" className="h-10 w-10" />
-        <span className="text-xl font-bold text-gray-800 ml-3 self-center">MVA</span>
+        <span className="text-xl font-bold text-gray-800 ml-3 self-center">
+          MVA
+        </span>
       </div>
       <div className="flex flex-col gap-2">
         {itemsToRender.map((item) => (

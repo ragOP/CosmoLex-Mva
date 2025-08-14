@@ -324,7 +324,9 @@ export default function CreateContactDialog({ open, setOpen }) {
               </div>
             </div>
           </div>
+
           <Divider />
+
           <div className="flex items-center justify-end p-4 gap-2">
             <Button
               type="button"
@@ -360,24 +362,24 @@ export default function CreateContactDialog({ open, setOpen }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
-              'address_1',
-              'address_2',
-              'city',
-              'county',
-              'state',
-              'zip',
-              'country',
-            ].map((key) => (
-              <div key={key} className="w-full">
+              { label: 'Address 1', name: 'address_1' },
+              { label: 'Address 2', name: 'address_2' },
+              { label: 'City', name: 'city' },
+              { label: 'County', name: 'county' },
+              { label: 'State', name: 'state' },
+              { label: 'Zip', name: 'zip' },
+              { label: 'Country', name: 'country' },
+            ].map(({ label, name }) => (
+              <div key={name} className="w-full">
                 <Label className="text-[#40444D] font-semibold mb-2">
-                  {key.replace('_', ' ')}
+                  {label}
                 </Label>
                 <Input
-                  value={newAddress[key]}
+                  value={newAddress[name]}
                   onChange={(e) =>
-                    setNewAddress({ ...newAddress, [key]: e.target.value })
+                    setNewAddress({ ...newAddress, [name]: e.target.value })
                   }
-                  placeholder={key.replace('_', ' ')}
+                  placeholder={name.replace('_', ' ')}
                 />
               </div>
             ))}

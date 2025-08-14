@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Trash2, Plus } from 'lucide-react';
+import {
+  Dialog,
+  Divider,
+  IconButton,
+  Stack,
+  Switch,
+  Tooltip,
+} from '@mui/material';
+import { Trash2, Plus, X } from 'lucide-react';
 
 const repeatOptions = ['never', 'daily', 'weekly', 'monthly', 'yearly'];
 
@@ -22,10 +30,12 @@ export default function NewEventDialogRHF({
   onSubmit = () => {},
   selectedDateRange = null,
 }) {
+  const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [participantDialogOpen, setParticipantDialogOpen] = useState(false);
   const {
     control,
     register,
-    handleSubmit,
+    getValues,
     setValue,
     formState: { errors },
   } = useForm({
@@ -80,335 +90,223 @@ export default function NewEventDialogRHF({
     name: 'participants',
   });
 
+  const [newParticipant, setNewParticipant] = useState({
+    email: '',
+    role: '',
+    status: '',
+    comment: '',
+    address_type: '',
+    is_primary: false,
+  });
+
+  const handleAddParticipantSubmit = () => {
+    appendParticipant(newParticipant);
+    setNewParticipant({
+      email: '',
+      role: '',
+      status: '',
+      comment: '',
+      address_type: '',
+      is_primary: false,
+    });
+    setParticipantDialogOpen(false);
+  };
+
+  const handleAddReminderSubmit = () => {
+    appendReminder(newReminder);
+    setNewReminder({
+      sound: '',
+      value: '',
+      timing: '',
+      relative_to: '',
+    });
+    setReminderDialogOpen(false);
+  };
+
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 overflow-y-auto">
-      <form
-        onSubmit={handleSubmit((data) => {
-          onSubmit(data);
-        })}
-        className="bg-[#F5F5FA] rounded-lg w-full max-w-xl p-6 space-y-6 max-h-[90vh] overflow-y-auto shadow-[0px_4px_24px_0px_#000000] no-scrollbar"
-      >
-        <h2 className="text-2xl text-[#40444D] text-center font-bold font-sans">
-          Create New Event
-        </h2>
+    <>
+      <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+        <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000] ">
+          <div className="flex items-center justify-between p-4">
+            <h1 className="text-xl text-[#40444D] text-center font-bold font-sans ">
+              Create New Event
+            </h1>
+            <IconButton onClick={onClose}>
+              <X className="text-black" />
+            </IconButton>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex flex-col space-y-2">
-            <Label>Title</Label>
-            <Controller
-              control={control}
-              name="title"
-              rules={{ required: 'Title is required' }}
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  className={`border ${errors.title ? 'border-red-500' : ''}`}
+          <Divider />
+
+          <div className="space-y-4 flex-1 overflow-auto p-4 no-scrollbar">
+            <div className="flex flex-wrap gap-4">
+              <div className="w-full md:w-[49%] flex flex-col gap-2">
+                <Label>Title: </Label>
+                <Controller
+                  control={control}
+                  name="title"
+                  rules={{ required: 'Title is required' }}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      className={`border ${
+                        errors.title ? 'border-red-500' : ''
+                      }`}
+                    />
+                  )}
                 />
-              )}
-            />
-            {errors.title && (
-              <p className="text-red-500 text-sm">{errors.title.message}</p>
-            )}
-          </div>
+                {errors.title && (
+                  <p className="text-red-500 text-sm">{errors.title.message}</p>
+                )}
+              </div>
 
-          <div className="flex flex-col space-y-2">
-            <Label>Description</Label>
-            <Controller
-              control={control}
-              name="description"
-              render={({ field }) => (
-                <Input
-                  {...field}
-                  className={`border ${
-                    errors.description ? 'border-red-500' : ''
-                  }`}
+              <div className="w-full md:w-[49%] flex flex-col gap-2">
+                <Label>Description: </Label>
+                <Controller
+                  control={control}
+                  name="description"
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      className={`border ${
+                        errors.description ? 'border-red-500' : ''
+                      }`}
+                    />
+                  )}
                 />
-              )}
-            />
-            {errors.description && (
-              <p className="text-red-500 text-sm">
-                {errors.description.message}
-              </p>
-            )}
-          </div>
+                {errors.description && (
+                  <p className="text-red-500 text-sm">
+                    {errors.description.message}
+                  </p>
+                )}
+              </div>
 
-          <div className="flex flex-col space-y-2">
-            <Label>Start Time</Label>
-            <Controller
-              control={control}
-              name="start_time"
-              rules={{ required: 'Start time is required' }}
-              render={({ field }) => (
-                <Input
-                  type="datetime-local"
-                  {...field}
-                  className={`border ${
-                    errors.start_time ? 'border-red-500' : ''
-                  }`}
+              <div className="w-full md:w-[49%] flex flex-col gap-2">
+                <Label>Start Time: </Label>
+                <Controller
+                  control={control}
+                  name="start_time"
+                  rules={{ required: 'Start time is required' }}
+                  render={({ field }) => (
+                    <Input
+                      type="datetime-local"
+                      {...field}
+                      className={`border ${
+                        errors.start_time ? 'border-red-500' : ''
+                      }`}
+                    />
+                  )}
                 />
-              )}
-            />
-            {errors.start_time && (
-              <p className="text-red-500 text-sm">
-                {errors.start_time.message}
-              </p>
-            )}
-          </div>
+                {errors.start_time && (
+                  <p className="text-red-500 text-sm">
+                    {errors.start_time.message}
+                  </p>
+                )}
+              </div>
 
-          <div className="flex flex-col space-y-2">
-            <Label>End Time</Label>
-            <Controller
-              control={control}
-              name="end_time"
-              rules={{ required: 'End time is required' }}
-              render={({ field }) => (
-                <Input
-                  type="datetime-local"
-                  {...field}
-                  className={`border ${
-                    errors.end_time ? 'border-red-500' : ''
-                  }`}
+              <div className="w-full md:w-[49%] flex flex-col gap-2">
+                <Label>End Time: </Label>
+                <Controller
+                  control={control}
+                  name="end_time"
+                  rules={{ required: 'End time is required' }}
+                  render={({ field }) => (
+                    <Input
+                      type="datetime-local"
+                      {...field}
+                      className={`border ${
+                        errors.end_time ? 'border-red-500' : ''
+                      }`}
+                    />
+                  )}
                 />
-              )}
-            />
-            {errors.end_time && (
-              <p className="text-red-500 text-sm">{errors.end_time.message}</p>
-            )}
-          </div>
+                {errors.end_time && (
+                  <p className="text-red-500 text-sm">
+                    {errors.end_time.message}
+                  </p>
+                )}
+              </div>
 
-          <div className="flex flex-col space-y-2">
-            <Label>Category ID</Label>
-            <Controller
-              control={control}
-              name="category_id"
-              render={({ field }) => (
-                <Input
-                  type="text"
-                  {...field}
-                  className={`border ${
-                    errors.category_id ? 'border-red-500' : ''
-                  }`}
+              <div className="w-full md:w-[49%] flex flex-col gap-2">
+                <Label>Category ID: </Label>
+                <Controller
+                  control={control}
+                  name="category_id"
+                  render={({ field }) => (
+                    <Input
+                      type="text"
+                      {...field}
+                      className={`border ${
+                        errors.category_id ? 'border-red-500' : ''
+                      }`}
+                    />
+                  )}
                 />
-              )}
-            />
-            {errors.category_id && (
-              <p className="text-red-500 text-sm">
-                {errors.category_id.message}
-              </p>
-            )}
-          </div>
+                {errors.category_id && (
+                  <p className="text-red-500 text-sm">
+                    {errors.category_id.message}
+                  </p>
+                )}
+              </div>
 
-          <div className="flex flex-col space-y-2">
-            <Label>All Day</Label>
-            <Controller
-              control={control}
-              name="all_day"
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  onValueChange={field.onChange}
-                  value={field.value.toString()}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select All Day Option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value={true}>True</SelectItem>
-                      <SelectItem value={false}>False</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="flex flex-col space-y-2">
-            <Label>Repeat</Label>
-            <Controller
-              control={control}
-              name="repeat"
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  onValueChange={field.onChange}
-                  value={field.value}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Repeat Option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {repeatOptions.map((opt) => (
-                        <SelectItem key={opt} value={opt}>
-                          {opt}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </div>
-
-          <div className="flex flex-col space-y-2">
-            <Label>Priority</Label>
-            <Controller
-              control={control}
-              name="priority"
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  onValueChange={field.onChange}
-                  value={field.value}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Priority Option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </div>
-
-          <div className="flex flex-col space-y-2">
-            <Label>Status</Label>
-            <Controller
-              control={control}
-              name="status"
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  onValueChange={field.onChange}
-                  value={field.value}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Status Option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              )}
-            />
-          </div>
-        </div>
-
-        {/* Reminders Section */}
-        <div className="pt-4">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-xl font-semibold text-[#40444D]">Reminders</h3>
-            <div
-              onClick={() =>
-                appendReminder({
-                  type: 'sound',
-                  timing: 'minutes_before',
-                  value: 15,
-                  relative_to: 'start',
-                })
-              }
-              className="p-1 rounded-full cursor-pointer hover:bg-[#6366F1] hover:text-white transition-all duration-300 ease-in-out"
-            >
-              <Plus className="h-5 w-5" />
+              <div className="w-full md:w-[49%] flex flex-col gap-2">
+                <Label>All Day: </Label>
+                <Switch
+                  checked={getValues('all_day')}
+                  onChange={(e) => setValue('all_day', e.target.checked)}
+                />
+                {/* <Controller
+                control={control}
+                name="all_day"
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    onValueChange={field.onChange}
+                    value={field.value.toString()}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select All Day Option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value={true}>True</SelectItem>
+                        <SelectItem value={false}>False</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              /> */}
+              </div>
             </div>
-          </div>
 
-          {reminderFields.map((field, index) => (
-            <div key={field.id} className="flex items-center justify-between">
-              <div className="flex justify-around items-center gap-2">
-                {/* Type */}
+            <div className="flex flex-wrap gap-4">
+              <div className="w-full md:w-[49%] flex flex-col space-y-2">
+                <Label>Repeat</Label>
                 <Controller
                   control={control}
-                  name={`reminders.${index}.type`}
+                  name="repeat"
                   render={({ field }) => (
                     <Select
                       {...field}
                       onValueChange={field.onChange}
                       value={field.value}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Type" />
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Repeat Option" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent
+                        position="popper"
+                        portal={false}
+                        className="z-[9999]"
+                      >
                         <SelectGroup>
-                          <SelectItem value="sound">Sound</SelectItem>
-                          <SelectItem value="email">Email</SelectItem>
-                          <SelectItem value="popup">Popup</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-
-                {/* Value */}
-                <Input
-                  type="number"
-                  {...register(`reminders.${index}.value`)}
-                  placeholder="Time"
-                  min="1"
-                />
-
-                {/* Timing */}
-                <Controller
-                  control={control}
-                  name={`reminders.${index}.timing`}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Timing" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="minutes_before">
-                            Minutes Before
-                          </SelectItem>
-                          <SelectItem value="hours_before">
-                            Hours Before
-                          </SelectItem>
-                          <SelectItem value="days_before">
-                            Days Before
-                          </SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-
-                {/* Relative To */}
-                <Controller
-                  control={control}
-                  name={`reminders.${index}.relative_to`}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Relative To" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="start">Start</SelectItem>
-                          <SelectItem value="end">End</SelectItem>
+                          {repeatOptions.map((opt) => (
+                            <SelectItem key={opt} value={opt}>
+                              {opt}
+                            </SelectItem>
+                          ))}
                         </SelectGroup>
                       </SelectContent>
                     </Select>
@@ -416,111 +314,280 @@ export default function NewEventDialogRHF({
                 />
               </div>
 
-              {/* Remove */}
-              <div className="flex items-center justify-end w-20 ">
-                <Trash2
-                  onClick={() => removeReminder(index)}
-                  className="text-[#6366F1] hover:text-red-500 transition-all duration-300 ease-in-out h-5 w-5 cursor-pointer"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Participants Section */}
-        <div className="pt-4">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-xl font-semibold text-[#40444D]">
-              Participants
-            </h3>
-            <div
-              onClick={() =>
-                appendParticipant({
-                  email: '',
-                  role: '',
-                  status: 'pending',
-                  comment: '',
-                })
-              }
-              className="p-1 rounded-full cursor-pointer hover:bg-[#6366F1] hover:text-white transition-all duration-300 ease-in-out"
-            >
-              <Plus className="h-5 w-5" />
-            </div>
-          </div>
-
-          {participantFields.map((field, index) => (
-            <div key={field.id} className="flex items-center justify-between">
-              <div className="flex items-center justify-between gap-2">
+              <div className="w-full md:w-[49%] flex flex-col space-y-2">
+                <Label>Priority</Label>
                 <Controller
                   control={control}
-                  name={`participants.${index}.email`}
-                  render={({ field }) => (
-                    <Input {...field} placeholder="Email" />
-                  )}
-                />
-                <Controller
-                  control={control}
-                  name={`participants.${index}.role`}
-                  render={({ field }) => (
-                    <Input {...field} placeholder="Role" />
-                  )}
-                />
-
-                {/* Status Dropdown */}
-                <Controller
-                  control={control}
-                  name={`participants.${index}.status`}
+                  name="priority"
                   render={({ field }) => (
                     <Select
                       {...field}
                       onValueChange={field.onChange}
                       value={field.value}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Status" />
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Priority Option" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent
+                        position="popper"
+                        portal={false}
+                        className="z-[9999]"
+                      >
                         <SelectGroup>
-                          <SelectItem value="confirmed">Confirmed</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="low">Low</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+
+              <div className="w-full md:w-[49%] flex flex-col space-y-2">
+                <Label>Status</Label>
+                <Controller
+                  control={control}
+                  name="status"
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      onValueChange={field.onChange}
+                      value={field.value}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Status Option" />
+                      </SelectTrigger>
+                      <SelectContent
+                        position="popper"
+                        portal={false}
+                        className="z-[9999]"
+                      >
+                        <SelectGroup>
                           <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="declined">Declined</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
                   )}
                 />
-
-                <Input
-                  {...register(`participants.${index}.comment`)}
-                  placeholder="Comment"
-                />
-              </div>
-              {/* Remove */}
-              <div className="flex items-center justify-end w-20 ">
-                <Trash2
-                  onClick={() => removeParticipant(index)}
-                  className="text-[#6366F1] hover:text-red-500 transition-all duration-300 ease-in-out h-5 w-5 cursor-pointer"
-                />
               </div>
             </div>
-          ))}
-        </div>
 
-        <div className="flex justify-end gap-4">
-          <Button
-            onClick={onClose}
-            className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
-          >
-            Submit
-          </Button>
-        </div>
-      </form>
-    </div>
+            {/* Reminders Section */}
+            <div className="w-full">
+              <h3 className="text-lg font-semibold mb-1">Reminders</h3>
+              {reminderFields.map((reminder, idx) => (
+                <div
+                  key={reminder.id}
+                  className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
+                >
+                  <p className="text-sm">
+                    {reminder.sound}, {reminder.value}, {reminder.timing},{' '}
+                    {reminder.relative_to}
+                  </p>
+                  <Tooltip arrow title="Remove Participant">
+                    <IconButton
+                      type="button"
+                      onClick={() => remove(idx)}
+                      variant="ghost"
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </IconButton>
+                  </Tooltip>
+                </div>
+              ))}
+
+              <Button
+                type="button"
+                onClick={() => setReminderDialogOpen(true)}
+                variant="outline"
+                className="w-fit mt-2 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Reminder
+              </Button>
+            </div>
+
+            {/* Participants Section */}
+            <div className="w-full">
+              <h3 className="text-lg font-semibold mb-1">Participants</h3>
+              {participantFields.map((participant, idx) => (
+                <div
+                  key={participant.id}
+                  className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
+                >
+                  <p className="text-sm">
+                    {participant.email}, {participant.role},{' '}
+                    {participant.status}
+                  </p>
+                  <Tooltip arrow title="Remove Participant">
+                    <IconButton
+                      type="button"
+                      onClick={() => remove(idx)}
+                      variant="ghost"
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </IconButton>
+                  </Tooltip>
+                </div>
+              ))}
+
+              <Button
+                type="button"
+                onClick={() => setParticipantDialogOpen(true)}
+                variant="outline"
+                className="w-fit mt-2 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Participant
+              </Button>
+            </div>
+          </div>
+
+          <Divider />
+
+          <div className="flex items-center justify-end p-4 gap-2">
+            <Button
+              onClick={onClose}
+              className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={(data) => onSubmit(data)}
+              className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
+            >
+              Submit
+            </Button>
+          </div>
+        </Stack>
+      </Dialog>
+
+      {/* Dialog for Reminder */}
+      <Dialog
+        open={reminderDialogOpen}
+        onClose={() => setReminderDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <Stack className="bg-[#F5F5FA] rounded-lg p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-center">Add Reminder</h1>
+            <IconButton onClick={() => setReminderDialogOpen(false)}>
+              <X className="text-black" />
+            </IconButton>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { label: 'Sound', name: 'sound', type: 'text' },
+              { label: 'Value', name: 'value', type: 'number' },
+              { label: 'Timing', name: 'timing', type: 'date' },
+              { label: 'Relative To', name: 'relative_to', type: 'text' },
+            ].map(({ label, name, type }) => (
+              <div key={name} className="w-full">
+                <Label className="text-[#40444D] font-semibold mb-2">
+                  {label}
+                </Label>
+                <Controller
+                  control={control}
+                  name={name}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      type={type}
+                      value={field.value}
+                      onChange={(e) => setValue(name, e.target.value)}
+                      placeholder={name.replace('_', ' ')}
+                    />
+                  )}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-end p-4 gap-2">
+            <Button
+              type="button"
+              className="bg-gray-300 text-black hover:bg-gray-400"
+              onClick={() => setReminderDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
+              onClick={handleAddReminderSubmit}
+            >
+              Save Reminder
+            </Button>
+          </div>
+        </Stack>
+      </Dialog>
+
+      {/* Dialog for participants */}
+      <Dialog
+        open={participantDialogOpen}
+        onClose={() => setParticipantDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <Stack className="bg-[#F5F5FA] rounded-lg p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-center">Add Participant</h1>
+            <IconButton onClick={() => setParticipantDialogOpen(false)}>
+              <X className="text-black" />
+            </IconButton>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { label: 'Email', name: 'email', type: 'email' },
+              { label: 'Role', name: 'role', type: 'text' },
+              { label: 'Status', name: 'status', type: 'text' },
+              { label: 'Comment', name: 'comment', type: 'text' },
+            ].map(({ label, name, type }) => (
+              <div key={name} className="w-full">
+                <Label className="text-[#40444D] font-semibold mb-2">
+                  {label}
+                </Label>
+                <Controller
+                  control={control}
+                  name={name}
+                  render={({ field }) => (
+                    <Input
+                      {...field}
+                      type={type}
+                      value={field.value}
+                      onChange={(e) => setValue(name, e.target.value)}
+                      placeholder={name.replace('_', ' ')}
+                    />
+                  )}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-end p-4 gap-2">
+            <Button
+              type="button"
+              className="bg-gray-300 text-black hover:bg-gray-400"
+              onClick={() => setParticipantDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
+              onClick={handleAddParticipantSubmit}
+            >
+              Save Participant
+            </Button>
+          </div>
+        </Stack>
+      </Dialog>
+    </>
   );
 }
