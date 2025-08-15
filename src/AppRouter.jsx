@@ -16,7 +16,7 @@ const DashboardPage = lazy(() => import('./pages/DashboardPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/forget-password'));
 const ResetPasswordPage = lazy(() => import('./pages/reset-password'));
 const EmailVerifyPage = lazy(() => import('./pages/email-verify'));
-
+const DocumentationPage = lazy(() => import('./components/inbox/documents'));
 const DashboardHome = lazy(() => import('./components/dashboard/Dashboard'));
 const DashboardForm = lazy(() =>
   import('./components/dashboard/DashboardForm')
@@ -35,7 +35,7 @@ const KeyDates = lazy(() => import('./components/inbox/KeyDates'));
 const Notes = () => <ErrorPage pageName="Notes" />;
 const Event = () => <ErrorPage pageName="Event" />;
 const Tasks = () => <ErrorPage pageName="Tasks" />;
-const Documentation = () => <ErrorPage pageName="Documentation" />;
+const Documentation = () => <DocumentationPage />;
 const Communication = () => <ErrorPage pageName="Communication" />;
 const Finance = () => <ErrorPage pageName="Finance" />;
 const ActivityLogs = () => <ErrorPage pageName="Activity Logs" />;

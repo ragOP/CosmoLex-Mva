@@ -37,4 +37,10 @@ export const endpoints = {
   storeCaseKeyDates: 'v2/matter/case-key-dates/store',
   addForm: 'v2/matter/form/store',
   updateForm: 'v2/matter/form/update',
+  // Documents endpoints
+  getFolders: 'v2/documents/folders',
+  getFolderContents: 'v2/documents/folders',
+  createFolder: 'v2/documents/folders',
+  uploadFile: 'v2/documents/upload',
+  deleteDocument: 'v2/documents',
 };
