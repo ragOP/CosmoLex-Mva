@@ -317,7 +317,7 @@ const Form = () => {
                   )}
 
                   {/* Section Fields */}
-                  <Grid container spacing={2}>
+                  <Grid container spacing={1}>
                     {sectionFields.map((field, index) => {
                       if (field.type === 'section') {
                         return null;
@@ -350,9 +350,9 @@ const Form = () => {
                           <Stack
                             sx={{
                               height: '100%',
-                              minHeight: isTextarea ? '100px' : '60px',
-                              mt: isTextarea ? 1 : 0,
-                              mb: isTextarea ? 1 : 0,
+                              // minHeight: isTextarea ? '100px' : '60px',
+                              mt: isTextarea ? 0.5 : 0,
+                              mb: isTextarea ? 0.5 : 0,
                             }}
                           >
                             <FormFields

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,16 +11,12 @@ import {
   SelectGroup,
   SelectItem,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { taskSchema } from '@/pages/tasks/schema/createTaskSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
 import getEventsUserList from '@/pages/calendar/helpers/getEventsUserList';
 import {
   Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Stack,
   Divider,
   IconButton,
@@ -67,6 +63,7 @@ export default function CreateTaskDialog({
   open = false,
   onClose = () => {},
   onSubmit = () => {},
+  task = {},
 }) {
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [assignedToDialogOpen, setAssignedToDialogOpen] = useState(false);
@@ -158,13 +155,23 @@ export default function CreateTaskDialog({
     setAssignedToDialogOpen(false);
   };
 
+  useEffect(() => {
+    if (task) {
+      reset({
+        ...task,
+        reminders: task.reminders || [],
+        assigned_to: task?.assignees?.map((assignee) => assignee.id) || [],
+      });
+    }
+  }, [task, reset]);
+
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
         <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000] ">
           <div className="flex items-center justify-between p-4">
             <h1 className="text-xl text-[#40444D] text-center font-bold font-sans ">
-              Create New Contact
+              {task.id ? 'Update Task' : 'Create New Task'}
             </h1>
             <IconButton onClick={onClose}>
               <X className="text-black" />
@@ -337,22 +344,24 @@ export default function CreateTaskDialog({
         maxWidth="md"
         fullWidth
       >
-        <Stack className="bg-[#F5F5FA] rounded-lg p-6 space-y-6">
-          <div className="flex items-center justify-between">
+        <Stack className="bg-[#F5F5FA] rounded-lg">
+          <div className="flex items-center justify-between p-4">
             <h1 className="text-xl font-bold text-center">Add Reminder</h1>
             <IconButton onClick={() => setReminderDialogOpen(false)}>
               <X className="text-black" />
             </IconButton>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Divider />
+
+          <div className="flex flex-wrap gap-4 p-4">
             {[
               { label: 'Sound', name: 'sound', type: 'text' },
               { label: 'Value', name: 'value', type: 'number' },
               { label: 'Timing', name: 'timing', type: 'date' },
               { label: 'Relative To', name: 'relative_to', type: 'text' },
             ].map(({ label, name, type }) => (
-              <div key={name} className="w-full">
+              <div key={name} className="w-full md:w-[49%]">
                 <Label className="text-[#40444D] font-semibold mb-2">
                   {label}
                 </Label>
@@ -372,6 +381,8 @@ export default function CreateTaskDialog({
               </div>
             ))}
           </div>
+
+          <Divider />
 
           <div className="flex items-center justify-end p-4 gap-2">
             <Button
@@ -399,21 +410,23 @@ export default function CreateTaskDialog({
         maxWidth="md"
         fullWidth
       >
-        <Stack className="bg-[#F5F5FA] rounded-lg p-6 space-y-6">
-          <div className="flex items-center justify-between">
+        <Stack className="bg-[#F5F5FA] rounded-lg">
+          <div className="flex items-center justify-between p-4">
             <h1 className="text-xl font-bold text-center">Add Assigned To</h1>
             <IconButton onClick={() => setAssignedToDialogOpen(false)}>
               <X className="text-black" />
             </IconButton>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Divider />
+
+          <div className="flex flex-wrap gap-4 p-4">
             {[
-              { label: 'User', name: 'user', type: 'text' },
+              { label: 'User', name: 'user', type: 'select', options: users },
               { label: 'Role', name: 'role', type: 'text' },
               { label: 'Status', name: 'status', type: 'text' },
-            ].map(({ label, name, type }) => (
-              <div key={name} className="w-full">
+            ].map(({ label, name, type, options }) => (
+              <div key={name} className="w-full md:w-[49%]">
                 <Label className="text-[#40444D] font-semibold mb-2">
                   {label}
                 </Label>
@@ -421,18 +434,49 @@ export default function CreateTaskDialog({
                   control={control}
                   name={name}
                   render={({ field }) => (
-                    <Input
-                      {...field}
-                      type={type}
-                      value={field.value}
-                      onChange={(e) => setValue(name, e.target.value)}
-                      placeholder={name.replace('_', ' ')}
-                    />
+                    <>
+                      {type === 'text' && (
+                        <Input
+                          {...field}
+                          type={type}
+                          value={field.value}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          placeholder={name.replace('_', ' ')}
+                        />
+                      )}
+
+                      {type === 'select' && (
+                        <Select
+                          {...field}
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select User" />
+                          </SelectTrigger>
+                          <SelectContent
+                            position="popper"
+                            portal={false}
+                            className="z-[9999] w-full"
+                          >
+                            <SelectGroup>
+                              {options?.map((option) => (
+                                <SelectItem key={option.id} value={option.id}>
+                                  {option.name}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </>
                   )}
                 />
               </div>
             ))}
           </div>
+
+          <Divider />
 
           <div className="flex items-center justify-end p-4 gap-2">
             <Button

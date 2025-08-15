@@ -102,7 +102,7 @@ const TasksPage = () => {
           onClick={() => setOpen(true)}
           className="cursor-pointer max-w-48"
           icon={Plus}
-          iconPosition='left'
+          iconPosition="left"
         >
           Create Task
         </Button>
