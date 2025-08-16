@@ -13,7 +13,6 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createMatterSchema } from '@/pages/matter/intake/schema/createMatterSchema';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
@@ -27,7 +26,14 @@ import { useNavigate } from 'react-router-dom';
 import CreateContactDialog from './CreateContactDialog';
 import BreadCrumb from '@/components/BreadCrumb';
 import getContactMeta from '@/pages/matter/intake/helpers/getContactMeta';
-import { Edit, X, ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import {
+  Edit,
+  X,
+  ChevronDown,
+  ChevronRight,
+  Plus,
+  Loader2,
+} from 'lucide-react';
 
 export default function Overview() {
   const navigate = useNavigate();
@@ -48,7 +54,6 @@ export default function Overview() {
     mutationFn: updateMatter,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['matters'] });
-      navigate('/dashboard/inbox');
     },
   });
 
@@ -572,7 +577,11 @@ export default function Overview() {
                 type="submit"
                 className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
               >
-                Update Matter
+                {updateMatterMutation.isPending ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  'Update Matter'
+                )}
               </Button>
             </div>
           </form>

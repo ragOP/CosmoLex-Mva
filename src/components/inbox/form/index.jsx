@@ -4,7 +4,7 @@ import {
   getInitialFormData,
   getFormDataForSubmission,
 } from './helpers';
-import Button from '@/components/button';
+import { Button } from '@/components/ui/button';
 
 import { Stack, Typography } from '@mui/material';
 import { Grid } from '@mui/material';
