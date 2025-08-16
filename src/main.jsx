@@ -4,8 +4,14 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { store, persistor } from './store';
+import { setupAxiosInterceptor } from './api/api_services';
 import './index.css';
 import App from './App.jsx';
+
+// Setup axios interceptor with store
+console.log("Setting up axios interceptor...");
+setupAxiosInterceptor(store);
+console.log("Axios interceptor setup complete");
 
 // Create a client
 const queryClient = new QueryClient({

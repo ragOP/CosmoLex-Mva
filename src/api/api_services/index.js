@@ -1,6 +1,66 @@
 import { BACKEND_URL } from '../endpoint/index';
 import axios from 'axios';
-import { getToken } from '@/utils/auth';
+import { getToken, clearAuthData } from '@/utils/auth';
+import { logout } from '@/store/slices/authSlice';
+
+// Create axios instance
+const axiosInstance = axios.create();
+
+// Setup interceptor to handle token expiration
+export const setupAxiosInterceptor = (store) => {
+  // Clear any existing interceptors first
+  axiosInstance.interceptors.request.clear();
+  axiosInstance.interceptors.response.clear();
+
+  // Add response interceptor
+  axiosInstance.interceptors.response.use(
+    (response) => {
+      // Check if the response indicates token expiration
+      const data = response.data;
+
+      // Handle different response structures
+      if (data) {
+        // Check for direct response structure
+        if (data.Apistatus === false && data.message === 'Token has expired') {
+          console.log('Token expired detected - direct structure');
+          handleTokenExpiration(store);
+          return Promise.reject(new Error('Token has expired'));
+        }
+      }
+
+      return response;
+    },
+    (error) => {
+      if (error.response && error.response.data) {
+        const data = error.response.data;
+        if (data.Apistatus === false && data.message === 'Token has expired') {
+          console.log('Token expired detected in error response');
+          handleTokenExpiration(store);
+        }
+      }
+
+      return Promise.reject(error);
+    }
+  );
+
+  console.log('Axios interceptors registered successfully');
+};
+
+// Helper function to handle token expiration
+const handleTokenExpiration = (store) => {
+  console.log('Handling token expiration...');
+
+  // Clear all auth data
+  clearAuthData();
+
+  // Dispatch logout action
+  store.dispatch(logout());
+
+  // Redirect to login page
+  setTimeout(() => {
+    window.location.href = '/login';
+  }, 100);
+};
 
 export const apiService = async ({
   endpoint,
@@ -34,7 +94,7 @@ export const apiService = async ({
       headers: requestHeaders,
     };
 
-    const { data: res } = await axios(requestObj);
+    const { data: res } = await axiosInstance(requestObj);
     return { response: res };
   } catch (error) {
     console.error(error, 'backend endpoint error');
