@@ -1,20 +1,14 @@
 import React, { useState, useCallback } from 'react';
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-  Button,
-  Box,
-  Typography,
-  Alert,
-  LinearProgress,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  IconButton
-} from '@mui/material';
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogClose,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { 
   UploadFile, 
   InsertDriveFile, 
@@ -97,119 +91,124 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, currentFolderNam
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>
-        <Box display="flex" alignItems="center" gap={1}>
-          <UploadFile color="primary" />
-          <Typography variant="h6">Upload Files</Typography>
-        </Box>
-      </DialogTitle>
-      
-      <DialogContent>
-        {currentFolderName && (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Uploading to: <strong>{currentFolderName}</strong>
-          </Typography>
-        )}
-        
-        {/* Drag & Drop Area */}
-        <Box
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-          sx={{
-            border: '2px dashed',
-            borderColor: dragActive ? 'primary.main' : 'divider',
-            borderRadius: 2,
-            p: 4,
-            textAlign: 'center',
-            backgroundColor: dragActive ? 'action.hover' : 'background.paper',
-            transition: 'all 0.2s ease',
-            cursor: 'pointer',
-            mb: 2
-          }}
-          onClick={() => document.getElementById('file-input').click()}
-        >
-          <CloudUpload sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Drop files here or click to browse
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Support for multiple files
-          </Typography>
-        </Box>
-        
-        <input
-          id="file-input"
-          type="file"
-          multiple
-          style={{ display: 'none' }}
-          onChange={(e) => handleFiles(e.target.files)}
-        />
-        
-        {/* File List */}
-        {files.length > 0 && (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Selected Files ({files.length})
-            </Typography>
-            <List dense>
-              {files.map((fileItem) => (
-                <ListItem
-                  key={fileItem.id}
-                  secondaryAction={
-                    <IconButton 
-                      edge="end" 
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="bg-[#F5F5FA] rounded-lg w-full max-w-2xl p-6 space-y-6 shadow-[0px_4px_24px_0px_#000000] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl text-[#40444D] text-center font-bold font-sans flex items-center justify-center gap-2">
+            <UploadFile className="text-[#6366F1]" />
+            Upload Files
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {currentFolderName && (
+            <div className="text-sm text-[#40444D] bg-white p-3 rounded-lg border">
+              <span className="font-semibold">Uploading to: </span>
+              <span className="text-[#6366F1] font-medium">{currentFolderName}</span>
+            </div>
+          )}
+          
+          {/* Drag & Drop Area */}
+          <div
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            className={`
+              border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 cursor-pointer
+              ${dragActive 
+                ? 'border-[#6366F1] bg-blue-50' 
+                : 'border-gray-300 bg-white hover:border-[#6366F1] hover:bg-gray-50'
+              }
+            `}
+            onClick={() => document.getElementById('file-input').click()}
+          >
+            <CloudUpload className="text-[#6366F1] mb-4" style={{ fontSize: 48 }} />
+            <h3 className="text-lg font-semibold text-[#40444D] mb-2">
+              Drop files here or click to browse
+            </h3>
+            <p className="text-sm text-gray-600">
+              Support for multiple files
+            </p>
+          </div>
+          
+          <input
+            id="file-input"
+            type="file"
+            multiple
+            style={{ display: 'none' }}
+            onChange={(e) => handleFiles(e.target.files)}
+          />
+          
+          {/* File List */}
+          {files.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-[#40444D] font-semibold">
+                Selected Files ({files.length})
+              </Label>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {files.map((fileItem) => (
+                  <div
+                    key={fileItem.id}
+                    className="flex items-center justify-between p-3 bg-white rounded-lg border"
+                  >
+                    <div className="flex items-center gap-3">
+                      <InsertDriveFile className="text-gray-600" />
+                      <div>
+                        <p className="font-medium text-[#40444D]">{fileItem.name}</p>
+                        <p className="text-xs text-gray-500">{formatFileSize(fileItem.size)}</p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
                       onClick={() => removeFile(fileItem.id)}
                       disabled={isLoading}
+                      className="bg-red-100 text-red-600 hover:bg-red-200 p-2 h-8 w-8"
                     >
-                      <Delete />
-                    </IconButton>
-                  }
-                >
-                  <ListItemIcon>
-                    <InsertDriveFile />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={fileItem.name}
-                    secondary={formatFileSize(fileItem.size)}
-                  />
-                </ListItem>
-              ))}
-            </List>
-          </Box>
-        )}
-        
-        {isLoading && (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" sx={{ mb: 1 }}>
-              Uploading files...
-            </Typography>
-            <LinearProgress />
-          </Box>
-        )}
-        
-        {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {error}
-          </Alert>
-        )}
+                      <Delete className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {isLoading && (
+            <div className="space-y-2">
+              <p className="text-sm text-[#40444D] font-medium">Uploading files...</p>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-[#6366F1] h-2 rounded-full animate-pulse" style={{ width: '70%' }}></div>
+              </div>
+            </div>
+          )}
+          
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="pt-4 flex justify-end gap-4">
+          <DialogClose asChild>
+            <Button
+              type="button"
+              className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+          </DialogClose>
+          <Button 
+            onClick={handleSubmit}
+            className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
+            disabled={isLoading || files.length === 0}
+          >
+            <UploadFile className="mr-2 h-4 w-4" />
+            {isLoading ? 'Uploading...' : `Upload ${files.length} File${files.length !== 1 ? 's' : ''}`}
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      
-      <DialogActions>
-        <Button onClick={handleClose} disabled={isLoading}>
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleSubmit}
-          variant="contained" 
-          disabled={isLoading || files.length === 0}
-          startIcon={<UploadFile />}
-        >
-          {isLoading ? 'Uploading...' : `Upload ${files.length} File${files.length !== 1 ? 's' : ''}`}
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };

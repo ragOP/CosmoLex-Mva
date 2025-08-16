@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,11 +10,19 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { CreateNewFolder } from '@mui/icons-material';
+import { Edit } from '@mui/icons-material';
 
-const CreateFolderDialog = ({ open, onClose, onSubmit, isLoading, currentFolderName }) => {
+const RenameFolderDialog = ({ open, onClose, onSubmit, isLoading, folderToRename }) => {
   const [folderName, setFolderName] = useState('');
   const [error, setError] = useState('');
+
+  // Set initial folder name when dialog opens
+  useEffect(() => {
+    if (open && folderToRename) {
+      setFolderName(folderToRename.name || '');
+      setError('');
+    }
+  }, [open, folderToRename]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -28,10 +36,14 @@ const CreateFolderDialog = ({ open, onClose, onSubmit, isLoading, currentFolderN
       setError('Folder name must be at least 2 characters long');
       return;
     }
+
+    if (folderName.trim() === folderToRename?.name) {
+      setError('Please enter a different name');
+      return;
+    }
     
     setError('');
-    onSubmit(folderName.trim());
-    setFolderName('');
+    onSubmit(folderToRename.id, folderName.trim());
   };
 
   const handleClose = () => {
@@ -45,29 +57,27 @@ const CreateFolderDialog = ({ open, onClose, onSubmit, isLoading, currentFolderN
       <DialogContent className="bg-[#F5F5FA] rounded-lg w-full max-w-md p-6 space-y-6 shadow-[0px_4px_24px_0px_#000000]">
         <DialogHeader>
           <DialogTitle className="text-2xl text-[#40444D] text-center font-bold font-sans flex items-center justify-center gap-2">
-            <CreateNewFolder className="text-[#6366F1]" />
-            Create New Folder
+            <Edit className="text-[#6366F1]" />
+            Rename Folder
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-4">
-            {currentFolderName && (
-              <div className="text-sm text-[#40444D] bg-white p-3 rounded-lg border">
-                <span className="font-semibold">Creating folder in: </span>
-                <span className="text-[#6366F1] font-medium">{currentFolderName}</span>
-              </div>
-            )}
+            <div className="text-sm text-[#40444D] bg-white p-3 rounded-lg border">
+              <span className="font-semibold">Renaming folder: </span>
+              <span className="text-[#6366F1] font-medium">{folderToRename?.name}</span>
+            </div>
             
             <div>
               <Label className="text-[#40444D] font-semibold mb-2 block">
-                Folder Name
+                New Folder Name
               </Label>
               <Input
                 autoFocus
                 value={folderName}
                 onChange={(e) => setFolderName(e.target.value)}
-                placeholder="Enter folder name"
+                placeholder="Enter new folder name"
                 disabled={isLoading}
                 className={error ? 'border-red-500' : ''}
               />
@@ -90,10 +100,10 @@ const CreateFolderDialog = ({ open, onClose, onSubmit, isLoading, currentFolderN
             <Button 
               type="submit" 
               className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
-              disabled={isLoading || !folderName.trim()}
+              disabled={isLoading || !folderName.trim() || folderName.trim() === folderToRename?.name}
             >
-              <CreateNewFolder className="mr-2 h-4 w-4" />
-              {isLoading ? 'Creating...' : 'Create Folder'}
+              <Edit className="mr-2 h-4 w-4" />
+              {isLoading ? 'Renaming...' : 'Rename Folder'}
             </Button>
           </DialogFooter>
         </form>
@@ -102,4 +112,4 @@ const CreateFolderDialog = ({ open, onClose, onSubmit, isLoading, currentFolderN
   );
 };
 
-export default CreateFolderDialog; 
+export default RenameFolderDialog; 

@@ -1,9 +1,12 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { 
   getFolders, 
-  getFolderContents, 
-  createFolder, 
+  getFoldersBySlug,
+  getFolderItems,
+  createFolderWithSlug,
+  renameFolder,
   uploadFile, 
   deleteItem 
 } from '@/api/api_services/documents';
@@ -11,28 +14,46 @@ import {
 export const useDocuments = () => {
   const [currentPath, setCurrentPath] = useState([]);
   const [selectedFolder, setSelectedFolder] = useState(null);
+  const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
-  // Query for fetching all folders
+  // Extract slug from URL parameters
+  const slugId = searchParams.get('slugId');
+
+  // Query for fetching folders by slug
   const { data: folders = [], isLoading: foldersLoading } = useQuery({
-    queryKey: ['folders'],
-    queryFn: getFolders,
+    queryKey: ['folders', slugId],
+    queryFn: () => slugId ? getFoldersBySlug(slugId) : getFolders(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Query for fetching folder contents
-  const { data: folderContents, isLoading: contentsLoading } = useQuery({
+  const { data: folderContentsData, isLoading: contentsLoading } = useQuery({
     queryKey: ['folderContents', selectedFolder?.id],
-    queryFn: () => selectedFolder ? getFolderContents(selectedFolder.id) : null,
+    queryFn: () => selectedFolder ? getFolderItems(selectedFolder.id) : null,
     enabled: !!selectedFolder,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
+  // Extract items from the new API response structure
+  const folderContents = folderContentsData?.items || [];
+
   // Mutation for creating new folder
   const createFolderMutation = useMutation({
-    mutationFn: createFolder,
+    mutationFn: ({ folderData, parentSlug }) => createFolderWithSlug(folderData, parentSlug || slugId),
     onSuccess: () => {
-      queryClient.invalidateQueries(['folders']);
+      queryClient.invalidateQueries(['folders', slugId]);
+      if (selectedFolder) {
+        queryClient.invalidateQueries(['folderContents', selectedFolder.id]);
+      }
+    },
+  });
+
+  // Mutation for renaming folder
+  const renameFolderMutation = useMutation({
+    mutationFn: ({ folderId, newName }) => renameFolder(folderId, newName),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['folders', slugId]);
       if (selectedFolder) {
         queryClient.invalidateQueries(['folderContents', selectedFolder.id]);
       }
@@ -53,7 +74,7 @@ export const useDocuments = () => {
   const deleteItemMutation = useMutation({
     mutationFn: ({ itemId, itemType }) => deleteItem(itemId, itemType),
     onSuccess: () => {
-      queryClient.invalidateQueries(['folders']);
+      queryClient.invalidateQueries(['folders', slugId]);
       if (selectedFolder) {
         queryClient.invalidateQueries(['folderContents', selectedFolder.id]);
       }
@@ -88,17 +109,22 @@ export const useDocuments = () => {
   }, []);
 
   // Create new folder
-  const handleCreateFolder = useCallback(async (folderName, parentId = null) => {
+  const handleCreateFolder = useCallback(async (folderName, parentSlug = null) => {
     try {
-      await createFolderMutation.mutateAsync({
+      const folderData = {
         name: folderName,
-        parentId: parentId || selectedFolder?.id,
+        slug: parentSlug || selectedFolder?.slug || null
+      };
+      
+      await createFolderMutation.mutateAsync({
+        folderData,
+        parentSlug: parentSlug || selectedFolder?.slug
       });
     } catch (error) {
       console.error('Error creating folder:', error);
       throw error;
     }
-  }, [selectedFolder, createFolderMutation]);
+  }, [selectedFolder, createFolderMutation, slugId]);
 
   // Upload file
   const handleUploadFile = useCallback(async (file, parentId = null) => {
@@ -114,6 +140,16 @@ export const useDocuments = () => {
     }
   }, [selectedFolder, uploadFileMutation]);
 
+  // Rename folder
+  const handleRenameFolder = useCallback(async (folderId, newName) => {
+    try {
+      await renameFolderMutation.mutateAsync({ folderId, newName });
+    } catch (error) {
+      console.error('Error renaming folder:', error);
+      throw error;
+    }
+  }, [renameFolderMutation]);
+
   // Delete item
   const handleDeleteItem = useCallback(async (itemId, itemType) => {
     try {
@@ -127,9 +163,10 @@ export const useDocuments = () => {
   return {
     // State
     folders,
-    folderContents: folderContents?.items || [],
+    folderContents,
     currentPath,
     selectedFolder,
+    slugId,
     
     // Loading states
     foldersLoading,
@@ -141,11 +178,13 @@ export const useDocuments = () => {
     navigateToRoot,
     handleCreateFolder,
     handleUploadFile,
+    handleRenameFolder,
     handleDeleteItem,
     
     // Mutation states
     isCreatingFolder: createFolderMutation.isPending,
     isUploadingFile: uploadFileMutation.isPending,
+    isRenamingFolder: renameFolderMutation.isPending,
     isDeletingItem: deleteItemMutation.isPending,
   };
 }; 

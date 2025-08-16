@@ -22,9 +22,6 @@ const InboxPage = () => {
     queryFn: () => getMatterMeta({ slug: slugId }),
   });
 
-  console.log('MATTER >>>>', matter);
-  console.log('MATTER META >>>>', matterMeta);
-
   React.useEffect(() => {
     console.log(location.pathname);
   }, [location]);

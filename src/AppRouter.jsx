@@ -17,6 +17,8 @@ const ForgotPasswordPage = lazy(() => import('./pages/forget-password'));
 const ResetPasswordPage = lazy(() => import('./pages/reset-password'));
 const EmailVerifyPage = lazy(() => import('./pages/email-verify'));
 const DocumentationPage = lazy(() => import('./components/inbox/documents'));
+const NotesPage = lazy(() => import('./pages/notes'));
+const NoteDetailPage = lazy(() => import('./pages/notes/NoteDetail'));
 const DashboardHome = lazy(() => import('./components/dashboard/Dashboard'));
 const DashboardForm = lazy(() =>
   import('./components/dashboard/DashboardForm')
@@ -32,7 +34,7 @@ const CreateIntake = lazy(() => import('./components/inbox/CreateIntake'));
 const InboxPage = lazy(() => import('./components/inbox/InboxPage'));
 const Form = lazy(() => import('./components/inbox/form'));
 const KeyDates = lazy(() => import('./components/inbox/KeyDates'));
-const Notes = () => <ErrorPage pageName="Notes" />;
+const Notes = () => <NotesPage />;
 const Event = () => <ErrorPage pageName="Event" />;
 const Tasks = () => <ErrorPage pageName="Tasks" />;
 const Documentation = () => <DocumentationPage />;
@@ -64,8 +66,11 @@ const AppRouter = () => (
           <Route path="matter" element={<MatterPage />} />
           <Route path="user-management" element={<UserManagementPage />} />
           <Route path="bulk-import" element={<BulkImportPage />} />
-          <Route path="calendar/:id" element={<CalendarPage />} />
+          <Route path=
+            "calendar/:id" element={<CalendarPage />} />
           <Route path="tasks" element={<TasksPage />} />
+          <Route path="notes" element={<NotesPage />} />
+          <Route path="notes/:noteId" element={<NoteDetailPage />} />
           <Route
             path="inbox/*"
             element={

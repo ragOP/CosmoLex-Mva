@@ -11,16 +11,43 @@ import {
   FileContextMenu,
   ChonkyActions,
   defineFileAction,
-  ChonkyIconName
+  ChonkyIconName,
+  setChonkyDefaults
 } from 'chonky';
 import { ChonkyIconFA } from 'chonky-icon-fontawesome';
+
+// Set Chonky defaults to disable DnD
+setChonkyDefaults({
+  disableDragAndDrop: true,
+});
 import BreadCrumb from "@/components/BreadCrumb";
 import { useDocuments } from './hooks/useDocuments';
 import CreateFolderDialog from './components/CreateFolderDialog';
 import UploadFileDialog from './components/UploadFileDialog';
+import RenameFolderDialog from './components/RenameFolderDialog';
 
 // Custom file actions
 const customActions = [
+  defineFileAction({
+    id: 'go_up',
+    requiresSelection: false,
+    icon: ChonkyIconName.up,
+    button: {
+      name: 'Up',
+      toolbar: true,
+      contextMenu: false,
+    },
+  }),
+  defineFileAction({
+    id: 'go_back',
+    requiresSelection: false,
+    icon: ChonkyIconName.left,
+    button: {
+      name: 'Back',
+      toolbar: true,
+      contextMenu: false,
+    },
+  }),
   defineFileAction({
     id: 'create_folder',
     requiresSelection: false,
@@ -41,11 +68,33 @@ const customActions = [
       contextMenu: false,
     },
   }),
+  defineFileAction({
+    id: 'rename_folder',
+    requiresSelection: true,
+    icon: ChonkyIconName.config,
+    button: {
+      name: 'Rename',
+      toolbar: false,
+      contextMenu: true,
+    },
+  }),
+  defineFileAction({
+    id: 'download_file',
+    requiresSelection: true,
+    icon: ChonkyIconName.download,
+    button: {
+      name: 'Download',
+      toolbar: false,
+      contextMenu: true,
+    },
+  }),
 ];
 
 const DocumentationPage = () => {
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
   const [uploadFileOpen, setUploadFileOpen] = useState(false);
+  const [renameFolderOpen, setRenameFolderOpen] = useState(false);
+  const [folderToRename, setFolderToRename] = useState(null);
   
   const {
     folders,
@@ -54,11 +103,57 @@ const DocumentationPage = () => {
     selectedFolder,
     foldersLoading,
     navigateToFolder,
+    navigateBack,
+    navigateToRoot,
     handleCreateFolder,
     handleUploadFile,
+    handleRenameFolder,
     isCreatingFolder,
-    isUploadingFile
+    isUploadingFile,
+    isRenamingFolder
   } = useDocuments();
+
+  // Dynamic file actions based on navigation state
+  const dynamicActions = useMemo(() => {
+    const baseActions = customActions.filter(action => 
+      action.id !== 'go_back' && action.id !== 'go_up'
+    );
+    
+    // Add navigation actions based on current state
+    const navigationActions = [];
+    
+    if (currentPath.length > 0) {
+      // Show "Up" button when not at root
+      navigationActions.push(
+        defineFileAction({
+          id: 'go_up',
+          requiresSelection: false,
+          icon: ChonkyIconName.up,
+          button: {
+            name: 'Up',
+            toolbar: true,
+            contextMenu: false,
+          },
+        })
+      );
+      
+      // Show "Back" button when there's navigation history
+      navigationActions.push(
+        defineFileAction({
+          id: 'go_back',
+          requiresSelection: false,
+          icon: ChonkyIconName.left,
+          button: {
+            name: 'Back',
+            toolbar: true,
+            contextMenu: false,
+          },
+        })
+      );
+    }
+    
+    return [...navigationActions, ...baseActions];
+  }, [currentPath]);
 
   // Transform data for Chonky
   const chonkyFiles = useMemo(() => {
@@ -78,13 +173,16 @@ const DocumentationPage = () => {
     
     // Show folder contents
     return folderContents.map(item => ({
-      id: item.id || item.slug,
+      id: item.id,
       name: item.name,
       isDir: item.type === 'folder',
-      modDate: item.modDate || new Date(),
-      size: item.size || 0,
-      thumbnailUrl: item.thumbnailUrl || null,
+      modDate: item.modified ? new Date(item.modified) : new Date(),
+      size: item.type === 'folder' ? 0 : item.size,
+      thumbnailUrl: item.type !== 'folder' && item.slug.startsWith('http') ? item.slug : null,
       folderChain: currentPath.map(p => ({ id: p.id, name: p.name })),
+      description: item.description || '',
+      fileType: item.type,
+      downloadUrl: item.type !== 'folder' ? item.slug : null,
       ...item
     }));
   }, [folders, folderContents, selectedFolder, currentPath]);
@@ -100,17 +198,39 @@ const DocumentationPage = () => {
         const folder = {
           id: fileToOpen.id,
           name: fileToOpen.name,
-          slug: fileToOpen.slug || fileToOpen.id
+          slug: fileToOpen.slug
         };
         navigateToFolder(folder);
       } else if (fileToOpen) {
-        // Handle file opening
+        // Handle file opening/download
         console.log('File clicked:', fileToOpen);
+        if (fileToOpen.downloadUrl) {
+          // Open file in new tab or download
+          window.open(fileToOpen.downloadUrl, '_blank');
+        }
+      }
+    } else if (data.id === 'go_back') {
+      navigateBack();
+    } else if (data.id === 'go_up') {
+      if (currentPath.length > 1) {
+        // Go to parent folder
+        navigateBack();
+      } else {
+        // Go to root
+        navigateToRoot();
       }
     } else if (data.id === 'create_folder') {
       setCreateFolderOpen(true);
     } else if (data.id === 'upload_file') {
       setUploadFileOpen(true);
+    } else if (data.id === 'rename_folder') {
+      setFolderToRename(data.payload.targetFile);
+      setRenameFolderOpen(true);
+    } else if (data.id === 'download_file') {
+      const fileToDownload = data.payload.targetFile;
+      if (fileToDownload && fileToDownload.downloadUrl) {
+        window.open(fileToDownload.downloadUrl, '_blank');
+      }
     }
   };
 
@@ -129,6 +249,16 @@ const DocumentationPage = () => {
       setUploadFileOpen(false);
     } catch (error) {
       console.error('Error uploading file:', error);
+    }
+  };
+
+  const handleRenameFolderSubmit = async (folderId, newName) => {
+    try {
+      await handleRenameFolder(folderId, newName);
+      setRenameFolderOpen(false);
+      setFolderToRename(null);
+    } catch (error) {
+      console.error('Error renaming folder:', error);
     }
   };
 
@@ -154,7 +284,7 @@ const DocumentationPage = () => {
           onFileAction={handleFileAction}
           iconComponent={ChonkyIconFA}
           fileActions={[
-            ...customActions,
+            ...dynamicActions,
             ChonkyActions.OpenFiles,
             ChonkyActions.SelectAllFiles,
             ChonkyActions.ClearSelection,
@@ -188,6 +318,17 @@ const DocumentationPage = () => {
         onSubmit={handleUploadFileSubmit}
         isLoading={isUploadingFile}
         currentFolderName={selectedFolder?.name}
+      />
+
+      <RenameFolderDialog
+        open={renameFolderOpen}
+        onClose={() => {
+          setRenameFolderOpen(false);
+          setFolderToRename(null);
+        }}
+        onSubmit={handleRenameFolderSubmit}
+        isLoading={isRenamingFolder}
+        folderToRename={folderToRename}
       />
     </div>
   );
