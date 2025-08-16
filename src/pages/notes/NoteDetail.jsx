@@ -3,7 +3,9 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import BreadCrumb from '@/components/BreadCrumb';
+import BackButton from '@/components/BackButton';
 import CreateEditNoteDialog from '@/components/notes/CreateEditNoteDialog';
+import { Skeleton, IconButton, Tooltip } from '@mui/material';
 import { 
   Edit,
   Trash2,
@@ -13,7 +15,8 @@ import {
   FileImage,
   FileVideo,
   FileText as FileTextIcon,
-  File
+  File,
+  ChevronLeft
 } from 'lucide-react';
 import { getNote, updateNote, deleteNote, getNotesMeta } from '@/api/api_services/notes';
 
@@ -133,8 +136,34 @@ const NoteDetail = () => {
     return (
       <div className="px-4">
         <BreadCrumb label="Notes" />
-        <div className="flex justify-center items-center h-64">
-          <div className="text-lg text-gray-600">Loading note...</div>
+        
+        {/* Note Content Skeleton */}
+        <div className="w-full">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            {/* Title and Category Row Skeleton */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b border-gray-200">
+              <Skeleton variant="text" width={300} height={40} />
+              <Skeleton variant="rectangular" width={120} height={32} className="rounded-full" />
+            </div>
+            
+            {/* Content Skeleton */}
+            <div className="mb-6 space-y-3">
+              <Skeleton variant="text" width="100%" height={24} />
+              <Skeleton variant="text" width="95%" height={24} />
+              <Skeleton variant="text" width="88%" height={24} />
+              <Skeleton variant="text" width="92%" height={24} />
+              <Skeleton variant="text" width="75%" height={24} />
+            </div>
+
+            {/* Attachments Skeleton */}
+            <div className="pt-4 border-t border-gray-200">
+              <Skeleton variant="text" width={150} height={24} className="mb-3" />
+              <div className="space-y-2">
+                <Skeleton variant="rectangular" width="100%" height={60} className="rounded-lg" />
+                <Skeleton variant="rectangular" width="100%" height={60} className="rounded-lg" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -164,7 +193,13 @@ const NoteDetail = () => {
       
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-4 mb-6">
-        <h1 className="text-2xl font-bold text-[#40444D]">Note Details</h1>
+        <div className="flex items-center gap-3">
+          <BackButton
+            to={`/dashboard/notes?slugId=${matterSlug}`}
+            tooltip="Back to Notes"
+          />
+          <h1 className="text-2xl font-bold text-[#40444D]">Note Details</h1>
+        </div>
 
         <div className="flex gap-2">
           <Button
@@ -198,9 +233,10 @@ const NoteDetail = () => {
           
           {/* Content */}
           <div className="mb-6">
-            <div className="text-gray-800 leading-relaxed whitespace-pre-wrap">
-              {note.body}
-            </div>
+            <div 
+              className="text-gray-800 leading-relaxed prose max-w-none"
+              dangerouslySetInnerHTML={{ __html: note.body }}
+            />
           </div>
 
           {/* Attachments */}

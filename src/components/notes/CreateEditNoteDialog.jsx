@@ -48,10 +48,7 @@ const CreateEditNoteDialog = ({
     categories = []
 }) => {
     const [attachments, setAttachments] = useState([]);
-
-    // Debug: Log categories prop
-    console.log("Dialog categories:", categories);
-
+    
     const {
         control,
         handleSubmit,

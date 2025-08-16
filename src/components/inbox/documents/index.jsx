@@ -309,7 +309,6 @@ const DocumentationPage = () => {
         onClose={() => setCreateFolderOpen(false)}
         onSubmit={handleCreateFolderSubmit}
         isLoading={isCreatingFolder}
-        currentFolderName={selectedFolder?.name}
       />
 
       <UploadFileDialog
@@ -317,7 +316,6 @@ const DocumentationPage = () => {
         onClose={() => setUploadFileOpen(false)}
         onSubmit={handleUploadFileSubmit}
         isLoading={isUploadingFile}
-        currentFolderName={selectedFolder?.name}
       />
 
       <RenameFolderDialog

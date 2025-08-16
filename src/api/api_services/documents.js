@@ -107,16 +107,20 @@ export const createFolder = async (folderData) => {
 };
 
 // Create new folder with slug (new function for the updated API)
-export const createFolderWithSlug = async (folderData, parentSlugId) => {
+export const createFolderWithSlug = async (folderData, parentFolderSlug, mainSlug) => {
   try {
-    const endpoint = parentSlugId 
-      ? `${endpoints.addFolder}/${parentSlugId}` 
-      : endpoints.addFolder;
+    // Both root and subfolder creation use the same endpoint pattern
+    const endpoint = `${endpoints.addFolder}/${mainSlug}`;
+    
+    const requestData = {
+      ...folderData,
+      slug: parentFolderSlug // null for root level, parent slug for subfolders
+    };
       
     const response = await apiService({
       endpoint,
       method: 'POST',
-      data: folderData
+      data: requestData
     });
     
     if (response.error) {
@@ -131,10 +135,12 @@ export const createFolderWithSlug = async (folderData, parentSlugId) => {
 };
 
 // Upload file
-export const uploadFile = async (fileData) => {
+export const uploadFile = async (fileData, parentFolderSlug, mainSlug) => {
   try {
+    const endpoint = `${endpoints.uploadFile}/${mainSlug}`;
+    
     const response = await apiService({
-      endpoint: endpoints.uploadFile,
+      endpoint,
       method: 'POST',
       data: fileData,
       headers: {

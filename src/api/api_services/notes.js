@@ -24,7 +24,7 @@ export const getNotes = async (matterSlug) => {
       method: 'GET'
     });    
    
-    return response.response || [];
+    return response.response
   } catch (error) {
     console.error('Error fetching notes:', error);
     throw error;

@@ -7,6 +7,14 @@ import {
   Calendar,
   CheckSquare,
   Inbox,
+  Eye,
+  FileText,
+  ClipboardList,
+  MessageSquare,
+  DollarSign,
+  Activity,
+  FormInput,
+  StickyNote,
 } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -23,6 +31,15 @@ const typeToIcon = {
   calendar: Calendar,
   tasks: CheckSquare,
   inbox: Inbox,
+  dashboard: LayoutDashboardIcon,
+  overview: Eye,
+  form: FormInput,
+  notes: StickyNote,
+  event: Calendar,
+  documentation: FileText,
+  communication: MessageSquare,
+  finance: DollarSign,
+  'activity-logs': Activity,
 };
 
 const sidebarItems = [
@@ -30,7 +47,7 @@ const sidebarItems = [
     id: '/dashboard',
     label: 'Dashboard',
     type: 'link',
-    iconType: 'link',
+    iconType: 'dashboard',
   },
   {
     id: '/dashboard/calendar/1',
@@ -42,7 +59,7 @@ const sidebarItems = [
   //     id: '/dashboard/analytics',
   //     label: 'Analytics',
   //     type: 'link',
-  //     iconType: 'link',
+  //     iconType: 'analytics',
   // },
   // {
   //   id: 'matter',
@@ -93,7 +110,7 @@ const sidebarItems = [
   //       id: '/dashboard/matter-intake',
   //       label: 'Intake',
   //       type: 'link',
-  //       iconType: 'link',
+  //       iconType: 'intake',
   //       // children: [
   //       //   { id: '/dashboard/matter-intake', label: 'Intake', fileType: 'link' },
   //       //   // { id: '5.2', label: 'Intake Status', fileType: 'file' },
@@ -168,13 +185,13 @@ const inboxSidebarItems = [
     id: '/dashboard/inbox/overview',
     label: 'Overview',
     type: 'link',
-    iconType: 'link',
+    iconType: 'overview',
   },
   {
     id: '/dashboard/inbox/form',
     label: 'Form',
     type: 'link',
-    iconType: 'link',
+    iconType: 'form',
   },
   {
     id: '/dashboard/inbox/key-dates',
@@ -186,13 +203,13 @@ const inboxSidebarItems = [
     id: '/dashboard/inbox/notes',
     label: 'Notes',
     type: 'link',
-    iconType: 'link',
+    iconType: 'notes',
   },
   {
     id: '/dashboard/inbox/event',
     label: 'Event',
     type: 'link',
-    iconType: 'calendar',
+    iconType: 'event',
   },
   {
     id: '/dashboard/inbox/tasks',
@@ -204,25 +221,25 @@ const inboxSidebarItems = [
     id: '/dashboard/inbox/documentation',
     label: 'Documentation',
     type: 'link',
-    iconType: 'file',
+    iconType: 'documentation',
   },
   {
     id: '/dashboard/inbox/communication',
     label: 'Communication',
     type: 'link',
-    iconType: 'link',
+    iconType: 'communication',
   },
   {
     id: '/dashboard/inbox/finance',
     label: 'Finance',
     type: 'link',
-    iconType: 'link',
+    iconType: 'finance',
   },
   {
     id: '/dashboard/inbox/activity-logs',
     label: 'Activity Logs',
     type: 'link',
-    iconType: 'link',
+    iconType: 'activity-logs',
   },
 ];
 

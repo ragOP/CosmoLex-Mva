@@ -1,22 +1,21 @@
 import React, { useState, useCallback } from 'react';
 import {
   Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogClose,
-} from '@/components/ui/dialog';
+  Stack,
+  Divider,
+  IconButton,
+} from '@mui/material';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { 
-  UploadFile, 
-  InsertDriveFile, 
-  Delete,
-  CloudUpload
-} from '@mui/icons-material';
+  Upload, 
+  FileText, 
+  Trash2,
+  CloudUpload,
+  X
+} from 'lucide-react';
 
-const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, currentFolderName }) => {
+const UploadFileDialog = ({ open, onClose, onSubmit, isLoading }) => {
   const [files, setFiles] = useState([]);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState('');
@@ -91,23 +90,23 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, currentFolderNam
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="bg-[#F5F5FA] rounded-lg w-full max-w-2xl p-6 space-y-6 shadow-[0px_4px_24px_0px_#000000] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl text-[#40444D] text-center font-bold font-sans flex items-center justify-center gap-2">
-            <UploadFile className="text-[#6366F1]" />
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth sx={{ zIndex: 9998 }}>
+      <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-3">
+          <h1 className="text-xl text-[#40444D] text-center font-bold font-sans flex items-center gap-2">
+            <Upload className="text-[#6366F1]" />
             Upload Files
-          </DialogTitle>
-        </DialogHeader>
+          </h1>
+          <IconButton onClick={handleClose}>
+            <X className="text-black" />
+          </IconButton>
+        </div>
 
-        <div className="space-y-4">
-          {currentFolderName && (
-            <div className="text-sm text-[#40444D] bg-white p-3 rounded-lg border">
-              <span className="font-semibold">Uploading to: </span>
-              <span className="text-[#6366F1] font-medium">{currentFolderName}</span>
-            </div>
-          )}
-          
+        <Divider />
+
+        {/* Scrollable Content Area */}
+        <div className="space-y-6 flex-1 overflow-auto p-6 no-scrollbar">
           {/* Drag & Drop Area */}
           <div
             onDragEnter={handleDrag}
@@ -123,7 +122,7 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, currentFolderNam
             `}
             onClick={() => document.getElementById('file-input').click()}
           >
-            <CloudUpload className="text-[#6366F1] mb-4" style={{ fontSize: 48 }} />
+            <CloudUpload className="text-[#6366F1] mb-4 mx-auto" size={48} />
             <h3 className="text-lg font-semibold text-[#40444D] mb-2">
               Drop files here or click to browse
             </h3>
@@ -153,7 +152,7 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, currentFolderNam
                     className="flex items-center justify-between p-3 bg-white rounded-lg border"
                   >
                     <div className="flex items-center gap-3">
-                      <InsertDriveFile className="text-gray-600" />
+                      <FileText className="text-gray-600" />
                       <div>
                         <p className="font-medium text-[#40444D]">{fileItem.name}</p>
                         <p className="text-xs text-gray-500">{formatFileSize(fileItem.size)}</p>
@@ -165,7 +164,7 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, currentFolderNam
                       disabled={isLoading}
                       className="bg-red-100 text-red-600 hover:bg-red-200 p-2 h-8 w-8"
                     >
-                      <Delete className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
@@ -189,26 +188,28 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, currentFolderNam
           )}
         </div>
 
-        <DialogFooter className="pt-4 flex justify-end gap-4">
-          <DialogClose asChild>
-            <Button
-              type="button"
-              className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-          </DialogClose>
+        <Divider />
+
+        {/* Footer */}
+        <div className="flex items-center justify-end px-6 py-4 gap-4">
+          <Button
+            type="button"
+            className="bg-gray-300 text-black hover:bg-gray-400"
+            onClick={handleClose}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
           <Button 
             onClick={handleSubmit}
-            className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
+            className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
             disabled={isLoading || files.length === 0}
           >
-            <UploadFile className="mr-2 h-4 w-4" />
+            <Upload className="mr-2 h-4 w-4" />
             {isLoading ? 'Uploading...' : `Upload ${files.length} File${files.length !== 1 ? 's' : ''}`}
           </Button>
-        </DialogFooter>
-      </DialogContent>
+        </div>
+      </Stack>
     </Dialog>
   );
 };

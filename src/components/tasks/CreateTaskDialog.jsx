@@ -156,14 +156,14 @@ export default function CreateTaskDialog({
   };
 
   useEffect(() => {
-    if (task) {
+    if (task && task.id) {
       reset({
         ...task,
         reminders: task.reminders || [],
         assigned_to: task?.assignees?.map((assignee) => assignee.id) || [],
       });
     }
-  }, [task, reset]);
+  }, [task?.id, task?.reminders, task?.assignees]);
 
   return (
     <>

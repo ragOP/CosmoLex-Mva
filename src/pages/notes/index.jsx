@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import BreadCrumb from '@/components/BreadCrumb';
 import CreateEditNoteDialog from '@/components/notes/CreateEditNoteDialog';
+import { Skeleton } from '@mui/material';
 import {
     Plus,
     List,
@@ -21,7 +22,8 @@ import {
     Trash2,
     Eye,
     Paperclip,
-    Tag
+    Tag,
+    FileText
 } from 'lucide-react';
 import { getNotes, createNote, updateNote, deleteNote, getNotesMeta } from '@/api/api_services/notes';
 import { toast } from 'sonner';
@@ -79,9 +81,14 @@ const NotesPage = () => {
     // Fetch notes
     const { data: notes = [], isLoading } = useQuery({
         queryKey: ['notes', matterSlug],
-        queryFn: () => getNotes(matterSlug),
-        staleTime: 5 * 60 * 1000,
-        select: (data) => data?.data || []
+        queryFn: async () => {
+            const apiResponse = await getNotes(matterSlug)
+            if (apiResponse?.Apistatus) {
+                return apiResponse?.data || [];
+            } else {
+                return [];
+            }
+        },
     });
     console.log("notes >>>>", notes)
 
@@ -129,7 +136,10 @@ const NotesPage = () => {
 
     // Filter notes based on search and category
     const filteredNotes = useMemo(() => {
-        return notes.filter(note => {
+
+        if (!notes || notes?.length === 0) return [];
+        console.log("notes >>>>", notes)
+        return notes?.filter(note => {
             const matchesSearch = !searchTerm ||
                 note.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 note.body?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -187,9 +197,11 @@ const NotesPage = () => {
         return category?.name || 'Unknown';
     };
 
-    const truncateText = (text, maxLength = 100) => {
-        if (!text) return '';
-        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    const truncateText = (htmlText, maxLength = 100) => {
+        if (!htmlText) return '';
+        // Strip HTML tags for preview text
+        const textOnly = htmlText.replace(/<[^>]*>/g, '');
+        return textOnly.length > maxLength ? textOnly.substring(0, maxLength) + '...' : textOnly;
     };
 
     // Check if we have a valid slug after all hooks are defined
@@ -280,8 +292,28 @@ const NotesPage = () => {
 
             {/* Loading State */}
             {isLoading && (
-                <div className="flex justify-center items-center h-64">
-                    <div className="text-lg text-gray-600">Loading notes...</div>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {[...Array(6)].map((_, index) => (
+                        <div key={index} className="bg-white rounded-lg border border-gray-200 p-6">
+                            <div className="flex items-start justify-between mb-4">
+                                <Skeleton variant="text" width="70%" height={28} />
+                                <Skeleton variant="rectangular" width={80} height={24} className="rounded-full" />
+                            </div>
+                            <div className="space-y-2 mb-4">
+                                <Skeleton variant="text" width="100%" height={20} />
+                                <Skeleton variant="text" width="90%" height={20} />
+                                <Skeleton variant="text" width="75%" height={20} />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <Skeleton variant="text" width={120} height={16} />
+                                <div className="flex gap-2">
+                                    <Skeleton variant="rectangular" width={32} height={32} className="rounded" />
+                                    <Skeleton variant="rectangular" width={32} height={32} className="rounded" />
+                                    <Skeleton variant="rectangular" width={32} height={32} className="rounded" />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             )}
 
@@ -289,15 +321,15 @@ const NotesPage = () => {
             {!isLoading && (
                 <>
                     {filteredNotes.length === 0 ? (
-                        <div className="text-center py-12">
-                            <div className="text-gray-400 mb-4">
-                                <Plus size={64} className="mx-auto" />
+                        <div className="text-center py-16">
+                            <div className="mb-6">
+                                <FileText size={80} className="mx-auto" />
                             </div>
-                            <h3 className="text-lg font-semibold text-gray-600 mb-2">No notes found</h3>
-                            <p className="text-gray-500 mb-4">
+                            <h3 className="text-xl font-semibold text-gray-700 mb-3">No notes found</h3>
+                            <p className="text-gray-500 mb-6 max-w-md mx-auto">
                                 {searchTerm || selectedCategory !== 'all'
-                                    ? 'Try adjusting your search or filter criteria'
-                                    : 'Create your first note to get started'
+                                    ? 'No notes match your current search or filter criteria. Try adjusting your search terms or removing filters.'
+                                    : 'Get started by creating your first note. Notes help you organize thoughts, track important information, and collaborate with your team.'
                                 }
                             </p>
                             {!searchTerm && selectedCategory === 'all' && (
@@ -306,12 +338,13 @@ const NotesPage = () => {
                                         setEditingNote(null);
                                         setDialogOpen(true);
                                     }}
-                                    className="bg-[#6366F1] text-white hover:bg-[#5856eb] transition-colors shadow-sm"
+                                    className="bg-[#6366F1] text-white hover:bg-[#5856eb] transition-colors shadow-sm px-6 py-2"
                                 >
-                                    <Plus className="mr-2 h-4 w-4" />
-                                    Create First Note
+                                    <Plus className="mr-2 h-5 w-5" />
+                                    Create Your First Note
                                 </Button>
                             )}
+
                         </div>
                     ) : (
                         <div className={viewMode === 'grid'

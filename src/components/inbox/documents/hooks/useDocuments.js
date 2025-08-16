@@ -40,7 +40,7 @@ export const useDocuments = () => {
 
   // Mutation for creating new folder
   const createFolderMutation = useMutation({
-    mutationFn: ({ folderData, parentSlug }) => createFolderWithSlug(folderData, parentSlug || slugId),
+    mutationFn: ({ folderData, parentFolderSlug, mainSlug }) => createFolderWithSlug(folderData, parentFolderSlug, mainSlug),
     onSuccess: () => {
       queryClient.invalidateQueries(['folders', slugId]);
       if (selectedFolder) {
@@ -62,7 +62,7 @@ export const useDocuments = () => {
 
   // Mutation for uploading file
   const uploadFileMutation = useMutation({
-    mutationFn: uploadFile,
+    mutationFn: ({ fileData, parentFolderSlug, mainSlug }) => uploadFile(fileData, parentFolderSlug, mainSlug),
     onSuccess: () => {
       if (selectedFolder) {
         queryClient.invalidateQueries(['folderContents', selectedFolder.id]);
@@ -87,6 +87,15 @@ export const useDocuments = () => {
     setCurrentPath(prev => [...prev, folder]);
   }, []);
 
+  // Get current folder slug for API calls
+  const getCurrentFolderSlug = useCallback(() => {
+    if (selectedFolder?.slug) {
+      return selectedFolder.slug;
+    }
+    // If no selected folder, we're at root level - return null for root creation
+    return null;
+  }, [selectedFolder]);
+
   // Navigate back
   const navigateBack = useCallback(() => {
     if (currentPath.length > 0) {
@@ -109,36 +118,52 @@ export const useDocuments = () => {
   }, []);
 
   // Create new folder
-  const handleCreateFolder = useCallback(async (folderName, parentSlug = null) => {
+  const handleCreateFolder = useCallback(async (folderName) => {
     try {
       const folderData = {
-        name: folderName,
-        slug: parentSlug || selectedFolder?.slug || null
+        name: folderName
       };
+      
+      // Determine parent slug based on current context
+      const parentSlug = getCurrentFolderSlug();
       
       await createFolderMutation.mutateAsync({
         folderData,
-        parentSlug: parentSlug || selectedFolder?.slug
+        parentFolderSlug: parentSlug,
+        mainSlug: slugId
       });
     } catch (error) {
       console.error('Error creating folder:', error);
       throw error;
     }
-  }, [selectedFolder, createFolderMutation, slugId]);
+  }, [getCurrentFolderSlug, createFolderMutation, slugId]);
 
   // Upload file
-  const handleUploadFile = useCallback(async (file, parentId = null) => {
+  const handleUploadFile = useCallback(async (file, description = '') => {
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('parentId', parentId || selectedFolder?.id);
       
-      await uploadFileMutation.mutateAsync(formData);
+      // Create the attachment structure as expected by the API
+      formData.append('attachments[0][category_id]', '373'); // Default category
+      formData.append('attachments[0][description]', description || file.name);
+      formData.append('attachments[0][file]', file);
+      
+      // Add parent folder slug (null for root level, parent folder slug for subfolders)
+      const parentFolderSlug = getCurrentFolderSlug();
+      if (parentFolderSlug) {
+        formData.append('slug', parentFolderSlug);
+      }
+      
+      await uploadFileMutation.mutateAsync({
+        fileData: formData,
+        parentFolderSlug,
+        mainSlug: slugId
+      });
     } catch (error) {
       console.error('Error uploading file:', error);
       throw error;
     }
-  }, [selectedFolder, uploadFileMutation]);
+  }, [getCurrentFolderSlug, uploadFileMutation, slugId]);
 
   // Rename folder
   const handleRenameFolder = useCallback(async (folderId, newName) => {
@@ -176,6 +201,7 @@ export const useDocuments = () => {
     navigateToFolder,
     navigateBack,
     navigateToRoot,
+    getCurrentFolderSlug,
     handleCreateFolder,
     handleUploadFile,
     handleRenameFolder,
