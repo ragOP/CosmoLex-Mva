@@ -2,6 +2,32 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* Quill Editor Styles */
+.ql-container {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+}
+
+.ql-editor {
+  min-height: 400px;
+  padding: 16px;
+  width: 100%;
+}
+
+.ql-toolbar {
+  border-top: 1px solid #e5e7eb;
+  border-left: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: none;
+}
+
+.ql-container {
+  border-left: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  border-top: none;
+}
+
 /* font inter */
 
 @custom-variant dark (&:is(.dark *));

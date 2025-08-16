@@ -167,7 +167,7 @@ export default function CreateTaskDialog({
 
   return (
     <>
-      <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+      <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
         <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000] ">
           <div className="flex items-center justify-between p-4">
             <h1 className="text-xl text-[#40444D] text-center font-bold font-sans ">

@@ -1,7 +1,6 @@
-import { ChevronDown } from 'lucide-react';
-import { Button, Select, MenuItem, Box, Typography } from '@mui/material';
-import { useEffect } from 'react';
-import moment from 'moment';
+import { ChevronDown, Plus } from 'lucide-react';
+import {  Select, MenuItem, Box, Typography } from '@mui/material';
+import { Button } from '../ui/button';
 
 const CustomToolBar = ({
   onNavigate,
@@ -25,7 +24,8 @@ const CustomToolBar = ({
     >
       {/* Left Group */}
       <Box display="flex" gap={2} alignItems="center">
-        <Button variant="contained" onClick={() => setOpen(true)}>
+        <Button variant="contained" onClick={() => setOpen(true)} className="flex flex-row items-center gap-2">
+          {/* <Plus className="w-4 h-4" /> */}
           New Event
         </Button>
 

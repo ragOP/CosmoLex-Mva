@@ -37,4 +37,21 @@ export const endpoints = {
   storeCaseKeyDates: 'v2/matter/case-key-dates/store',
   addForm: 'v2/matter/form/store',
   updateForm: 'v2/matter/form/update',
+  // Documents endpoints
+  getFolders: 'v2/documents/folders',
+  getFoldersBySlug: 'v2/documents/list', // New endpoint for slug-based folder listing
+  getFolderContents: 'v2/documents/folders',
+  getItems: 'v2/documents/getItems', // New endpoint for getting folder contents
+  createFolder: 'v2/documents/folders',
+  addFolder: 'v2/documents/addFolder', // New endpoint for creating folders with slug
+  renameFolder: 'v2/documents/renameFolder', // New endpoint for renaming folders
+  uploadFile: 'v2/documents/upload',
+  deleteDocument: 'v2/documents',
+  // Notes endpoints
+  getNotes: 'v2/matter/notes/list',
+  getNote: 'v2/matter/notes/show',
+  createNote: 'v2/matter/notes/store',
+  updateNote: 'v2/matter/notes/update',
+  deleteNote: 'v2/matter/notes/delete',
+  getNotesMeta: 'v2/matter/notes/meta',
 };
