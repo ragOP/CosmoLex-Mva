@@ -6,6 +6,7 @@ import { getCommunications } from '@/api/api_services/communications';
 import { useSearchParams } from 'react-router-dom';
 import ComposeEmailDialog from './components/ComposeEmailDialog';
 import EmailList from './components/EmailList';
+import EmailPreviewDialog from './components/EmailPreviewDialog';
 import { Input } from '@/components/ui/input';
 
 const EmailTab = () => {
@@ -13,13 +14,15 @@ const EmailTab = () => {
     const queryClient = useQueryClient();
     const [composeOpen, setComposeOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+    const [selectedEmail, setSelectedEmail] = useState(null);
 
     const matterId = searchParams.get('slugId') || '1';
 
     // Fetch emails
     const { data: emailsResponse, isLoading, refetch } = useQuery({
-        queryKey: ['communications', matterId],
-        queryFn: () => getCommunications(matterId),
+        queryKey: ['email-communications', matterId],
+        queryFn: () => getCommunications(matterId, 1), // Type 1 for emails
         staleTime: 2 * 60 * 1000, // 2 minutes
     });
 
@@ -31,7 +34,16 @@ const EmailTab = () => {
 
     const handleComposeSuccess = () => {
         setComposeOpen(false);
-        queryClient.invalidateQueries(['communications', matterId]);
+        queryClient.invalidateQueries(['email-communications', matterId]);
+    };
+
+    const handleEmailClick = (email) => {
+        setSelectedEmail(email);
+        setPreviewDialogOpen(true);
+    };
+
+    const handleDeleteSuccess = () => {
+        queryClient.invalidateQueries(['email-communications', matterId]);
     };
 
     const filteredEmails = emails.filter(email =>
@@ -45,7 +57,9 @@ const EmailTab = () => {
             <Stack spacing={4}>
                 {/* Header */}
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <h2 className="text-xl font-semibold text-gray-900">Email Communications</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">
+                        Email Communications ({emails.length})
+                    </h2>
 
                     <Stack direction="row" spacing={2} alignItems="center">
                         <IconButton onClick={handleRefresh} size="small">
@@ -73,9 +87,9 @@ const EmailTab = () => {
                 </Stack>
 
                 {/* Email List */}
-                <div className="min-h-[600px] flex items-center justify-center">
+                <div className="min-h-[600px] flex w-full h-full">
                     {isLoading ? (
-                        <div className="text-center">
+                        <div className="flex flex-col flex-1items-center justify-center">
                             <div className="w-16 h-16 border-4 border-gray-200 border-t-[#7367F0] rounded-full animate-spin mx-auto mb-4"></div>
                             <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
                                 Loading emails...
@@ -85,7 +99,7 @@ const EmailTab = () => {
                             </Typography>
                         </div>
                     ) : filteredEmails.length === 0 ? (
-                        <div className="text-center max-w-md">
+                        <div className="flex flex-col flex-1 w-full items-center justify-center">
                             <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <svg className="w-12 h-12 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -114,6 +128,8 @@ const EmailTab = () => {
                         <EmailList
                             emails={filteredEmails}
                             isLoading={isLoading}
+                            onEmailClick={handleEmailClick}
+                            onDeleteSuccess={handleDeleteSuccess}
                         />
                     )}
                 </div>
@@ -124,6 +140,13 @@ const EmailTab = () => {
                     onClose={() => setComposeOpen(false)}
                     onSuccess={handleComposeSuccess}
                     matterId={matterId}
+                />
+
+                {/* Email Preview Dialog */}
+                <EmailPreviewDialog
+                    open={previewDialogOpen}
+                    onClose={() => setPreviewDialogOpen(false)}
+                    email={selectedEmail}
                 />
             </Stack>
         </div>

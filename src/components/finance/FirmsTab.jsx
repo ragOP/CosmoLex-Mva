@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
-import { Stack, IconButton, Typography, Chip, Box } from '@mui/material';
-import { Search, RotateCcw, Plus, Building, Mail, Phone, MapPin } from 'lucide-react';
+import { Stack, IconButton, Typography, Chip, Box, Menu, MenuItem, ListItemIcon, Dialog } from '@mui/material';
+import { Search, RotateCcw, Plus, Building, Mail, Phone, MapPin, MoreVertical, Grid3X3, List, Edit, Trash2, Eye } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getFirms, createFirm } from '@/api/api_services/finance';
+import { getFirms, createFirm, updateFirm, deleteFirm } from '@/api/api_services/finance';
 import { Input } from '@/components/ui/input';
 import CreateFirmDialog from './components/CreateFirmDialog';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const FirmsTab = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingFirm, setEditingFirm] = useState(null);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedFirm, setSelectedFirm] = useState(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [firmToDelete, setFirmToDelete] = useState(null);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Fetch firms
   const { data: firmsResponse, isLoading, refetch } = useQuery({
@@ -39,8 +48,62 @@ const FirmsTab = () => {
     }
   });
 
+  // Update firm mutation
+  const updateFirmMutation = useMutation({
+    mutationFn: ({ firmId, firmData }) => updateFirm(firmId, firmData),
+    onSuccess: () => {
+      toast.success('Firm updated successfully!');
+      setEditDialogOpen(false);
+      setEditingFirm(null);
+      queryClient.invalidateQueries(['firms']);
+    },
+    onError: (error) => {
+      toast.error('Failed to update firm. Please try again.');
+      console.error('Update firm error:', error);
+    }
+  });
+
+  // Delete firm mutation
+  const deleteFirmMutation = useMutation({
+    mutationFn: deleteFirm,
+    onSuccess: () => {
+      toast.success('Firm deleted successfully!');
+      setAnchorEl(null);
+      setSelectedFirm(null);
+      queryClient.invalidateQueries(['firms']);
+    },
+    onError: (error) => {
+      toast.error('Failed to delete firm. Please try again.');
+      console.error('Delete firm error:', error);
+    }
+  });
+
   const handleCreateFirm = (firmData) => {
     createFirmMutation.mutate(firmData);
+  };
+
+  const handleUpdateFirm = (firmData) => {
+    const { id, ...updateData } = firmData;
+    updateFirmMutation.mutate({ firmId: id, firmData: updateData });
+  };
+
+  const confirmDeleteFirm = (firm) => {
+    setFirmToDelete(firm);
+    setDeleteConfirmOpen(true);
+    setAnchorEl(null);
+    setSelectedFirm(null);
+  };
+
+  const executeDeleteFirm = () => {
+    if (firmToDelete) {
+      deleteFirmMutation.mutate(firmToDelete.id);
+      setDeleteConfirmOpen(false);
+      setFirmToDelete(null);
+    }
+  };
+
+  const handleFirmClick = (firm) => {
+    navigate(`/dashboard/inbox/finance/${firm.id}?slug=${firm.id}&tab=firms`);
   };
 
   const filteredFirms = firms.filter(firm => 
@@ -83,6 +146,30 @@ const FirmsTab = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
+            </div>
+
+            {/* View Toggle */}
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'grid' 
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <Grid3X3 size={16} />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'list' 
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <List size={16} />
+              </button>
             </div>
             
             <button 
@@ -132,11 +219,15 @@ const FirmsTab = () => {
               )}
             </div>
           ) : (
-            <div className="w-full grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredFirms.map((firm) => (
+            <>
+              {/* Grid View */}
+              {viewMode === 'grid' && (
+                <div className="w-full grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredFirms.map((firm) => (
                 <div
                   key={firm.id}
-                  className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-gray-300"
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-gray-300 cursor-pointer"
+                  onClick={() => handleFirmClick(firm)}
                 >
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
@@ -153,15 +244,29 @@ const FirmsTab = () => {
                          </p>
                        </div>
                      </div>
-                     <Chip
-                       label={firm.is_active ? 'Active' : 'Inactive'}
-                       size="small"
-                       sx={{
-                         ...getStatusColor(firm.is_active ? 'Active' : 'Inactive'),
-                         fontSize: '0.75rem',
-                         fontWeight: 500
-                       }}
-                     />
+                     <div className="flex items-center gap-2">
+                       <Chip
+                         label={firm.is_active ? 'Active' : 'Inactive'}
+                         size="small"
+                         sx={{
+                           ...getStatusColor(firm.is_active ? 'Active' : 'Inactive'),
+                           fontSize: '0.75rem',
+                           fontWeight: 500
+                         }}
+                       />
+                       
+                       {/* Three-dot menu */}
+                       <IconButton
+                         size="small"
+                         onClick={(e) => {
+                           setAnchorEl(e.currentTarget);
+                           setSelectedFirm(firm);
+                         }}
+                         className="text-gray-400 hover:text-gray-600"
+                       >
+                         <MoreVertical size={16} />
+                       </IconButton>
+                     </div>
                   </div>
 
                                      {/* Contact Info */}
@@ -212,6 +317,96 @@ const FirmsTab = () => {
                 </div>
               ))}
             </div>
+              )}
+
+              {/* List View */}
+              {viewMode === 'list' && (
+                <div className="w-full space-y-4">
+                  {filteredFirms.map((firm) => (
+                    <div
+                      key={firm.id}
+                      className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-gray-300 cursor-pointer"
+                      onClick={() => handleFirmClick(firm)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center">
+                            <Building className="w-6 h-6 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900 text-lg mb-1">
+                              {firm.name}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              Firm Type ID: {firm.firm_type_id}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-4">
+                          <Chip
+                            label={firm.is_active ? 'Active' : 'Inactive'}
+                            size="small"
+                            sx={{
+                              ...getStatusColor(firm.is_active ? 'Active' : 'Inactive'),
+                              fontSize: '0.75rem',
+                              fontWeight: 500
+                            }}
+                          />
+                          
+                          {/* Three-dot menu */}
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              setAnchorEl(e.currentTarget);
+                              setSelectedFirm(firm);
+                            }}
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <MoreVertical size={16} />
+                          </IconButton>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Mail className="w-4 h-4 text-gray-400" />
+                            <span className="truncate">{firm.email}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Phone className="w-4 h-4 text-gray-400" />
+                            <span>{firm.phone}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">EIN:</span>
+                            <span className="font-medium">{firm.ein}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">Firm %:</span>
+                            <span className="font-medium text-green-600">{firm.firm_percent}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">Flat Fee:</span>
+                            <span className="font-medium text-blue-600">${firm.firm_flat_fee}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">Contact:</span>
+                            <span className="font-medium">{firm.contact_name}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -222,6 +417,130 @@ const FirmsTab = () => {
           onSubmit={handleCreateFirm}
           isLoading={createFirmMutation.isPending}
         />
+
+        {/* Edit Firm Dialog */}
+        <CreateFirmDialog
+          open={editDialogOpen}
+          onClose={() => {
+            setEditDialogOpen(false);
+            setEditingFirm(null);
+          }}
+          onSubmit={handleUpdateFirm}
+          isLoading={updateFirmMutation.isPending}
+          editMode={true}
+          editingFirm={editingFirm}
+        />
+
+        {/* Three-dot Menu */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => {
+            setAnchorEl(null);
+            setSelectedFirm(null);
+          }}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+        >
+          <MenuItem
+            onClick={() => {
+              if (selectedFirm) {
+                handleFirmClick(selectedFirm);
+                setAnchorEl(null);
+                setSelectedFirm(null);
+              }
+            }}
+          >
+            <ListItemIcon>
+              <Eye size={16} />
+            </ListItemIcon>
+            View Details
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setEditingFirm(selectedFirm);
+              setEditDialogOpen(true);
+              setAnchorEl(null);
+              setSelectedFirm(null);
+            }}
+          >
+            <ListItemIcon>
+              <Edit size={16} />
+            </ListItemIcon>
+            Edit Firm
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              if (selectedFirm) {
+                confirmDeleteFirm(selectedFirm);
+              }
+            }}
+            sx={{ color: '#dc2626' }}
+          >
+            <ListItemIcon>
+              <Trash2 size={16} style={{ color: '#dc2626' }} />
+            </ListItemIcon>
+            Delete Firm
+          </MenuItem>
+        </Menu>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteConfirmOpen}
+          onClose={() => setDeleteConfirmOpen(false)}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: '16px',
+              overflow: 'hidden'
+            }
+          }}
+        >
+          <div className="bg-white rounded-lg p-6">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 size={24} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Delete Firm
+                </h3>
+                <p className="text-sm text-gray-500">
+                  This action cannot be undone
+                </p>
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-gray-700">
+                Are you sure you want to delete <strong>"{firmToDelete?.name}"</strong>? 
+                This will permanently remove the firm and all associated data.
+              </p>
+            </div>
+            
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setDeleteConfirmOpen(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeDeleteFirm}
+                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors"
+              >
+                Delete Firm
+              </button>
+            </div>
+          </div>
+        </Dialog>
       </Stack>
     </div>
   );

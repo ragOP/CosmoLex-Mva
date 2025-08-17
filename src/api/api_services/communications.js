@@ -1,10 +1,10 @@
 import { apiService } from './index';
 
 // Get communication meta data (from, to, roles)
-export const getCommunicationMeta = async (matterId = 1) => {
+export const getCommunicationMeta = async (matterId = 1, type = 1) => {
   try {
     const response = await apiService({
-      endpoint: `v2/communications/meta/${matterId}`,
+      endpoint: `v2/communications/meta/${type}/${matterId}`,
       method: 'GET'
     });
     
@@ -16,10 +16,10 @@ export const getCommunicationMeta = async (matterId = 1) => {
 };
 
 // Get all communications/emails
-export const getCommunications = async (matterId = 1) => {
+export const getCommunications = async (matterSlug, type = 1) => {
   try {
     const response = await apiService({
-      endpoint: `v2/communications/getCommunications/${matterId}/`,
+      endpoint: `v2/communications/getCommunications/${type}/${matterSlug}`,
       method: 'GET'
     });
     
@@ -30,8 +30,18 @@ export const getCommunications = async (matterId = 1) => {
   }
 };
 
+// Get emails specifically (type 1)
+export const getEmails = async (matterSlug) => {
+  return getCommunications(matterSlug, 1);
+};
+
+// Get SMS messages specifically (type 2)
+export const getSMS = async (matterSlug) => {
+  return getCommunications(matterSlug, 2);
+};
+
 // Compose/Send email
-export const composeEmail = async (emailData) => {
+export const composeEmail = async (emailData, slug = null) => {
   try {
     const formData = new FormData();
     
@@ -51,8 +61,15 @@ export const composeEmail = async (emailData) => {
       });
     }
     
+    // Use slug in endpoint URL only
+    const endpoint = slug ? 
+      `v2/communications/ComposeEmail/${slug}` : 
+      'v2/communications/ComposeEmail';
+    
+    console.log('Compose email endpoint:', endpoint, 'slug:', slug);
+    
     const response = await apiService({
-      endpoint: 'v2/communications/ComposeEmail',
+      endpoint: endpoint,
       method: 'POST',
       data: formData,
       headers: {
@@ -68,10 +85,12 @@ export const composeEmail = async (emailData) => {
 };
 
 // Search users for recipient selection
-export const searchUsers = async (matterId = 1, searchData = {}) => {
+export const searchUsers = async (searchData = {}, type = 1) => {
   try {
+    console.log(`searchUsers called with type: ${type}, searchData:`, searchData);
+    
     const response = await apiService({
-      endpoint: `v2/communications/searchUsers/${matterId}`,
+      endpoint: `v2/communications/searchUsers/${type}`,
       method: 'POST',
       data: {
         searchBar: searchData.searchBar || '',
@@ -79,6 +98,7 @@ export const searchUsers = async (matterId = 1, searchData = {}) => {
       }
     });
     
+    console.log(`searchUsers response for type ${type}:`, response);
     return response.response;
   } catch (error) {
     console.error('Error searching users:', error);
@@ -87,7 +107,7 @@ export const searchUsers = async (matterId = 1, searchData = {}) => {
 };
 
 // Send SMS
-export const sendSMS = async (smsData) => {
+export const sendSMS = async (smsData, slug = null) => {
   try {
     const formData = new FormData();
     
@@ -97,8 +117,15 @@ export const sendSMS = async (smsData) => {
     formData.append('recipient', smsData.recipient);
     formData.append('message', smsData.message);
     
+    // Use slug in endpoint URL only
+    const endpoint = slug ? 
+      `v2/communications/Sendsms/${slug}` : 
+      'v2/communications/Sendsms';
+    
+    console.log('Send SMS endpoint:', endpoint, 'slug:', slug);
+    
     const response = await apiService({
-      endpoint: 'v2/communications/Sendsms',
+      endpoint: endpoint,
       method: 'POST',
       data: formData,
       headers: {
@@ -113,17 +140,39 @@ export const sendSMS = async (smsData) => {
   }
 };
 
-// Delete communication
+// Delete communication (sends OTP)
 export const deleteCommunication = async (communicationId) => {
   try {
     const response = await apiService({
       endpoint: `v2/communications/delete/${communicationId}`,
-      method: 'DELETE'
+      method: 'GET'
     });
     
     return response.response;
   } catch (error) {
     console.error('Error deleting communication:', error);
+    throw error;
+  }
+};
+
+// Confirm and delete communication with OTP
+export const confirmAndDeleteCommunication = async (requestId, otp) => {
+  try {
+    const response = await apiService({
+      endpoint: 'v2/confirmAndDelete',
+      method: 'POST',
+      data: {
+        request_id: requestId,
+        otp: otp
+      },
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    return response.response;
+  } catch (error) {
+    console.error('Error confirming delete:', error);
     throw error;
   }
 }; 

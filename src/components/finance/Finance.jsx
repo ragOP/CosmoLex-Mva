@@ -1,18 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Stack, Tabs, Tab, Box } from '@mui/material';
+import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
 import BreadCrumb from '@/components/BreadCrumb';
 import TabPanel from './TabPanel';
 import FirmsTab from './FirmsTab';
 import VendorsTab from './VendorsTab';
 import FeeSplitsTab from './FeeSplitsTab';
 import ExpensesTab from './ExpensesTab';
+import FirmDetail from './FirmDetail';
 
 const Finance = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { id: firmId } = useParams();
   const [tabValue, setTabValue] = useState(0);
+
+  // Get slug from URL parameters
+  const slugId = searchParams.get('slugId');
+
+  // Get tab from URL params
+  const tabParam = searchParams.get('tab');
+  
+  // Set initial tab based on URL and ensure tab parameter exists
+  useEffect(() => {
+    if (tabParam === 'firms') {
+      setTabValue(0);
+    } else if (tabParam === 'vendors') {
+      setTabValue(1);
+    } else if (tabParam === 'fee-splits') {
+      setTabValue(2);
+    } else if (tabParam === 'expenses') {
+      setTabValue(3);
+    } else {
+      // If no tab parameter, set default to firms and update URL
+      setTabValue(0);
+      const currentParams = new URLSearchParams(searchParams);
+      currentParams.set('tab', 'firms');
+      navigate(`?${currentParams.toString()}`, { replace: true });
+    }
+  }, [tabParam, searchParams, navigate]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+    
+    // Update URL with tab parameter
+    const currentParams = new URLSearchParams(searchParams);
+    let newTab = 'firms';
+    if (newValue === 1) newTab = 'vendors';
+    else if (newValue === 2) newTab = 'fee-splits';
+    else if (newValue === 3) newTab = 'expenses';
+    
+    currentParams.set('tab', newTab);
+    navigate(`?${currentParams.toString()}`, { replace: true });
   };
+
+  // If we have a firm ID, show firm detail instead of tabs
+  if (firmId) {
+    return (
+      <div className="px-4">
+        <BreadCrumb label="Finance" />
+        <FirmDetail firmId={firmId} />
+      </div>
+    );
+  }
 
   return (
     <div className="px-4">
@@ -75,19 +125,19 @@ const Finance = () => {
           overflow: 'hidden'
         }}>
           <TabPanel value={tabValue} index={0}>
-            <FirmsTab />
+            <FirmsTab slugId={slugId} />
           </TabPanel>
           
           <TabPanel value={tabValue} index={1}>
-            <VendorsTab />
+            <VendorsTab slugId={slugId} />
           </TabPanel>
 
           <TabPanel value={tabValue} index={2}>
-            <FeeSplitsTab />
+            <FeeSplitsTab slugId={slugId} />
           </TabPanel>
 
           <TabPanel value={tabValue} index={3}>
-            <ExpensesTab />
+            <ExpensesTab slugId={slugId} />
           </TabPanel>
         </Box>
       </Stack>

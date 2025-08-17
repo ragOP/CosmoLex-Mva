@@ -391,7 +391,7 @@ const CreateFeeSplitDialog = ({
                                         {...field}
                                         placeholder="Enter any additional notes about the fee split arrangement"
                                         disabled={isLoading}
-                                        className="h-24 resize-none px-4 rounded-md border shadow-[0px_4px_4px_0px_#0000000D] backdrop-blur-[20px] bg-gradient-to-t from-[#E9E9E980]/50 to-[#FFFFFF0D]/5 text-sm placeholder:text-[#667085] py-1 w-full"
+                                        className="h-24 resize-none px-4 rounded-md border shadow-[0px_4px_4px_0px_#0000000D] bg-white text-sm placeholder:text-[#667085] py-1 w-full mt-2"
                                     />
                                 )}
                             />

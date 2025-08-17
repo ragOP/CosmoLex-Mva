@@ -7,31 +7,38 @@ import {
     TextField,
     Stack,
     Chip,
-    Autocomplete,
     IconButton,
     Typography,
     Divider,
-    Box
+    Box,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemAvatar,
+    ListItemText,
+    Avatar,
+    Checkbox
 } from '@mui/material';
 import { Button } from '@/components/ui/button';
-import { X, Paperclip, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Paperclip, Send, ChevronDown, ChevronUp, Search, Mail } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
     getCommunicationMeta,
-    composeEmail
+    composeEmail,
+    searchUsers
 } from '@/api/api_services/communications';
 import { toast } from 'sonner';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import ContactSelectionDialog from './ContactSelectionDialog';
 
 const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
-    const [showCcBcc, setShowCcBcc] = useState(false);
     const [attachments, setAttachments] = useState([]);
-    const [showFromDialog, setShowFromDialog] = useState(false);
     const [showToDialog, setShowToDialog] = useState(false);
     const [showCcDialog, setShowCcDialog] = useState(false);
     const [showBccDialog, setShowBccDialog] = useState(false);
+    const [showCcBcc, setShowCcBcc] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [fromSearchTerm, setFromSearchTerm] = useState('');
     const [formData, setFormData] = useState({
         from: '',
         recipient: [],
@@ -41,43 +48,145 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
         message: ''
     });
 
-    // Fetch meta data for from emails
+    // Debounced search terms
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+    const [debouncedFromSearchTerm, setDebouncedFromSearchTerm] = useState('');
+
+    // Debounce effect for recipient search term
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 300); // 300ms debounce
+
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Debounce effect for from search term
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedFromSearchTerm(fromSearchTerm);
+        }, 300); // 300ms debounce
+
+        return () => clearTimeout(timer);
+    }, [fromSearchTerm]);
+
+    // Fetch email meta data
     const { data: metaData } = useQuery({
-        queryKey: ['communicationMeta', matterId],
-        queryFn: () => getCommunicationMeta(matterId),
-        enabled: open
+        queryKey: ['email-communicationMeta', matterId],
+        queryFn: () => getCommunicationMeta(matterId, 1), // Type 1 for emails
+        enabled: open && !!matterId
     });
 
+    // Search for From email addresses (independent search)
+    const { data: fromSearchResults } = useQuery({
+        queryKey: ['email-from-search', debouncedFromSearchTerm],
+        queryFn: () => searchUsers({ searchBar: debouncedFromSearchTerm, role_type: '' }, 1),
+        enabled: open && debouncedFromSearchTerm.length > 0
+    });
 
+    // Search for To/CC/BCC recipients (independent search)
+    const { data: recipientSearchResults, isLoading: recipientsLoading } = useQuery({
+        queryKey: ['email-recipients-search', debouncedSearchTerm],
+        queryFn: () => searchUsers({ searchBar: debouncedSearchTerm, role_type: '' }, 1),
+        enabled: open && debouncedSearchTerm.length > 0
+    });
 
     const fromEmails = metaData?.from || [];
+    const fromSearchContacts = fromSearchResults?.data || [];
+    const allAvailableContacts = Array.isArray(metaData?.to) ? metaData.to : (metaData?.to ? [metaData.to] : []);
+    const searchedContacts = recipientSearchResults?.data || [];
 
-    // Set default from email when meta data loads
+    // For To/CC/BCC: Show meta data contacts if no search, otherwise show search results
+    const availableContacts = debouncedSearchTerm.length > 0 ? searchedContacts : allAvailableContacts;
+
+    // Debug logging
     useEffect(() => {
-        if (fromEmails.length > 0 && !formData.from) {
-            setFormData(prev => ({ ...prev, from: fromEmails[0].email }));
+        if (metaData) {
+            console.log('Email Dialog - metaData:', metaData);
+            console.log('Email Dialog - fromEmails:', fromEmails);
+            console.log('Email Dialog - allAvailableContacts:', allAvailableContacts);
+            console.log('Email Dialog - availableContacts (filtered):', availableContacts);
+            console.log('Email Dialog - searchTerm:', searchTerm);
         }
-    }, [fromEmails, formData.from]);
+    }, [metaData, fromEmails, allAvailableContacts, availableContacts, searchTerm]);
 
+    // Don't set any defaults - let user select manually
+    useEffect(() => {
+        // Reset form when dialog opens/closes
+        if (!open) {
+            setFormData({
+                from: '',
+                recipient: [],
+                cc: [],
+                bcc: [],
+                subject: '',
+                message: ''
+            });
+            setAttachments([]);
+            setShowCcBcc(false);
+        }
+    }, [open]);
 
+    // Custom email selection dialog for From field
+    const [showFromEmailDialog, setShowFromEmailDialog] = useState(false);
 
     // Compose email mutation
     const composeEmailMutation = useMutation({
-        mutationFn: composeEmail,
-        onSuccess: () => {
+        mutationFn: ({ emailData, slug }) => composeEmail(emailData, slug),
+        onSuccess: (response) => {
+            console.log('Email send response:', response);
+            
+            // Check API status
+            if (response?.Apistatus === true) {
             toast.success('Email sent successfully!');
             handleClose();
             onSuccess();
+            } else {
+                // API returned false status
+                const errorMessage = response?.message || 'Failed to send email';
+                toast.error(`Send failed: ${errorMessage}`);
+                
+                // Show validation errors if present
+                if (response?.errors) {
+                    Object.entries(response.errors).forEach(([field, messages]) => {
+                        messages.forEach(message => {
+                            toast.error(`${field}: ${message}`);
+                        });
+                    });
+                }
+            }
         },
         onError: (error) => {
-            toast.error('Failed to send email. Please try again.');
             console.error('Email send error:', error);
+            
+            // Handle different types of errors
+            if (error?.response?.data) {
+                const errorData = error.response.data;
+                
+                if (errorData.Apistatus === false) {
+                    const errorMessage = errorData.message || 'Failed to send email';
+                    toast.error(`Send failed: ${errorMessage}`);
+                    
+                    // Show validation errors
+                    if (errorData.errors) {
+                        Object.entries(errorData.errors).forEach(([field, messages]) => {
+                            messages.forEach(message => {
+                                toast.error(`${field}: ${message}`);
+                            });
+                        });
+                    }
+                } else {
+                    toast.error('Failed to send email. Please try again.');
+                }
+            } else {
+                toast.error('Network error. Please check your connection and try again.');
+            }
         }
     });
 
     const handleClose = () => {
         setFormData({
-            from: fromEmails[0]?.email || '',
+            from: '',
             recipient: [],
             cc: [],
             bcc: [],
@@ -90,7 +199,13 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
     };
 
     const handleInputChange = (field, value) => {
+        console.log(`handleInputChange called: field=${field}, value=`, value);
         setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleFromEmailSelect = (email) => {
+        handleInputChange('from', email);
+        setShowFromEmailDialog(false);
     };
 
     const handleFileAttachment = (event) => {
@@ -112,18 +227,25 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
             return;
         }
 
+        // Format recipients properly - extract email addresses
+        const formatRecipients = (recipients) => {
+            return recipients.map(recipient => recipient.recipient || recipient.email || recipient).join(',');
+        };
+
         const emailData = {
             type: '1',
             from: formData.from,
-            recipient: formData.recipient.join(','),
-            cc: formData.cc.join(','),
-            bcc: formData.bcc.join(','),
+            recipient: formatRecipients(formData.recipient),
+            cc: formatRecipients(formData.cc),
+            bcc: formatRecipients(formData.bcc),
             subject: formData.subject,
             message: formData.message,
             attachments
         };
 
-        composeEmailMutation.mutate(emailData);
+        console.log('Sending email data:', emailData);
+        console.log('Using matterId/slug:', matterId);
+        composeEmailMutation.mutate({ emailData, slug: matterId });
     };
 
 
@@ -168,6 +290,7 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
                                         <Chip
                                             label={formData.from}
                                             onDelete={() => handleInputChange('from', '')}
+                                            deleteIcon={<X size={16} />}
                                             size="small"
                                             sx={{ bgcolor: '#e3f2fd', color: '#1976d2' }}
                                         />
@@ -180,7 +303,7 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => setShowFromDialog(true)}
+                                    onClick={() => setShowFromEmailDialog(true)}
                                     className="border-gray-300 text-gray-600 hover:bg-gray-50"
                                 >
                                     Select
@@ -201,11 +324,12 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
                                         formData.recipient.map((recipient, index) => (
                                             <Chip
                                                 key={index}
-                                                label={recipient.name || recipient.recipient}
+                                                label={recipient.recipient || recipient.email || recipient}
                                                 onDelete={() => {
                                                     const newRecipients = formData.recipient.filter((_, i) => i !== index);
                                                     handleInputChange('recipient', newRecipients);
                                                 }}
+                                                deleteIcon={<X size={16} />}
                                                 size="small"
                                                 sx={{ bgcolor: '#e8f5e8', color: '#2e7d32' }}
                                             />
@@ -222,6 +346,7 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
                                         variant="outline"
                                         onClick={() => setShowToDialog(true)}
                                         className="border-gray-300 text-gray-600 hover:bg-gray-50"
+                                        title="Search and select email contacts"
                                     >
                                         Select
                                     </Button>
@@ -252,11 +377,12 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
                                                 formData.cc.map((recipient, index) => (
                                                     <Chip
                                                         key={index}
-                                                        label={recipient.name || recipient.recipient}
+                                                        label={recipient.recipient || recipient.email || recipient}
                                                         onDelete={() => {
                                                             const newRecipients = formData.cc.filter((_, i) => i !== index);
                                                             handleInputChange('cc', newRecipients);
                                                         }}
+                                                        deleteIcon={<X size={16} />}
                                                         size="small"
                                                         sx={{ bgcolor: '#fff3e0', color: '#f57c00' }}
                                                     />
@@ -290,11 +416,12 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
                                                 formData.bcc.map((recipient, index) => (
                                                     <Chip
                                                         key={index}
-                                                        label={recipient.name || recipient.recipient}
+                                                        label={recipient.recipient || recipient.email || recipient}
                                                         onDelete={() => {
                                                             const newRecipients = formData.bcc.filter((_, i) => i !== index);
                                                             handleInputChange('bcc', newRecipients);
                                                         }}
+                                                        deleteIcon={<X size={16} />}
                                                         size="small"
                                                         sx={{ bgcolor: '#fce4ec', color: '#c2185b' }}
                                                     />
@@ -448,64 +575,637 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
                     <Button
                         onClick={handleSend}
                         disabled={composeEmailMutation.isPending}
-                        className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
+                        className="bg-[#6366F1] text-white hover:bg-[#4e5564] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
+                        {composeEmailMutation.isPending ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                                Sending...
+                            </>
+                        ) : (
+                            <>
                         <Send size={16} className="mr-2" />
-                        {composeEmailMutation.isPending ? 'Sending...' : 'Send'}
+                                Send Email
+                            </>
+                        )}
                     </Button>
                 </Stack>
             </DialogActions>
 
             {/* Contact Selection Dialogs */}
-            <ContactSelectionDialog
-                open={showFromDialog}
-                onClose={() => setShowFromDialog(false)}
-                onSelect={(contacts) => {
-                    if (contacts.length > 0) {
-                        handleInputChange('from', contacts[0].recipient);
-                    }
-                }}
-                title="Select Sender Email"
-                matterId={matterId}
-                selectedContacts={formData.from ? [{ recipient: formData.from, name: '' }] : []}
-                multiple={false}
-            />
-
-            <ContactSelectionDialog
+            <Dialog
                 open={showToDialog}
                 onClose={() => setShowToDialog(false)}
-                onSelect={(contacts) => {
-                    handleInputChange('recipient', contacts);
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: { borderRadius: 2 }
                 }}
-                title="Select Recipients"
-                matterId={matterId}
-                selectedContacts={formData.recipient}
-                multiple={true}
-            />
+            >
+                <DialogTitle sx={{ pb: 1 }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6">Select Recipients</Typography>
+                        <IconButton onClick={() => setShowToDialog(false)} size="small">
+                            <X size={20} />
+                        </IconButton>
+                    </Stack>
+                </DialogTitle>
+                <Divider />
+                <DialogContent sx={{ p: 0 }}>
+                    <Stack spacing={2} sx={{ p: 2 }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            variant="outlined"
+                            placeholder="Search recipients..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            InputProps={{
+                                startAdornment: (
+                                    <IconButton size="small">
+                                        <Search size={18} />
+                                    </IconButton>
+                                ),
+                                endAdornment: (
+                                    <IconButton size="small" onClick={() => setSearchTerm('')} disabled={!searchTerm}>
+                                        <X size={18} />
+                                    </IconButton>
+                                )
+                            }}
+                            sx={{
+                                '& .MuiInputBase-root': {
+                                    fontSize: '14px',
+                                    padding: '8px 12px'
+                                }
+                            }}
+                        />
+                        {availableContacts.length > 0 ? (
+                            <List sx={{ p: 0 }}>
+                                {availableContacts.map((contact, index) => {
+                                    const isSelected = formData.recipient.some(item => item.recipient === contact.recipient);
+                                    return (
+                                        <ListItem
+                                            key={index}
+                                            disablePadding
+                                            sx={{
+                                                borderRadius: 1,
+                                                mb: 0.25,
+                                                '&:hover': {
+                                                    bgcolor: '#f9fafb'
+                                                }
+                                            }}
+                                        >
+                                            <ListItemButton
+                                                onClick={() => {
+                                                    const selectedContact = {
+                                                        name: contact.name,
+                                                        recipient: contact.recipient,
+                                                        id: contact.id
+                                                    };
+                                                    if (isSelected) {
+                                                        // Remove contact
+                                                        const newRecipients = formData.recipient.filter(item => item.recipient !== contact.recipient);
+                                                        handleInputChange('recipient', newRecipients);
+                                                    } else {
+                                                        // Add contact
+                                                        const newRecipients = [...formData.recipient, selectedContact];
+                                                        handleInputChange('recipient', newRecipients);
+                                                    }
+                                                }}
+                                                sx={{
+                                                    borderRadius: 1,
+                                                    py: 0.5,
+                                                    px: 1
+                                                }}
+                                            >
+                                                <Checkbox
+                                                    checked={isSelected}
+                                                    sx={{
+                                                        color: '#9ca3af',
+                                                        '&.Mui-checked': {
+                                                            color: '#7367F0',
+                                                        },
+                                                    }}
+                                                />
+                                                <ListItemAvatar>
+                                                    <Avatar
+                                                        sx={{
+                                                            width: 32,
+                                                            height: 32,
+                                                            bgcolor: '#1976d2',
+                                                            fontSize: '12px'
+                                                        }}
+                                                    >
+                                                        {contact.recipient?.charAt(0)?.toUpperCase() || 'C'}
+                                                    </Avatar>
+                                                </ListItemAvatar>
+                                                <ListItemText
+                                                    primary={
+                                                        <Typography variant="body2" sx={{ fontWeight: 400 }}>
+                                                            {contact.name || contact.recipient}
+                                                        </Typography>
+                                                    }
+                                                    secondary={
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {contact.recipient}
+                                                        </Typography>
+                                                    }
+                                                />
+                                            </ListItemButton>
+                                        </ListItem>
+                                    );
+                                })}
+                            </List>
+                        ) : recipientsLoading ? (
+                            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                                Searching recipients...
+                            </Typography>
+                        ) : (
+                            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                                {debouncedSearchTerm ? `No recipients found for "${debouncedSearchTerm}"` : 'No recipients found'}
+                            </Typography>
+                        )}
+                    </Stack>
+                </DialogContent>
+                <Divider />
+                <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">
+                        {formData.recipient.length} recipient(s) selected
+                    </Typography>
+                    <Stack direction="row" spacing={2}>
+                        <Button onClick={() => setShowToDialog(false)} className="bg-gray-300 text-black hover:bg-gray-400">
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={() => setShowToDialog(false)}
+                            className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
+                        >
+                            Done
+                        </Button>
+                    </Stack>
+                </DialogActions>
+            </Dialog>
 
-            <ContactSelectionDialog
+            {/* CC Contact Selection Dialog */}
+            <Dialog
                 open={showCcDialog}
                 onClose={() => setShowCcDialog(false)}
-                onSelect={(contacts) => {
-                    handleInputChange('cc', contacts);
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: { borderRadius: 2 }
                 }}
-                title="Select CC Recipients"
-                matterId={matterId}
-                selectedContacts={formData.cc}
-                multiple={true}
-            />
+            >
+                <DialogTitle sx={{ pb: 1 }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6">Select CC Recipients</Typography>
+                        <IconButton onClick={() => setShowCcDialog(false)} size="small">
+                            <X size={20} />
+                        </IconButton>
+                    </Stack>
+                </DialogTitle>
+                <Divider />
+                <DialogContent sx={{ p: 0 }}>
+                    <Stack spacing={2} sx={{ p: 2 }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            variant="outlined"
+                            placeholder="Search CC recipients..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            InputProps={{
+                                startAdornment: (
+                                    <IconButton size="small">
+                                        <Search size={18} />
+                                    </IconButton>
+                                ),
+                                endAdornment: (
+                                    <IconButton size="small" onClick={() => setSearchTerm('')} disabled={!searchTerm}>
+                                        <X size={18} />
+                                    </IconButton>
+                                )
+                            }}
+                            sx={{
+                                '& .MuiInputBase-root': {
+                                    fontSize: '14px',
+                                    padding: '8px 12px'
+                                }
+                            }}
+                        />
+                        {availableContacts.length > 0 ? (
+                            <List sx={{ p: 0 }}>
+                                {availableContacts.map((contact, index) => {
+                                    const isSelected = formData.cc.some(item => item.recipient === contact.recipient);
+                                    return (
+                                        <ListItem
+                                            key={index}
+                                            disablePadding
+                                            sx={{
+                                                borderRadius: 1,
+                                                mb: 0.25,
+                                                '&:hover': {
+                                                    bgcolor: '#f9fafb'
+                                                }
+                                            }}
+                                        >
+                                            <ListItemButton
+                                                onClick={() => {
+                                                    const selectedContact = {
+                                                        name: contact.name,
+                                                        recipient: contact.recipient,
+                                                        id: contact.id
+                                                    };
+                                                    if (isSelected) {
+                                                        // Remove contact
+                                                        const newRecipients = formData.cc.filter(item => item.recipient !== contact.recipient);
+                                                        handleInputChange('cc', newRecipients);
+                                                    } else {
+                                                        // Add contact
+                                                        const newRecipients = [...formData.cc, selectedContact];
+                                                        handleInputChange('cc', newRecipients);
+                                                    }
+                                                }}
+                                                sx={{
+                                                    borderRadius: 1,
+                                                    py: 0.5,
+                                                    px: 1
+                                                }}
+                                            >
+                                                <Checkbox
+                                                    checked={isSelected}
+                                                    sx={{
+                                                        color: '#9ca3af',
+                                                        '&.Mui-checked': {
+                                                            color: '#f57c00',
+                                                        },
+                                                    }}
+                                                />
+                                                <ListItemAvatar>
+                                                    <Avatar
+                                                        sx={{
+                                                            width: 32,
+                                                            height: 32,
+                                                            bgcolor: '#f57c00',
+                                                            fontSize: '12px'
+                                                        }}
+                                                    >
+                                                        {contact.recipient?.charAt(0)?.toUpperCase() || 'C'}
+                                                    </Avatar>
+                                                </ListItemAvatar>
+                                                <ListItemText
+                                                    primary={
+                                                        <Typography variant="body2" sx={{ fontWeight: 400 }}>
+                                                            {contact.name || contact.recipient}
+                                                        </Typography>
+                                                    }
+                                                    secondary={
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {contact.recipient}
+                                                        </Typography>
+                                                    }
+                                                />
+                                            </ListItemButton>
+                                        </ListItem>
+                                    );
+                                })}
+                            </List>
+                        ) : (
+                            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                                {debouncedSearchTerm ? `No CC recipients found for "${debouncedSearchTerm}"` : 'No CC recipients found'}
+                            </Typography>
+                        )}
+                    </Stack>
+                </DialogContent>
+                <Divider />
+                <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">
+                        {formData.cc.length} CC recipient(s) selected
+                    </Typography>
+                    <Stack direction="row" spacing={2}>
+                        <Button onClick={() => setShowCcDialog(false)} className="bg-gray-300 text-black hover:bg-gray-400">
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={() => setShowCcDialog(false)}
+                            className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
+                        >
+                            Done
+                        </Button>
+                    </Stack>
+                </DialogActions>
+            </Dialog>
 
-            <ContactSelectionDialog
+            {/* BCC Contact Selection Dialog */}
+            <Dialog
                 open={showBccDialog}
                 onClose={() => setShowBccDialog(false)}
-                onSelect={(contacts) => {
-                    handleInputChange('bcc', contacts);
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: { borderRadius: 2 }
                 }}
-                title="Select BCC Recipients"
-                matterId={matterId}
-                selectedContacts={formData.bcc}
-                multiple={true}
-            />
+            >
+                <DialogTitle sx={{ pb: 1 }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6">Select BCC Recipients</Typography>
+                        <IconButton onClick={() => setShowBccDialog(false)} size="small">
+                            <X size={20} />
+                        </IconButton>
+                    </Stack>
+                </DialogTitle>
+                <Divider />
+                <DialogContent sx={{ p: 0 }}>
+                    <Stack spacing={2} sx={{ p: 2 }}>
+                        <TextField
+                            fullWidth
+                            size="small"
+                            variant="outlined"
+                            placeholder="Search BCC recipients..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            InputProps={{
+                                startAdornment: (
+                                    <IconButton size="small">
+                                        <Search size={18} />
+                                    </IconButton>
+                                ),
+                                endAdornment: (
+                                    <IconButton size="small" onClick={() => setSearchTerm('')} disabled={!searchTerm}>
+                                        <X size={18} />
+                                    </IconButton>
+                                )
+                            }}
+                            sx={{
+                                '& .MuiInputBase-root': {
+                                    fontSize: '14px',
+                                    padding: '8px 12px'
+                                }
+                            }}
+                        />
+                        {availableContacts.length > 0 ? (
+                            <List sx={{ p: 0 }}>
+                                {availableContacts.map((contact, index) => {
+                                    const isSelected = formData.bcc.some(item => item.recipient === contact.recipient);
+                                    return (
+                                        <ListItem
+                                            key={index}
+                                            disablePadding
+                                            sx={{
+                                                borderRadius: 1,
+                                                mb: 0.25,
+                                                '&:hover': {
+                                                    bgcolor: '#f9fafb'
+                                                }
+                                            }}
+                                        >
+                                            <ListItemButton
+                                                onClick={() => {
+                                                    const selectedContact = {
+                                                        name: contact.name,
+                                                        recipient: contact.recipient,
+                                                        id: contact.id
+                                                    };
+                                                    if (isSelected) {
+                                                        // Remove contact
+                                                        const newRecipients = formData.bcc.filter(item => item.recipient !== contact.recipient);
+                                                        handleInputChange('bcc', newRecipients);
+                                                    } else {
+                                                        // Add contact
+                                                        const newRecipients = [...formData.bcc, selectedContact];
+                                                        handleInputChange('bcc', newRecipients);
+                                                    }
+                                                }}
+                                                sx={{
+                                                    borderRadius: 1,
+                                                    py: 0.5,
+                                                    px: 1
+                                                }}
+                                            >
+                                                <Checkbox
+                                                    checked={isSelected}
+                                                    sx={{
+                                                        color: '#9ca3af',
+                                                        '&.Mui-checked': {
+                                                            color: '#c2185b',
+                                                        },
+                                                    }}
+                                                />
+                                                <ListItemAvatar>
+                                                    <Avatar
+                                                        sx={{
+                                                            width: 32,
+                                                            height: 32,
+                                                            bgcolor: '#c2185b',
+                                                            fontSize: '12px'
+                                                        }}
+                                                    >
+                                                        {contact.recipient?.charAt(0)?.toUpperCase() || 'B'}
+                                                    </Avatar>
+                                                </ListItemAvatar>
+                                                <ListItemText
+                                                    primary={
+                                                        <Typography variant="body2" sx={{ fontWeight: 400 }}>
+                                                            {contact.name || contact.recipient}
+                                                        </Typography>
+                                                    }
+                                                    secondary={
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {contact.recipient}
+                                                        </Typography>
+                                                    }
+                                                />
+                                            </ListItemButton>
+                                        </ListItem>
+                                    );
+                                })}
+                            </List>
+                        ) : (
+                            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                                {debouncedSearchTerm ? `No BCC recipients found for "${debouncedSearchTerm}"` : 'No BCC recipients found'}
+                            </Typography>
+                        )}
+                    </Stack>
+                </DialogContent>
+                <Divider />
+                <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
+                    <Typography variant="body2" color="text.secondary">
+                        {formData.bcc.length} BCC recipient(s) selected
+                    </Typography>
+                    <Stack direction="row" spacing={2}>
+                        <Button onClick={() => setShowBccDialog(false)} className="bg-gray-300 text-black hover:bg-gray-400">
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={() => setShowBccDialog(false)}
+                            className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
+                        >
+                            Done
+                        </Button>
+                    </Stack>
+                </DialogActions>
+            </Dialog>
+
+            {/* Custom Email Selection Dialog for From field */}
+            <Dialog
+                open={showFromEmailDialog}
+                onClose={() => setShowFromEmailDialog(false)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: { borderRadius: 2 }
+                }}
+            >
+                <DialogTitle sx={{ pb: 1 }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6">Select Sender Email</Typography>
+                        <IconButton onClick={() => setShowFromEmailDialog(false)} size="small">
+                            <X size={20} />
+                        </IconButton>
+                    </Stack>
+                </DialogTitle>
+                <Divider />
+                <DialogContent sx={{ p: 0 }}>
+                    <Stack spacing={2} sx={{ p: 2 }}>
+                        {/* Search Field for From emails */}
+                        <TextField
+                            fullWidth
+                            size="small"
+                            variant="outlined"
+                            placeholder="Search sender emails..."
+                            value={fromSearchTerm}
+                            onChange={(e) => setFromSearchTerm(e.target.value)}
+                            InputProps={{
+                                startAdornment: (
+                                    <IconButton size="small">
+                                        <Search size={18} />
+                                    </IconButton>
+                                ),
+                                endAdornment: (
+                                    <IconButton size="small" onClick={() => setFromSearchTerm('')} disabled={!fromSearchTerm}>
+                                        <X size={18} />
+                                    </IconButton>
+                                )
+                            }}
+                            sx={{
+                                '& .MuiInputBase-root': {
+                                    fontSize: '14px',
+                                    padding: '8px 12px'
+                                }
+                            }}
+                        />
+                        
+                        {/* Show meta data emails if no search, otherwise show search results */}
+                        {debouncedFromSearchTerm.length > 0 ? (
+                            // Show search results
+                            fromSearchContacts.length > 0 ? (
+                                <List sx={{ p: 0 }}>
+                                    {fromSearchContacts.map((contact, index) => (
+                                        <ListItem
+                                            key={index}
+                                            disablePadding
+                                            sx={{
+                                                borderRadius: 1,
+                                                mb: 0.25,
+                                                '&:hover': {
+                                                    bgcolor: '#f9fafb'
+                                                }
+                                            }}
+                                        >
+                                            <ListItemButton
+                                                onClick={() => handleFromEmailSelect(contact.recipient)}
+                                                sx={{
+                                                    borderRadius: 1,
+                                                    py: 1,
+                                                    px: 2
+                                                }}
+                                            >
+                                                <ListItemAvatar>
+                                                    <Avatar
+                                                        sx={{
+                                                            width: 40,
+                                                            height: 40,
+                                                            bgcolor: '#1976d2',
+                                                            fontSize: '14px'
+                                                        }}
+                                                    >
+                                                        {contact.recipient?.charAt(0)?.toUpperCase() || 'E'}
+                                                    </Avatar>
+                                                </ListItemAvatar>
+                                                <ListItemText
+                                                    primary={
+                                                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                                            {contact.name || contact.recipient}
+                                                        </Typography>
+                                                    }
+                                                    secondary={contact.recipient}
+                                                />
+                                            </ListItemButton>
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            ) : (
+                                <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                                    No sender emails found for "{debouncedFromSearchTerm}"
+                                </Typography>
+                            )
+                        ) : (
+                            // Show meta data emails
+                            fromEmails.length > 0 ? (
+                                <List sx={{ p: 0 }}>
+                                    {fromEmails.map((emailObj, index) => (
+                                        <ListItem
+                                            key={index}
+                                            disablePadding
+                                            sx={{
+                                                borderRadius: 1,
+                                                mb: 0.25,
+                                                '&:hover': {
+                                                    bgcolor: '#f9fafb'
+                                                }
+                                            }}
+                                        >
+                                            <ListItemButton
+                                                onClick={() => handleFromEmailSelect(emailObj.email)}
+                                                sx={{
+                                                    borderRadius: 1,
+                                                    py: 1,
+                                                    px: 2
+                                                }}
+                                            >
+                                                <ListItemAvatar>
+                                                    <Avatar
+                                                        sx={{
+                                                            width: 40,
+                                                            height: 40,
+                                                            bgcolor: '#1976d2',
+                                                            fontSize: '14px'
+                                                        }}
+                                                    >
+                                                        {emailObj.email?.charAt(0)?.toUpperCase() || 'E'}
+                                                    </Avatar>
+                                                </ListItemAvatar>
+                                                <ListItemText
+                                                    primary={
+                                                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                                            {emailObj.email}
+                                                        </Typography>
+                                                    }
+                                                    secondary="Click to select as sender"
+                                                />
+                                            </ListItemButton>
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            ) : (
+                                <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
+                                    No email addresses available
+                                </Typography>
+                            )
+                        )}
+                    </Stack>
+                </DialogContent>
+            </Dialog>
         </Dialog>
     );
 };

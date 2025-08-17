@@ -1,15 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Stack, Tabs, Tab, Box } from '@mui/material';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import BreadCrumb from '@/components/BreadCrumb';
 import TabPanel from './TabPanel';
 import SMSTab from './SMSTab';
 import EmailTab from './EmailTab';
 
 const Communication = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [tabValue, setTabValue] = useState(0);
+
+  // Get tab from URL params
+  const tabParam = searchParams.get('tab');
+  
+  // Set initial tab based on URL and ensure tab parameter exists
+  useEffect(() => {
+    if (tabParam === 'sms') {
+      setTabValue(1);
+    } else if (tabParam === 'email') {
+      setTabValue(0);
+    } else {
+      // If no tab parameter, set default to email and update URL
+      setTabValue(0);
+      const currentParams = new URLSearchParams(searchParams);
+      currentParams.set('tab', 'email');
+      navigate(`?${currentParams.toString()}`, { replace: true });
+    }
+  }, [tabParam, searchParams, navigate]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+    
+    // Update URL with tab parameter
+    const currentParams = new URLSearchParams(searchParams);
+    const newTab = newValue === 0 ? 'email' : 'sms';
+    currentParams.set('tab', newTab);
+    navigate(`?${currentParams.toString()}`, { replace: true });
   };
 
   return (

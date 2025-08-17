@@ -7,19 +7,24 @@ import { Input } from '@/components/ui/input';
 import CreateExpenseDialog from './components/CreateExpenseDialog';
 import { toast } from 'sonner';
 
-const ExpensesTab = () => {
+const ExpensesTab = ({ slugId }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch expenses
   const { data: expensesResponse, isLoading, refetch } = useQuery({
-    queryKey: ['expenses'],
-    queryFn: getExpenses,
+    queryKey: ['expenses', slugId],
+    queryFn: () => getExpenses(slugId),
     staleTime: 2 * 60 * 1000, // 2 minutes
+    enabled: !!slugId
   });
 
   const expenses = expensesResponse?.data || [];
+  
+  // Debug: Log the expenses data structure
+  console.log('Expenses data:', expenses);
+  console.log('First expense structure:', expenses[0]);
 
   const handleRefresh = () => {
     refetch();
@@ -27,11 +32,11 @@ const ExpensesTab = () => {
 
   // Create expense mutation
   const createExpenseMutation = useMutation({
-    mutationFn: createExpense,
+    mutationFn: ({ slugId, ...expenseData }) => createExpense(expenseData, slugId),
     onSuccess: () => {
       toast.success('Expense created successfully!');
       setCreateDialogOpen(false);
-      queryClient.invalidateQueries(['expenses']);
+      queryClient.invalidateQueries(['expenses', slugId]);
     },
     onError: (error) => {
       toast.error('Failed to create expense. Please try again.');
@@ -40,17 +45,26 @@ const ExpensesTab = () => {
   });
 
   const handleCreateExpense = (expenseData) => {
-    createExpenseMutation.mutate(expenseData);
+    createExpenseMutation.mutate({ ...expenseData, slugId });
   };
 
-  const filteredExpenses = expenses.filter(expense => 
-    expense.case_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    expense.case_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    expense.vendor.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredExpenses = expenses.filter(expense => {
+    if (!expense) return false;
+    
+    const searchLower = searchTerm.toLowerCase();
+    
+    return (
+      (expense.case_name && expense.case_name.toLowerCase().includes(searchLower)) ||
+      (expense.case_number && expense.case_number.toLowerCase().includes(searchLower)) ||
+      (expense.description && expense.description.toLowerCase().includes(searchLower)) ||
+      (expense.vendor && expense.vendor.toLowerCase().includes(searchLower)) ||
+      (expense.contact_name && expense.contact_name.toLowerCase().includes(searchLower))
+    );
+  });
 
   const getStatusColor = (status) => {
+    if (!status) return { bgcolor: '#f3f4f6', color: '#374151' };
+    
     switch (status) {
       case 'Paid':
         return { bgcolor: '#d1fae5', color: '#065f46' };
@@ -64,6 +78,8 @@ const ExpensesTab = () => {
   };
 
   const getCostTypeColor = (costType) => {
+    if (!costType) return { bgcolor: '#f3f4f6', color: '#374151' };
+    
     if (costType.includes('Hard Cost')) {
       return { bgcolor: '#fef3c7', color: '#92400e' };
     } else if (costType.includes('Soft Cost')) {

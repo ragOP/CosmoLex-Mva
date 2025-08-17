@@ -16,7 +16,8 @@ import {
     IconButton,
     Checkbox,
     Box,
-    Divider
+    Divider,
+    Chip
 } from '@mui/material';
 import { Button } from '@/components/ui/button';
 import { X, Search, User } from 'lucide-react';
@@ -28,21 +29,35 @@ const ContactSelectionDialog = ({
     onClose,
     onSelect,
     title,
-    matterId,
     selectedContacts = [],
-    multiple = true
+    multiple = true,
+    type = 1
 }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedItems, setSelectedItems] = useState(selectedContacts);
 
     // Search users query
-    const { data: usersData, isLoading } = useQuery({
-        queryKey: ['searchUsers', matterId, searchTerm],
-        queryFn: () => searchUsers(matterId, { searchBar: searchTerm, role_type: '' }),
-        enabled: open && !!matterId
+    const { data: usersData, isLoading, error } = useQuery({
+        queryKey: ['searchUsers', searchTerm, type],
+        queryFn: () => searchUsers({ searchBar: searchTerm, role_type: '' }, type),
+        enabled: open
     });
 
-    const users = usersData?.data || [];
+    // Ensure users is always an array and handle different response structures
+    const users = Array.isArray(usersData?.data) ? usersData.data : 
+                  Array.isArray(usersData) ? usersData : 
+                  [];
+    
+    // Debug logging
+    useEffect(() => {
+        if (usersData) {
+            console.log('ContactSelectionDialog - usersData:', usersData);
+            console.log('ContactSelectionDialog - users array:', users);
+            console.log('ContactSelectionDialog - type:', type);
+            console.log('ContactSelectionDialog - searchTerm:', searchTerm);
+            console.log('ContactSelectionDialog - API endpoint used:', `v2/communications/searchUsers/${type}`);
+        }
+    }, [usersData, users, type, searchTerm]);
 
     useEffect(() => {
         setSelectedItems(selectedContacts);
@@ -100,7 +115,12 @@ const ContactSelectionDialog = ({
         >
             <DialogTitle sx={{ pb: 1 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h6">{title}</Typography>
+                    <Box>
+                        <Typography variant="h6">{title}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            {type === 1 ? 'Email Contacts' : 'SMS Contacts'}
+                        </Typography>
+                    </Box>
                     <IconButton onClick={handleClose} size="small">
                         <X size={20} />
                     </IconButton>
@@ -115,7 +135,7 @@ const ContactSelectionDialog = ({
                     <TextField
                         fullWidth
                         size="small"
-                        placeholder="Search contacts..."
+                        placeholder={`Search ${type === 1 ? 'email' : 'SMS'} contacts...`}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         InputProps={{
@@ -124,6 +144,24 @@ const ContactSelectionDialog = ({
                             ),
                         }}
                     />
+
+                    {/* Contact Type Info */}
+                    <Box sx={{ textAlign: 'center', py: 1 }}>
+                        <Chip
+                            label={`${type === 1 ? 'Email' : 'SMS'} Contacts`}
+                            size="small"
+                            sx={{
+                                bgcolor: type === 1 ? '#e3f2fd' : '#e8f5e8',
+                                color: type === 1 ? '#1976d2' : '#2e7d32',
+                                fontWeight: 500
+                            }}
+                        />
+                        {searchTerm && (
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                                Searching for: "{searchTerm}"
+                            </Typography>
+                        )}
+                    </Box>
 
                     {/* Selected Count Display */}
                     {selectedItems.length > 0 && (
@@ -140,9 +178,20 @@ const ContactSelectionDialog = ({
                             <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
                                 Loading contacts...
                             </Typography>
+                        ) : error ? (
+                            <Typography variant="body2" color="error" sx={{ textAlign: 'center', py: 4 }}>
+                                Error loading contacts: {error.message}
+                            </Typography>
                         ) : users.length === 0 ? (
                             <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-                                No contacts found
+                                {searchTerm ? 
+                                    `No ${type === 1 ? 'email' : 'SMS'} contacts found matching "${searchTerm}"` : 
+                                    `No ${type === 1 ? 'email' : 'SMS'} contacts available`
+                                }
+                                <br />
+                                <Typography variant="caption" color="text.secondary">
+                                    API endpoint: /searchUsers/{type}
+                                </Typography>
                             </Typography>
                         ) : (
                             <List sx={{ p: 0 }}>
@@ -197,9 +246,21 @@ const ContactSelectionDialog = ({
                                                         </Typography>
                                                     }
                                                     secondary={
-                                                        <Typography variant="caption" color="text.secondary">
-                                                            {contact.recipient}
-                                                        </Typography>
+                                                        <Stack direction="row" alignItems="center" spacing={1}>
+                                                            <Typography variant="caption" color="text.secondary">
+                                                                {contact.recipient}
+                                                            </Typography>
+                                                            <Chip
+                                                                label={type === 1 ? 'Email' : 'SMS'}
+                                                                size="small"
+                                                                sx={{
+                                                                    height: 16,
+                                                                    fontSize: '10px',
+                                                                    bgcolor: type === 1 ? '#e3f2fd' : '#e8f5e8',
+                                                                    color: type === 1 ? '#1976d2' : '#2e7d32'
+                                                                }}
+                                                            />
+                                                        </Stack>
                                                     }
                                                 />
                                             </ListItemButton>

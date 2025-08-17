@@ -76,122 +76,74 @@ export const getVendor = async (vendorId) => {
 };
 
 // Fee Splits API
-export const getFeeSplits = async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        Apistatus: true,
-        data: [
-          {
-            id: 1,
-            case_name: "Johnson vs. ABC Corp",
-            case_number: "2024-CV-001",
-            firm_name: "Smith & Associates",
-            split_type: "Fee Share %",
-            our_percentage: "60%",
-            their_percentage: "40%",
-            total_settlement: "$250,000.00",
-            our_share: "$150,000.00",
-            their_share: "$100,000.00",
-            status: "Settled",
-            created_at: "2024-03-01"
-          },
-          {
-            id: 2,
-            case_name: "Davis Personal Injury",
-            case_number: "2024-CV-002",
-            firm_name: "Legal Partners LLC",
-            split_type: "Firm Flat Free %",
-            our_percentage: "70%",
-            their_percentage: "30%",
-            total_settlement: "$180,000.00",
-            our_share: "$126,000.00",
-            their_share: "$54,000.00",
-            status: "Pending",
-            created_at: "2024-03-15"
-          }
-        ]
-      });
-    }, 600);
-  });
+export const getFeeSplits = async (slug = null) => {
+  try {
+    const endpoint = slug ? 
+      `v2/matter/finance/fee-splits/list/${slug}` : 
+      'v2/matter/finance/fee-splits/list';
+    
+    const response = await apiService({
+      endpoint: endpoint,
+      method: 'GET'
+    });
+    
+    return response.response;
+  } catch (error) {
+    console.error('Error fetching fee splits:', error);
+    throw error;
+  }
 };
 
 // Expenses API
-export const getExpenses = async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        Apistatus: true,
-        data: [
-          {
-            id: 1,
-            case_name: "Johnson vs. ABC Corp",
-            case_number: "2024-CV-001",
-            category: "Court Costs/Filing Fees",
-            cost_type: "Hard Cost - Third-Party Vendors",
-            description: "Filing fees for initial complaint",
-            amount: "$450.00",
-            date: "2024-01-15",
-            vendor: "Court Clerk Office",
-            status: "Paid",
-            receipt_attached: true
-          },
-          {
-            id: 2,
-            case_name: "Davis Personal Injury",
-            case_number: "2024-CV-002",
-            category: "Expert/Professional",
-            cost_type: "Hard Cost - Third-Party Vendors",
-            description: "Medical expert witness consultation",
-            amount: "$2,500.00",
-            date: "2024-02-20",
-            vendor: "Dr. Expert Medical Services",
-            status: "Pending",
-            receipt_attached: false
-          },
-          {
-            id: 3,
-            case_name: "Smith Contract Dispute",
-            case_number: "2024-CV-003",
-            category: "Depositions",
-            cost_type: "Soft Cost - Due to our Firm",
-            description: "Deposition transcript and court reporter",
-            amount: "$850.00",
-            date: "2024-03-10",
-            vendor: "Legal Transcription Pro",
-            status: "Paid",
-            receipt_attached: true
-          }
-        ]
-      });
-    }, 900);
-  });
+export const getExpenses = async (slug = null) => {
+  try {
+    const endpoint = slug ? 
+      `v2/matter/finance/expenses/list/${slug}` : 
+      'v2/matter/finance/expenses/list';
+    
+    const response = await apiService({
+      endpoint: endpoint,
+      method: 'GET'
+    });
+    
+    return response.response;
+  } catch (error) {
+    console.error('Error fetching expenses:', error);
+    throw error;
+  }
 };
 
 // Create/Update/Delete functions for firms
 export const createFirm = async (firmData) => {
   try {
-    const formData = new FormData();
+    // Comment out FormData for now, use normal JSON
+    // const formData = new FormData();
     
-    // Add all firm fields
-    Object.keys(firmData).forEach(key => {
-      if (firmData[key] !== null && firmData[key] !== undefined) {
-        if (key === 'attachments' && Array.isArray(firmData[key])) {
-          firmData[key].forEach((file) => {
-            formData.append('attachments', file);
-          });
-        } else {
-          formData.append(key, firmData[key]);
-        }
-      }
-    });
+    // // Add all firm fields
+    // Object.keys(firmData).forEach(key => {
+    //   if (firmData[key] !== null && firmData[key] !== undefined) {
+    //     if (key === 'attachments' && Array.isArray(firmData[key])) {
+    //       firmData[key].forEach((file) => {
+    //       formData.append('attachments', file);
+    //     });
+    //   } else {
+    //       formData.append(key, firmData[key]);
+    //     }
+    //   }
+    // });
+    
+    // Use normal JSON data
+    const jsonData = {
+      ...firmData,
+      // attachments: firmData.attachments // Comment out attachments for now
+    };
     
     const response = await apiService({
       endpoint: 'v2/sub-firms/store',
       method: 'POST',
-      data: formData,
+      data: jsonData,
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'application/json',
       },
     });
     
@@ -205,27 +157,34 @@ export const createFirm = async (firmData) => {
 // Update firm
 export const updateFirm = async (firmId, firmData) => {
   try {
-    const formData = new FormData();
+    // Comment out FormData for now, use normal JSON
+    // const formData = new FormData();
     
-    // Add all firm fields
-    Object.keys(firmData).forEach(key => {
-      if (firmData[key] !== null && firmData[key] !== undefined) {
-        if (key === 'attachments' && Array.isArray(firmData[key])) {
-          firmData[key].forEach((file) => {
-            formData.append('attachments', file);
-          });
-        } else {
-          formData.append(key, firmData[key]);
-        }
-      }
-    });
+    // // Add all firm fields
+    // Object.keys(firmData).forEach(key => {
+    //   if (firmData[key] !== null && firmData[key] !== undefined) {
+    //     if (key === 'attachments' && Array.isArray(firmData[key])) {
+    //       firmData[key].forEach((file) => {
+    //         formData.append('attachments', file);
+    //       });
+    //     } else {
+    //       formData.append(key, firmData[key]);
+    //     }
+    //   }
+    // });
+    
+    // Use normal JSON data
+    const jsonData = {
+      ...firmData,
+      // attachments: firmData.attachments // Comment out attachments for now
+    };
     
     const response = await apiService({
       endpoint: `v2/sub-firms/update/${firmId}`,
       method: 'PUT',
-      data: formData,
+      data: jsonData,
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'application/json',
       },
     });
     
@@ -333,26 +292,105 @@ export const deleteVendor = async (vendorId) => {
   }
 };
 
-export const createFeeSplit = async (feeSplitData) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        Apistatus: true,
-        message: "Fee split created successfully",
-        data: { id: Date.now(), ...feeSplitData }
-      });
-    }, 500);
-  });
+export const createFeeSplit = async (feeSplitData, slug = null) => {
+  try {
+    const formData = new FormData();
+    
+    // Add all fee split fields
+    Object.keys(feeSplitData).forEach(key => {
+      if (feeSplitData[key] !== null && feeSplitData[key] !== undefined) {
+        formData.append(key, feeSplitData[key]);
+      }
+    });
+    
+    // Add slug if provided
+    if (slug) {
+      formData.append('slug', slug);
+    }
+    
+    const endpoint = slug ? 
+      `v2/matter/finance/fee-splits/store/${slug}` : 
+      'v2/matter/finance/fee-splits/store';
+    
+    const response = await apiService({
+      endpoint: endpoint,
+      method: 'POST',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    return response.response;
+  } catch (error) {
+    console.error('Error creating fee split:', error);
+    throw error;
+  }
 };
 
-export const createExpense = async (expenseData) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        Apistatus: true,
-        message: "Expense created successfully",
-        data: { id: Date.now(), ...expenseData }
-      });
-    }, 500);
-  });
+export const createExpense = async (expenseData, slug = null) => {
+  try {
+    return await storeExpense(expenseData, slug);
+  } catch (error) {
+    console.error('Error creating expense:', error);
+    throw error;
+  }
+};
+
+// Get firms by type
+export const getFirmsByType = async (typeId) => {
+  try {
+    const response = await apiService({
+      endpoint: `v2/finance-by-type/${typeId}`,
+      method: 'GET'
+    });
+    
+    return response.response;
+  } catch (error) {
+    console.error('Error fetching firms by type:', error);
+    throw error;
+  }
+};
+
+// Store expense with slug support
+export const storeExpense = async (expenseData, slug = null) => {
+  try {
+    const formData = new FormData();
+    
+    // Add all expense fields
+    Object.keys(expenseData).forEach(key => {
+      if (expenseData[key] !== null && expenseData[key] !== undefined) {
+        if (key === 'attachments' && Array.isArray(expenseData[key])) {
+          expenseData[key].forEach((file) => {
+            formData.append('attachments', file);
+          });
+        } else {
+          formData.append(key, expenseData[key]);
+        }
+      }
+    });
+    
+    // Add slug if provided
+    if (slug) {
+      formData.append('slug', slug);
+    }
+    
+    const endpoint = slug ? 
+      `v2/matter/finance/store/${slug}` : 
+      'v2/matter/finance/store';
+    
+    const response = await apiService({
+      endpoint: endpoint,
+      method: 'POST',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    return response.response;
+  } catch (error) {
+    console.error('Error storing expense:', error);
+    throw error;
+  }
 }; 

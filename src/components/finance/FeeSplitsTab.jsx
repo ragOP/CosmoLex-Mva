@@ -7,16 +7,17 @@ import { Input } from '@/components/ui/input';
 import CreateFeeSplitDialog from './components/CreateFeeSplitDialog';
 import { toast } from 'sonner';
 
-const FeeSplitsTab = () => {
+const FeeSplitsTab = ({ slugId }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   // Fetch fee splits
   const { data: feeSplitsResponse, isLoading, refetch } = useQuery({
-    queryKey: ['feeSplits'],
-    queryFn: getFeeSplits,
+    queryKey: ['feeSplits', slugId],
+    queryFn: () => getFeeSplits(slugId),
     staleTime: 2 * 60 * 1000, // 2 minutes
+    enabled: !!slugId
   });
 
   const feeSplits = feeSplitsResponse?.data || [];
@@ -27,11 +28,11 @@ const FeeSplitsTab = () => {
 
   // Create fee split mutation
   const createFeeSplitMutation = useMutation({
-    mutationFn: createFeeSplit,
+    mutationFn: ({ slugId, ...feeSplitData }) => createFeeSplit(feeSplitData, slugId),
     onSuccess: () => {
       toast.success('Fee split created successfully!');
       setCreateDialogOpen(false);
-      queryClient.invalidateQueries(['feeSplits']);
+      queryClient.invalidateQueries(['feeSplits', slugId]);
     },
     onError: (error) => {
       toast.error('Failed to create fee split. Please try again.');
@@ -40,7 +41,7 @@ const FeeSplitsTab = () => {
   });
 
   const handleCreateFeeSplit = (feeSplitData) => {
-    createFeeSplitMutation.mutate(feeSplitData);
+    createFeeSplitMutation.mutate({ ...feeSplitData, slugId });
   };
 
   const filteredFeeSplits = feeSplits.filter(split => 
