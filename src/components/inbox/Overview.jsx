@@ -84,7 +84,7 @@ export default function Overview() {
     queryFn: () =>
       searchContact({
         data: {
-          globalSearchBar: searchContactQuery,
+          searchBar: searchContactQuery,
           contact_type_id: selectedContactType,
         },
       }),

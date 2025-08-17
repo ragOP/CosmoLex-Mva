@@ -54,7 +54,7 @@ export default function CreateMatterDialog({
     queryFn: () =>
       searchContact({
         data: {
-          globalSearchBar: searchContactQuery,
+          searchBar: searchContactQuery,
           contact_type_id: selectedContactType,
         },
       }),

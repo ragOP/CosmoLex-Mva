@@ -116,15 +116,15 @@ export default function UpdateTaskDialog({
     name: 'assigned_to',
   });
 
-  useEffect(() => {
-    if (task) {
-      reset({
-        ...task,
-        reminders: task.reminders || [],
-        assigned_to: task?.assignees?.map((assignee) => assignee.id) || [],
-      });
-    }
-  }, [task, reset]);
+  // useEffect(() => {
+  //   if (task) {
+  //     reset({
+  //       ...task,
+  //       reminders: task.reminders || [],
+  //       assigned_to: task?.assignees?.map((assignee) => assignee.id) || [],
+  //     });
+  //   }
+  // }, [task, reset]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

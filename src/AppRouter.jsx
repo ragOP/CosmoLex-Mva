@@ -65,12 +65,12 @@ const AppRouter = () => (
         >
           <Route index element={<DashboardHome />} />
           <Route path="dashboard-form" element={<DashboardForm />} />
+          <Route path="tasks/" element={<TasksPage />} />
           <Route path="matter" element={<MatterPage />} />
           <Route path="user-management" element={<UserManagementPage />} />
           <Route path="bulk-import" element={<BulkImportPage />} />
-          <Route path=
-            "calendar/:id" element={<CalendarPage />} />
-          <Route path="tasks" element={<TasksPage />} />
+          <Route path="calendar/:id" element={<CalendarPage />} />
+          {/* <Route path="tasks" element={<TasksPage />} /> */}
           <Route path="notes" element={<NotesPage />} />
           <Route path="notes/:noteId" element={<NoteDetailPage />} />
           <Route
@@ -88,7 +88,7 @@ const AppRouter = () => (
             <Route path="key-dates/" element={<KeyDates />} />
             <Route path="notes/" element={<Notes />} />
             <Route path="event/" element={<Event />} />
-            <Route path="tasks/" element={<Tasks />} />
+            <Route path="tasks/" element={<TasksPage />} />
             <Route path="documentation/" element={<Documentation />} />
             <Route path="communication/" element={<Communication />} />
             <Route path="communication/:tab" element={<Communication />} />

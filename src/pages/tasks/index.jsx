@@ -1,21 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Button from '@/components/Button';
-import CreateTaskDialog from '@/components/tasks/CreateTaskDialog';
-import UpdateTaskDialog from '@/components/tasks/UpdateTaskDialog';
+import TaskDialog from '@/components/dialogs/TaskDialog';
 import ShowTaskDialog from '@/components/tasks/ShowTaskDialog';
 import DeleteTaskDialog from '@/components/tasks/DeleteTaskDialog';
 import TaskTable from '@/components/tasks/TaskTable';
-import createTask from './helpers/createTask';
 import { Loader2, Plus } from 'lucide-react';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import getTasks from './helpers/getTasks';
-import getTask from './helpers/getTask';
-import updateTaskStatus from './helpers/updateTaskStatus';
-import deleteTask from './helpers/deleteTask';
-import updateTask from './helpers/updateTask';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTasks } from '@/components/tasks/hooks/useTasks';
+import { useMatter } from '@/components/inbox/MatterContext';
 
 const TasksPage = () => {
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -24,67 +19,54 @@ const TasksPage = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
-  const queryClient = useQueryClient();
+  // Get matter slug from URL params (assuming notes are matter-specific)
+  const matterSlug = searchParams.get('slugId');
 
-  const { data: tasks, isLoading } = useQuery({
-    queryKey: ['tasks'],
-    queryFn: getTasks,
-  });
+  let matter = null;
+  if (matterSlug) {
+    matter = useMatter();
+  }
+  const {
+    tasks,
+    tasksLoading,
+    createTask,
+    updateTask,
+    updateStatus,
+    deleteTask,
+  } = useTasks();
 
-  const { data: task, isLoading: taskLoading } = useQuery({
-    queryKey: ['task', selectedTaskId],
-    queryFn: () => getTask(selectedTaskId),
-    enabled: !!selectedTaskId,
-  });
-
-  const updateTaskStatusMutation = useMutation({
-    mutationFn: updateTaskStatus,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    },
-  });
-
-  const deleteTaskMutation = useMutation({
-    mutationFn: deleteTask,
-    onSuccess: () => {
-      setShowDeleteConfirm(false);
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    },
-  });
-
-  const updateTaskMutation = useMutation({
-    mutationFn: updateTask,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    },
-  });
-
-  const createTaskMutation = useMutation({
-    mutationFn: createTask,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    },
-  });
-
+  // Handlers
   const handleDelete = (id) => {
-    deleteTaskMutation.mutate({ id });
+    deleteTask(id).then(() => setShowDeleteConfirm(false));
   };
 
   const handleUpdateTaskStatus = (id, status) => {
-    updateTaskStatusMutation.mutate({ id, status });
+    console.log('id', id);
+    console.log('status', status);
+    updateStatus({ taskId: id, status_id: parseInt(status) });
   };
 
   const handleCreateTask = async (data) => {
+    const newData = {
+      ...data,
+      contact_id: matter?.contact_id,
+      slug: matterSlug,
+    };
     setOpen(false);
-    console.log(data);
-    createTaskMutation.mutate(data);
+    await createTask(newData);
   };
 
-  const handleUpdateTask = async (id, data) => {
-    updateTaskMutation.mutate({ id, data });
+  const handleUpdateTask = async ({ id, data }) => {
+    const newData = {
+      ...data,
+      contact_id: matter?.contact_id,
+      slug: matterSlug,
+    };
+    await updateTask({ taskId: id, taskData: newData });
+    setShowUpdateDialog(false);
   };
 
-  if (isLoading) {
+  if (tasksLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="w-12 h-12 animate-spin" />
@@ -95,9 +77,7 @@ const TasksPage = () => {
   return (
     <div className="flex flex-col gap-4 h-full w-full p-4">
       <div className="flex justify-between w-full items-center">
-        <p className="text-2xl font-bold">
-          Showing {tasks?.tasks?.length || 0} tasks
-        </p>
+        <p className="text-2xl font-bold">Tasks ({tasks?.length || 0})</p>
         <Button
           onClick={() => setOpen(true)}
           className="cursor-pointer max-w-48"
@@ -107,15 +87,31 @@ const TasksPage = () => {
           Create Task
         </Button>
       </div>
+
       <TaskTable
-        tasks={tasks?.tasks || []}
+        tasks={tasks || []}
         handleUpdateTaskStatus={handleUpdateTaskStatus}
         onRowClick={(params) => {
+          // append taskId to url params
+          navigate(
+            `/dashboard/inbox/tasks?slugId=${matterSlug}&taskId=${params.row.id}`,
+            {
+              replace: false,
+            }
+          );
+          setSelectedTaskId(params.row.id);
           setSelectedTask(params.row);
           setShowViewDialog(true);
         }}
         handleEdit={(task) => {
+          navigate(
+            `/dashboard/inbox/tasks?slugId=${matterSlug}&taskId=${task.id}`,
+            {
+              replace: false,
+            }
+          );
           setSelectedTaskId(task.id);
+          setSelectedTask(task);
           setShowUpdateDialog(true);
         }}
         handleDelete={(task) => {
@@ -123,28 +119,38 @@ const TasksPage = () => {
           setShowDeleteConfirm(true);
         }}
       />
+
+      {/* View */}
       <ShowTaskDialog
         open={showViewDialog}
-        onClose={() => setShowViewDialog(false)}
-        task={selectedTask}
+        onClose={() => {
+          // remove taskId from url params
+          navigate(`/dashboard/inbox/tasks?slugId=${matterSlug}`);
+          setShowViewDialog(false);
+        }}
       />
-      <CreateTaskDialog
+
+      <TaskDialog
         open={open}
         onClose={() => setOpen(false)}
         onSubmit={handleCreateTask}
+        mode="create"
       />
-      <UpdateTaskDialog
+
+      <TaskDialog
         open={showUpdateDialog}
         onClose={() => setShowUpdateDialog(false)}
-        task={task || {}}
-        isLoading
         onSubmit={handleUpdateTask}
+        // task={selectedTask}
+        mode="update"
       />
+
+      {/* Delete */}
       <DeleteTaskDialog
         open={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         task={selectedTask}
-        onConfirm={handleDelete}
+        onConfirm={() => handleDelete(selectedTask?.id)}
       />
     </div>
   );

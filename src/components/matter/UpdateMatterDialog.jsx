@@ -64,7 +64,7 @@ export default function UpdateMatterDialog({
     queryFn: () =>
       searchContact({
         data: {
-          globalSearchBar: searchContactQuery,
+          searchBar: searchContactQuery,
           contact_type_id: selectedContactType,
         },
       }),
