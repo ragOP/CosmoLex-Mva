@@ -38,8 +38,10 @@ const Notes = () => <NotesPage />;
 const Event = () => <ErrorPage pageName="Event" />;
 const Tasks = () => <ErrorPage pageName="Tasks" />;
 const Documentation = () => <DocumentationPage />;
-const Communication = () => <ErrorPage pageName="Communication" />;
-const Finance = () => <ErrorPage pageName="Finance" />;
+const CommunicationPage = lazy(() => import('./components/inbox/communication/Communication'));
+const Communication = () => <CommunicationPage />;
+const FinancePage = lazy(() => import('./components/finance/Finance'));
+const Finance = () => <FinancePage />;
 const ActivityLogs = () => <ErrorPage pageName="Activity Logs" />;
 
 const AppRouter = () => (
@@ -89,7 +91,10 @@ const AppRouter = () => (
             <Route path="tasks/" element={<TasksPage />} />
             <Route path="documentation/" element={<Documentation />} />
             <Route path="communication/" element={<Communication />} />
+            <Route path="communication/:tab" element={<Communication />} />
             <Route path="finance/" element={<Finance />} />
+            <Route path="finance/:id" element={<Finance />} />
+            <Route path="finance/:tab" element={<Finance />} />
             <Route path="activity-logs/" element={<ActivityLogs />} />
           </Route>
           {/* <Route path="matter-intake" element={<MatterIntakePage />} />
