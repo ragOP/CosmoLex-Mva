@@ -15,15 +15,26 @@ export const endpoints = {
   login: 'login',
   verifyOtp: 'verify-otp',
   resendOtp: 'resend-otp',
+
+  // Event endpoint
   getEvent: 'v2/event/show',
   getEvents: 'v2/event/list',
   createEvent: 'v2/event/store',
+  deleteReminder: 'v2/event/deleteReminder',
+
+  // Task endpoint
+  getTaskMeta: 'v2/task/meta',
   createTask: 'v2/task/store',
   getTasks: 'v2/task/list',
   getTask: 'v2/task/show',
   updateTask: 'v2/task/update',
   updateTaskStatus: 'v2/task/update-status',
   deleteTask: 'v2/task/delete',
+  searchTask: 'v2/task/search',
+  uploadTaskFile: 'v2/task/uploadAttachment',
+  deleteTaskFile: 'v2/task/deleteAttachment',
+  filterTask: 'v2/task/filter',
+
   getMatterMeta: 'v2/matter/meta',
   getMatters: 'v2/matter/list',
   matterIntake: 'v2/matter/intake',

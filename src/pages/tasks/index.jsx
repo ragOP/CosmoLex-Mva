@@ -1,19 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Button from '@/components/Button';
 import CreateTaskDialog from '@/components/tasks/CreateTaskDialog';
 import UpdateTaskDialog from '@/components/tasks/UpdateTaskDialog';
 import ShowTaskDialog from '@/components/tasks/ShowTaskDialog';
 import DeleteTaskDialog from '@/components/tasks/DeleteTaskDialog';
 import TaskTable from '@/components/tasks/TaskTable';
-import createTask from './helpers/createTask';
 import { Loader2, Plus } from 'lucide-react';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import getTasks from './helpers/getTasks';
-import getTask from './helpers/getTask';
-import updateTaskStatus from './helpers/updateTaskStatus';
-import deleteTask from './helpers/deleteTask';
-import updateTask from './helpers/updateTask';
 import { useNavigate } from 'react-router-dom';
+import { useTasks } from '@/components/tasks/hooks/useTasks';
 
 const TasksPage = () => {
   const navigate = useNavigate();
@@ -24,67 +18,36 @@ const TasksPage = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
-  const queryClient = useQueryClient();
+  // ✅ use custom hook
+  const {
+    tasks,
+    tasksLoading,
+    createTask,
+    updateTask,
+    updateStatus,
+    deleteTask,
+  } = useTasks();
 
-  const { data: tasks, isLoading } = useQuery({
-    queryKey: ['tasks'],
-    queryFn: getTasks,
-  });
-
-  const { data: task, isLoading: taskLoading } = useQuery({
-    queryKey: ['task', selectedTaskId],
-    queryFn: () => getTask(selectedTaskId),
-    enabled: !!selectedTaskId,
-  });
-
-  const updateTaskStatusMutation = useMutation({
-    mutationFn: updateTaskStatus,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    },
-  });
-
-  const deleteTaskMutation = useMutation({
-    mutationFn: deleteTask,
-    onSuccess: () => {
-      setShowDeleteConfirm(false);
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    },
-  });
-
-  const updateTaskMutation = useMutation({
-    mutationFn: updateTask,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    },
-  });
-
-  const createTaskMutation = useMutation({
-    mutationFn: createTask,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    },
-  });
-
+  // Handlers
   const handleDelete = (id) => {
-    deleteTaskMutation.mutate({ id });
+    deleteTask(id).then(() => setShowDeleteConfirm(false));
   };
 
   const handleUpdateTaskStatus = (id, status) => {
-    updateTaskStatusMutation.mutate({ id, status });
+    updateStatus({ taskId: id, status });
   };
 
   const handleCreateTask = async (data) => {
     setOpen(false);
-    console.log(data);
-    createTaskMutation.mutate(data);
+    await createTask(data);
   };
 
   const handleUpdateTask = async (id, data) => {
-    updateTaskMutation.mutate({ id, data });
+    await updateTask({ taskId: id, taskData: data });
+    setShowUpdateDialog(false);
   };
 
-  if (isLoading) {
+  if (tasksLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="w-12 h-12 animate-spin" />
@@ -95,9 +58,7 @@ const TasksPage = () => {
   return (
     <div className="flex flex-col gap-4 h-full w-full p-4">
       <div className="flex justify-between w-full items-center">
-        <p className="text-2xl font-bold">
-          Showing {tasks?.tasks?.length || 0} tasks
-        </p>
+        <p className="text-2xl font-bold">Showing {tasks?.length || 0} tasks</p>
         <Button
           onClick={() => setOpen(true)}
           className="cursor-pointer max-w-48"
@@ -107,8 +68,9 @@ const TasksPage = () => {
           Create Task
         </Button>
       </div>
+
       <TaskTable
-        tasks={tasks?.tasks || []}
+        tasks={tasks || []}
         handleUpdateTaskStatus={handleUpdateTaskStatus}
         onRowClick={(params) => {
           setSelectedTask(params.row);
@@ -123,28 +85,36 @@ const TasksPage = () => {
           setShowDeleteConfirm(true);
         }}
       />
+
+      {/* View */}
       <ShowTaskDialog
         open={showViewDialog}
         onClose={() => setShowViewDialog(false)}
         task={selectedTask}
       />
+
+      {/* Create */}
       <CreateTaskDialog
         open={open}
         onClose={() => setOpen(false)}
         onSubmit={handleCreateTask}
       />
+
+      {/* Update */}
       <UpdateTaskDialog
         open={showUpdateDialog}
         onClose={() => setShowUpdateDialog(false)}
-        task={task || {}}
-        isLoading
+        task={tasks?.find((t) => t.id === selectedTaskId) || {}}
+        isLoading={false}
         onSubmit={handleUpdateTask}
       />
+
+      {/* Delete */}
       <DeleteTaskDialog
         open={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
         task={selectedTask}
-        onConfirm={handleDelete}
+        onConfirm={() => handleDelete(selectedTask?.id)}
       />
     </div>
   );
