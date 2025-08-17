@@ -75,11 +75,11 @@ export const updateTask = async (taskId, taskData) => {
 };
 
 // Update task status
-export const updateTaskStatus = async (taskId, status) => {
+export const updateTaskStatus = async (taskId, status_id) => {
   const response = await apiService({
     endpoint: `${endpoints.updateTaskStatus}/${taskId}`,
-    method: 'PATCH',
-    data: { status },
+    method: 'POST',
+    data: { status_id },
   });
   if (response.error) throw new Error('Failed to update task status');
   return response.response?.data;

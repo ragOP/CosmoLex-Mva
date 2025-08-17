@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Button from '@/components/Button';
-import CreateTaskDialog from '@/components/tasks/CreateTaskDialog';
-import UpdateTaskDialog from '@/components/tasks/UpdateTaskDialog';
+import TaskDialog from '@/components/dialogs/TaskDialog';
 import ShowTaskDialog from '@/components/tasks/ShowTaskDialog';
 import DeleteTaskDialog from '@/components/tasks/DeleteTaskDialog';
 import TaskTable from '@/components/tasks/TaskTable';
@@ -23,13 +22,8 @@ const TasksPage = () => {
   // Get matter slug from URL params (assuming notes are matter-specific)
   const matterSlug = searchParams.get('slugId');
 
-  console.log('matterSlug >>>>', matterSlug);
-
   const { matter } = useMatter();
 
-  // console.log('matter >>>>', matter);
-
-  // ✅ use custom hook
   const {
     tasks,
     tasksLoading,
@@ -45,7 +39,8 @@ const TasksPage = () => {
   };
 
   const handleUpdateTaskStatus = (id, status) => {
-    updateStatus({ taskId: id, status });
+    console.log('status', status);
+    updateStatus({ taskId: id, status_id: parseInt(status) });
   };
 
   const handleCreateTask = async (data) => {
@@ -58,13 +53,13 @@ const TasksPage = () => {
     await createTask(newData);
   };
 
-  const handleUpdateTask = async (id, data) => {
+  const handleUpdateTask = async ({ id, data }) => {
     const newData = {
       ...data,
       contact_id: matter?.contact_id,
       slug: matterSlug,
     };
-    console.log('newData >>>>', newData);
+    console.log('newData', newData);
     await updateTask({ taskId: id, taskData: newData });
     setShowUpdateDialog(false);
   };
@@ -107,7 +102,14 @@ const TasksPage = () => {
           setShowViewDialog(true);
         }}
         handleEdit={(task) => {
+          navigate(
+            `/dashboard/inbox/tasks?slugId=${matterSlug}&taskId=${task.id}`,
+            {
+              replace: false,
+            }
+          );
           setSelectedTaskId(task.id);
+          setSelectedTask(task);
           setShowUpdateDialog(true);
         }}
         handleDelete={(task) => {
@@ -126,21 +128,19 @@ const TasksPage = () => {
         }}
       />
 
-      {/* Create */}
-      <CreateTaskDialog
+      <TaskDialog
         open={open}
-        task={selectedTask}
         onClose={() => setOpen(false)}
-        handleCreateTask={handleCreateTask}
+        onSubmit={handleCreateTask}
+        mode="create"
       />
 
-      {/* Update */}
-      <UpdateTaskDialog
+      <TaskDialog
         open={showUpdateDialog}
         onClose={() => setShowUpdateDialog(false)}
-        // task={tasks?.find((t) => t.id === selectedTaskId) || {}}
-        isLoading={false}
         onSubmit={handleUpdateTask}
+        // task={selectedTask}
+        mode="update"
       />
 
       {/* Delete */}

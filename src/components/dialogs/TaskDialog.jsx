@@ -13,8 +13,6 @@ import {
 } from '@/components/ui/select';
 import { taskSchema } from '@/pages/tasks/schema/createTaskSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useQuery } from '@tanstack/react-query';
-import getEventsUserList from '@/pages/calendar/helpers/getEventsUserList';
 import {
   Dialog,
   Stack,
@@ -22,7 +20,6 @@ import {
   IconButton,
   Tooltip,
   Switch,
-  Card,
 } from '@mui/material';
 import { Plus, Trash2, X } from 'lucide-react';
 import ReminderDialog from '@/components/dialogs/ReminderDialog';
@@ -68,17 +65,22 @@ const formFields = [
   },
 ];
 
-export default function CreateTaskDialog({
+export default function TaskDialog({
   open = false,
   onClose = () => {},
-  handleCreateTask = () => {},
-  task = {},
+  onSubmit = () => {},
+  // task = null, // null for create, task object for update
+  mode = 'create', // 'create' or 'update'
 }) {
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [assignedToDialogOpen, setAssignedToDialogOpen] = useState(false);
 
-  const { tasksMeta, createTask, updateTask, isCreating, isUpdating } =
+  const { tasksMeta, task, createTask, updateTask, isCreating, isUpdating } =
     useTasks();
+
+  // Determine if we're in update mode
+  const isUpdateMode = mode === 'update' || (task && task.id);
+  const isLoading = isCreating || isUpdating;
 
   const {
     control,
@@ -111,6 +113,7 @@ export default function CreateTaskDialog({
     fields: reminderFields,
     append: appendReminder,
     remove: removeReminder,
+    replace: replaceReminders,
   } = useFieldArray({
     control,
     name: 'reminders',
@@ -120,6 +123,7 @@ export default function CreateTaskDialog({
     fields: assignedToFields,
     append: appendAssignedTo,
     remove: removeAssignedTo,
+    replace: replaceAssignedTo,
   } = useFieldArray({
     control,
     name: 'assigned_to',
@@ -140,7 +144,7 @@ export default function CreateTaskDialog({
     setAssignedToDialogOpen(false);
   };
 
-  const onSubmit = async (data) => {
+  const onFormSubmit = async (data) => {
     try {
       // Format the data for API
       const formattedData = {
@@ -154,39 +158,91 @@ export default function CreateTaskDialog({
           user_id: parseInt(assignee.user_id),
         })),
         // Convert select values to IDs if needed
-        task_type: parseInt(data.task_type) || data.task_type,
         utbms_code_id: parseInt(data.utbms_code_id) || data.utbms_code_id,
         priority_id: parseInt(data.priority_id) || data.priority_id,
         status_id: parseInt(data.status_id) || data.status_id,
       };
 
-      handleCreateTask(formattedData);
+      if (isUpdateMode) {
+        // Update existing task
+        await onSubmit({ id: task.id, data: formattedData });
+      } else {
+        // Create new task
+        await onSubmit(formattedData);
+      }
+
+      // Call the parent's onSubmit if provided
+      onSubmit(formattedData);
 
       onClose();
     } catch (error) {
-      console.error('Error submitting task:', error);
+      console.error(
+        `Error ${isUpdateMode ? 'updating' : 'creating'} task:`,
+        error
+      );
     }
   };
 
+  // Reset form when task changes or dialog opens
   useEffect(() => {
-    if ((task && task?.id) || task === null) {
-      reset({
-        ...task,
-        reminders: task?.reminders || [],
-        assigned_to: task?.assigned_to || [],
-      });
+    if (open) {
+      if (isUpdateMode && task) {
+        console.log('task', task);
+        // Populate form with existing task data
+        const formData = {
+          ...task,
+          type_id: task.type_id?.toString() || '',
+          priority_id: task.priority_id?.toString() || '',
+          status_id: task.status_id?.toString() || '',
+          utbms_code_id: task.utbms_code_id?.toString() || '',
+          due_date: task.due_date ? task.due_date.split('T')[0] : '', // Format date for input
+          reminders: task.reminders || [],
+          assigned_to:
+            task.assignees?.map((assignee) => ({
+              user_id: assignee.id || assignee.user_id,
+            })) ||
+            task.assigned_to ||
+            [],
+        };
+        console.log('formData', formData);
+
+        reset(formData);
+
+        // Set field arrays
+        replaceReminders(task.reminders || []);
+        replaceAssignedTo(formData.assigned_to);
+      } else {
+        // Reset to default values for create mode
+        reset({
+          type_id: '',
+          subject: '',
+          description: '',
+          due_date: '',
+          priority_id: '',
+          utbms_code_id: '',
+          billable: false,
+          notify_text: false,
+          add_calendar_event: false,
+          trigger_appointment_reminders: false,
+          status_id: '',
+          assigned_to: [],
+          reminders: [],
+        });
+
+        replaceReminders([]);
+        replaceAssignedTo([]);
+      }
     }
-  }, [task?.id, task?.reminders, task?.assigned_to, reset]);
-  // console.log('errors', errors);
+  }, [open, task, isUpdateMode, reset, replaceReminders, replaceAssignedTo]);
 
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onFormSubmit)}>
           <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000]">
             <div className="flex items-center justify-between p-4">
               <h1 className="text-xl text-[#40444D] text-center font-bold font-sans">
-                {task?.id ? 'Update Task' : 'Create New Task'}
+                {isUpdateMode ? 'Update Task' : 'Create New Task'}
               </h1>
               <IconButton onClick={onClose}>
                 <X className="text-black" />
@@ -277,17 +333,15 @@ export default function CreateTaskDialog({
                   <h3 className="text-lg font-semibold mb-1">Reminders</h3>
                   {reminderFields.map((reminder, idx) => (
                     <div
-                      key={idx}
+                      key={reminder.id || idx}
                       className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
                     >
                       <div className="text-sm flex flex-col gap-1">
                         <span>
                           Type:{' '}
-                          {
-                            getMetaOptions('taks_type').find(
-                              (type) => type.id === parseInt(reminder.type_id)
-                            )?.name
-                          }
+                          {getMetaOptions('taks_reminders_type').find(
+                            (type) => type.id === parseInt(reminder.type_id)
+                          )?.name || 'Unknown Type'}
                         </span>
                         <span>
                           Reminder: {formatDate(reminder.scheduled_at)}
@@ -320,7 +374,7 @@ export default function CreateTaskDialog({
                   <h3 className="text-lg font-semibold mb-1">Assigned To</h3>
                   {assignedToFields.map((assignedTo, idx) => (
                     <div
-                      key={idx}
+                      key={assignedTo.id || idx}
                       className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
                     >
                       <div className="text-sm">
@@ -355,6 +409,7 @@ export default function CreateTaskDialog({
                 </div>
               </div>
             </div>
+
             <Divider />
 
             <div className="flex items-center justify-end p-4 gap-2">
@@ -367,14 +422,14 @@ export default function CreateTaskDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={isCreating || isUpdating}
+                disabled={isLoading}
                 className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
               >
-                {isCreating || isUpdating
-                  ? task?.id
+                {isLoading
+                  ? isUpdateMode
                     ? 'Updating...'
                     : 'Creating...'
-                  : task?.id
+                  : isUpdateMode
                   ? 'Update Task'
                   : 'Create Task'}
               </Button>

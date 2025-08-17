@@ -33,7 +33,7 @@ export const useTasks = () => {
 
   // All tasks
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
-    queryKey: ['tasks', taskId],
+    queryKey: ['tasks'],
     queryFn: () => getTasks(),
     staleTime: 5 * 60 * 1000,
   });
@@ -69,7 +69,7 @@ export const useTasks = () => {
 
   // Update status
   const updateStatusMutation = useMutation({
-    mutationFn: ({ taskId, status }) => updateTaskStatus(taskId, status),
+    mutationFn: ({ taskId, status_id }) => updateTaskStatus(taskId, status_id),
     onSuccess: () => queryClient.invalidateQueries(['tasks']),
   });
 
@@ -132,6 +132,7 @@ export const useTasks = () => {
     // Loading
     tasksMetaLoading,
     tasksLoading,
+    taskLoading,
 
     // Actions
     navigateToTask,

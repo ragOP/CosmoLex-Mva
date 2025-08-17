@@ -51,12 +51,9 @@ const AssignDialog = ({
   });
 
   const handleAddAssignedToSubmit = (data) => {
-    console.log('data', data);
     onSubmit(data);
     setAssignedToDialogOpen(false);
   };
-
-  console.log('errors', errors);
 
   return (
     <Dialog
