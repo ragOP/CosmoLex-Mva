@@ -6,10 +6,12 @@ import ShowTaskDialog from '@/components/tasks/ShowTaskDialog';
 import DeleteTaskDialog from '@/components/tasks/DeleteTaskDialog';
 import TaskTable from '@/components/tasks/TaskTable';
 import { Loader2, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTasks } from '@/components/tasks/hooks/useTasks';
+import { useMatter } from '@/components/inbox/MatterContext';
 
 const TasksPage = () => {
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -17,6 +19,15 @@ const TasksPage = () => {
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+
+  // Get matter slug from URL params (assuming notes are matter-specific)
+  const matterSlug = searchParams.get('slugId');
+
+  console.log('matterSlug >>>>', matterSlug);
+
+  const { matter } = useMatter();
+
+  // console.log('matter >>>>', matter);
 
   // ✅ use custom hook
   const {
@@ -38,12 +49,25 @@ const TasksPage = () => {
   };
 
   const handleCreateTask = async (data) => {
+    console.log('data >>>>', data);
+    const newData = {
+      ...data,
+      contact_id: matter?.contact_id,
+      slug: matterSlug,
+    };
+    console.log('newData >>>>', newData);
     setOpen(false);
-    await createTask(data);
+    await createTask(newData);
   };
 
   const handleUpdateTask = async (id, data) => {
-    await updateTask({ taskId: id, taskData: data });
+    const newData = {
+      ...data,
+      contact_id: matter?.contact_id,
+      slug: matterSlug,
+    };
+    console.log('newData >>>>', newData);
+    await updateTask({ taskId: id, taskData: newData });
     setShowUpdateDialog(false);
   };
 
@@ -96,8 +120,9 @@ const TasksPage = () => {
       {/* Create */}
       <CreateTaskDialog
         open={open}
+        task={selectedTask}
         onClose={() => setOpen(false)}
-        onSubmit={handleCreateTask}
+        handleCreateTask={handleCreateTask}
       />
 
       {/* Update */}

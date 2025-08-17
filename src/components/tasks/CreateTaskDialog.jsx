@@ -71,6 +71,7 @@ const formFields = [
 export default function CreateTaskDialog({
   open = false,
   onClose = () => {},
+  handleCreateTask = () => {},
   task = {},
 }) {
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
@@ -144,6 +145,7 @@ export default function CreateTaskDialog({
       // Format the data for API
       const formattedData = {
         ...data,
+        type_id: parseInt(data.type_id) || data.type_id,
         reminders: reminderFields.map((reminder) => ({
           type_id: parseInt(reminder.type_id),
           scheduled_at: reminder.scheduled_at,
@@ -157,7 +159,7 @@ export default function CreateTaskDialog({
         priority_id: parseInt(data.priority_id) || data.priority_id,
         status_id: parseInt(data.status_id) || data.status_id,
       };
-      console.log(formattedData);
+      // console.log(formattedData);
 
       // formData.append('reminders', JSON.stringify(data.reminders));
       // formData.append('assigned_to', JSON.stringify(data.));
@@ -194,11 +196,13 @@ export default function CreateTaskDialog({
       //   formData.append(`assigned_to[${index}]`, assignee.user_id);
       // });
 
-      if (task.id) {
-        await updateTask({ taskId: task.id, taskData: formattedData });
-      } else {
-        await createTask(formattedData);
-      }
+      // if (task.id) {
+      //   await updateTask({ taskId: task.id, taskData: formattedData });
+      // } else {
+      //   await createTask(formattedData);
+      // }
+
+      handleCreateTask(formattedData);
 
       onClose();
     } catch (error) {
@@ -207,15 +211,15 @@ export default function CreateTaskDialog({
   };
 
   useEffect(() => {
-    if (task && task.id) {
+    if ((task && task?.id) || task === null) {
       reset({
         ...task,
-        reminders: task.reminders || [],
-        assigned_to: task.assigned_to || [],
+        reminders: task?.reminders || [],
+        assigned_to: task?.assigned_to || [],
       });
     }
   }, [task?.id, task?.reminders, task?.assigned_to, reset]);
-  console.log('errors', errors);
+  // console.log('errors', errors);
 
   return (
     <>
@@ -224,7 +228,7 @@ export default function CreateTaskDialog({
           <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000]">
             <div className="flex items-center justify-between p-4">
               <h1 className="text-xl text-[#40444D] text-center font-bold font-sans">
-                {task.id ? 'Update Task' : 'Create New Task'}
+                {task?.id ? 'Update Task' : 'Create New Task'}
               </h1>
               <IconButton onClick={onClose}>
                 <X className="text-black" />
@@ -409,10 +413,10 @@ export default function CreateTaskDialog({
                 className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
               >
                 {isCreating || isUpdating
-                  ? task.id
+                  ? task?.id
                     ? 'Updating...'
                     : 'Creating...'
-                  : task.id
+                  : task?.id
                   ? 'Update Task'
                   : 'Create Task'}
               </Button>

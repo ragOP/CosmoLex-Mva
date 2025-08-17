@@ -65,7 +65,7 @@ export default function CreateIntake() {
       queryFn: () =>
         searchContact({
           data: {
-            globalSearchBar: searchContactQuery,
+            searchBar: searchContactQuery,
             contact_type_id: selectedContactType,
           },
         }),

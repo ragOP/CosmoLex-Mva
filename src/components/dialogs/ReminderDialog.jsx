@@ -71,7 +71,7 @@ const ReminderDialog = ({
               label: 'Type',
               name: 'type_id',
               type: 'select',
-              metaField: 'taks_type',
+              metaField: 'taks_reminders_type',
             },
             {
               label: 'Scheduled At',

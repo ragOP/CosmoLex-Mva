@@ -18,7 +18,7 @@ export const getTasks = async () => {
     method: 'GET',
   });
   if (response.error) throw new Error('Failed to fetch tasks');
-  return response.response?.data || [];
+  return response.response?.tasks || [];
 };
 
 // Get task by id
