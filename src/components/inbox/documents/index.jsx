@@ -1,18 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  Box, 
-  Skeleton
-} from '@mui/material';
-import { 
-  FileBrowser, 
-  FileNavbar, 
-  FileToolbar, 
-  FileList, 
+import { Box, Skeleton } from '@mui/material';
+import {
+  FileBrowser,
+  FileNavbar,
+  FileToolbar,
+  FileList,
   FileContextMenu,
   ChonkyActions,
   defineFileAction,
   ChonkyIconName,
-  setChonkyDefaults
+  setChonkyDefaults,
 } from 'chonky';
 import { ChonkyIconFA } from 'chonky-icon-fontawesome';
 
@@ -20,7 +17,7 @@ import { ChonkyIconFA } from 'chonky-icon-fontawesome';
 setChonkyDefaults({
   disableDragAndDrop: true,
 });
-import BreadCrumb from "@/components/BreadCrumb";
+import BreadCrumb from '@/components/BreadCrumb';
 import { useDocuments } from './hooks/useDocuments';
 import CreateFolderDialog from './components/CreateFolderDialog';
 import UploadFileDialog from './components/UploadFileDialog';
@@ -95,7 +92,7 @@ const DocumentationPage = () => {
   const [uploadFileOpen, setUploadFileOpen] = useState(false);
   const [renameFolderOpen, setRenameFolderOpen] = useState(false);
   const [folderToRename, setFolderToRename] = useState(null);
-  
+
   const {
     folders,
     folderContents,
@@ -110,18 +107,18 @@ const DocumentationPage = () => {
     handleRenameFolder,
     isCreatingFolder,
     isUploadingFile,
-    isRenamingFolder
+    isRenamingFolder,
   } = useDocuments();
 
   // Dynamic file actions based on navigation state
   const dynamicActions = useMemo(() => {
-    const baseActions = customActions.filter(action => 
-      action.id !== 'go_back' && action.id !== 'go_up'
+    const baseActions = customActions.filter(
+      (action) => action.id !== 'go_back' && action.id !== 'go_up'
     );
-    
+
     // Add navigation actions based on current state
     const navigationActions = [];
-    
+
     if (currentPath.length > 0) {
       // Show "Up" button when not at root
       navigationActions.push(
@@ -136,7 +133,7 @@ const DocumentationPage = () => {
           },
         })
       );
-      
+
       // Show "Back" button when there's navigation history
       navigationActions.push(
         defineFileAction({
@@ -151,7 +148,7 @@ const DocumentationPage = () => {
         })
       );
     }
-    
+
     return [...navigationActions, ...baseActions];
   }, [currentPath]);
 
@@ -159,7 +156,7 @@ const DocumentationPage = () => {
   const chonkyFiles = useMemo(() => {
     if (!selectedFolder) {
       // Show root folders when no folder is selected
-      return folders.map(folder => ({
+      return folders.map((folder) => ({
         id: folder.id || folder.slug,
         name: folder.name,
         isDir: true,
@@ -167,23 +164,26 @@ const DocumentationPage = () => {
         size: 0,
         thumbnailUrl: null,
         folderChain: [],
-        ...folder
+        ...folder,
       }));
     }
-    
+
     // Show folder contents
-    return folderContents.map(item => ({
+    return folderContents.map((item) => ({
       id: item.id,
       name: item.name,
       isDir: item.type === 'folder',
       modDate: item.modified ? new Date(item.modified) : new Date(),
       size: item.type === 'folder' ? 0 : item.size,
-      thumbnailUrl: item.type !== 'folder' && item.slug.startsWith('http') ? item.slug : null,
-      folderChain: currentPath.map(p => ({ id: p.id, name: p.name })),
+      thumbnailUrl:
+        item.type !== 'folder' && item.slug.startsWith('http')
+          ? item.slug
+          : null,
+      folderChain: currentPath.map((p) => ({ id: p.id, name: p.name })),
       description: item.description || '',
       fileType: item.type,
       downloadUrl: item.type !== 'folder' ? item.slug : null,
-      ...item
+      ...item,
     }));
   }, [folders, folderContents, selectedFolder, currentPath]);
 
@@ -192,13 +192,13 @@ const DocumentationPage = () => {
     if (data.id === ChonkyActions.OpenFiles.id) {
       const { targetFile, files } = data.payload;
       const fileToOpen = targetFile ?? files[0];
-      
+
       if (fileToOpen && fileToOpen.isDir) {
         // Navigate to folder
         const folder = {
           id: fileToOpen.id,
           name: fileToOpen.name,
-          slug: fileToOpen.slug
+          slug: fileToOpen.slug,
         };
         navigateToFolder(folder);
       } else if (fileToOpen) {
@@ -276,11 +276,11 @@ const DocumentationPage = () => {
   return (
     <div className="px-4">
       <BreadCrumb label="Documents" />
-      
+
       <Box sx={{ mt: 2, height: 'calc(100vh - 200px)' }}>
         <FileBrowser
           files={chonkyFiles}
-          folderChain={currentPath.map(p => ({ id: p.id, name: p.name }))}
+          folderChain={currentPath.map((p) => ({ id: p.id, name: p.name }))}
           onFileAction={handleFileAction}
           iconComponent={ChonkyIconFA}
           fileActions={[

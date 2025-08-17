@@ -38,6 +38,7 @@ export const endpoints = {
   addForm: 'v2/matter/form/store',
   updateForm: 'v2/matter/form/update',
   // Documents endpoints
+  getDocumentsMeta: 'v2/documents/meta',
   getFolders: 'v2/documents/folders',
   getFoldersBySlug: 'v2/documents/list', // New endpoint for slug-based folder listing
   getFolderContents: 'v2/documents/folders',
