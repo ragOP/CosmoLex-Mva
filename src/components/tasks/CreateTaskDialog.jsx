@@ -159,48 +159,6 @@ export default function CreateTaskDialog({
         priority_id: parseInt(data.priority_id) || data.priority_id,
         status_id: parseInt(data.status_id) || data.status_id,
       };
-      // console.log(formattedData);
-
-      // formData.append('reminders', JSON.stringify(data.reminders));
-      // formData.append('assigned_to', JSON.stringify(data.));
-
-      // const formData = new FormData();
-      // formData.append('type_id', data.type_id);
-      // formData.append('subject', data.subject);
-      // formData.append('priority_id', data.priority_id);
-      // formData.append('status_id', data.status_id);
-      // formData.append('due_date', data.due_date);
-      // formData.append('billable', data.billable ? true : false);
-      // formData.append('notify_text', data.notify_text ? true : false);
-      // formData.append(
-      //   'add_calendar_event',
-      //   data.add_calendar_event ? true : false
-      // );
-      // formData.append(
-      //   'trigger_appointment_reminders',
-      //   data.trigger_appointment_reminders ? true : false
-      // );
-      // formData.append('utbms_code_id', data.utbms_code_id);
-      // formData.append('description', data.description);
-
-      // reminderFields.forEach((reminder, index) => {
-      //   formData.append(`reminders.${index}.type_id`, reminder.type_id);
-      //   formData.append(
-      //     `reminders.${index}.scheduled_at`,
-      //     reminder.scheduled_at
-      //   );
-      // });
-
-      // // format for assign - [1, 2, 3]
-      // assignedToFields.forEach((assignee, index) => {
-      //   formData.append(`assigned_to[${index}]`, assignee.user_id);
-      // });
-
-      // if (task.id) {
-      //   await updateTask({ taskId: task.id, taskData: formattedData });
-      // } else {
-      //   await createTask(formattedData);
-      // }
 
       handleCreateTask(formattedData);
 

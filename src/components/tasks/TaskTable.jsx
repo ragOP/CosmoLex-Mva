@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { Box } from '@mui/material';
+import { Avatar, Box, Tooltip } from '@mui/material';
 import formatDate from '@/utils/formatDate';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -11,7 +11,7 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, CircleOff, Trash2 } from 'lucide-react';
 
 const TaskTable = ({
   tasks = [],
@@ -32,17 +32,17 @@ const TaskTable = ({
       align: 'center',
     },
     {
-      field: 'client_name',
-      headerName: 'Client',
-      width: 130,
+      field: 'subject',
+      headerName: 'Subject',
+      flex: 1,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
       align: 'center',
     },
     {
-      field: 'subject',
-      headerName: 'Subject',
+      field: 'description',
+      headerName: 'Description',
       flex: 1,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
@@ -87,9 +87,23 @@ const TaskTable = ({
       ),
     },
     {
+      field: 'contact_name',
+      headerName: 'Contact Name',
+      width: 100,
+      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
+      renderCell: (params) => (
+        <div className="w-full h-full flex items-center justify-center">
+          {params.value}
+        </div>
+      ),
+    },
+    {
       field: 'assignees',
       headerName: 'Assignees',
-      width: 200,
+      width: 100,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -97,8 +111,37 @@ const TaskTable = ({
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-start">
           <ScrollArea className="w-full">
-            <div className="text-sm text-muted-foreground">
-              {params.row.assignees.map((a) => a.first_name).join(', ')}
+            <div className="text-sm text-muted-foreground flex justify-center">
+              {params.row.assignees.map((a, index) => (
+                <Tooltip title={a?.name} key={index}>
+                  <Avatar src={a?.profile} alt={a?.name} />
+                </Tooltip>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+      ),
+    },
+    {
+      field: 'assigned_by',
+      headerName: 'Assigned By',
+      width: 100,
+      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
+      renderCell: (params) => (
+        <div className="w-full h-full flex items-center justify-start">
+          <ScrollArea className="w-full">
+            <div className="text-sm text-muted-foreground flex justify-center">
+              {params.row.assigned_by && (
+                <Tooltip title={params.row.assigned_by?.name}>
+                  <Avatar
+                    src={params.row.assigned_by?.profile}
+                    alt={params.row.assigned_by?.name}
+                  />
+                </Tooltip>
+              )}
             </div>
           </ScrollArea>
         </div>
@@ -141,13 +184,17 @@ const TaskTable = ({
       align: 'center',
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-center">
-          <Pencil
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit(params.row);
-            }}
-            className="h-4 w-4 cursor-pointer hover:text-blue-500 transition-colors duration-300"
-          />
+          {params?.row?.is_editable ? (
+            <Pencil
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(params.row);
+              }}
+              className="h-4 w-4 cursor-pointer hover:text-blue-500 transition-colors duration-300"
+            />
+          ) : (
+            <CircleOff className="h-4 w-4 cursor-pointer hover:text-blue-500 transition-colors duration-300" />
+          )}
         </div>
       ),
     },
@@ -161,13 +208,17 @@ const TaskTable = ({
       align: 'center',
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-center">
-          <Trash2
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(params.row);
-            }}
-            className="h-4 w-4 cursor-pointer hover:text-red-500 transition-colors duration-300"
-          />
+          {params?.row?.is_deletable ? (
+            <Trash2
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(params.row);
+              }}
+              className="h-4 w-4 cursor-pointer hover:text-red-500 transition-colors duration-300"
+            />
+          ) : (
+            <CircleOff className="h-4 w-4 cursor-pointer hover:text-blue-500 transition-colors duration-300" />
+          )}
         </div>
       ),
     },

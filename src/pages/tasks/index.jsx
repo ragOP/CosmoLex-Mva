@@ -49,13 +49,11 @@ const TasksPage = () => {
   };
 
   const handleCreateTask = async (data) => {
-    console.log('data >>>>', data);
     const newData = {
       ...data,
       contact_id: matter?.contact_id,
       slug: matterSlug,
     };
-    console.log('newData >>>>', newData);
     setOpen(false);
     await createTask(newData);
   };

@@ -3,13 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
 import BreadCrumb from '@/components/BreadCrumb';
 import CreateEditNoteDialog from '@/components/notes/CreateEditNoteDialog';
 import { Skeleton, Stack } from '@mui/material';
