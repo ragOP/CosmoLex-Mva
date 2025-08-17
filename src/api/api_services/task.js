@@ -35,7 +35,7 @@ export const getTaskById = async (id) => {
 export const searchTask = async (searchData) => {
   const response = await apiService({
     endpoint: endpoints.searchTask,
-    method: 'GET',
+    method: 'POST',
     data: searchData,
   });
   if (response.error) throw new Error('Failed to search task');

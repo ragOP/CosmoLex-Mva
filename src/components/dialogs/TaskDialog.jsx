@@ -20,12 +20,18 @@ import {
   IconButton,
   Tooltip,
   Switch,
+  Chip,
+  TextareaAutosize,
 } from '@mui/material';
-import { Plus, Trash2, X } from 'lucide-react';
+import { Edit, Plus, Trash2, X } from 'lucide-react';
 import ReminderDialog from '@/components/dialogs/ReminderDialog';
 import AssignDialog from '@/components/dialogs/AssignDialog';
+import SearchDialog from '@/components/dialogs/SearchDialog';
 import { useTasks } from '@/components/tasks/hooks/useTasks';
 import formatDate from '@/utils/formatDate';
+import { searchTask } from '@/api/api_services/task';
+import { useQuery } from '@tanstack/react-query';
+import { Textarea } from '@/components/ui/textarea';
 
 const formFields = [
   {
@@ -36,7 +42,7 @@ const formFields = [
   },
   { label: 'Due Date', name: 'due_date', type: 'date' },
   { label: 'Subject', name: 'subject', type: 'text', required: true },
-  { label: 'Description', name: 'description', type: 'text' },
+  { label: 'Description', name: 'description', type: 'textarea' },
   {
     label: 'UTBMS Code',
     name: 'utbms_code_id',
@@ -74,9 +80,51 @@ export default function TaskDialog({
 }) {
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [assignedToDialogOpen, setAssignedToDialogOpen] = useState(false);
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
 
-  const { tasksMeta, task, createTask, updateTask, isCreating, isUpdating } =
-    useTasks();
+  const [contact, setContact] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [fromSearchTerm, setFromSearchTerm] = useState('');
+
+  // Debounced search terms
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [debouncedFromSearchTerm, setDebouncedFromSearchTerm] = useState('');
+
+  // Debounce effect for recipient search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Debounce effect for from search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedFromSearchTerm(fromSearchTerm);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [fromSearchTerm]);
+
+  const { data: taskSearchResults, isLoading: taskLoading } = useQuery({
+    queryKey: ['task-search', debouncedSearchTerm],
+    queryFn: () =>
+      searchTask({ searchBar: debouncedSearchTerm, contact_type_id: '' }, 1),
+    enabled: open && debouncedSearchTerm.length > 0,
+  });
+
+  const {
+    tasksMeta,
+    task,
+    createTask,
+    updateTask,
+    isCreating,
+    isUpdating,
+    searchTasks,
+    handleSearchTask,
+  } = useTasks();
 
   // Determine if we're in update mode
   const isUpdateMode = mode === 'update' || (task && task.id);
@@ -92,6 +140,8 @@ export default function TaskDialog({
     setValue,
   } = useForm({
     defaultValues: {
+      slug: '',
+      contact_id: '',
       type_id: '',
       subject: '',
       description: '',
@@ -144,11 +194,19 @@ export default function TaskDialog({
     setAssignedToDialogOpen(false);
   };
 
+  /**
+   * API DATA FOR SEARCH
+   *   "searchBar": "john",
+   *   "contact_type_id":""
+   */
+
   const onFormSubmit = async (data) => {
     try {
       // Format the data for API
       const formattedData = {
         ...data,
+        contact_id: getValues('contact_id'),
+        slug: getValues('slug'),
         type_id: parseInt(data.type_id) || data.type_id,
         reminders: reminderFields.map((reminder) => ({
           type_id: parseInt(reminder.type_id),
@@ -162,6 +220,8 @@ export default function TaskDialog({
         priority_id: parseInt(data.priority_id) || data.priority_id,
         status_id: parseInt(data.status_id) || data.status_id,
       };
+
+      console.log('formattedData', formattedData);
 
       if (isUpdateMode) {
         // Update existing task
@@ -187,7 +247,7 @@ export default function TaskDialog({
   useEffect(() => {
     if (open) {
       if (isUpdateMode && task) {
-        console.log('task', task);
+        console.log('update task mode', task);
         // Populate form with existing task data
         const formData = {
           ...task,
@@ -253,79 +313,123 @@ export default function TaskDialog({
 
             <div className="space-y-4 flex-1 overflow-auto p-4 no-scrollbar">
               <div className="flex flex-wrap gap-4 overflow-auto">
-                {formFields.map(
-                  ({ label, name, type, required, metaField }) => (
-                    <div key={name} className="w-full md:w-[49%]">
-                      {type !== 'checkbox' && (
-                        <Label className="text-[#40444D] font-semibold mb-2">
-                          {label}
-                        </Label>
-                      )}
-
-                      {type === 'select' ? (
-                        <Controller
-                          control={control}
-                          name={name}
-                          render={({ field }) => (
-                            <Select
-                              onValueChange={field.onChange}
-                              value={field.value?.toString()}
-                            >
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder={`Select ${label}`} />
-                              </SelectTrigger>
-                              <SelectContent
-                                position="popper"
-                                portal={false}
-                                className="z-[9999]"
-                              >
-                                <SelectGroup>
-                                  {getMetaOptions(metaField).map((option) => (
-                                    <SelectItem
-                                      key={option.id}
-                                      value={option.id.toString()}
-                                    >
-                                      {option.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectGroup>
-                              </SelectContent>
-                            </Select>
-                          )}
-                        />
-                      ) : type === 'checkbox' ? (
-                        <div className="flex items-center space-x-2">
-                          <Label className="text-[#40444D] font-semibold">
-                            {label}:
+                <div className="w-full space-y-2">
+                  <Label>Contact: </Label>
+                  {contact ? (
+                    <>
+                      <Chip
+                        label={contact?.contact_name}
+                        onDelete={() => {
+                          setContact(null);
+                          setValue('contact_id', '');
+                          setValue('slug', '');
+                          setSearchDialogOpen(true);
+                        }}
+                        deleteIcon={<X size={16} />}
+                        size="small"
+                        sx={{ bgcolor: '#e8f5e8', color: '#2e7d32', p: 1 }}
+                      />
+                    </>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={() => setSearchDialogOpen(true)}
+                      className="w-fit"
+                    >
+                      Select Contact
+                    </Button>
+                  )}
+                </div>
+                {/* Dont show until contact is selected */}
+                {contact &&
+                  formFields.map(
+                    ({ label, name, type, required, metaField }) => (
+                      <div key={name} className="w-full md:w-[49%]">
+                        {type !== 'checkbox' && (
+                          <Label className="text-[#40444D] font-semibold mb-2">
+                            {label}
                           </Label>
+                        )}
+
+                        {type === 'select' ? (
                           <Controller
                             control={control}
                             name={name}
                             render={({ field }) => (
-                              <Switch
-                                checked={field.value}
-                                onChange={field.onChange}
+                              <Select
+                                onValueChange={field.onChange}
+                                value={field.value?.toString()}
+                              >
+                                <SelectTrigger className="w-full">
+                                  <SelectValue
+                                    placeholder={`Select ${label}`}
+                                  />
+                                </SelectTrigger>
+                                <SelectContent
+                                  position="popper"
+                                  portal={false}
+                                  className="z-[9999]"
+                                >
+                                  <SelectGroup>
+                                    {getMetaOptions(metaField).map((option) => (
+                                      <SelectItem
+                                        key={option.id}
+                                        value={option.id.toString()}
+                                      >
+                                        {option.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectGroup>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                        ) : type === 'checkbox' ? (
+                          <div className="flex items-center space-x-2">
+                            <Label className="text-[#40444D] font-semibold">
+                              {label}:
+                            </Label>
+                            <Controller
+                              control={control}
+                              name={name}
+                              render={({ field }) => (
+                                <Switch
+                                  checked={field.value}
+                                  onChange={field.onChange}
+                                />
+                              )}
+                            />
+                          </div>
+                        ) : type === 'textarea' ? (
+                          <Controller
+                            control={control}
+                            name={name}
+                            render={({ field }) => (
+                              <Textarea
+                                className="w-full bg-white"
+                                minRows={3}
+                                maxRows={5}
+                                {...field}
                               />
                             )}
                           />
-                        </div>
-                      ) : (
-                        <Controller
-                          control={control}
-                          name={name}
-                          render={({ field }) => (
-                            <Input type={type} {...field} />
-                          )}
-                        />
-                      )}
-                      {errors[name] && (
-                        <p className="text-xs text-red-500">
-                          {errors[name].message}
-                        </p>
-                      )}
-                    </div>
-                  )
-                )}
+                        ) : (
+                          <Controller
+                            control={control}
+                            name={name}
+                            render={({ field }) => (
+                              <Input type={type} {...field} />
+                            )}
+                          />
+                        )}
+                        {errors[name] && (
+                          <p className="text-xs text-red-500">
+                            {errors[name].message}
+                          </p>
+                        )}
+                      </div>
+                    )
+                  )}
               </div>
 
               <div className="flex flex-wrap gap-4 overflow-auto">
@@ -452,6 +556,52 @@ export default function TaskDialog({
         assignedToDialogOpen={assignedToDialogOpen}
         setAssignedToDialogOpen={setAssignedToDialogOpen}
         onSubmit={handleAddAssignedToSubmit}
+      />
+
+      <SearchDialog
+        open={searchDialogOpen}
+        onClose={() => setSearchDialogOpen(false)}
+        title="Select Contact"
+        searchPlaceholder="Search contacts..."
+        maxWidth="sm"
+        items={taskSearchResults}
+        selectedItems={task?.contact_id || []}
+        loading={taskLoading}
+        searchTerm={searchTerm}
+        onSearchChange={(searchTerm) => setSearchTerm(searchTerm)}
+        onItemSelect={(item) => {
+          console.log(item);
+          setContact(item);
+          setSearchDialogOpen(false);
+          setValue('contact_id', item.id);
+          setValue('slug', item.slug);
+        }}
+        onItemDeselect={(item) => {
+          console.log(item);
+          setContact(null);
+          setSearchDialogOpen(false);
+          setValue('contact_id', item.id);
+          setValue('slug', item.slug);
+        }}
+        getItemKey={(item, index) => item.id || index}
+        getItemDisplay={(item) => ({
+          primary: item.contact_name,
+          secondary: item.primary_email,
+          avatar: item.contact_name.charAt(0).toUpperCase(),
+        })}
+        emptyStateText="No contacts found"
+        loadingText="Searching..."
+        getEmptySearchText={(searchTerm) =>
+          `No contacts found for "${searchTerm}"`
+        }
+        onCancel={() => setSearchDialogOpen(false)}
+        onConfirm={(selectedItems) => {
+          console.log(selectedItems);
+          setSearchDialogOpen(false);
+          setContact(selectedItems);
+          setValue('contact_id', selectedItems);
+          setValue('slug', selectedItems.slug);
+        }}
       />
     </>
   );

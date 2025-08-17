@@ -47,13 +47,14 @@ const TasksPage = () => {
   };
 
   const handleCreateTask = async (data) => {
-    const newData = {
-      ...data,
-      contact_id: matter?.contact_id,
-      slug: matterSlug,
-    };
+    // const newData = {
+    //   ...data,
+    //   contact_id: matter?.contact_id,
+    //   slug: matterSlug,
+    // };
+    console.log('data', data);
     setOpen(false);
-    await createTask(newData);
+    await createTask(data);
   };
 
   const handleUpdateTask = async ({ id, data }) => {

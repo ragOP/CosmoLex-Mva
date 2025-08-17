@@ -97,6 +97,16 @@ export const useTasks = () => {
     },
   });
 
+  const handleSearchTask = useCallback(
+    (searchBar, contact_type_id) => {
+      searchTasksMutation.mutateAsync({
+        searchBar,
+        contact_type_id,
+      });
+    },
+    [searchTasksMutation]
+  );
+
   // Navigation (optional – mimic folder-style nav)
   const navigateToTask = useCallback((task) => {
     setSelectedTask(task);
@@ -138,6 +148,7 @@ export const useTasks = () => {
     navigateToTask,
     navigateBack,
     navigateToRoot,
+    handleSearchTask,
 
     // Mutations
     searchTasks: searchTasksMutation.mutateAsync,
