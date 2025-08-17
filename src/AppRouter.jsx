@@ -40,7 +40,8 @@ const Tasks = () => <ErrorPage pageName="Tasks" />;
 const Documentation = () => <DocumentationPage />;
 const CommunicationPage = lazy(() => import('./components/inbox/communication/Communication'));
 const Communication = () => <CommunicationPage />;
-const Finance = () => <ErrorPage pageName="Finance" />;
+const FinancePage = lazy(() => import('./components/finance/Finance'));
+const Finance = () => <FinancePage />;
 const ActivityLogs = () => <ErrorPage pageName="Activity Logs" />;
 
 const AppRouter = () => (

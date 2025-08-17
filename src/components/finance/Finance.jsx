@@ -1,0 +1,98 @@
+import React, { useState } from 'react';
+import { Stack, Tabs, Tab, Box } from '@mui/material';
+import BreadCrumb from '@/components/BreadCrumb';
+import TabPanel from './TabPanel';
+import FirmsTab from './FirmsTab';
+import VendorsTab from './VendorsTab';
+import FeeSplitsTab from './FeeSplitsTab';
+import ExpensesTab from './ExpensesTab';
+
+const Finance = () => {
+  const [tabValue, setTabValue] = useState(0);
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
+  return (
+    <div className="px-4">
+      <BreadCrumb label="Finance" />
+      
+      <Stack spacing={2}>
+        {/* Tabs - Outside White Background */}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs 
+            value={tabValue} 
+            onChange={handleTabChange}
+            sx={{
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontWeight: 500,
+                fontSize: '0.875rem',
+                color: '#6B7280',
+                '&.Mui-selected': {
+                  color: '#7367F0',
+                  fontWeight: 600,
+                },
+              },
+              '& .MuiTabs-indicator': {
+                background: 'linear-gradient(90deg, #7367F0 0%, #453E90 100%)',
+                height: 3,
+                borderRadius: '2px 2px 0 0',
+              },
+            }}
+          >
+            <Tab 
+              label="Firms" 
+              id="finance-tab-0"
+              aria-controls="finance-tabpanel-0"
+            />
+            <Tab 
+              label="Vendors" 
+              id="finance-tab-1"
+              aria-controls="finance-tabpanel-1"
+            />
+            <Tab 
+              label="Fee Splits" 
+              id="finance-tab-2"
+              aria-controls="finance-tabpanel-2"
+            />
+            <Tab 
+              label="Expenses" 
+              id="finance-tab-3"
+              aria-controls="finance-tabpanel-3"
+            />
+          </Tabs>
+        </Box>
+
+        {/* Tab Content - Inside Glassmorphism Background */}
+        <Box sx={{ 
+          bgcolor: 'rgba(255, 255, 255, 0.5)', 
+          backdropFilter: 'blur(8px)',
+          borderRadius: 3, 
+          boxShadow: '0 4px 24px 0px rgba(0, 0, 0, 0.1)',
+          border: '1px solid rgba(226, 232, 240, 0.8)',
+          overflow: 'hidden'
+        }}>
+          <TabPanel value={tabValue} index={0}>
+            <FirmsTab />
+          </TabPanel>
+          
+          <TabPanel value={tabValue} index={1}>
+            <VendorsTab />
+          </TabPanel>
+
+          <TabPanel value={tabValue} index={2}>
+            <FeeSplitsTab />
+          </TabPanel>
+
+          <TabPanel value={tabValue} index={3}>
+            <ExpensesTab />
+          </TabPanel>
+        </Box>
+      </Stack>
+    </div>
+  );
+};
+
+export default Finance; 
