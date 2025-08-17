@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
+import { Breadcrumb } from '@/components/breadcrumb/index';
 
 export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
@@ -36,6 +37,15 @@ export default function Navbar() {
     }, 1500);
   };
 
+  const items = [
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Inbox', href: '/inbox' },
+    { label: 'Tasks', href: '/tasks' },
+    { label: 'Matters', href: '/matters' },
+    { label: 'Contacts', href: '/contacts' },
+    { label: 'Settings', href: '/settings' },
+  ];
+
   return (
     <header
       className="w-full h-20 flex items-center justify-between px-4 md:px-8 flex-nowrap"
@@ -44,6 +54,7 @@ export default function Navbar() {
         background: 'transparent',
       }}
     >
+      <Breadcrumb items={items} />
       {/* Sidebar Icon (mobile only) */}
       <button
         className="md:hidden p-2 rounded bg-white shadow mr-2"
@@ -79,7 +90,7 @@ export default function Navbar() {
       <div className="flex items-center gap-3">
         {/* Action Buttons */}
         <div className="hidden md:flex items-center gap-2">
-          <button 
+          <button
             className="p-2.5 rounded-xl hover:bg-white/80 transition-all duration-200 shadow-lg hover:shadow-xl border border-white/30"
             style={{
               backdropFilter: 'blur(20px)',
@@ -90,8 +101,8 @@ export default function Navbar() {
           >
             <Home className="h-5 w-5 text-gray-600" />
           </button>
-          
-          <button 
+
+          <button
             className="p-2.5 rounded-xl hover:bg-white/80 transition-all duration-200 shadow-lg hover:shadow-xl border border-white/30"
             style={{
               backdropFilter: 'blur(20px)',
@@ -107,7 +118,7 @@ export default function Navbar() {
         {/* Profile Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button 
+            <button
               className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white/80 transition-all duration-200 border border-white/30 hover:border-white/50"
               style={{
                 backdropFilter: 'blur(20px)',
@@ -123,12 +134,14 @@ export default function Navbar() {
                 <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
               </div>
               <div className="hidden md:block text-left">
-                <span className="block text-sm font-semibold text-gray-800">Shibtain</span>
+                <span className="block text-sm font-semibold text-gray-800">
+                  Shibtain
+                </span>
               </div>
               <ChevronDown className="h-4 w-4 text-black" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent 
+          <DropdownMenuContent
             className="w-48 mt-2 p-2"
             style={{
               backdropFilter: 'blur(20px)',

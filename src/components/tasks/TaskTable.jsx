@@ -28,7 +28,6 @@ const TaskTable = ({
     metaField: 'taks_status',
     metaObj: tasksMeta,
   });
-  console.log(statusMeta);
   const columns = [
     {
       field: 'id',
@@ -164,7 +163,6 @@ const TaskTable = ({
       headerAlign: 'center',
       align: 'center',
       renderCell: (params) => {
-        console.log(params.value);
         return (
           <div className="w-full h-full flex items-center justify-start">
             {/* Uncomment when backend send id rather string for status */}
@@ -194,7 +192,6 @@ const TaskTable = ({
               disabled={params.value === 'Completed'}
               value={params.value} // "Pending", "Completed"
               onValueChange={(value) => {
-                console.log('value', value);
                 handleUpdateTaskStatus(params.id, value); // pass name directly
               }}
             >
