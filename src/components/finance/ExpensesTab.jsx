@@ -1,16 +1,25 @@
 import React, { useState } from 'react';
-import { Stack, IconButton, Typography, Chip } from '@mui/material';
-import { Search, RotateCcw, Plus, Receipt, FileText, DollarSign, Calendar, Paperclip } from 'lucide-react';
+import { Stack, IconButton, Typography, Chip, Box, Menu, MenuItem, ListItemIcon, Dialog } from '@mui/material';
+import { Search, RotateCcw, Plus, Receipt, FileText, DollarSign, Calendar, Paperclip, MoreVertical, Grid3X3, List, Edit, Trash2, Eye } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getExpenses, createExpense } from '@/api/api_services/finance';
+import { getExpenses, createExpense, updateExpense, deleteExpense } from '@/api/api_services/finance';
 import { Input } from '@/components/ui/input';
 import CreateExpenseDialog from './components/CreateExpenseDialog';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const ExpensesTab = ({ slugId }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState(null);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedExpense, setSelectedExpense] = useState(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState(null);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Fetch expenses
   const { data: expensesResponse, isLoading, refetch } = useQuery({
@@ -21,10 +30,10 @@ const ExpensesTab = ({ slugId }) => {
   });
 
   const expenses = expensesResponse?.data || [];
-  
-  // Debug: Log the expenses data structure
-  console.log('Expenses data:', expenses);
-  console.log('First expense structure:', expenses[0]);
+
+  // Debug: Log the slugId to see what's being received
+  console.log('ExpensesTab - slugId:', slugId);
+  console.log('ExpensesTab - expenses:', expenses);
 
   const handleRefresh = () => {
     refetch();
@@ -44,8 +53,64 @@ const ExpensesTab = ({ slugId }) => {
     }
   });
 
+  // Update expense mutation
+  const updateExpenseMutation = useMutation({
+    mutationFn: ({ expenseId, expenseData }) => updateExpense(expenseId, expenseData),
+    onSuccess: () => {
+      toast.success('Expense updated successfully!');
+      setEditDialogOpen(false);
+      setEditingExpense(null);
+      queryClient.invalidateQueries(['expenses', slugId]);
+    },
+    onError: (error) => {
+      toast.error('Failed to update expense. Please try again.');
+      console.error('Update expense error:', error);
+    }
+  });
+
+  // Delete expense mutation
+  const deleteExpenseMutation = useMutation({
+    mutationFn: deleteExpense,
+    onSuccess: () => {
+      toast.success('Expense deleted successfully!');
+      setAnchorEl(null);
+      setSelectedExpense(null);
+      queryClient.invalidateQueries(['expenses', slugId]);
+    },
+    onError: (error) => {
+      toast.error('Failed to delete expense. Please try again.');
+      console.error('Delete expense error:', error);
+    }
+  });
+
   const handleCreateExpense = (expenseData) => {
+    console.log('ExpensesTab - Creating expense with slugId:', slugId);
+    console.log('ExpensesTab - Expense data:', expenseData);
     createExpenseMutation.mutate({ ...expenseData, slugId });
+  };
+
+  const handleUpdateExpense = (expenseData) => {
+    const { id, ...updateData } = expenseData;
+    updateExpenseMutation.mutate({ expenseId: id, expenseData: updateData });
+  };
+
+  const confirmDeleteExpense = (expense) => {
+    setExpenseToDelete(expense);
+    setDeleteConfirmOpen(true);
+    setAnchorEl(null);
+    setSelectedExpense(null);
+  };
+
+  const executeDeleteExpense = () => {
+    if (expenseToDelete) {
+      deleteExpenseMutation.mutate(expenseToDelete.id);
+      setDeleteConfirmOpen(false);
+      setExpenseToDelete(null);
+    }
+  };
+
+  const handleExpenseClick = (expense) => {
+    navigate(`/dashboard/inbox/finance/${expense.id}?slugId=${slugId}&tab=expenses`);
   };
 
   const filteredExpenses = expenses.filter(expense => {
@@ -54,11 +119,11 @@ const ExpensesTab = ({ slugId }) => {
     const searchLower = searchTerm.toLowerCase();
     
     return (
-      (expense.case_name && expense.case_name.toLowerCase().includes(searchLower)) ||
-      (expense.case_number && expense.case_number.toLowerCase().includes(searchLower)) ||
       (expense.description && expense.description.toLowerCase().includes(searchLower)) ||
+      (expense.invoice_number && expense.invoice_number.toLowerCase().includes(searchLower)) ||
       (expense.vendor && expense.vendor.toLowerCase().includes(searchLower)) ||
-      (expense.contact_name && expense.contact_name.toLowerCase().includes(searchLower))
+      (expense.firm && expense.firm.toLowerCase().includes(searchLower)) ||
+      (expense.cost_type && expense.cost_type.toLowerCase().includes(searchLower))
     );
   });
 
@@ -88,6 +153,57 @@ const ExpensesTab = ({ slugId }) => {
     return { bgcolor: '#f3f4f6', color: '#374151' };
   };
 
+  // Helper function to get status based on available data
+  const getExpenseStatus = (expense) => {
+    // Since API doesn't provide status, we'll show a default or calculate based on other fields
+    if (expense.billable_client) {
+      return 'Billable';
+    }
+    return 'Active';
+  };
+
+  // Helper function to get display date
+  const getDisplayDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch {
+      return 'Invalid Date';
+    }
+  };
+
+  // Helper function to get created date (fallback to date_issued if created_at doesn't exist)
+  const getCreatedDate = (expense) => {
+    if (expense.created_at) {
+      return getDisplayDate(expense.created_at);
+    }
+    if (expense.date_issued) {
+      return getDisplayDate(expense.date_issued);
+    }
+    return 'N/A';
+  };
+
+  // Show message if no slugId is available
+  if (!slugId) {
+    return (
+      <div className="p-4">
+        <Stack spacing={3}>
+          <div className="text-center max-w-md mx-auto">
+            <div className="w-24 h-24 bg-gradient-to-br from-orange-50 to-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Receipt className="w-12 h-12 text-orange-500" />
+            </div>
+            <Typography variant="h5" sx={{ fontWeight: 600, color: '#374151', mb: 2 }}>
+              No ID Present
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 4, lineHeight: 1.6 }}>
+              Please select a matter to view expenses.
+            </Typography>
+          </div>
+        </Stack>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4">
       <Stack spacing={3}>
@@ -108,6 +224,30 @@ const ExpensesTab = ({ slugId }) => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
+            </div>
+
+            {/* View Toggle */}
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'grid' 
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <Grid3X3 size={16} />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'list' 
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <List size={16} />
+              </button>
             </div>
             
             <button 
@@ -157,52 +297,69 @@ const ExpensesTab = ({ slugId }) => {
               )}
             </div>
           ) : (
-            <div className="w-full grid gap-4">
-              {filteredExpenses.map((expense) => (
-                <div
-                  key={expense.id}
-                  className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-gray-300"
-                >
-                  <div className="grid grid-cols-12 gap-6 items-start">
-                    {/* Case & Category Info */}
-                    <div className="col-span-4">
-                      <div className="flex items-start gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-orange-50 to-amber-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Receipt className="w-6 h-6 text-orange-600" />
+            <>
+              {/* Grid View */}
+              {viewMode === 'grid' && (
+                <div className="w-full grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredExpenses.map((expense) => (
+                    <div
+                      key={expense.id}
+                      className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-gray-300 cursor-pointer"
+                      onClick={() => handleExpenseClick(expense)}
+                    >
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-orange-50 to-amber-100 rounded-lg flex items-center justify-center">
+                            <Receipt className="w-6 h-6 text-orange-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900 text-sm mb-1">
+                              {expense.description || 'No Description'}
+                            </h3>
+                            <p className="text-xs text-gray-500">
+                              {expense.invoice_number || 'No Invoice'}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900 text-sm mb-1">
-                            {expense.case_name}
-                          </h3>
-                          <p className="text-xs text-gray-500 mb-2">
-                            {expense.case_number}
-                          </p>
+                        <div className="flex items-center gap-2">
                           <Chip
-                            label={expense.category}
+                            label={getExpenseStatus(expense)}
                             size="small"
                             sx={{
-                              bgcolor: '#f0f9ff',
-                              color: '#0369a1',
-                              fontSize: '0.7rem'
+                              ...getStatusColor(getExpenseStatus(expense)),
+                              fontSize: '0.75rem',
+                              fontWeight: 500
                             }}
                           />
+                          
+                          {/* Three-dot menu */}
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAnchorEl(e.currentTarget);
+                              setSelectedExpense(expense);
+                            }}
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <MoreVertical size={16} />
+                          </IconButton>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Description & Vendor */}
-                    <div className="col-span-4">
-                      <div className="space-y-2">
+                      {/* Description & Vendor */}
+                      <div className="space-y-2 mb-4">
                         <div>
                           <p className="text-sm font-medium text-gray-900 mb-1">
-                            {expense.description}
+                            {expense.description || 'No Description'}
                           </p>
                           <p className="text-xs text-gray-500">
-                            Vendor: {expense.vendor}
+                            Vendor: {expense.vendor || 'N/A'}
                           </p>
                         </div>
                         <Chip
-                          label={expense.cost_type}
+                          label={expense.cost_type || 'N/A'}
                           size="small"
                           sx={{
                             ...getCostTypeColor(expense.cost_type),
@@ -210,46 +367,139 @@ const ExpensesTab = ({ slugId }) => {
                           }}
                         />
                       </div>
-                    </div>
 
-                    {/* Amount & Status */}
-                    <div className="col-span-4">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="flex items-center gap-2 mb-2">
-                            <DollarSign className="w-4 h-4 text-green-600" />
-                            <span className="font-bold text-green-600 text-lg">
-                              {expense.amount}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Calendar className="w-4 h-4 text-gray-400" />
-                            <span className="text-xs text-gray-500">
-                              {new Date(expense.date).toLocaleDateString()}
-                            </span>
-                          </div>
-                          {expense.receipt_attached && (
+                      {/* Amount & Date */}
+                      <div className="space-y-2 mb-4 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-500">Amount:</span>
+                          <span className="font-medium text-green-600">${expense.amount || '0'}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-500">Date:</span>
+                          <span className="font-medium">{getDisplayDate(expense.date_issued)}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-gray-500">Firm:</span>
+                          <span className="font-medium text-blue-600">{expense.firm || 'N/A'}</span>
+                        </div>
+                      </div>
+
+                      {/* Footer */}
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div className="text-xs text-gray-500">
+                          {expense.billable_client && (
                             <div className="flex items-center gap-1">
-                              <Paperclip className="w-3 h-3 text-blue-500" />
-                              <span className="text-xs text-blue-600">Receipt attached</span>
+                              <span className="text-green-600">✓ Billable to Client</span>
                             </div>
                           )}
                         </div>
-                        <Chip
-                          label={expense.status}
-                          size="small"
-                          sx={{
-                            ...getStatusColor(expense.status),
-                            fontSize: '0.75rem',
-                            fontWeight: 500
-                          }}
-                        />
+                        <div className="text-xs text-gray-400">
+                          Added {getCreatedDate(expense)}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+
+              {/* List View */}
+              {viewMode === 'list' && (
+                <div className="w-full space-y-4">
+                  {filteredExpenses.map((expense) => (
+                    <div
+                      key={expense.id}
+                      className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-gray-300 cursor-pointer"
+                      onClick={() => handleExpenseClick(expense)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-gradient-to-br from-orange-50 to-amber-100 rounded-lg flex items-center justify-center">
+                            <Receipt className="w-6 h-6 text-orange-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold text-gray-900 text-lg mb-1">
+                              {expense.description || 'No Description'}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              {expense.invoice_number || 'No Invoice'}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-4">
+                          <Chip
+                            label={getExpenseStatus(expense)}
+                            size="small"
+                            sx={{
+                              ...getStatusColor(getExpenseStatus(expense)),
+                              fontSize: '0.75rem',
+                              fontWeight: 500
+                            }}
+                          />
+                          
+                          {/* Three-dot menu */}
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setAnchorEl(e.currentTarget);
+                              setSelectedExpense(expense);
+                            }}
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <MoreVertical size={16} />
+                          </IconButton>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                        <div className="space-y-2">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900 mb-1">
+                              {expense.description || 'No Description'}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Vendor: {expense.vendor || 'N/A'}
+                            </p>
+                          </div>
+                          <Chip
+                            label={expense.cost_type || 'N/A'}
+                            size="small"
+                            sx={{
+                              ...getCostTypeColor(expense.cost_type),
+                              fontSize: '0.7rem'
+                            }}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">Amount:</span>
+                            <span className="font-medium text-green-600">${expense.amount || '0'}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">Firm:</span>
+                            <span className="font-medium text-blue-600">{expense.firm || 'N/A'}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-gray-500">Date:</span>
+                            <span className="font-medium">{getDisplayDate(expense.date_issued)}</span>
+                          </div>
+                          {expense.billable_client && (
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-green-600">✓ Billable to Client</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
 
@@ -259,7 +509,133 @@ const ExpensesTab = ({ slugId }) => {
           onClose={() => setCreateDialogOpen(false)}
           onSubmit={handleCreateExpense}
           isLoading={createExpenseMutation.isPending}
+          matterId={slugId}
         />
+
+        {/* Edit Expense Dialog */}
+        <CreateExpenseDialog
+          open={editDialogOpen}
+          onClose={() => {
+            setEditDialogOpen(false);
+            setEditingExpense(null);
+          }}
+          onSubmit={handleUpdateExpense}
+          isLoading={updateExpenseMutation.isPending}
+          matterId={slugId}
+          editMode={true}
+          editingExpense={editingExpense}
+        />
+
+        {/* Three-dot Menu */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => {
+            setAnchorEl(null);
+            setSelectedExpense(null);
+          }}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+        >
+          <MenuItem
+            onClick={() => {
+              if (selectedExpense) {
+                handleExpenseClick(selectedExpense);
+                setAnchorEl(null);
+                setSelectedExpense(null);
+              }
+            }}
+          >
+            <ListItemIcon>
+              <Eye size={16} />
+            </ListItemIcon>
+            View Details
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setEditingExpense(selectedExpense);
+              setEditDialogOpen(true);
+              setAnchorEl(null);
+              setSelectedExpense(null);
+            }}
+          >
+            <ListItemIcon>
+              <Edit size={16} />
+            </ListItemIcon>
+            Edit Expense
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              if (selectedExpense) {
+                confirmDeleteExpense(selectedExpense);
+              }
+            }}
+            sx={{ color: '#dc2626' }}
+          >
+            <ListItemIcon>
+              <Trash2 size={16} style={{ color: '#dc2626' }} />
+            </ListItemIcon>
+            Delete Expense
+          </MenuItem>
+        </Menu>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteConfirmOpen}
+          onClose={() => setDeleteConfirmOpen(false)}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: '16px',
+              overflow: 'hidden'
+            }
+          }}
+        >
+          <div className="bg-white rounded-lg p-6">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 size={24} className="text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Delete Expense
+                </h3>
+                <p className="text-sm text-gray-500">
+                  This action cannot be undone
+                </p>
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-gray-700">
+                Are you sure you want to delete the expense for <strong>"{expenseToDelete?.description || 'Unknown'}"</strong>? 
+                This will permanently remove the expense and all associated data.
+              </p>
+            </div>
+            
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => setDeleteConfirmOpen(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={executeDeleteExpense}
+                className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors"
+              >
+                Delete Expense
+              </button>
+            </div>
+          </div>
+        </Dialog>
       </Stack>
     </div>
   );

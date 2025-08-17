@@ -328,11 +328,100 @@ export const createFeeSplit = async (feeSplitData, slug = null) => {
   }
 };
 
+// Get single expense
+export const getExpense = async (expenseId) => {
+  try {
+    const response = await apiService({
+      endpoint: `v2/matter/finance/expenses/show/${expenseId}`,
+      method: 'GET'
+    });
+    
+    return response.response;
+  } catch (error) {
+    console.error('Error fetching expense:', error);
+    throw error;
+  }
+};
+
+// Update expense
+export const updateExpense = async (expenseId, expenseData) => {
+  try {
+    // Use normal JSON data instead of FormData
+    const jsonData = {
+      ...expenseData,
+      // Comment out attachments for now
+      // attachments: expenseData.attachments
+    };
+    
+    const response = await apiService({
+      endpoint: `v2/matter/finance/expenses/update/${expenseId}`,
+      method: 'PUT',
+      data: jsonData,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    return response.response;
+  } catch (error) {
+    console.error('Error updating expense:', error);
+    throw error;
+  }
+};
+
+// Delete expense
+export const deleteExpense = async (expenseId) => {
+  try {
+    const response = await apiService({
+      endpoint: `v2/matter/finance/expenses/delete/${expenseId}`,
+      method: 'DELETE'
+    });
+    
+    return response.response;
+  } catch (error) {
+    console.error('Error deleting expense:', error);
+    throw error;
+  }
+};
+
 export const createExpense = async (expenseData, slug = null) => {
   try {
-    return await storeExpense(expenseData, slug);
+    // Use normal JSON data instead of FormData
+    const jsonData = {
+      ...expenseData,
+      // Remove slug from body since it's in the URL
+      // attachments: expenseData.attachments
+    };
+    
+    // Debug: Log the data being sent
+    console.log('Creating expense with data:', jsonData);
+    console.log('Slug being used:', slug);
+    
+    // Use the correct endpoint with slug in URL path
+    const endpoint = slug ? 
+      `v2/matter/finance/expenses/store/${slug}` : 
+      'v2/matter/finance/expenses/store';
+    
+    const response = await apiService({
+      endpoint: endpoint,
+      method: 'POST',
+      data: jsonData,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    console.log('API Response:', response);
+    
+    // Check if the response indicates an error
+    if (response && response.Apistatus === false) {
+      throw new Error(response.message || 'API returned false status');
+    }
+    
+    return response.response;
   } catch (error) {
     console.error('Error creating expense:', error);
+    console.error('Full error object:', error);
     throw error;
   }
 };
@@ -348,49 +437,6 @@ export const getFirmsByType = async (typeId) => {
     return response.response;
   } catch (error) {
     console.error('Error fetching firms by type:', error);
-    throw error;
-  }
-};
-
-// Store expense with slug support
-export const storeExpense = async (expenseData, slug = null) => {
-  try {
-    const formData = new FormData();
-    
-    // Add all expense fields
-    Object.keys(expenseData).forEach(key => {
-      if (expenseData[key] !== null && expenseData[key] !== undefined) {
-        if (key === 'attachments' && Array.isArray(expenseData[key])) {
-          expenseData[key].forEach((file) => {
-            formData.append('attachments', file);
-          });
-        } else {
-          formData.append(key, expenseData[key]);
-        }
-      }
-    });
-    
-    // Add slug if provided
-    if (slug) {
-      formData.append('slug', slug);
-    }
-    
-    const endpoint = slug ? 
-      `v2/matter/finance/store/${slug}` : 
-      'v2/matter/finance/store';
-    
-    const response = await apiService({
-      endpoint: endpoint,
-      method: 'POST',
-      data: formData,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    
-    return response.response;
-  } catch (error) {
-    console.error('Error storing expense:', error);
     throw error;
   }
 }; 

@@ -8,14 +8,19 @@ import VendorsTab from './VendorsTab';
 import FeeSplitsTab from './FeeSplitsTab';
 import ExpensesTab from './ExpensesTab';
 import FirmDetail from './FirmDetail';
+import ExpenseDetail from './ExpenseDetail';
+// import { MatterContext } from '@/components/inbox/MatterContext';
 
 const Finance = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { id: firmId } = useParams();
+  const { id: itemId } = useParams();
   const [tabValue, setTabValue] = useState(0);
-
-  // Get slug from URL parameters
+  
+  // Get matter context to access slugId
+  // const { matter } = useContext(MatterContext);
+  
+  // Get slug from URL parameters first, fallback to context
   const slugId = searchParams.get('slugId');
 
   // Get tab from URL params
@@ -36,14 +41,20 @@ const Finance = () => {
       setTabValue(0);
       const currentParams = new URLSearchParams(searchParams);
       currentParams.set('tab', 'firms');
+      
+      // Preserve slugId if it exists
+      if (slugId) {
+        currentParams.set('slugId', slugId);
+      }
+      
       navigate(`?${currentParams.toString()}`, { replace: true });
     }
-  }, [tabParam, searchParams, navigate]);
+  }, [tabParam, searchParams, navigate, slugId]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
     
-    // Update URL with tab parameter
+    // Update URL with tab parameter while preserving slugId
     const currentParams = new URLSearchParams(searchParams);
     let newTab = 'firms';
     if (newValue === 1) newTab = 'vendors';
@@ -51,17 +62,32 @@ const Finance = () => {
     else if (newValue === 3) newTab = 'expenses';
     
     currentParams.set('tab', newTab);
+    
+    // Preserve slugId if it exists
+    if (slugId) {
+      currentParams.set('slugId', slugId);
+    }
+    
     navigate(`?${currentParams.toString()}`, { replace: true });
   };
 
-  // If we have a firm ID, show firm detail instead of tabs
-  if (firmId) {
-    return (
-      <div className="px-4">
-        <BreadCrumb label="Finance" />
-        <FirmDetail firmId={firmId} />
-      </div>
-    );
+  // If we have an item ID and tab parameter, show detail view
+  if (itemId && tabParam) {
+    if (tabParam === 'firms') {
+      return (
+        <div className="px-4">
+          <BreadCrumb label="Finance" />
+          <FirmDetail firmId={itemId} />
+        </div>
+      );
+    } else if (tabParam === 'expenses') {
+      return (
+        <div className="px-4">
+          <BreadCrumb label="Finance" />
+          <ExpenseDetail expenseId={itemId} />
+        </div>
+      );
+    }
   }
 
   return (

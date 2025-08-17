@@ -108,7 +108,7 @@ const FeeSplitsTab = ({ slugId }) => {
               </Typography>
             </div>
           ) : filteredFeeSplits.length === 0 ? (
-            <div className="text-center max-w-md">
+            <div className="text-center max-w-md py-16">
               <div className="w-24 h-24 bg-gradient-to-br from-purple-50 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Calculator className="w-12 h-12 text-purple-500" />
               </div>
