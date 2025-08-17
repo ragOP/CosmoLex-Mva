@@ -1,128 +1,193 @@
 import React from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Dialog, Stack, Divider, IconButton, Card } from '@mui/material';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { format } from 'date-fns';
-import { CalendarDays, AlarmClock } from 'lucide-react';
+import { CalendarDays, AlarmClock, Paperclip, X } from 'lucide-react';
 import formatDate from '@/utils/formatDate';
+import { useTasks } from '@/components/tasks/hooks/useTasks';
 
-const ShowTaskDialog = ({ task, open = false, onClose = () => {} }) => {
-  if (!task) return null;
+const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
+  const { task, tasksMeta } = useTasks();
+
+  // If task is empty or not found, return null
+  if (!task || !Object?.keys(task)?.length > 0) return null;
+
+  const mapMetaValue = (metaList = [], id) => {
+    return metaList.find((m) => m.id === id)?.name || 'N/A';
+  };
 
   const {
-    subject: title,
+    subject,
     description,
     due_date,
-    priority,
-    status,
+    priority_id,
+    status_id,
+    type_id,
+    utbms_code_id,
+    billable,
+    notify_text,
+    add_calendar_event,
+    trigger_appointment_reminders,
     assignees = [],
     reminders = [],
+    attachments = [],
   } = task;
 
-  const participants = assignees.map((a) => ({
-    email: a.email,
-    role: a.role,
-    status: a.is_active ? 'Active' : 'Inactive',
-  }));
+  const priorityName = mapMetaValue(tasksMeta?.taks_priority, priority_id);
+  const statusName = mapMetaValue(tasksMeta?.taks_status, status_id);
+  const typeName = mapMetaValue(tasksMeta?.taks_type, type_id);
 
-  const formattedReminders = reminders.map((r) => ({
-    type: r.type,
-    value: format(new Date(r.scheduled_at), 'p'), // e.g., "10:00 AM"
-    timing: 'exactly',
-    relative_to: 'due time',
-  }));
+  // Assignees
+  const assigneeDetails = tasksMeta?.assignees?.filter((a) =>
+    assignees?.map((a) => a.id).includes(a.id)
+  );
+
+  // Reminders
+  const formattedReminders = reminders.map((r) => {
+    const typeName = mapMetaValue(tasksMeta?.taks_reminders_type, r.type_id);
+    return {
+      type: typeName,
+      value: r?.scheduled_at,
+    };
+  });
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl bg-[#F5F5FA] p-6 rounded-xl shadow-xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-semibold flex items-center gap-2 text-[#1E293B]">
-            <CalendarDays className="w-5 h-5 text-[#6366F1]" />
-            {title}
-          </DialogTitle>
-        </DialogHeader>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000]">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4">
+          <h1 className="text-xl text-[#40444D] text-center font-bold font-sans">
+            Task Details
+          </h1>
+          <IconButton onClick={onClose}>
+            <X className="text-black" />
+          </IconButton>
+        </div>
 
-        <div className="space-y-4 text-sm text-slate-700">
-          <p className="text-muted-foreground">
-            {description || 'No description provided.'}
-          </p>
+        <Divider />
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
+        {/* Task Content */}
+        <div className="space-y-6 flex-1 overflow-auto p-6 no-scrollbar">
+          {/* Subject + Description */}
+          <div>
+            <h2 className="text-lg font-semibold text-[#40444D]">{subject}</h2>
+            <p className="text-muted-foreground mt-1">
+              {description || 'No description provided.'}
+            </p>
+          </div>
+
+          {/* Meta info */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center gap-2 text-sm">
               <CalendarDays className="w-4 h-4" />
               <span>
                 <strong>Due:</strong> {formatDate(due_date)}
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-sm">
               <span>
-                <strong>Status:</strong> {status || 'N/A'}
+                <strong>Status ID:</strong> {statusName || 'N/A'}
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-sm">
               <span>
-                <strong>Priority:</strong> {priority || 'N/A'}
+                <strong>Priority ID:</strong> {priorityName || 'N/A'}
               </span>
             </div>
           </div>
 
+          <Divider />
+
           {/* Participants */}
-          <Separator className="my-4" />
-          <h3 className="text-lg font-semibold text-[#40444D]">Participants</h3>
-          {participants.length === 0 && (
-            <p className="text-muted-foreground">No participants added.</p>
-          )}
-          {participants.map((p, index) => (
-            <div key={index} className="flex items-center gap-3 py-2">
-              <Avatar className="w-8 h-8">
-                <AvatarFallback>{p.email[0]?.toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div className="text-sm">
-                <p className="font-medium">{p.email}</p>
-                <p className="text-xs text-muted-foreground">
-                  Role: {p.role} | Status: {p.status}
-                </p>
+          <div>
+            <h3 className="text-lg font-semibold text-[#40444D] mb-2">
+              Participants
+            </h3>
+            {assigneeDetails.length === 0 && (
+              <p className="text-muted-foreground">No participants added.</p>
+            )}
+            {assigneeDetails.map((p, index) => (
+              <div key={index} className="flex items-center gap-3 py-2">
+                <Avatar className="w-8 h-8">
+                  <AvatarFallback className="bg-[#6366F1] text-white">
+                    {p?.name?.[0]?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-sm">
+                  <p className="font-medium">{p?.name}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+
+          <Divider />
 
           {/* Reminders */}
-          <Separator className="my-4" />
-          <h3 className="text-lg font-semibold text-[#40444D]">Reminders</h3>
-          {formattedReminders.length === 0 && (
-            <p className="text-muted-foreground">No reminders set.</p>
-          )}
-          <div className="flex flex-wrap gap-2 mt-2">
-            {formattedReminders.map((r, idx) => (
-              <Badge
-                key={idx}
-                variant="outline"
-                className="text-xs px-3 py-1 rounded-full flex items-center gap-1"
-              >
-                <AlarmClock className="w-3 h-3" />
-                {`${r.type} - ${r.value} ${r.timing} before ${r.relative_to}`}
-              </Badge>
-            ))}
+          <div>
+            <h3 className="text-lg font-semibold text-[#40444D] mb-2">
+              Reminders
+            </h3>
+            {formattedReminders.length === 0 && (
+              <p className="text-muted-foreground">No reminders set.</p>
+            )}
+            <div className="flex flex-wrap gap-2">
+              {formattedReminders.map((r, idx) => (
+                <Badge
+                  key={idx}
+                  variant="outline"
+                  className="text-xs px-3 py-1 rounded-full flex items-center gap-1"
+                >
+                  <AlarmClock className="w-3 h-3" />
+                  {`${r.type} - ${r.value}`}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <Divider />
+
+          {/* Attachments */}
+          <div>
+            <h3 className="text-lg font-semibold text-[#40444D] mb-2">
+              Attachments
+            </h3>
+            {attachments.length === 0 && (
+              <p className="text-muted-foreground">No attachments uploaded.</p>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              {attachments.map((file) => (
+                <Card
+                  key={file.id}
+                  className="p-2 flex items-center gap-2 shadow-sm"
+                >
+                  <Paperclip className="w-4 h-4 text-gray-500" />
+                  <a
+                    href={file.file_path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:underline truncate"
+                  >
+                    {file.file_name}
+                  </a>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
 
-        <DialogFooter className="mt-6">
+        <Divider />
+
+        {/* Footer */}
+        <div className="flex items-center justify-end p-4 gap-2">
           <Button
             onClick={onClose}
             className="bg-[#6366F1] text-white hover:bg-[#4f51d8]"
           >
             Close
           </Button>
-        </DialogFooter>
-      </DialogContent>
+        </div>
+      </Stack>
     </Dialog>
   );
 };

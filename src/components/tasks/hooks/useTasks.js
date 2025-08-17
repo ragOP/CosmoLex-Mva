@@ -31,10 +31,17 @@ export const useTasks = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // All tasks or single task
+  // All tasks
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
     queryKey: ['tasks', taskId],
-    queryFn: () => (taskId ? getTaskById(taskId) : getTasks()),
+    queryFn: () => getTasks(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Single task
+  const { data: task = {}, isLoading: taskLoading } = useQuery({
+    queryKey: ['task', taskId],
+    queryFn: () => getTaskById(taskId),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -118,6 +125,7 @@ export const useTasks = () => {
     // State
     tasksMeta,
     tasks,
+    task,
     selectedTask,
     currentPath,
 

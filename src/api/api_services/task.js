@@ -28,7 +28,7 @@ export const getTaskById = async (id) => {
     method: 'GET',
   });
   if (response.error) throw new Error('Failed to fetch task');
-  return response.response?.data || {};
+  return response.response?.task || {};
 };
 
 // Search task

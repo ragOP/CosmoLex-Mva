@@ -95,6 +95,14 @@ const TasksPage = () => {
         tasks={tasks || []}
         handleUpdateTaskStatus={handleUpdateTaskStatus}
         onRowClick={(params) => {
+          // append taskId to url params
+          navigate(
+            `/dashboard/inbox/tasks?slugId=${matterSlug}&taskId=${params.row.id}`,
+            {
+              replace: false,
+            }
+          );
+          setSelectedTaskId(params.row.id);
           setSelectedTask(params.row);
           setShowViewDialog(true);
         }}
@@ -111,8 +119,11 @@ const TasksPage = () => {
       {/* View */}
       <ShowTaskDialog
         open={showViewDialog}
-        onClose={() => setShowViewDialog(false)}
-        task={selectedTask}
+        onClose={() => {
+          // remove taskId from url params
+          navigate(`/dashboard/inbox/tasks?slugId=${matterSlug}`);
+          setShowViewDialog(false);
+        }}
       />
 
       {/* Create */}
@@ -127,7 +138,7 @@ const TasksPage = () => {
       <UpdateTaskDialog
         open={showUpdateDialog}
         onClose={() => setShowUpdateDialog(false)}
-        task={tasks?.find((t) => t.id === selectedTaskId) || {}}
+        // task={tasks?.find((t) => t.id === selectedTaskId) || {}}
         isLoading={false}
         onSubmit={handleUpdateTask}
       />
