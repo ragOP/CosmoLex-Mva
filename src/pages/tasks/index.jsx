@@ -67,6 +67,33 @@ const TasksPage = () => {
     setShowUpdateDialog(false);
   };
 
+  const handleNavigate = (taskId) => {
+    if (matterSlug) {
+      if (taskId) {
+        navigate(
+          `/dashboard/inbox/tasks?slugId=${matterSlug}&taskId=${taskId}`,
+          {
+            replace: false,
+          }
+        );
+      } else {
+        navigate(`/dashboard/inbox/tasks?slugId=${matterSlug}`, {
+          replace: false,
+        });
+      }
+    } else {
+      if (taskId) {
+        navigate(`/dashboard/tasks?taskId=${taskId}`, {
+          replace: false,
+        });
+      } else {
+        navigate(`/dashboard/tasks`, {
+          replace: false,
+        });
+      }
+    }
+  };
+
   if (tasksLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -94,23 +121,13 @@ const TasksPage = () => {
         handleUpdateTaskStatus={handleUpdateTaskStatus}
         onRowClick={(params) => {
           // append taskId to url params
-          navigate(
-            `/dashboard/inbox/tasks?slugId=${matterSlug}&taskId=${params.row.id}`,
-            {
-              replace: false,
-            }
-          );
+          handleNavigate(params.row.id);
           setSelectedTaskId(params.row.id);
           setSelectedTask(params.row);
           setShowViewDialog(true);
         }}
         handleEdit={(task) => {
-          navigate(
-            `/dashboard/inbox/tasks?slugId=${matterSlug}&taskId=${task.id}`,
-            {
-              replace: false,
-            }
-          );
+          handleNavigate(task.id);
           setSelectedTaskId(task.id);
           setSelectedTask(task);
           setShowUpdateDialog(true);
@@ -126,7 +143,7 @@ const TasksPage = () => {
         open={showViewDialog}
         onClose={() => {
           // remove taskId from url params
-          navigate(`/dashboard/inbox/tasks?slugId=${matterSlug}`);
+          handleNavigate(null);
           setShowViewDialog(false);
         }}
       />

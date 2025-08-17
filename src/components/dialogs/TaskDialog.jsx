@@ -221,8 +221,6 @@ export default function TaskDialog({
         status_id: parseInt(data.status_id) || data.status_id,
       };
 
-      console.log('formattedData', formattedData);
-
       if (isUpdateMode) {
         // Update existing task
         await onSubmit({ id: task.id, data: formattedData });
@@ -247,7 +245,6 @@ export default function TaskDialog({
   useEffect(() => {
     if (open) {
       if (isUpdateMode && task) {
-        console.log('update task mode', task);
         // Populate form with existing task data
         const formData = {
           ...task,
@@ -264,7 +261,6 @@ export default function TaskDialog({
             task.assigned_to ||
             [],
         };
-        console.log('formData', formData);
 
         reset(formData);
 
