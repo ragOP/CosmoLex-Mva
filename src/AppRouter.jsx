@@ -38,7 +38,8 @@ const Notes = () => <NotesPage />;
 const Event = () => <ErrorPage pageName="Event" />;
 const Tasks = () => <ErrorPage pageName="Tasks" />;
 const Documentation = () => <DocumentationPage />;
-const Communication = () => <ErrorPage pageName="Communication" />;
+const CommunicationPage = lazy(() => import('./components/inbox/communication/Communication'));
+const Communication = () => <CommunicationPage />;
 const Finance = () => <ErrorPage pageName="Finance" />;
 const ActivityLogs = () => <ErrorPage pageName="Activity Logs" />;
 
