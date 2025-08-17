@@ -22,8 +22,10 @@ const TasksPage = () => {
   // Get matter slug from URL params (assuming notes are matter-specific)
   const matterSlug = searchParams.get('slugId');
 
-  const { matter } = useMatter();
-
+  let matter = null;
+  if (matterSlug) {
+    matter = useMatter();
+  }
   const {
     tasks,
     tasksLoading,
@@ -39,6 +41,7 @@ const TasksPage = () => {
   };
 
   const handleUpdateTaskStatus = (id, status) => {
+    console.log('id', id);
     console.log('status', status);
     updateStatus({ taskId: id, status_id: parseInt(status) });
   };
@@ -59,7 +62,6 @@ const TasksPage = () => {
       contact_id: matter?.contact_id,
       slug: matterSlug,
     };
-    console.log('newData', newData);
     await updateTask({ taskId: id, taskData: newData });
     setShowUpdateDialog(false);
   };
@@ -75,7 +77,7 @@ const TasksPage = () => {
   return (
     <div className="flex flex-col gap-4 h-full w-full p-4">
       <div className="flex justify-between w-full items-center">
-        <p className="text-2xl font-bold">Showing {tasks?.length || 0} tasks</p>
+        <p className="text-2xl font-bold">Tasks ({tasks?.length || 0})</p>
         <Button
           onClick={() => setOpen(true)}
           className="cursor-pointer max-w-48"

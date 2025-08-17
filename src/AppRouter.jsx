@@ -63,6 +63,7 @@ const AppRouter = () => (
         >
           <Route index element={<DashboardHome />} />
           <Route path="dashboard-form" element={<DashboardForm />} />
+          <Route path="tasks/" element={<TasksPage />} />
           <Route path="matter" element={<MatterPage />} />
           <Route path="user-management" element={<UserManagementPage />} />
           <Route path="bulk-import" element={<BulkImportPage />} />
