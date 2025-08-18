@@ -95,6 +95,8 @@ const AppRouter = () => (
             <Route path="finance/" element={<Finance />} />
             <Route path="finance/:id" element={<Finance />} />
             <Route path="finance/:tab" element={<Finance />} />
+            <Route path="finance/vendors/:id" element={<Finance />} />
+            <Route path="finance/fee-splits/:id" element={<Finance />} />
             <Route path="activity-logs/" element={<ActivityLogs />} />
           </Route>
           {/* <Route path="matter-intake" element={<MatterIntakePage />} />

@@ -6,9 +6,9 @@ import { getFirms, createFirm, updateFirm, deleteFirm } from '@/api/api_services
 import { Input } from '@/components/ui/input';
 import CreateFirmDialog from './components/CreateFirmDialog';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
-const FirmsTab = () => {
+const FirmsTab = ({ slugId }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -20,6 +20,8 @@ const FirmsTab = () => {
   const [firmToDelete, setFirmToDelete] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const currentSlugId = searchParams.get('slugId') || slugId;
 
   // Fetch firms
   const { data: firmsResponse, isLoading, refetch } = useQuery({
@@ -103,7 +105,7 @@ const FirmsTab = () => {
   };
 
   const handleFirmClick = (firm) => {
-    navigate(`/dashboard/inbox/finance/${firm.id}?slug=${firm.id}&tab=firms`);
+    navigate(`/dashboard/inbox/finance/${firm.id}?slugId=${currentSlugId}&tab=firms`);
   };
 
   const filteredFirms = firms.filter(firm => 
@@ -259,6 +261,7 @@ const FirmsTab = () => {
                        <IconButton
                          size="small"
                          onClick={(e) => {
+                           e.stopPropagation();
                            setAnchorEl(e.currentTarget);
                            setSelectedFirm(firm);
                          }}
@@ -358,6 +361,7 @@ const FirmsTab = () => {
                           <IconButton
                             size="small"
                             onClick={(e) => {
+                              e.stopPropagation();
                               setAnchorEl(e.currentTarget);
                               setSelectedFirm(firm);
                             }}
@@ -460,7 +464,7 @@ const FirmsTab = () => {
             <ListItemIcon>
               <Eye size={16} />
             </ListItemIcon>
-            View Details
+            View Firm Details
           </MenuItem>
           <MenuItem
             onClick={() => {

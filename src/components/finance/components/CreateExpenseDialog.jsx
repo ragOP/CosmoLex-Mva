@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import {
     Dialog,
@@ -17,25 +17,24 @@ import {
     SelectItem,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import FileUpload from '@/components/FileUpload';
-import { Plus, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { getFinanceMeta } from '@/api/api_services/finance';
+import { getFinanceMeta, getVendors, getFirms } from '@/api/api_services/finance';
 
 const CreateExpenseDialog = ({
     open,
     onClose,
     onSubmit,
     isLoading,
-    matterId
+    editMode = false,
+    editingExpense = null
 }) => {
-    const [attachments, setAttachments] = useState([]);
-    
     const {
         control,
         handleSubmit,
         formState: { errors },
-        reset
+        reset,
+        setValue
     } = useForm({
         defaultValues: {
             cost_type_id: '',
@@ -59,20 +58,50 @@ const CreateExpenseDialog = ({
         enabled: open
     });
 
+    // Fetch vendors for dropdown
+    const { data: vendorsResponse } = useQuery({
+        queryKey: ['vendors'],
+        queryFn: getVendors,
+        enabled: open
+    });
+
+    // Fetch firms for dropdown
+    const { data: firmsResponse } = useQuery({
+        queryKey: ['firms'],
+        queryFn: getFirms,
+        enabled: open
+    });
+
     const costTypes = metaData?.cost_type || [];
     const categories = metaData?.category || [];
+    const vendors = vendorsResponse?.data || [];
+    const firms = firmsResponse?.data || [];
+
+    // Set form values when editing
+    useEffect(() => {
+        if (editMode && editingExpense) {
+            setValue('cost_type_id', editingExpense.cost_type_id?.toString() || '');
+            setValue('vendor_id', editingExpense.vendor_id?.toString() || '');
+            setValue('subfirm_id', editingExpense.subfirm_id?.toString() || '');
+            setValue('amount', editingExpense.amount || '');
+            setValue('billable_client', editingExpense.billable_client || false);
+            setValue('description', editingExpense.description || '');
+            setValue('date_issued', editingExpense.date_issued || '');
+            setValue('invoice_number', editingExpense.invoice_number || '');
+            setValue('qty', editingExpense.qty || '');
+            setValue('category_id', editingExpense.category_id?.toString() || '');
+            setValue('folder_id', editingExpense.folder_id?.toString() || '');
+        }
+    }, [editMode, editingExpense, setValue]);
 
     const onFormSubmit = (data) => {
-        const formData = {
-            ...data,
-            attachments: attachments.filter(att => !att.isExisting) // Only send new attachments
-        };
-        onSubmit(formData);
+        // Add ID if editing
+        const submitData = editMode ? { ...data, id: editingExpense.id } : data;
+        onSubmit(submitData);
     };
 
     const handleClose = () => {
         reset();
-        setAttachments([]);
         onClose();
     };
 
@@ -82,7 +111,7 @@ const CreateExpenseDialog = ({
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-3">
                     <h1 className="text-xl text-[#40444D] text-center font-bold font-sans">
-                        Create New Expense
+                        {editMode ? 'Edit Expense' : 'Create New Expense'}
                     </h1>
                     <IconButton onClick={handleClose}>
                         <X className="text-black" />
@@ -235,40 +264,64 @@ const CreateExpenseDialog = ({
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="w-full">
                                 <Label className="text-[#40444D] font-semibold mb-2 block">
-                                    Vendor ID
+                                    Vendor
                                 </Label>
                                 <Controller
                                     control={control}
                                     name="vendor_id"
                                     render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            type="number"
-                                            placeholder="Enter vendor ID"
+                                        <Select
+                                            onValueChange={field.onChange}
+                                            value={field.value || ''}
                                             disabled={isLoading}
-                                            className="h-12 w-full border-gray-300"
-                                        />
+                                        >
+                                            <SelectTrigger className={`h-12 w-full ${errors.vendor_id ? 'border-red-500' : 'border-gray-300'}`}>
+                                                <SelectValue placeholder="Select Vendor" />
+                                            </SelectTrigger>
+                                            <SelectContent className="z-[9999]">
+                                                {vendors.map((vendor) => (
+                                                    <SelectItem key={vendor.id} value={vendor.id.toString()}>
+                                                        {vendor.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     )}
                                 />
+                                {errors.vendor_id && (
+                                    <p className="text-xs text-red-500 mt-1">{errors.vendor_id.message}</p>
+                                )}
                             </div>
 
                             <div className="w-full">
                                 <Label className="text-[#40444D] font-semibold mb-2 block">
-                                    SubFirm ID
+                                    SubFirm
                                 </Label>
                                 <Controller
                                     control={control}
                                     name="subfirm_id"
                                     render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            type="number"
-                                            placeholder="Enter subfirm ID"
+                                        <Select
+                                            onValueChange={field.onChange}
+                                            value={field.value || ''}
                                             disabled={isLoading}
-                                            className="h-12 w-full border-gray-300"
-                                        />
+                                        >
+                                            <SelectTrigger className={`h-12 w-full ${errors.subfirm_id ? 'border-red-500' : 'border-gray-300'}`}>
+                                                <SelectValue placeholder="Select SubFirm" />
+                                            </SelectTrigger>
+                                            <SelectContent className="z-[9999]">
+                                                {firms.map((firm) => (
+                                                    <SelectItem key={firm.id} value={firm.id.toString()}>
+                                                        {firm.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     )}
                                 />
+                                {errors.subfirm_id && (
+                                    <p className="text-xs text-red-500 mt-1">{errors.subfirm_id.message}</p>
+                                )}
                             </div>
 
                             <div className="w-full">
@@ -332,17 +385,25 @@ const CreateExpenseDialog = ({
                             </Label>
                         </div>
 
-                        {/* Attachments */}
-                        <div className="w-full">
-                            <FileUpload
-                                files={attachments}
-                                onChange={setAttachments}
-                                multiple={true}
-                                disabled={isLoading}
-                                accept="*/*"
-                                maxSize={50 * 1024 * 1024}
+                        {/* Folder ID */}
+                        {/* <div className="w-full">
+                            <Label className="text-[#40444D] font-semibold mb-2 block">
+                                Folder ID
+                            </Label>
+                            <Controller
+                                control={control}
+                                name="folder_id"
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        type="number"
+                                        placeholder="Enter folder ID"
+                                        disabled={isLoading}
+                                        className="h-12 w-full border-gray-300"
+                                    />
+                                )}
                             />
-                        </div>
+                        </div> */}
                     </form>
                 </div>
 
@@ -364,7 +425,7 @@ const CreateExpenseDialog = ({
                         disabled={isLoading}
                         className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
                     >
-                        {isLoading ? 'Creating...' : 'Create Expense'}
+                        {isLoading ? (editMode ? 'Updating...' : 'Creating...') : (editMode ? 'Update Expense' : 'Create Expense')}
                     </Button>
                 </div>
             </Stack>

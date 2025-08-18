@@ -2,6 +2,7 @@ import { BACKEND_URL } from '../endpoint/index';
 import axios from 'axios';
 import { getToken, clearAuthData } from '@/utils/auth';
 import { logout } from '@/store/slices/authSlice';
+import { toast } from 'sonner';
 
 // Create axios instance
 const axiosInstance = axios.create();
@@ -50,6 +51,12 @@ export const setupAxiosInterceptor = (store) => {
 const handleTokenExpiration = (store) => {
   console.log('Handling token expiration...');
 
+  // Show logout toast
+  toast.error('Session expired. Please login again.', {
+    duration: 4000,
+    description: 'Your session has expired due to inactivity.'
+  });
+
   // Clear all auth data
   clearAuthData();
 
@@ -59,7 +66,7 @@ const handleTokenExpiration = (store) => {
   // Redirect to login page
   setTimeout(() => {
     window.location.href = '/login';
-  }, 100);
+  }, 1000);
 };
 
 export const apiService = async ({
