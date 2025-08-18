@@ -83,10 +83,20 @@ export const getFolderContents = async (folderId) => {
 };
 
 // Get folder items (new function for updated API)
-export const getFolderItems = async (folderId) => {
+export const getFolderItems = async (folderId, mainSlug = null) => {
   try {
+    let endpoint;
+    
+    if (mainSlug) {
+      // Matter-specific context - use slug-based endpoint
+      endpoint = `${endpoints.getItems}/${folderId}?slugId=${mainSlug}`;
+    } else {
+      // Main dashboard context - use general endpoint
+      endpoint = `${endpoints.getItems}/${folderId}`;
+    }
+
     const response = await apiService({
-      endpoint: `${endpoints.getItems}/${folderId}`,
+      endpoint,
       method: 'GET',
     });
 
@@ -132,13 +142,24 @@ export const createFolderWithSlug = async (
   mainSlug
 ) => {
   try {
-    // Both root and subfolder creation use the same endpoint pattern
-    const endpoint = `${endpoints.addFolder}/${mainSlug}`;
+    let endpoint;
+    let requestData;
 
-    const requestData = {
-      ...folderData,
-      slug: parentFolderSlug, // null for root level, parent slug for subfolders
-    };
+    if (mainSlug) {
+      // Matter-specific context - use slug-based endpoint
+      endpoint = `${endpoints.addFolder}/${mainSlug}`;
+      requestData = {
+        ...folderData,
+        slug: parentFolderSlug, // null for root level, parent slug for subfolders
+      };
+    } else {
+      // Main dashboard context - use list endpoint without slug
+      endpoint = endpoints.getFoldersBySlug;
+      requestData = {
+        ...folderData,
+        slug: parentFolderSlug, // null for root level, parent slug for subfolders
+      };
+    }
 
     const response = await apiService({
       endpoint,
@@ -160,7 +181,15 @@ export const createFolderWithSlug = async (
 // Upload file
 export const uploadFile = async (fileData, parentFolderSlug, mainSlug) => {
   try {
-    const endpoint = `${endpoints.uploadFile}/${mainSlug}`;
+    let endpoint;
+
+    if (mainSlug) {
+      // Matter-specific context - use slug-based endpoint
+      endpoint = `${endpoints.uploadFile}/${mainSlug}`;
+    } else {
+      // Main dashboard context - use list endpoint without slug
+      endpoint = endpoints.getFoldersBySlug;
+    }
 
     const response = await apiService({
       endpoint,
@@ -183,10 +212,10 @@ export const uploadFile = async (fileData, parentFolderSlug, mainSlug) => {
 };
 
 // Rename folder
-export const renameFolder = async (folderId, newName) => {
+export const renameFolder = async (folderId, newName, type = 'folder') => {
   try {
     const response = await apiService({
-      endpoint: `${endpoints.renameFolder}/${folderId}`,
+      endpoint: `${endpoints.renameFolder}/${type}/${folderId}`,
       method: 'PUT',
       data: { name: newName },
     });

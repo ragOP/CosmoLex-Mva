@@ -28,12 +28,12 @@ const RenameFolderDialog = ({ open, onClose, onSubmit, isLoading, folderToRename
     e.preventDefault();
     
     if (!folderName.trim()) {
-      setError('Folder name is required');
+      setError('Name is required');
       return;
     }
     
     if (folderName.trim().length < 2) {
-      setError('Folder name must be at least 2 characters long');
+      setError('Name must be at least 2 characters long');
       return;
     }
 
@@ -58,26 +58,26 @@ const RenameFolderDialog = ({ open, onClose, onSubmit, isLoading, folderToRename
         <DialogHeader>
           <DialogTitle className="text-2xl text-[#40444D] text-center font-bold font-sans flex items-center justify-center gap-2">
             <Edit className="text-[#6366F1]" />
-            Rename Folder
+            Rename {folderToRename?.isDir ? 'Folder' : 'File'}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-4">
             <div className="text-sm text-[#40444D] bg-white p-3 rounded-lg border">
-              <span className="font-semibold">Renaming folder: </span>
+              <span className="font-semibold">Renaming {folderToRename?.isDir ? 'folder' : 'file'}: </span>
               <span className="text-[#6366F1] font-medium">{folderToRename?.name}</span>
             </div>
             
             <div>
               <Label className="text-[#40444D] font-semibold mb-2 block">
-                New Folder Name
+                New {folderToRename?.isDir ? 'Folder' : 'File'} Name
               </Label>
               <Input
                 autoFocus
                 value={folderName}
                 onChange={(e) => setFolderName(e.target.value)}
-                placeholder="Enter new folder name"
+                placeholder={`Enter new ${folderToRename?.isDir ? 'folder' : 'file'} name`}
                 disabled={isLoading}
                 className={error ? 'border-red-500' : ''}
               />
@@ -103,7 +103,7 @@ const RenameFolderDialog = ({ open, onClose, onSubmit, isLoading, folderToRename
               disabled={isLoading || !folderName.trim() || folderName.trim() === folderToRename?.name}
             >
               <Edit className="mr-2 h-4 w-4" />
-              {isLoading ? 'Renaming...' : 'Rename Folder'}
+              {isLoading ? 'Renaming...' : `Rename ${folderToRename?.isDir ? 'Folder' : 'File'}`}
             </Button>
           </DialogFooter>
         </form>

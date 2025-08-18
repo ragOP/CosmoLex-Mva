@@ -295,7 +295,7 @@ const CreateExpenseDialog = ({
 
                             <div className="w-full">
                                 <Label className="text-[#40444D] font-semibold mb-2 block">
-                                    SubFirm
+                                    Firm 
                                 </Label>
                                 <Controller
                                     control={control}
@@ -307,7 +307,7 @@ const CreateExpenseDialog = ({
                                             disabled={isLoading}
                                         >
                                             <SelectTrigger className={`h-12 w-full ${errors.subfirm_id ? 'border-red-500' : 'border-gray-300'}`}>
-                                                <SelectValue placeholder="Select SubFirm" />
+                                                <SelectValue placeholder="Select Firm" />
                                             </SelectTrigger>
                                             <SelectContent className="z-[9999]">
                                                 {firms.map((firm) => (

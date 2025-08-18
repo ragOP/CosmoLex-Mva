@@ -229,7 +229,7 @@ const ExpenseDetail = ({ expenseId }) => {
                   
                   <div>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      SubFirm
+                      Firm
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500, color: '#7c3aed' }}>
                       {expense.firm || 'N/A'}
@@ -308,7 +308,7 @@ const ExpenseDetail = ({ expenseId }) => {
                   
                   <div>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      SubFirm ID
+                      Firm ID
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
                       {expense.subfirm_id || 'N/A'}

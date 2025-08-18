@@ -58,7 +58,7 @@ export const endpoints = {
   addFolder: 'v2/documents/addFolder', // New endpoint for creating folders with slug
   renameFolder: 'v2/documents/renameFolder', // New endpoint for renaming folders
   uploadFile: 'v2/documents/uploadfile',
-  deleteDocument: 'v2/documents',
+  deleteDocument: 'v2/documents/delete', // Updated endpoint for delete operations
   // Notes endpoints
   getNotes: 'v2/matter/notes/list',
   getNote: 'v2/matter/notes/show',

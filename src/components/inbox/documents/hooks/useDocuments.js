@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import {
   getDocumentsMeta,
-  getFolders,
   getFoldersBySlug,
   getFolderItems,
   createFolderWithSlug,
@@ -32,14 +31,14 @@ export const useDocuments = () => {
   // Query for fetching folders by slug
   const { data: folders = [], isLoading: foldersLoading } = useQuery({
     queryKey: ['folders', slugId],
-    queryFn: () => (slugId ? getFoldersBySlug(slugId) : getFolders()),
+    queryFn: () => getFoldersBySlug(slugId || ''), // Always use getFoldersBySlug, pass empty string for main dashboard
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Query for fetching folder contents
   const { data: folderContentsData, isLoading: contentsLoading } = useQuery({
-    queryKey: ['folderContents', selectedFolder?.id],
-    queryFn: () => (selectedFolder ? getFolderItems(selectedFolder.id) : null),
+    queryKey: ['folderContents', selectedFolder?.id, slugId],
+    queryFn: () => (selectedFolder ? getFolderItems(selectedFolder.id, slugId) : null),
     enabled: !!selectedFolder,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
@@ -61,7 +60,7 @@ export const useDocuments = () => {
 
   // Mutation for renaming folder
   const renameFolderMutation = useMutation({
-    mutationFn: ({ folderId, newName }) => renameFolder(folderId, newName),
+    mutationFn: ({ folderId, newName, type }) => renameFolder(folderId, newName, type),
     onSuccess: () => {
       queryClient.invalidateQueries(['folders', slugId]);
       if (selectedFolder) {
@@ -75,6 +74,9 @@ export const useDocuments = () => {
     mutationFn: ({ fileData, parentFolderSlug, mainSlug }) =>
       uploadFile(fileData, parentFolderSlug, mainSlug),
     onSuccess: () => {
+      // Always invalidate folders to show new files at root level
+      queryClient.invalidateQueries(['folders', slugId]);
+      // Also invalidate folder contents if we're in a subfolder
       if (selectedFolder) {
         queryClient.invalidateQueries(['folderContents', selectedFolder.id]);
       }
@@ -128,6 +130,15 @@ export const useDocuments = () => {
     setSelectedFolder(null);
   }, []);
 
+  // Navigate to specific path level
+  const navigateToPathLevel = useCallback((targetIndex) => {
+    if (targetIndex < 0 || targetIndex >= currentPath.length) return;
+    
+    const targetPath = currentPath.slice(0, targetIndex + 1);
+    setCurrentPath(targetPath);
+    setSelectedFolder(targetPath[targetPath.length - 1]);
+  }, [currentPath]);
+
   // Create new folder
   const handleCreateFolder = useCallback(
     async (folderName) => {
@@ -168,9 +179,8 @@ export const useDocuments = () => {
 
         // Add parent folder slug (null for root level, parent folder slug for subfolders)
         const parentFolderSlug = getCurrentFolderSlug();
-        if (parentFolderSlug) {
-          formData.append('slug', parentFolderSlug);
-        }
+        // Always include slug field - set to null if no parent folder, otherwise use parent folder slug
+        formData.append('slug', parentFolderSlug || null);
 
         await uploadFileMutation.mutateAsync({
           fileData: formData,
@@ -185,13 +195,13 @@ export const useDocuments = () => {
     [getCurrentFolderSlug, uploadFileMutation, slugId]
   );
 
-  // Rename folder
-  const handleRenameFolder = useCallback(
-    async (folderId, newName) => {
+  // Rename item (folder or file)
+  const handleRenameItem = useCallback(
+    async (itemId, newName, itemType = 'folder') => {
       try {
-        await renameFolderMutation.mutateAsync({ folderId, newName });
+        await renameFolderMutation.mutateAsync({ folderId: itemId, newName, type: itemType });
       } catch (error) {
-        console.error('Error renaming folder:', error);
+        console.error('Error renaming item:', error);
         throw error;
       }
     },
@@ -229,10 +239,11 @@ export const useDocuments = () => {
     navigateToFolder,
     navigateBack,
     navigateToRoot,
+    navigateToPathLevel,
     getCurrentFolderSlug,
     handleCreateFolder,
     handleUploadFile,
-    handleRenameFolder,
+    handleRenameItem,
     handleDeleteItem,
 
     // Mutation states
