@@ -1,16 +1,27 @@
-import React, { useState } from 'react';
-import { Stack, IconButton, Typography, Chip } from '@mui/material';
-import { Search, RotateCcw, Plus, Calculator, FileText, DollarSign, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Stack, IconButton, Typography, Chip, Menu, MenuItem, ListItemIcon, Dialog } from '@mui/material';
+import { Search, RotateCcw, Plus, Calculator, FileText, DollarSign, TrendingUp, MoreVertical, Eye, Edit, Trash2, Grid3X3, List } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getFeeSplits, createFeeSplit } from '@/api/api_services/finance';
+import { getFeeSplits, createFeeSplit, updateFeeSplit, deleteFeeSplit } from '@/api/api_services/finance';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import CreateFeeSplitDialog from './components/CreateFeeSplitDialog';
 import { toast } from 'sonner';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const FeeSplitsTab = ({ slugId }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState('grid');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingFeeSplit, setEditingFeeSplit] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [feeSplitToDelete, setFeeSplitToDelete] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedFeeSplit, setSelectedFeeSplit] = useState(null);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Fetch fee splits
   const { data: feeSplitsResponse, isLoading, refetch } = useQuery({
@@ -22,26 +33,120 @@ const FeeSplitsTab = ({ slugId }) => {
 
   const feeSplits = feeSplitsResponse?.data || [];
 
+  useEffect(() => {
+    const editId = searchParams.get('edit');
+    if (editId && feeSplits.length) {
+      const feeSplit = feeSplits.find(f => String(f.id) === String(editId));
+      if (feeSplit) {
+        setEditingFeeSplit(feeSplit);
+        setEditDialogOpen(true);
+      }
+    } else {
+      setEditDialogOpen(false);
+      setEditingFeeSplit(null);
+    }
+  }, [searchParams, feeSplits]);
+
   const handleRefresh = () => {
     refetch();
   };
 
   // Create fee split mutation
   const createFeeSplitMutation = useMutation({
-    mutationFn: ({ slugId, ...feeSplitData }) => createFeeSplit(feeSplitData, slugId),
+    mutationFn: ({ slugId, ...feeSplitData }) => createFeeSplit(feeSplitData, slugId)
+  });
+
+  // Update fee split mutation
+  const updateFeeSplitMutation = useMutation({
+    mutationFn: ({ id, data }) => updateFeeSplit(id, data, slugId)
+  });
+
+  // Delete fee split mutation
+  const deleteFeeSplitMutation = useMutation({
+    mutationFn: deleteFeeSplit,
     onSuccess: () => {
-      toast.success('Fee split created successfully!');
-      setCreateDialogOpen(false);
+      toast.success('Fee split deleted successfully!');
+      setDeleteDialogOpen(false);
+      setFeeSplitToDelete(null);
       queryClient.invalidateQueries(['feeSplits', slugId]);
     },
     onError: (error) => {
-      toast.error('Failed to create fee split. Please try again.');
-      console.error('Create fee split error:', error);
+      toast.error('Failed to delete fee split. Please try again.');
+      console.error('Delete fee split error:', error);
     }
   });
 
-  const handleCreateFeeSplit = (feeSplitData) => {
-    createFeeSplitMutation.mutate({ ...feeSplitData, slugId });
+  const handleCreateFeeSplit = async (feeSplitData, setApiErrors) => {
+    try {
+      const result = await createFeeSplitMutation.mutateAsync({ ...feeSplitData, slugId });
+      
+      // Return the result to the dialog for proper error handling
+      return result;
+    } catch (error) {
+      console.error('Create fee split error:', error);
+      
+      // Handle API validation errors
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        if (errorData.Apistatus === false && errorData.errors) {
+          setApiErrors(errorData.errors);
+          return errorData; // Return error data to dialog
+        }
+      }
+      
+      // Return generic error
+      return {
+        Apistatus: false,
+        message: 'Failed to create fee split. Please try again.'
+      };
+    }
+  };
+
+  const handleUpdateFeeSplit = async (data) => {
+    if (!editingFeeSplit) return;
+    
+    try {
+      const result = await updateFeeSplitMutation.mutateAsync({ id: editingFeeSplit.id, data });
+      
+      // Return the result to the dialog for proper error handling
+      return result;
+    } catch (error) {
+      console.error('Update fee split error:', error);
+      
+      // Handle API validation errors
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        if (errorData.Apistatus === false && errorData.errors) {
+          return errorData; // Return error data to dialog
+        }
+      }
+      
+      // Return generic error
+      return {
+        Apistatus: false,
+        message: 'Failed to update fee split. Please try again.'
+      };
+    }
+  };
+
+  const handleViewFeeSplit = (feeSplitId) => {
+    navigate(`/dashboard/inbox/finance/${feeSplitId}?slugId=${slugId}&tab=fee-splits`);
+  };
+
+  const handleEditFeeSplit = (feeSplitId) => {
+    // Open edit dialog via URL param for consistency
+    navigate(`/dashboard/inbox/finance?slugId=${slugId}&tab=fee-splits&edit=${feeSplitId}`);
+  };
+
+  const handleDeleteFeeSplit = (feeSplit) => {
+    setFeeSplitToDelete(feeSplit);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteFeeSplit = () => {
+    if (feeSplitToDelete) {
+      deleteFeeSplitMutation.mutate(feeSplitToDelete.id);
+    }
   };
 
   const filteredFeeSplits = feeSplits.filter(split => 
@@ -83,6 +188,30 @@ const FeeSplitsTab = ({ slugId }) => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
               />
+            </div>
+
+            {/* View Toggle */}
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'grid' 
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <Grid3X3 size={16} />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-md transition-colors ${
+                  viewMode === 'list' 
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <List size={16} />
+              </button>
             </div>
             
             <button 
@@ -133,33 +262,20 @@ const FeeSplitsTab = ({ slugId }) => {
             </div>
           ) : (
             <div className="w-full">
-              {/* Table Header */}
-              <div className="bg-gray-50 rounded-t-lg border border-gray-200 px-6 py-4">
-                <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700">
-                  <div className="col-span-3">Case Information</div>
-                  <div className="col-span-2">Partner Firm</div>
-                  <div className="col-span-2">Split Details</div>
-                  <div className="col-span-3">Financial Breakdown</div>
-                  <div className="col-span-1">Status</div>
-                  <div className="col-span-1">Date</div>
-                </div>
-              </div>
-
-              {/* Table Body */}
-              <div className="bg-white border-l border-r border-b border-gray-200 rounded-b-lg">
-                {filteredFeeSplits.map((split, index) => (
-                  <div
-                    key={split.id}
-                    className={`px-6 py-4 border-gray-100 hover:bg-gray-50 transition-colors ${
-                      index !== filteredFeeSplits.length - 1 ? 'border-b' : ''
-                    }`}
-                  >
-                    <div className="grid grid-cols-12 gap-4 items-center">
-                      {/* Case Information */}
-                      <div className="col-span-3">
-                        <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-purple-50 to-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <FileText className="w-5 h-5 text-purple-600" />
+              {viewMode === 'grid' ? (
+                // Grid View - Cards
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredFeeSplits.map((split) => (
+                    <div
+                      key={split.id}
+                      className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-gray-300 cursor-pointer"
+                      onClick={() => handleViewFeeSplit(split.id)}
+                    >
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-purple-50 to-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-6 h-6 text-purple-600" />
                           </div>
                           <div>
                             <h3 className="font-semibold text-gray-900 text-sm mb-1">
@@ -170,17 +286,28 @@ const FeeSplitsTab = ({ slugId }) => {
                             </p>
                           </div>
                         </div>
+                        <IconButton
+                          size="small"
+                          className="text-gray-400 hover:text-gray-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAnchorEl(e.currentTarget);
+                            setSelectedFeeSplit(split);
+                          }}
+                        >
+                          <MoreVertical size={16} />
+                        </IconButton>
                       </div>
 
-                      {/* Partner Firm */}
-                      <div className="col-span-2">
-                        <p className="font-medium text-gray-900 text-sm">{split.firm_name}</p>
+                      {/* Firm Info */}
+                      <div className="mb-4">
+                        <p className="font-medium text-gray-900 text-sm mb-1">{split.firm_name}</p>
                         <p className="text-xs text-gray-500">{split.split_type}</p>
                       </div>
 
                       {/* Split Details */}
-                      <div className="col-span-2">
-                        <div className="flex items-center gap-2 mb-1">
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center gap-2">
                           <TrendingUp className="w-4 h-4 text-blue-500" />
                           <span className="text-sm font-medium text-blue-600">Us: {split.our_percentage}</span>
                         </div>
@@ -190,8 +317,8 @@ const FeeSplitsTab = ({ slugId }) => {
                         </div>
                       </div>
 
-                      {/* Financial Breakdown */}
-                      <div className="col-span-3">
+                      {/* Financial Summary */}
+                      <div className="bg-gray-50 rounded-lg p-3 mb-4">
                         <div className="space-y-1">
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-gray-500">Total:</span>
@@ -201,15 +328,11 @@ const FeeSplitsTab = ({ slugId }) => {
                             <span className="text-xs text-blue-600">Our Share:</span>
                             <span className="font-medium text-blue-600">{split.our_share}</span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs text-orange-600">Their Share:</span>
-                            <span className="font-medium text-orange-600">{split.their_share}</span>
-                          </div>
                         </div>
                       </div>
 
-                      {/* Status */}
-                      <div className="col-span-1">
+                      {/* Footer */}
+                      <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                         <Chip
                           label={split.status}
                           size="small"
@@ -219,18 +342,131 @@ const FeeSplitsTab = ({ slugId }) => {
                             fontWeight: 500
                           }}
                         />
-                      </div>
-
-                      {/* Date */}
-                      <div className="col-span-1">
                         <p className="text-xs text-gray-500">
                           {new Date(split.created_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
+                  ))}
+                </div>
+              ) : (
+                // List View - Table
+                <>
+                  {/* Table Header */}
+                  <div className="bg-gray-50 rounded-t-lg border border-gray-200 px-6 py-4">
+                    <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700">
+                      <div className="col-span-3">Case Information</div>
+                      <div className="col-span-2">Partner Firm</div>
+                      <div className="col-span-2">Split Details</div>
+                      <div className="col-span-3">Financial Breakdown</div>
+                      <div className="col-span-1">Status</div>
+                      <div className="col-span-1">Date</div>
+                    </div>
                   </div>
-                ))}
-              </div>
+
+                  {/* Table Body */}
+                  <div className="bg-white border-l border-r border-b border-gray-200 rounded-b-lg">
+                    {filteredFeeSplits.map((split, index) => (
+                      <div
+                        key={split.id}
+                        className={`px-6 py-4 border-gray-100 hover:bg-gray-50 transition-colors ${
+                          index !== filteredFeeSplits.length - 1 ? 'border-b' : ''
+                        }`}
+                      >
+                        <div className="grid grid-cols-12 gap-4 items-center">
+                          {/* Case Information */}
+                          <div className="col-span-3">
+                            <div className="flex items-start gap-3">
+                              <div className="w-10 h-10 bg-gradient-to-br from-purple-50 to-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <FileText className="w-5 h-5 text-purple-600" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-900 text-sm mb-1">
+                                  {split.case_name}
+                                </h3>
+                                <p className="text-xs text-gray-500">
+                                  {split.case_number}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Partner Firm */}
+                          <div className="col-span-2">
+                            <p className="font-medium text-gray-900 text-sm">{split.firm_name}</p>
+                            <p className="text-xs text-gray-500">{split.split_type}</p>
+                          </div>
+
+                          {/* Split Details */}
+                          <div className="col-span-2">
+                            <div className="flex items-center gap-2 mb-1">
+                              <TrendingUp className="w-4 h-4 text-blue-500" />
+                              <span className="text-sm font-medium text-blue-600">Us: {split.our_percentage}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <TrendingUp className="w-4 h-4 text-orange-500" />
+                              <span className="text-sm font-medium text-orange-600">Them: {split.their_percentage}</span>
+                            </div>
+                          </div>
+
+                          {/* Financial Breakdown */}
+                          <div className="col-span-3">
+                            <div className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-500">Total:</span>
+                                <span className="font-semibold text-gray-900">{split.total_settlement}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-blue-600">Our Share:</span>
+                                <span className="font-medium text-blue-600">{split.our_share}</span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-orange-600">Their Share:</span>
+                                <span className="font-medium text-orange-600">{split.their_share}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Status */}
+                          <div className="col-span-1">
+                            <Chip
+                              label={split.status}
+                              size="small"
+                              sx={{
+                                ...getStatusColor(split.status),
+                                fontSize: '0.75rem',
+                                fontWeight: 500
+                              }}
+                            />
+                          </div>
+
+                          {/* Date */}
+                          <div className="col-span-1">
+                            <p className="text-xs text-gray-500">
+                              {new Date(split.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="col-span-1">
+                            <IconButton
+                              size="small"
+                              className="text-gray-400 hover:text-gray-600"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAnchorEl(e.currentTarget);
+                                setSelectedFeeSplit(split);
+                              }}
+                            >
+                              <MoreVertical size={16} />
+                            </IconButton>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -238,10 +474,131 @@ const FeeSplitsTab = ({ slugId }) => {
         {/* Create Fee Split Dialog */}
         <CreateFeeSplitDialog
           open={createDialogOpen}
-          onClose={() => setCreateDialogOpen(false)}
+          onClose={(success) => {
+            if (success) {
+              // Success - invalidate queries and close dialog
+              queryClient.invalidateQueries(['feeSplits', slugId]);
+            }
+            setCreateDialogOpen(false);
+          }}
           onSubmit={handleCreateFeeSplit}
           isLoading={createFeeSplitMutation.isPending}
         />
+
+        {/* Edit Fee Split Dialog */}
+        <CreateFeeSplitDialog
+          open={editDialogOpen}
+          onClose={(success) => {
+            if (success) {
+              // Success - invalidate queries, close dialog, and clear URL params
+              queryClient.invalidateQueries(['feeSplits', slugId]);
+              const params = new URLSearchParams(searchParams);
+              params.delete('edit');
+              navigate(`?${params.toString()}`, { replace: true });
+            }
+            setEditDialogOpen(false);
+            setEditingFeeSplit(null);
+          }}
+          onSubmit={handleUpdateFeeSplit}
+          isLoading={updateFeeSplitMutation.isPending}
+          editMode={true}
+          editingFeeSplit={editingFeeSplit}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <div className="p-6">
+            <Typography variant="h6" className="font-semibold text-gray-900 mb-4">
+              Delete Fee Split
+            </Typography>
+            <Typography variant="body1" className="text-gray-600 mb-6">
+              Are you sure you want to delete this fee split? This action cannot be undone.
+            </Typography>
+            <div className="flex justify-end gap-3">
+              <Button
+                onClick={() => setDeleteDialogOpen(false)}
+                variant="outline"
+                className="border-gray-300"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmDeleteFeeSplit}
+                disabled={deleteFeeSplitMutation.isPending}
+                className="bg-red-600 text-white hover:bg-red-700"
+              >
+                {deleteFeeSplitMutation.isPending ? 'Deleting...' : 'Delete Fee Split'}
+              </Button>
+            </div>
+          </div>
+        </Dialog>
+
+        {/* Three-dot Menu */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => {
+            setAnchorEl(null);
+            setSelectedFeeSplit(null);
+          }}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+        >
+          <MenuItem
+            onClick={() => {
+              if (selectedFeeSplit) {
+                handleViewFeeSplit(selectedFeeSplit.id);
+                setAnchorEl(null);
+                setSelectedFeeSplit(null);
+              }
+            }}
+          >
+            <ListItemIcon>
+              <Eye size={16} />
+            </ListItemIcon>
+            View Fee Split Details
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              if (selectedFeeSplit) {
+                handleEditFeeSplit(selectedFeeSplit.id);
+                setAnchorEl(null);
+                setSelectedFeeSplit(null);
+              }
+            }}
+          >
+            <ListItemIcon>
+              <Edit size={16} />
+            </ListItemIcon>
+            Edit Fee Split
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              if (selectedFeeSplit) {
+                handleDeleteFeeSplit(selectedFeeSplit);
+                setAnchorEl(null);
+                setSelectedFeeSplit(null);
+              }
+            }}
+            sx={{ color: '#dc2626' }}
+          >
+            <ListItemIcon>
+              <Trash2 size={16} style={{ color: '#dc2626' }} />
+            </ListItemIcon>
+            Delete Fee Split
+          </MenuItem>
+        </Menu>
       </Stack>
     </div>
   );

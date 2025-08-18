@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Stack, Tabs, Tab, Box } from '@mui/material';
-import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
+import { useSearchParams, useNavigate, useParams, useLocation } from 'react-router-dom';
 import BreadCrumb from '@/components/BreadCrumb';
 import TabPanel from './TabPanel';
 import FirmsTab from './FirmsTab';
@@ -9,12 +9,15 @@ import FeeSplitsTab from './FeeSplitsTab';
 import ExpensesTab from './ExpensesTab';
 import FirmDetail from './FirmDetail';
 import ExpenseDetail from './ExpenseDetail';
+import VendorDetail from './VendorDetail';
+import FeeSplitDetail from './FeeSplitDetail';
 // import { MatterContext } from '@/components/inbox/MatterContext';
 
 const Finance = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { id: itemId } = useParams();
+  const location = useLocation();
   const [tabValue, setTabValue] = useState(0);
   
   // Get matter context to access slugId
@@ -25,6 +28,9 @@ const Finance = () => {
 
   // Get tab from URL params
   const tabParam = searchParams.get('tab');
+  
+  // Check if we're on a vendor detail route
+  const isVendorDetail = location.pathname.includes('/finance/vendors/');
   
   // Set initial tab based on URL and ensure tab parameter exists
   useEffect(() => {
@@ -80,6 +86,20 @@ const Finance = () => {
           <FirmDetail firmId={itemId} />
         </div>
       );
+    } else if (tabParam === 'vendors') {
+      return (
+        <div className="px-4">
+          <BreadCrumb label="Finance" />
+          <VendorDetail />
+        </div>
+      );
+    } else if (tabParam === 'fee-splits') {
+      return (
+        <div className="px-4">
+          <BreadCrumb label="Finance" />
+          <FeeSplitDetail />
+        </div>
+      );
     } else if (tabParam === 'expenses') {
       return (
         <div className="px-4">
@@ -88,6 +108,16 @@ const Finance = () => {
         </div>
       );
     }
+  }
+  
+  // Check if we're on a vendor detail route
+  if (isVendorDetail && itemId) {
+    return (
+      <div className="px-4">
+        <BreadCrumb label="Finance" />
+        <VendorDetail />
+      </div>
+    );
   }
 
   return (

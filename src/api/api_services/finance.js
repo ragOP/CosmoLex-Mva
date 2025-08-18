@@ -212,27 +212,19 @@ export const deleteFirm = async (firmId) => {
 
 export const createVendor = async (vendorData) => {
   try {
-    const formData = new FormData();
-    
-    // Add all vendor fields
-    Object.keys(vendorData).forEach(key => {
-      if (vendorData[key] !== null && vendorData[key] !== undefined) {
-        if (key === 'attachments' && Array.isArray(vendorData[key])) {
-          vendorData[key].forEach((file) => {
-            formData.append('attachments', file);
-          });
-        } else {
-          formData.append(key, vendorData[key]);
-        }
-      }
-    });
+    // Use normal JSON data instead of FormData
+    const jsonData = {
+      ...vendorData,
+      // Comment out attachments for now
+      // attachments: vendorData.attachments
+    };
     
     const response = await apiService({
       endpoint: 'v2/vendors/store',
       method: 'POST',
-      data: formData,
+      data: jsonData,
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'application/json',
       },
     });
     
@@ -246,27 +238,19 @@ export const createVendor = async (vendorData) => {
 // Update vendor
 export const updateVendor = async (vendorId, vendorData) => {
   try {
-    const formData = new FormData();
-    
-    // Add all vendor fields
-    Object.keys(vendorData).forEach(key => {
-      if (vendorData[key] !== null && vendorData[key] !== undefined) {
-        if (key === 'attachments' && Array.isArray(vendorData[key])) {
-          vendorData[key].forEach((file) => {
-            formData.append('attachments', file);
-          });
-        } else {
-          formData.append(key, vendorData[key]);
-        }
-      }
-    });
+    // Use normal JSON data instead of FormData
+    const jsonData = {
+      ...vendorData,
+      // Comment out attachments for now
+      // attachments: vendorData.attachments
+    };
     
     const response = await apiService({
       endpoint: `v2/vendors/update/${vendorId}`,
       method: 'PUT',
-      data: formData,
+      data: jsonData,
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'application/json',
       },
     });
     
@@ -324,6 +308,73 @@ export const createFeeSplit = async (feeSplitData, slug = null) => {
     return response.response;
   } catch (error) {
     console.error('Error creating fee split:', error);
+    throw error;
+  }
+};
+
+// Get single fee split
+export const getFeeSplit = async (feeSplitId) => {
+  try {
+    const response = await apiService({
+      endpoint: `v2/matter/finance/fee-splits/show/${feeSplitId}`,
+      method: 'GET'
+    });
+    
+    return response.response;
+  } catch (error) {
+    console.error('Error fetching fee split:', error);
+    throw error;
+  }
+};
+
+// Update fee split
+export const updateFeeSplit = async (feeSplitId, feeSplitData, slug = null) => {
+  try {
+    const formData = new FormData();
+    
+    // Add all fee split fields
+    Object.keys(feeSplitData).forEach(key => {
+      if (feeSplitData[key] !== null && feeSplitData[key] !== undefined) {
+        formData.append(key, feeSplitData[key]);
+      }
+    });
+    
+    // Add slug if provided
+    if (slug) {
+      formData.append('slug', slug);
+    }
+    
+    const endpoint = slug ? 
+      `v2/matter/finance/fee-splits/update/${feeSplitId}/${slug}` : 
+      `v2/matter/finance/fee-splits/update/${feeSplitId}`;
+    
+    const response = await apiService({
+      endpoint: endpoint,
+      method: 'PUT',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    
+    return response.response;
+  } catch (error) {
+    console.error('Error updating fee split:', error);
+    throw error;
+  }
+};
+
+// Delete fee split
+export const deleteFeeSplit = async (feeSplitId) => {
+  try {
+    const response = await apiService({
+      endpoint: `v2/matter/finance/fee-splits/delete/${feeSplitId}`,
+      method: 'DELETE'
+    });
+    
+    return response.response;
+  } catch (error) {
+    console.error('Error deleting fee split:', error);
     throw error;
   }
 };

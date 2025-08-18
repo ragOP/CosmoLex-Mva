@@ -20,15 +20,19 @@ import { Checkbox } from '@/components/ui/checkbox';
 import FileUpload from '@/components/FileUpload';
 import { Plus, X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { getFinanceMeta } from '@/api/api_services/finance';
+import { getFinanceMeta, getFirms } from '@/api/api_services/finance';
+import { toast } from 'sonner';
 
 const CreateFeeSplitDialog = ({
     open,
     onClose,
     onSubmit,
-    isLoading
+    isLoading,
+    editMode = false,
+    editingFeeSplit = null
 }) => {
     const [attachments, setAttachments] = useState([]);
+    const [apiErrors, setApiErrors] = useState({});
 
     const {
         control,
@@ -40,6 +44,10 @@ const CreateFeeSplitDialog = ({
             case_name: '',
             case_number: '',
             firm_id: '',
+            subfirm_id: '',
+            override_type_id: '',
+            firm_agreement_id: '',
+            referral_status_id: '',
             split_type: '',
             our_percentage: '',
             their_percentage: '',
@@ -62,20 +70,69 @@ const CreateFeeSplitDialog = ({
         enabled: open
     });
 
-    const categories = metaData?.category || [];
+    // Fetch firms for dropdown
+    const { data: firmsResponse } = useQuery({
+        queryKey: ['firms'],
+        queryFn: getFirms,
+        enabled: open
+    });
 
-    const onFormSubmit = (data) => {
+    const categories = metaData?.category || [];
+    const firms = firmsResponse?.data || [];
+
+    // Reset form when dialog opens or populate with editing data
+    React.useEffect(() => {
+        if (!open) return;
+        if (editMode && editingFeeSplit) {
+            reset(editingFeeSplit);
+        } else {
+            reset();
+            setAttachments([]);
+        }
+        setApiErrors({}); // Clear API errors when dialog opens
+    }, [open, editMode, editingFeeSplit, reset]);
+
+    const onFormSubmit = async (data) => {
         const formData = {
             ...data,
             attachments: attachments.filter(att => !att.isExisting) // Only send new attachments
         };
-        onSubmit(formData);
+        
+        try {
+            const result = await onSubmit(formData, setApiErrors);
+            
+            // Check if the submission was successful
+            if (result && result.Apistatus === true) {
+                // Success - show success toast and close dialog
+                toast.success(editMode ? 'Fee split updated successfully!' : 'Fee split created successfully!');
+                // Close dialog with success flag
+                onClose(true); // true indicates success
+            } else if (result && result.Apistatus === false) {
+                // API returned validation errors
+                if (result.errors) {
+                    setApiErrors(result.errors);
+                    toast.error(result.message || 'Validation failed. Please fix the errors below.');
+                } else {
+                    toast.error(result.message || 'Failed to save fee split. Please try again.');
+                }
+                // Don't close dialog on validation errors
+            }
+        } catch (error) {
+            console.error('Form submission error:', error);
+            toast.error('Network error. Please check your connection and try again.');
+            // Don't close dialog on network errors
+        }
     };
 
     const handleClose = () => {
+        // Only close if there are no validation errors
+        if (Object.keys(apiErrors).length > 0) {
+            toast.warning('Form has validation errors. Please fix them before closing.');
+            return;
+        }
         reset();
         setAttachments([]);
-        onClose();
+        onClose(false); // false indicates normal close (not success)
     };
 
     return (
@@ -89,7 +146,7 @@ const CreateFeeSplitDialog = ({
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-3">
                     <h1 className="text-xl text-[#40444D] text-center font-bold font-sans">
-                        Create New Fee Split
+                        {editMode ? 'Edit Fee Split' : 'Create New Fee Split'}
                     </h1>
                     <IconButton onClick={handleClose}>
                         <X className="text-black" />
@@ -124,6 +181,9 @@ const CreateFeeSplitDialog = ({
                                 {errors.case_name && (
                                     <p className="text-xs text-red-500 mt-1">{errors.case_name.message}</p>
                                 )}
+                                {apiErrors.case_name && (
+                                    <p className="text-xs text-red-500 mt-1">{apiErrors.case_name[0]}</p>
+                                )}
                             </div>
 
                             {/* Case Number */}
@@ -147,10 +207,13 @@ const CreateFeeSplitDialog = ({
                                 {errors.case_number && (
                                     <p className="text-xs text-red-500 mt-1">{errors.case_number.message}</p>
                                 )}
+                                {apiErrors.case_number && (
+                                    <p className="text-xs text-red-500 mt-1">{apiErrors.case_number[0]}</p>
+                                )}
                             </div>
                         </div>
 
-                        {/* Partner Firm Information */}
+                        {/* Firm Information */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="w-full">
                                 <Label className="text-[#40444D] font-semibold mb-2 block">
@@ -160,14 +223,130 @@ const CreateFeeSplitDialog = ({
                                     control={control}
                                     name="firm_id"
                                     render={({ field }) => (
+                                        <Select
+                                            onValueChange={field.onChange}
+                                            value={field.value || ''}
+                                            disabled={isLoading}
+                                        >
+                                            <SelectTrigger className="h-12 w-full border-gray-300">
+                                                <SelectValue placeholder="Select Partner Firm" />
+                                            </SelectTrigger>
+                                            <SelectContent className="z-[9999]">
+                                                {firms.map((firm) => (
+                                                    <SelectItem key={firm.id} value={firm.id.toString()}>
+                                                        {firm.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
+                            </div>
+
+                            <div className="w-full">
+                                <Label className="text-[#40444D] font-semibold mb-2 block">
+                                    Subfirm ID *
+                                </Label>
+                                <Controller
+                                    control={control}
+                                    name="subfirm_id"
+                                    rules={{ required: 'Subfirm ID is required' }}
+                                    render={({ field }) => (
                                         <Input
                                             {...field}
-                                            placeholder="Enter partner firm ID"
+                                            placeholder="Enter subfirm ID"
                                             disabled={isLoading}
-                                            className="h-12 w-full border-gray-300"
+                                            className={`h-12 w-full ${errors.subfirm_id ? 'border-red-500' : 'border-gray-300'}`}
                                         />
                                     )}
                                 />
+                                {errors.subfirm_id && (
+                                    <p className="text-xs text-red-500 mt-1">{errors.subfirm_id.message}</p>
+                                )}
+                                {apiErrors.subfirm_id && (
+                                    <p className="text-xs text-red-500 mt-1">{apiErrors.subfirm_id[0]}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Required Fields */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="w-full">
+                                <Label className="text-[#40444D] font-semibold mb-2 block">
+                                    Override Type ID *
+                                </Label>
+                                <Controller
+                                    control={control}
+                                    name="override_type_id"
+                                    rules={{ required: 'Override type ID is required' }}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            placeholder="Enter override type ID"
+                                            disabled={isLoading}
+                                            className={`h-12 w-full ${errors.override_type_id ? 'border-red-500' : 'border-gray-300'}`}
+                                        />
+                                    )}
+                                />
+                                {errors.override_type_id && (
+                                    <p className="text-xs text-red-500 mt-1">{errors.override_type_id.message}</p>
+                                )}
+                                {apiErrors.override_type_id && (
+                                    <p className="text-xs text-red-500 mt-1">{apiErrors.override_type_id[0]}</p>
+                                )}
+                            </div>
+
+                            <div className="w-full">
+                                <Label className="text-[#40444D] font-semibold mb-2 block">
+                                    Firm Agreement ID *
+                                </Label>
+                                <Controller
+                                    control={control}
+                                    name="firm_agreement_id"
+                                    rules={{ required: 'Firm agreement ID is required' }}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            placeholder="Enter firm agreement ID"
+                                            disabled={isLoading}
+                                            className={`h-12 w-full ${errors.firm_agreement_id ? 'border-red-500' : 'border-gray-300'}`}
+                                        />
+                                    )}
+                                />
+                                {errors.firm_agreement_id && (
+                                    <p className="text-xs text-red-500 mt-1">{errors.firm_agreement_id.message}</p>
+                                )}
+                                {apiErrors.firm_agreement_id && (
+                                    <p className="text-xs text-red-500 mt-1">{apiErrors.firm_agreement_id[0]}</p>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Additional Required Fields */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="w-full">
+                                <Label className="text-[#40444D] font-semibold mb-2 block">
+                                    Referral Status ID *
+                                </Label>
+                                <Controller
+                                    control={control}
+                                    name="referral_status_id"
+                                    rules={{ required: 'Referral status ID is required' }}
+                                    render={({ field }) => (
+                                        <Input
+                                            {...field}
+                                            placeholder="Enter referral status ID"
+                                            disabled={isLoading}
+                                            className={`h-12 w-full ${errors.referral_status_id ? 'border-red-500' : 'border-gray-300'}`}
+                                        />
+                                    )}
+                                />
+                                {errors.referral_status_id && (
+                                    <p className="text-xs text-red-500 mt-1">{errors.referral_status_id.message}</p>
+                                )}
+                                {apiErrors.referral_status_id && (
+                                    <p className="text-xs text-red-500 mt-1">{apiErrors.referral_status_id[0]}</p>
+                                )}
                             </div>
 
                             <div className="w-full">
@@ -199,6 +378,9 @@ const CreateFeeSplitDialog = ({
                                 {errors.split_type && (
                                     <p className="text-xs text-red-500 mt-1">{errors.split_type.message}</p>
                                 )}
+                                {apiErrors.split_type && (
+                                    <p className="text-xs text-red-500 mt-1">{apiErrors.split_type[0]}</p>
+                                )}
                             </div>
                         </div>
 
@@ -224,6 +406,9 @@ const CreateFeeSplitDialog = ({
                                 {errors.our_percentage && (
                                     <p className="text-xs text-red-500 mt-1">{errors.our_percentage.message}</p>
                                 )}
+                                {apiErrors.our_percentage && (
+                                    <p className="text-xs text-red-500 mt-1">{apiErrors.our_percentage[0]}</p>
+                                )}
                             </div>
 
                             <div className="w-full">
@@ -245,6 +430,9 @@ const CreateFeeSplitDialog = ({
                                 />
                                 {errors.their_percentage && (
                                     <p className="text-xs text-red-500 mt-1">{errors.their_percentage.message}</p>
+                                )}
+                                {apiErrors.their_percentage && (
+                                    <p className="text-xs text-red-500 mt-1">{apiErrors.their_percentage[0]}</p>
                                 )}
                             </div>
                         </div>
@@ -270,6 +458,9 @@ const CreateFeeSplitDialog = ({
                                 />
                                 {errors.total_settlement && (
                                     <p className="text-xs text-red-500 mt-1">{errors.total_settlement.message}</p>
+                                )}
+                                {apiErrors.total_settlement && (
+                                    <p className="text-xs text-red-500 mt-1">{apiErrors.total_settlement[0]}</p>
                                 )}
                             </div>
 
@@ -448,7 +639,7 @@ const CreateFeeSplitDialog = ({
                         disabled={isLoading}
                         className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
                     >
-                        {isLoading ? 'Creating...' : 'Create Fee Split'}
+                        {isLoading ? (editMode ? 'Updating...' : 'Creating...') : (editMode ? 'Update Fee Split' : 'Create Fee Split')}
                     </Button>
                 </div>
             </Stack>
