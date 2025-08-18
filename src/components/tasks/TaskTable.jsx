@@ -166,29 +166,28 @@ const TaskTable = ({
         return (
           <div className="w-full h-full flex items-center justify-start">
             {/* Uncomment when backend send id rather string for status */}
-            {/*
-            
+
             <Select
-  disabled={params.value === 'Completed'}
-  value={
-    statusMeta.find((s) => s.name === params.value)?.id.toString()
-  } // convert "Pending" → "1"
-  onValueChange={(value) => {
-    handleUpdateTaskStatus(params.id, parseInt(value));
-  }}
->
-  <SelectTrigger className="w-[120px] h-8 text-xs">
-    <SelectValue />
-  </SelectTrigger>
-  <SelectContent>
-    {statusMeta.map((status) => (
-      <SelectItem key={status.id} value={status.id.toString()}>
-        {status.name}
-      </SelectItem>
-    ))}
-  </SelectContent>
-</Select>*/}
-            <Select
+              disabled={params.value === 'Completed'}
+              value={statusMeta
+                .find((s) => s.name === params.value)
+                ?.id.toString()} // convert "Pending" → "1"
+              onValueChange={(value) => {
+                handleUpdateTaskStatus(params.id, parseInt(value));
+              }}
+            >
+              <SelectTrigger className="w-[120px] h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {statusMeta.map((status) => (
+                  <SelectItem key={status.id} value={status.id.toString()}>
+                    {status.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {/* <Select
               disabled={params.value === 'Completed'}
               value={params.value} // "Pending", "Completed"
               onValueChange={(value) => {
@@ -205,7 +204,7 @@ const TaskTable = ({
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+            </Select> */}
           </div>
         );
       },
