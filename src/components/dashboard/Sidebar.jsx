@@ -137,6 +137,12 @@ const sidebarItems = [
     type: 'link',
     iconType: 'documentation',
   },
+  {
+    id: '/dashboard/communication',
+    label: 'Communication',
+    type: 'link',
+    iconType: 'communication',
+  },
 
   // {
   //   id: '/dashboard/matter-intake',

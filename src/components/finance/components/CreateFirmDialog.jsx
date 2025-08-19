@@ -17,7 +17,7 @@ import {
     SelectItem,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getFinanceMeta } from '@/api/api_services/finance';
 import { toast } from 'sonner';
@@ -97,6 +97,14 @@ const CreateFirmDialog = ({
 
     const firmTypes = metaData?.firm_type || [];
 
+    // Search states for dropdowns
+    const [firmTypeSearch, setFirmTypeSearch] = useState('');
+
+    // Filtered data based on search terms
+    const filteredFirmTypes = firmTypes.filter(type =>
+        type.name?.toLowerCase().includes(firmTypeSearch.toLowerCase())
+    );
+
     // Reset all states when dialog opens or populate with editing data
     useEffect(() => {
         if (open) {
@@ -171,10 +179,15 @@ const CreateFirmDialog = ({
         onClose();
     };
 
+    const resetSearchTerms = () => {
+        setFirmTypeSearch('');
+    };
+
     const resetAllStates = () => {
         reset(); // Reset form data
         setApiErrors({}); // Clear API errors
         setIsSubmitting(false); // Reset submission state
+        resetSearchTerms(); // Reset search terms
     };
 
     return (
@@ -271,11 +284,31 @@ const CreateFirmDialog = ({
                                                 </SelectValue>
                                             </SelectTrigger>
                                             <SelectContent className="z-[9999]">
-                                                {firmTypes.map((type) => (
-                                                    <SelectItem key={type.id} value={type.id.toString()}>
-                                                        {type.name}
-                                                    </SelectItem>
-                                                ))}
+                                                {/* Search Input */}
+                                                <div className="p-2 border-b border-gray-200">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+                                                        <Input
+                                                            placeholder="Search firm types..."
+                                                            value={firmTypeSearch}
+                                                            onChange={(e) => setFirmTypeSearch(e.target.value)}
+                                                            className="pl-6 h-8 text-sm border-0 focus:ring-0 focus:border-0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Firm Type List */}
+                                                {filteredFirmTypes.length === 0 ? (
+                                                    <div className="p-2 text-sm text-gray-500 text-center">
+                                                        No firm types found
+                                                    </div>
+                                                ) : (
+                                                    filteredFirmTypes.map((type) => (
+                                                        <SelectItem key={type.id} value={type.id.toString()}>
+                                                            {type.name}
+                                                        </SelectItem>
+                                                    ))
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     );

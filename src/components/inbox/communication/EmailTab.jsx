@@ -17,7 +17,8 @@ const EmailTab = () => {
     const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
     const [selectedEmail, setSelectedEmail] = useState(null);
 
-    const matterId = searchParams.get('slugId') || '1';
+    const slugId = searchParams.get('slugId');
+    const matterId = slugId; // Use slugId if present, otherwise null for main dashboard
 
     // Fetch emails
     const { data: emailsResponse, isLoading, refetch } = useQuery({

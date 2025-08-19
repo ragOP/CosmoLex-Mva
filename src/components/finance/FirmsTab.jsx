@@ -30,7 +30,7 @@ const FirmsTab = ({ slugId }) => {
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
-  const firms = firmsResponse?.data || [];
+  const firms = Array.isArray(firmsResponse?.data) ? firmsResponse.data : [];
 
   const handleRefresh = () => {
     refetch();
@@ -108,11 +108,11 @@ const FirmsTab = ({ slugId }) => {
     navigate(`/dashboard/inbox/finance/${firm.id}?slugId=${currentSlugId}&tab=firms`);
   };
 
-  const filteredFirms = firms.filter(firm => 
-    firm.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredFirms = Array.isArray(firms) ? firms.filter(firm => 
+    firm.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (firm.firm_type_id && firm.firm_type_id.toString().includes(searchTerm.toLowerCase())) ||
-    firm.contact_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    firm.contact_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) : [];
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -225,7 +225,7 @@ const FirmsTab = ({ slugId }) => {
               {/* Grid View */}
               {viewMode === 'grid' && (
                 <div className="w-full grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredFirms.map((firm) => (
+                  {Array.isArray(filteredFirms) && filteredFirms.map((firm) => (
                 <div
                   key={firm.id}
                   className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-gray-300 cursor-pointer"
@@ -325,7 +325,7 @@ const FirmsTab = ({ slugId }) => {
               {/* List View */}
               {viewMode === 'list' && (
                 <div className="w-full space-y-4">
-                  {filteredFirms.map((firm) => (
+                  {Array.isArray(filteredFirms) && filteredFirms.map((firm) => (
                     <div
                       key={firm.id}
                       className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-gray-300 cursor-pointer"

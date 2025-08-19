@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import FileUpload from '@/components/FileUpload';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getFinanceMeta, getFirms } from '@/api/api_services/finance';
 import { toast } from 'sonner';
@@ -62,10 +62,30 @@ const CreateFeeSplitDialog = ({
         enabled: open
     });
 
-    const firms = firmsResponse?.data || [];
-    const overrideTypes = metaData?.firm_override_type || [];
-    const firmAgreements = metaData?.firm_agreement || [];
-    const referralStatuses = metaData?.firm_referral_status || [];
+    const firms = Array.isArray(firmsResponse?.data) ? firmsResponse.data : [];
+    const overrideTypes = metaData?.override_type || [];
+    const firmAgreements = metaData?.firm_agreement_in_place || [];
+    const referralStatuses = metaData?.referral_status || [];
+
+    // Search states for dropdowns
+    const [firmSearch, setFirmSearch] = useState('');
+    const [overrideTypeSearch, setOverrideTypeSearch] = useState('');
+    const [firmAgreementSearch, setFirmAgreementSearch] = useState('');
+    const [referralStatusSearch, setReferralStatusSearch] = useState('');
+
+    // Filtered data based on search terms
+    const filteredFirms = firms.filter(firm =>
+        firm.name?.toLowerCase().includes(firmSearch.toLowerCase())
+    );
+    const filteredOverrideTypes = overrideTypes.filter(type =>
+        type.name?.toLowerCase().includes(overrideTypeSearch.toLowerCase())
+    );
+    const filteredFirmAgreements = firmAgreements.filter(agreement =>
+        agreement.name?.toLowerCase().includes(firmAgreementSearch.toLowerCase())
+    );
+    const filteredReferralStatuses = referralStatuses.filter(status =>
+        status.name?.toLowerCase().includes(referralStatusSearch.toLowerCase())
+    );
 
     // Reset form when dialog opens or populate with editing data
     React.useEffect(() => {
@@ -77,6 +97,13 @@ const CreateFeeSplitDialog = ({
         }
         setApiErrors({}); // Clear API errors when dialog opens
     }, [open, editMode, editingFeeSplit, reset]);
+
+    const resetSearchTerms = () => {
+        setFirmSearch('');
+        setOverrideTypeSearch('');
+        setFirmAgreementSearch('');
+        setReferralStatusSearch('');
+    };
 
     const onFormSubmit = async (data) => {
         try {
@@ -112,6 +139,7 @@ const CreateFeeSplitDialog = ({
             return;
         }
         reset();
+        resetSearchTerms();
         onClose(false); // false indicates normal close (not success)
     };
 
@@ -157,11 +185,31 @@ const CreateFeeSplitDialog = ({
                                             <SelectValue placeholder="Select Firm" />
                                         </SelectTrigger>
                                         <SelectContent className="z-[9999]">
-                                            {firms.map((firm) => (
-                                                <SelectItem key={firm.id} value={firm.id.toString()}>
-                                                    {firm.name}
-                                                </SelectItem>
-                                            ))}
+                                            {/* Search Input */}
+                                            <div className="p-2 border-b border-gray-200">
+                                                <div className="relative">
+                                                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+                                                    <Input
+                                                        placeholder="Search firms..."
+                                                        value={firmSearch}
+                                                        onChange={(e) => setFirmSearch(e.target.value)}
+                                                        className="pl-6 h-8 text-sm border-0 focus:ring-0 focus:border-0"
+                                                    />
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Firm List */}
+                                            {filteredFirms.length === 0 ? (
+                                                <div className="p-2 text-sm text-gray-500 text-center">
+                                                    No firms found
+                                                </div>
+                                            ) : (
+                                                filteredFirms.map((firm) => (
+                                                    <SelectItem key={firm.id} value={firm.id.toString()}>
+                                                        {firm.name}
+                                                    </SelectItem>
+                                                ))
+                                            )}
                                         </SelectContent>
                                     </Select>
                                 )}
@@ -194,11 +242,31 @@ const CreateFeeSplitDialog = ({
                                                 <SelectValue placeholder="Select Override Type" />
                                             </SelectTrigger>
                                             <SelectContent className="z-[9999]">
-                                                {overrideTypes.map((type) => (
-                                                    <SelectItem key={type.id} value={type.id.toString()}>
-                                                        {type.name}
-                                                    </SelectItem>
-                                                ))}
+                                                {/* Search Input */}
+                                                <div className="p-2 border-b border-gray-200">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+                                                        <Input
+                                                            placeholder="Search override types..."
+                                                            value={overrideTypeSearch}
+                                                            onChange={(e) => setOverrideTypeSearch(e.target.value)}
+                                                            className="pl-6 h-8 text-sm border-0 focus:ring-0 focus:border-0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Override Type List */}
+                                                {filteredOverrideTypes.length === 0 ? (
+                                                    <div className="p-2 text-sm text-gray-500 text-center">
+                                                        No override types found
+                                                    </div>
+                                                ) : (
+                                                    filteredOverrideTypes.map((type) => (
+                                                        <SelectItem key={type.id} value={type.id.toString()}>
+                                                            {type.name}
+                                                        </SelectItem>
+                                                    ))
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     )}
@@ -257,11 +325,31 @@ const CreateFeeSplitDialog = ({
                                                 <SelectValue placeholder="Select Firm Agreement" />
                                             </SelectTrigger>
                                             <SelectContent className="z-[9999]">
-                                                {firmAgreements.map((agreement) => (
-                                                    <SelectItem key={agreement.id} value={agreement.id.toString()}>
-                                                        {agreement.name}
-                                                    </SelectItem>
-                                                ))}
+                                                {/* Search Input */}
+                                                <div className="p-2 border-b border-gray-200">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+                                                        <Input
+                                                            placeholder="Search firm agreements..."
+                                                            value={firmAgreementSearch}
+                                                            onChange={(e) => setFirmAgreementSearch(e.target.value)}
+                                                            className="pl-6 h-8 text-sm border-0 focus:ring-0 focus:border-0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Firm Agreement List */}
+                                                {filteredFirmAgreements.length === 0 ? (
+                                                    <div className="p-2 text-sm text-gray-500 text-center">
+                                                        No firm agreements found
+                                                    </div>
+                                                ) : (
+                                                    filteredFirmAgreements.map((agreement) => (
+                                                        <SelectItem key={agreement.id} value={agreement.id.toString()}>
+                                                            {agreement.name}
+                                                        </SelectItem>
+                                                    ))
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     )}
@@ -292,11 +380,31 @@ const CreateFeeSplitDialog = ({
                                                 <SelectValue placeholder="Select Referral Status" />
                                             </SelectTrigger>
                                             <SelectContent className="z-[9999]">
-                                                {referralStatuses.map((status) => (
-                                                    <SelectItem key={status.id} value={status.id.toString()}>
-                                                        {status.name}
-                                                    </SelectItem>
-                                                ))}
+                                                {/* Search Input */}
+                                                <div className="p-2 border-b border-gray-200">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+                                                        <Input
+                                                            placeholder="Search referral statuses..."
+                                                            value={referralStatusSearch}
+                                                            onChange={(e) => setReferralStatusSearch(e.target.value)}
+                                                            className="pl-6 h-8 text-sm border-0 focus:ring-0 focus:border-0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Referral Status List */}
+                                                {filteredReferralStatuses.length === 0 ? (
+                                                    <div className="p-2 text-sm text-gray-500 text-center">
+                                                        No referral statuses found
+                                                    </div>
+                                                ) : (
+                                                    filteredReferralStatuses.map((status) => (
+                                                        <SelectItem key={status.id} value={status.id.toString()}>
+                                                            {status.name}
+                                                        </SelectItem>
+                                                    ))
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     )}

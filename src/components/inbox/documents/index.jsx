@@ -46,6 +46,7 @@ const DocumentationPage = () => {
     currentPath,
     selectedFolder,
     foldersLoading,
+    documentsMeta,
     navigateToFolder,
     navigateBack,
     navigateToRoot,
@@ -280,9 +281,9 @@ const DocumentationPage = () => {
     }
   };
 
-  const handleUploadFileSubmit = async (file) => {
+  const handleUploadFileSubmit = async (file, categoryId) => {
     try {
-      await handleUploadFile(file);
+      await handleUploadFile(file, '', categoryId);
       setUploadFileOpen(false);
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -373,6 +374,7 @@ const DocumentationPage = () => {
         onClose={() => setUploadFileOpen(false)}
         onSubmit={handleUploadFileSubmit}
         isLoading={isUploadingFile}
+        categories={documentsMeta}
       />
 
       <RenameFolderDialog

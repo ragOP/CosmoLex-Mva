@@ -165,12 +165,12 @@ export const useDocuments = () => {
 
   // Upload file
   const handleUploadFile = useCallback(
-    async (file, description = '') => {
+    async (file, description = '', categoryId = '373') => {
       try {
         const formData = new FormData();
 
         // Create the attachment structure as expected by the API
-        formData.append('attachments[0][category_id]', '373'); // Default category
+        formData.append('attachments[0][category_id]', categoryId);
         formData.append(
           'attachments[0][description]',
           description || file.name
