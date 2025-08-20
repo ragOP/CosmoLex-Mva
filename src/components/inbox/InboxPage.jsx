@@ -13,7 +13,7 @@ const InboxPage = () => {
   const slugId = searchParams.get('slugId');
 
   const { data: matter } = useQuery({
-    queryKey: ['matter', slugId],
+    queryKey: ['matters', slugId],
     queryFn: () => getMatter({ slug: slugId }),
     enabled: !!slugId,
   });

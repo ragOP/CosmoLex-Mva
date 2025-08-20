@@ -53,6 +53,7 @@ export default function Overview() {
   const updateMatterMutation = useMutation({
     mutationFn: updateMatter,
     onSuccess: () => {
+      console.log('Matter updated successfully');
       queryClient.invalidateQueries({ queryKey: ['matters'] });
     },
   });
@@ -62,7 +63,7 @@ export default function Overview() {
   };
 
   const { data: matter, isLoading } = useQuery({
-    queryKey: ['matter', slugId],
+    queryKey: ['matters', slugId],
     queryFn: () => getMatter({ slug: slugId }),
     enabled: !!slugId,
   });
