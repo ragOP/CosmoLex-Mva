@@ -23,7 +23,7 @@ import {
   Chip,
   TextareaAutosize,
 } from '@mui/material';
-import { Edit, Plus, Trash2, X } from 'lucide-react';
+import { Edit, Paperclip, Plus, Trash2, X } from 'lucide-react';
 import ReminderDialog from '@/components/dialogs/ReminderDialog';
 import AssignDialog from '@/components/dialogs/AssignDialog';
 import SearchDialog from '@/components/dialogs/SearchDialog';
@@ -32,6 +32,7 @@ import formatDate from '@/utils/formatDate';
 import { searchTask } from '@/api/api_services/task';
 import { useQuery } from '@tanstack/react-query';
 import { Textarea } from '@/components/ui/textarea';
+import UploadMediaDialog from '@/components/UploadMediaDialog';
 
 const formFields = [
   {
@@ -85,6 +86,9 @@ export default function TaskDialog({
   const [contact, setContact] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [fromSearchTerm, setFromSearchTerm] = useState('');
+
+  // Upload media
+  const [showUploadMediaDialog, setShowUploadMediaDialog] = useState(false);
 
   // Debounced search terms
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -512,14 +516,39 @@ export default function TaskDialog({
 
             <Divider />
 
-            <div className="flex items-center justify-end p-4 gap-2">
-              <Button
+            <div className="flex items-center justify-between p-4 gap-2">
+              {/* <Button
                 type="button"
                 className="bg-gray-300 text-black hover:bg-gray-400"
                 onClick={onClose}
               >
                 Cancel
-              </Button>
+              </Button> */}
+              <Stack direction="row" alignItems="center" spacing={1}>
+                {/* <input
+                          type="file"
+                          multiple
+                          onChange={handleFileAttachment}
+                          style={{ display: 'none' }}
+                          id="attachment-input"
+                        /> */}
+                <label htmlFor="attachment-input">
+                  <IconButton
+                    onClick={() => setShowUploadMediaDialog(true)}
+                    component="span"
+                    size="small"
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 1,
+                      '&:hover': {
+                        bgcolor: '#e3f2fd',
+                      },
+                    }}
+                  >
+                    <Paperclip size={18} color="#666" />
+                  </IconButton>
+                </label>
+              </Stack>
               <Button
                 type="submit"
                 disabled={isLoading}
@@ -552,6 +581,15 @@ export default function TaskDialog({
         assignedToDialogOpen={assignedToDialogOpen}
         setAssignedToDialogOpen={setAssignedToDialogOpen}
         onSubmit={handleAddAssignedToSubmit}
+      />
+
+      {/* Upload Media Dialog */}
+      <UploadMediaDialog
+        open={showUploadMediaDialog}
+        onClose={() => setShowUploadMediaDialog(false)}
+        onSubmit={(payload) => {
+          console.log(payload);
+        }}
       />
 
       <SearchDialog

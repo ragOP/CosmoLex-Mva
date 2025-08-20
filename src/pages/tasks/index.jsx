@@ -46,21 +46,21 @@ const TasksPage = () => {
     updateStatus({ taskId: id, status_id: parseInt(status) });
   };
 
-  // const handleCreateTask = async (data) => {
-  //   console.log('data', data);
-  //   setOpen(false);
-  //   await createTask(data);
-  // };
+  const handleCreateTask = async (data) => {
+    console.log('data', data);
+    setOpen(false);
+    await createTask(data);
+  };
 
-  // const handleUpdateTask = async ({ id, data }) => {
-  //   const newData = {
-  //     ...data,
-  //     contact_id: matter?.contact_id,
-  //     slug: matterSlug,
-  //   };
-  //   await updateTask({ taskId: id, taskData: newData });
-  //   setShowUpdateDialog(false);
-  // };
+  const handleUpdateTask = async ({ id, data }) => {
+    const newData = {
+      ...data,
+      contact_id: matter?.contact_id,
+      slug: matterSlug,
+    };
+    await updateTask({ taskId: id, taskData: newData });
+    setShowUpdateDialog(false);
+  };
 
   const handleNavigate = (taskId) => {
     if (matterSlug) {
