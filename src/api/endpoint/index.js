@@ -17,10 +17,16 @@ export const endpoints = {
   resendOtp: 'resend-otp',
 
   // Event endpoint
+  eventMeta: 'v2/event/meta',
   getEvent: 'v2/event/show',
   getEvents: 'v2/event/list',
   createEvent: 'v2/event/store',
   deleteReminder: 'v2/event/deleteReminder',
+  updateEvent: 'v2/event/update',
+  deleteEvent: 'v2/event/delete',
+  searchEvent: 'v2/event/search',
+  uploadEventFile: 'v2/event/uploadAttachment',
+  deleteEventFile: 'v2/event/deleteAttachment',
 
   // Task endpoint
   getTaskMeta: 'v2/task/meta',
