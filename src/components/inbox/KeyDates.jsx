@@ -337,22 +337,17 @@ const KeyDates = () => {
             <div className="pt-4 flex justify-end gap-4">
               <Button
                 type="button"
-                className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
-                onClick={() => navigate(-1)}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="button"
                 onClick={handleSubmit}
                 disabled={submitting}
                 className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
               >
-                {submitting
-                  ? 'Submitting...'
-                  : hasExistingData
-                  ? 'Update'
-                  : 'Submit'}
+                {submitting ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : (
+                  'Save'
+                )}
               </Button>
             </div>
           </>

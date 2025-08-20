@@ -2,40 +2,36 @@ import React from 'react';
 import { Stack, Typography, Chip, Box, IconButton, Skeleton } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Building, Mail, Phone, MapPin, Edit, Trash2 } from 'lucide-react';
-import { getFirm } from '@/api/api_services/finance';
+import { ArrowLeft, Receipt, DollarSign, Calendar, FileText, Edit, Trash2, Paperclip } from 'lucide-react';
+import { getExpense } from '@/api/api_services/finance';
 
-const FirmDetail = ({ firmId }) => {
+const ExpenseDetail = ({ expenseId }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const slugId = searchParams.get('slugId');
 
-  // Fetch firm details
-  const { data: firmResponse, isLoading, error } = useQuery({
-    queryKey: ['firm', firmId],
-    queryFn: () => getFirm(firmId),
-    enabled: !!firmId,
+  // Fetch expense details
+  const { data: expenseResponse, isLoading, error } = useQuery({
+    queryKey: ['expense', expenseId],
+    queryFn: () => getExpense(expenseId),
+    enabled: !!expenseId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const firm = firmResponse?.data;
+  const expense = expenseResponse?.data;
   
-  // Debug: Log firm data to see what permissions are available
-  console.log('Firm data:', firm);
-  console.log('Boolean permissions:', Object.entries(firm || {}).filter(([key, value]) => typeof value === 'boolean' && key !== 'is_active'));
-
   const handleBack = () => {
-    navigate(`/dashboard/inbox/finance?slugId=${slugId}&tab=firms`);
+    navigate(`/dashboard/inbox/finance?slugId=${slugId}&tab=expenses`);
   };
 
   const handleEdit = () => {
     // Navigate to edit mode or open edit dialog
-    navigate(`/dashboard/inbox/finance?slugId=${slugId}&tab=firms&edit=${firmId}`);
+    navigate(`/dashboard/inbox/finance?slugId=${slugId}&tab=expenses&edit=${expenseId}`);
   };
 
   const handleDelete = () => {
     // TODO: Implement delete confirmation dialog
-    console.log('Delete firm:', firmId);
+    console.log('Delete expense:', expenseId);
   };
 
   if (isLoading) {
@@ -72,14 +68,14 @@ const FirmDetail = ({ firmId }) => {
           p: 4
         }}>
           <Typography variant="h6" color="error" align="center">
-            Error loading firm details. Please try again.
+            Error loading expense details. Please try again.
           </Typography>
         </Box>
       </div>
     );
   }
 
-  if (!firm) {
+  if (!expense) {
     return (
       <div className="px-4">
         <Box sx={{ 
@@ -91,7 +87,7 @@ const FirmDetail = ({ firmId }) => {
           p: 4
         }}>
           <Typography variant="h6" color="text.secondary" align="center">
-            Firm not found
+            Expense not found
           </Typography>
         </Box>
       </div>
@@ -122,7 +118,7 @@ const FirmDetail = ({ firmId }) => {
               <ArrowLeft size={20} />
             </IconButton>
             <Typography variant="h5" sx={{ fontWeight: 600, color: '#374151' }}>
-              Firm Details
+              Expense Details
             </Typography>
           </Box>
           
@@ -170,29 +166,29 @@ const FirmDetail = ({ firmId }) => {
           },
         }}>
           <Stack spacing={4}>
-            {/* Basic Information */}
+            {/* Case Information */}
             <Box>
               <Typography variant="h6" sx={{ mb: 3, color: '#374151', fontWeight: 600 }}>
-                Basic Information
+                Expense Information
               </Typography>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      Firm Name
+                      Description
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {firm.name || 'N/A'}
+                      {expense.description || 'N/A'}
                     </Typography>
                   </div>
                   
                   <div>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      Firm Type
+                      Invoice Number
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {firm.firm_type_id || 'N/A'}
+                      {expense.invoice_number || 'N/A'}
                     </Typography>
                   </div>
                   
@@ -201,11 +197,11 @@ const FirmDetail = ({ firmId }) => {
                       Status
                     </Typography>
                     <Chip
-                      label={firm.is_active ? 'Active' : 'Inactive'}
+                      label={expense.billable_client ? 'Billable' : 'Non-Billable'}
                       size="small"
                       sx={{
-                        bgcolor: firm.is_active ? '#dcfce7' : '#fef2f2',
-                        color: firm.is_active ? '#166534' : '#dc2626',
+                        bgcolor: expense.billable_client ? '#dcfce7' : '#fef2f2',
+                        color: expense.billable_client ? '#166534' : '#dc2626',
                         fontWeight: 500
                       }}
                     />
@@ -215,149 +211,179 @@ const FirmDetail = ({ firmId }) => {
                 <div className="space-y-4">
                   <div>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      EIN
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                      {firm.ein || 'N/A'}
-                    </Typography>
-                  </div>
-                  
-                  <div>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      Firm Percentage
-                    </Typography>
-                    <Typography variant="body1" sx={{ fontWeight: 500, color: '#059669' }}>
-                      {firm.firm_percent || 'N/A'}
-                    </Typography>
-                  </div>
-                  
-                  <div>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      Flat Fee
+                      Cost Type
                     </Typography>
                     <Typography variant="body1" sx={{ fontWeight: 500, color: '#2563eb' }}>
-                      ${firm.firm_flat_fee || '0'}
+                      {expense.cost_type || 'N/A'}
+                    </Typography>
+                  </div>
+                  
+                  <div>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      Vendor
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500, color: '#059669' }}>
+                      {expense.vendor || 'N/A'}
+                    </Typography>
+                  </div>
+                  
+                  <div>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      Firm
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500, color: '#7c3aed' }}>
+                      {expense.firm || 'N/A'}
                     </Typography>
                   </div>
                 </div>
               </div>
             </Box>
 
-            {/* Contact Information */}
+            {/* Financial Information */}
             <Box>
               <Typography variant="h6" sx={{ mb: 3, color: '#374151', fontWeight: 600 }}>
-                Contact Information
+                Financial Information
               </Typography>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-gray-400" />
+                    <DollarSign className="w-5 h-5 text-green-600" />
                     <div>
                       <Typography variant="body2" color="text.secondary">
-                        Email
+                        Amount
                       </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {firm.email || 'N/A'}
+                      <Typography variant="body1" sx={{ fontWeight: 500, color: '#059669' }}>
+                        ${expense.amount || '0'}
                       </Typography>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-3">
-                    <Phone className="w-5 h-5 text-gray-400" />
+                    <FileText className="w-5 h-5 text-gray-400" />
                     <div>
                       <Typography variant="body2" color="text.secondary">
-                        Phone
+                        Invoice Number
                       </Typography>
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {firm.phone || 'N/A'}
+                        {expense.invoice_number || 'N/A'}
                       </Typography>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-3">
-                    <Building className="w-5 h-5 text-gray-400" />
+                    <Receipt className="w-5 h-5 text-gray-400" />
                     <div>
                       <Typography variant="body2" color="text.secondary">
-                        Contact Person
+                        Quantity
                       </Typography>
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                        {firm.contact_name || 'N/A'}
+                        {expense.qty || '1'}
                       </Typography>
                     </div>
                   </div>
                 </div>
                 
                 <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-gray-400 mt-1" />
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-5 h-5 text-gray-400" />
                     <div>
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        Address
+                      <Typography variant="body2" color="text.secondary">
+                        Date Issued
                       </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 500, lineHeight: 1.6 }}>
-                        {[
-                          firm.address1,
-                          firm.address2,
-                          firm.city,
-                          firm.state,
-                          firm.zip_code
-                        ].filter(Boolean).join(', ') || 'N/A'}
+                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                        {expense.date_issued ? new Date(expense.date_issued).toLocaleDateString() : 'N/A'}
                       </Typography>
                     </div>
+                  </div>
+                  
+                  <div>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      Vendor ID
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {expense.vendor_id || 'N/A'}
+                    </Typography>
+                  </div>
+                  
+                  <div>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      Firm ID
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {expense.subfirm_id || 'N/A'}
+                    </Typography>
                   </div>
                 </div>
               </div>
             </Box>
 
-            {/* Permissions - Always show this section */}
+            {/* Description */}
             <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-                <Typography variant="h6" sx={{ color: '#374151', fontWeight: 600 }}>
-                  Permissions
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {Object.entries(firm || {}).filter(([key, value]) => typeof value === 'boolean' && key !== 'is_active').length} permissions
-                </Typography>
-              </Box>
+              <Typography variant="h6" sx={{ mb: 3, color: '#374151', fontWeight: 600 }}>
+                Description
+              </Typography>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {Object.entries(firm || {}).map(([key, value]) => {
-                  if (typeof value === 'boolean' && key !== 'is_active') {
-                    return (
-                      <div key={key} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                        <Chip
-                          label={key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                          size="small"
-                          sx={{
-                            bgcolor: value ? '#dcfce7' : '#fef2f2',
-                            color: value ? '#166534' : '#dc2626',
-                            fontSize: '0.75rem',
-                            maxWidth: '100%',
-                            fontWeight: 500,
-                            '& .MuiChip-label': {
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap'
-                            }
-                          }}
-                        />
-                        <Typography variant="caption" color="text.secondary">
-                          {value ? '✓' : '✗'}
-                        </Typography>
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
+                  {expense.description || 'No description provided'}
+                </Typography>
               </div>
+            </Box>
+
+            {/* Additional Information */}
+            <Box>
+              <Typography variant="h6" sx={{ mb: 3, color: '#374151', fontWeight: 600 }}>
+                Additional Information
+              </Typography>
               
-              {/* Show message if no permissions found */}
-              {Object.entries(firm).filter(([key, value]) => typeof value === 'boolean' && key !== 'is_active').length === 0 && (
-                <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-                  No permission data available
-                </Typography>
-              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      Quantity
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      {expense.qty || '1'}
+                    </Typography>
+                  </div>
+                  
+                  <div>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      Total Amount
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontWeight: 500, color: '#059669' }}>
+                      ${expense.total || expense.amount || '0'}
+                    </Typography>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      Billable to Client
+                    </Typography>
+                    <Chip
+                      label={expense.billable_client ? 'Yes' : 'No'}
+                      size="small"
+                      sx={{
+                        bgcolor: expense.billable_client ? '#dcfce7' : '#fef2f2',
+                        color: expense.billable_client ? '#166534' : '#dc2626',
+                        fontWeight: 500
+                      }}
+                    />
+                  </div>
+                  
+                  {expense.file_name && (
+                    <div className="flex items-center gap-2">
+                      <Paperclip className="w-5 h-5 text-blue-500" />
+                      <Typography variant="body2" sx={{ color: '#2563eb', fontWeight: 500 }}>
+                        File: {expense.file_name}
+                      </Typography>
+                    </div>
+                  )}
+                </div>
+              </div>
             </Box>
           </Stack>
         </Box>
@@ -366,4 +392,4 @@ const FirmDetail = ({ firmId }) => {
   );
 };
 
-export default FirmDetail; 
+export default ExpenseDetail; 

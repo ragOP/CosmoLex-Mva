@@ -131,6 +131,18 @@ const sidebarItems = [
     type: 'link',
     iconType: 'inbox',
   },
+  {
+    id: '/dashboard/documentation',
+    label: 'Documentation',
+    type: 'link',
+    iconType: 'documentation',
+  },
+  {
+    id: '/dashboard/communication',
+    label: 'Communication',
+    type: 'link',
+    iconType: 'communication',
+  },
 
   // {
   //   id: '/dashboard/matter-intake',

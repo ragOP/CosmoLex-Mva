@@ -11,6 +11,10 @@ const Communication = () => {
   const navigate = useNavigate();
   const [tabValue, setTabValue] = useState(0);
 
+  // Get context information
+  const slugId = searchParams.get('slugId');
+  const isFromInbox = !!slugId;
+
   // Get tab from URL params
   const tabParam = searchParams.get('tab');
   
@@ -41,7 +45,7 @@ const Communication = () => {
 
   return (
     <div className="px-4">
-      <BreadCrumb label="Communication" />
+      <BreadCrumb label={isFromInbox ? "Communication" : "Communications"} />
       
       <Stack spacing={2} sx={{  }}>
         {/* Tabs - Outside White Background */}

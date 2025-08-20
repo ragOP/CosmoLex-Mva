@@ -228,10 +228,7 @@ const Form = () => {
   };
 
   const getSubmitButtonText = () => {
-    if (isSubmitting) {
-      return mode === 'edit' ? 'Updating...' : 'Submitting...';
-    }
-    return mode === 'edit' ? 'Update Form' : 'Submit Form';
+    return 'Save';
   };
 
   // Show loading state
@@ -376,14 +373,6 @@ const Form = () => {
             )}
             <div className="flex items-end justify-end gap-2 p-2 ">
               <Button
-                type="button"
-                variant="outline"
-                onClick={handleCancel}
-                className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer max-w-48"
-              >
-                Cancel
-              </Button>
-              <Button
                 type="submit"
                 disabled={isSubmitting}
                 className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer max-w-48"
@@ -391,7 +380,6 @@ const Form = () => {
                 {isSubmitting ? (
                   <div className="flex items-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>{getSubmitButtonText()}</span>
                   </div>
                 ) : (
                   getSubmitButtonText()

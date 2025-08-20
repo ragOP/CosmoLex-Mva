@@ -564,15 +564,6 @@ export default function Overview() {
             </div>
 
             <div className="pt-4 flex justify-end gap-4">
-              <div>
-                <Button
-                  type="button"
-                  className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
-                  onClick={() => navigate(-1)}
-                >
-                  Cancel
-                </Button>
-              </div>
               <Button
                 type="submit"
                 className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
@@ -580,7 +571,7 @@ export default function Overview() {
                 {updateMatterMutation.isPending ? (
                   <Loader2 className="animate-spin" />
                 ) : (
-                  'Update Matter'
+                  'Save'
                 )}
               </Button>
             </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import {
     Dialog,
@@ -10,16 +10,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import FileUpload from '@/components/FileUpload';
-import { Plus, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { X } from 'lucide-react';
 
 const CreateVendorDialog = ({
     open,
     onClose,
     onSubmit,
-    isLoading
+    isLoading,
+    editMode = false,
+    editingVendor = null
 }) => {
-    const [attachments, setAttachments] = useState([]);
 
     const {
         control,
@@ -32,11 +33,11 @@ const CreateVendorDialog = ({
             write_to: '',
             net_terms: 'Net 30',
             days: '30',
-            prefix: '',
+            prefix: 'Mr',
             first_name: '',
             middle_name: '',
             last_name: '',
-            suffix: '',
+            suffix: 'Jr',
             address1: '',
             address2: '',
             city: '',
@@ -59,17 +60,26 @@ const CreateVendorDialog = ({
         }
     });
 
+    React.useEffect(() => {
+        if (!open) return;
+        if (editMode && editingVendor) {
+            reset({
+                ...editingVendor,
+                // ensure booleans are boolean
+                w9_on_file: Boolean(editingVendor.w9_on_file),
+                track_1099: Boolean(editingVendor.track_1099),
+            });
+        } else {
+            reset();
+        }
+    }, [open, editMode, editingVendor, reset]);
+
     const onFormSubmit = (data) => {
-        const formData = {
-            ...data,
-            attachments: attachments.filter(att => !att.isExisting) // Only send new attachments
-        };
-        onSubmit(formData);
+        onSubmit(data);
     };
 
     const handleClose = () => {
         reset();
-        setAttachments([]);
         onClose();
     };
 
@@ -90,7 +100,7 @@ const CreateVendorDialog = ({
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-3">
                     <h1 className="text-xl text-[#40444D] text-center font-bold font-sans">
-                        Create New Vendor
+                        {editMode ? 'Edit Vendor' : 'Create New Vendor'}
                     </h1>
                     <IconButton onClick={handleClose}>
                         <X className="text-black" />
@@ -124,10 +134,9 @@ const CreateVendorDialog = ({
                                     )}
                                 />
                                 {errors.name && (
-                                    <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>
+                                    <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
                                 )}
                             </div>
-
                             {/* Write To */}
                             <div className="w-full">
                                 <Label className="text-[#40444D] font-semibold mb-2 block">
@@ -141,7 +150,7 @@ const CreateVendorDialog = ({
                                             {...field}
                                             placeholder="Enter write to name"
                                             disabled={isLoading}
-                                            className="h-12 w-full border-gray-300"
+                                            className="h-12 w-full"
                                         />
                                     )}
                                 />
@@ -158,12 +167,24 @@ const CreateVendorDialog = ({
                                     control={control}
                                     name="prefix"
                                     render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            placeholder="Mr/Ms/Dr"
+                                        <Select
+                                            onValueChange={field.onChange}
+                                            value={field.value || ''}
                                             disabled={isLoading}
-                                            className="h-12 w-full border-gray-300"
-                                        />
+                                        >
+                                            <SelectTrigger className="h-12 w-full border border-gray-300 rounded-md">
+                                                <SelectValue placeholder="Select prefix" />
+                                            </SelectTrigger>
+                                            <SelectContent className="z-[9999]">
+                                                <SelectItem value="Mr">Mr</SelectItem>
+                                                <SelectItem value="Ms">Ms</SelectItem>
+                                                <SelectItem value="Mrs">Mrs</SelectItem>
+                                                <SelectItem value="Dr">Dr</SelectItem>
+                                                <SelectItem value="Prof">Prof</SelectItem>
+                                                <SelectItem value="Rev">Rev</SelectItem>
+                                                <SelectItem value="Hon">Hon</SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                     )}
                                 />
                             </div>
@@ -238,12 +259,28 @@ const CreateVendorDialog = ({
                                     control={control}
                                     name="suffix"
                                     render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            placeholder="Jr/Sr/III"
+                                        <Select
+                                            onValueChange={field.onChange}
+                                            value={field.value || ''}
                                             disabled={isLoading}
-                                            className="h-12 w-full border-gray-300"
-                                        />
+                                        >
+                                            <SelectTrigger className="h-12 w-full border border-gray-300 rounded-md">
+                                                <SelectValue placeholder="Select suffix" />
+                                            </SelectTrigger>
+                                            <SelectContent className="z-[9999]">
+                                                <SelectItem value="Jr">Jr</SelectItem>
+                                                <SelectItem value="Sr">Sr</SelectItem>
+                                                <SelectItem value="I">I</SelectItem>
+                                                <SelectItem value="II">II</SelectItem>
+                                                <SelectItem value="III">III</SelectItem>
+                                                <SelectItem value="IV">IV</SelectItem>
+                                                <SelectItem value="V">V</SelectItem>
+                                                <SelectItem value="Esq">Esq</SelectItem>
+                                                <SelectItem value="CPA">CPA</SelectItem>
+                                                <SelectItem value="MBA">MBA</SelectItem>
+                                                <SelectItem value="PhD">PhD</SelectItem>
+                                            </SelectContent>
+                                        </Select>
                                     )}
                                 />
                             </div>
@@ -581,7 +618,7 @@ const CreateVendorDialog = ({
                                         {...field}
                                         placeholder="Enter vendor description"
                                         disabled={isLoading}
-                                        className="h-24 resize-none px-4 rounded-md border shadow-[0px_4px_4px_0px_#0000000D] backdrop-blur-[20px] bg-gradient-to-t from-[#E9E9E980]/50 to-[#FFFFFF0D]/5 text-sm placeholder:text-[#667085] py-1 w-full"
+                                        className="h-24 resize-none px-4 py-3 rounded-md border border-gray-300 bg-white text-sm placeholder:text-gray-500 w-full focus:outline-none focus:ring-2 focus:ring-[#7367F0] focus:border-transparent"
                                     />
                                 )}
                             />
@@ -626,17 +663,7 @@ const CreateVendorDialog = ({
                             </div>
                         </div>
 
-                        {/* Attachments */}
-                        <div className="w-full">
-                            <FileUpload
-                                files={attachments}
-                                onChange={setAttachments}
-                                multiple={true}
-                                disabled={isLoading}
-                                accept="*/*"
-                                maxSize={50 * 1024 * 1024}
-                            />
-                        </div>
+
                     </form>
                 </div>
 
@@ -658,7 +685,7 @@ const CreateVendorDialog = ({
                         disabled={isLoading}
                         className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
                     >
-                        {isLoading ? 'Creating...' : 'Create Vendor'}
+                        {isLoading ? (editMode ? 'Updating...' : 'Creating...') : (editMode ? 'Update Vendor' : 'Create Vendor')}
                     </Button>
                 </div>
             </div>

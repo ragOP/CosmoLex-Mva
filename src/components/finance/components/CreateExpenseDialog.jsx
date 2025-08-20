@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import {
     Dialog,
@@ -9,33 +9,26 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectTrigger,
-    SelectValue,
-    SelectContent,
-    SelectItem,
-} from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
 import { Checkbox } from '@/components/ui/checkbox';
-import FileUpload from '@/components/FileUpload';
-import { Plus, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { getFinanceMeta } from '@/api/api_services/finance';
+import { getFinanceMeta, getVendors, getFirms } from '@/api/api_services/finance';
 
 const CreateExpenseDialog = ({
     open,
     onClose,
     onSubmit,
     isLoading,
-    matterId
+    editMode = false,
+    editingExpense = null
 }) => {
-    const [attachments, setAttachments] = useState([]);
-    
     const {
         control,
         handleSubmit,
         formState: { errors },
-        reset
+        reset,
+        setValue
     } = useForm({
         defaultValues: {
             cost_type_id: '',
@@ -52,6 +45,12 @@ const CreateExpenseDialog = ({
         }
     });
 
+    // Search states for dropdowns
+    const [costTypeSearch, setCostTypeSearch] = React.useState('');
+    const [vendorSearch, setVendorSearch] = React.useState('');
+    const [firmSearch, setFirmSearch] = React.useState('');
+    const [categorySearch, setCategorySearch] = React.useState('');
+
     // Fetch meta data
     const { data: metaData } = useQuery({
         queryKey: ['financeMeta'],
@@ -59,20 +58,72 @@ const CreateExpenseDialog = ({
         enabled: open
     });
 
+    // Fetch vendors for dropdown
+    const { data: vendorsResponse } = useQuery({
+        queryKey: ['vendors'],
+        queryFn: getVendors,
+        enabled: open
+    });
+
+    // Fetch firms for dropdown
+    const { data: firmsResponse } = useQuery({
+        queryKey: ['firms'],
+        queryFn: getFirms,
+        enabled: open
+    });
+
     const costTypes = metaData?.cost_type || [];
     const categories = metaData?.category || [];
+    const vendors = vendorsResponse?.data || [];
+    const firms = Array.isArray(firmsResponse?.data) ? firmsResponse.data : [];
+
+    // Filtered data based on search terms
+    const filteredCostTypes = costTypes.filter(type =>
+        type.name?.toLowerCase().includes(costTypeSearch.toLowerCase())
+    );
+    const filteredVendors = vendors.filter(vendor =>
+        vendor.name?.toLowerCase().includes(vendorSearch.toLowerCase())
+    );
+    const filteredFirms = firms.filter(firm =>
+        firm.name?.toLowerCase().includes(firmSearch.toLowerCase())
+    );
+    const filteredCategories = categories.filter(category =>
+        category.name?.toLowerCase().includes(categorySearch.toLowerCase())
+    );
+
+    // Set form values when editing
+    useEffect(() => {
+        if (editMode && editingExpense) {
+            setValue('cost_type_id', editingExpense.cost_type_id?.toString() || '');
+            setValue('vendor_id', editingExpense.vendor_id?.toString() || '');
+            setValue('subfirm_id', editingExpense.subfirm_id?.toString() || '');
+            setValue('amount', editingExpense.amount || '');
+            setValue('billable_client', editingExpense.billable_client || false);
+            setValue('description', editingExpense.description || '');
+            setValue('date_issued', editingExpense.date_issued || '');
+            setValue('invoice_number', editingExpense.invoice_number || '');
+            setValue('qty', editingExpense.qty || '');
+            setValue('category_id', editingExpense.category_id?.toString() || '');
+            setValue('folder_id', editingExpense.folder_id?.toString() || '');
+        }
+    }, [editMode, editingExpense, setValue]);
 
     const onFormSubmit = (data) => {
-        const formData = {
-            ...data,
-            attachments: attachments.filter(att => !att.isExisting) // Only send new attachments
-        };
-        onSubmit(formData);
+        // Add ID if editing
+        const submitData = editMode ? { ...data, id: editingExpense.id } : data;
+        onSubmit(submitData);
+    };
+
+    const resetSearchTerms = () => {
+        setCostTypeSearch('');
+        setVendorSearch('');
+        setFirmSearch('');
+        setCategorySearch('');
     };
 
     const handleClose = () => {
         reset();
-        setAttachments([]);
+        resetSearchTerms();
         onClose();
     };
 
@@ -82,7 +133,7 @@ const CreateExpenseDialog = ({
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-3">
                     <h1 className="text-xl text-[#40444D] text-center font-bold font-sans">
-                        Create New Expense
+                        {editMode ? 'Edit Expense' : 'Create New Expense'}
                     </h1>
                     <IconButton onClick={handleClose}>
                         <X className="text-black" />
@@ -115,11 +166,31 @@ const CreateExpenseDialog = ({
                                                 <SelectValue placeholder="Select Cost Type" />
                                             </SelectTrigger>
                                             <SelectContent className="z-[9999]">
-                                                {costTypes.map((type) => (
-                                                    <SelectItem key={type.id} value={type.id.toString()}>
-                                                        {type.name}
-                                                    </SelectItem>
-                                                ))}
+                                                {/* Search Input */}
+                                                <div className="p-2 border-b border-gray-200">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+                                                        <Input
+                                                            placeholder="Search cost types..."
+                                                            value={costTypeSearch}
+                                                            onChange={(e) => setCostTypeSearch(e.target.value)}
+                                                            className="pl-6 h-8 text-sm border-0 focus:ring-0 focus:border-0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Cost Type List */}
+                                                {filteredCostTypes.length === 0 ? (
+                                                    <div className="p-2 text-sm text-gray-500 text-center">
+                                                        No cost types found
+                                                    </div>
+                                                ) : (
+                                                    filteredCostTypes.map((type) => (
+                                                        <SelectItem key={type.id} value={type.id.toString()}>
+                                                            {type.name}
+                                                        </SelectItem>
+                                                    ))
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     )}
@@ -148,11 +219,31 @@ const CreateExpenseDialog = ({
                                                 <SelectValue placeholder="Select Category" />
                                             </SelectTrigger>
                                             <SelectContent className="z-[9999]">
-                                                {categories.map((category) => (
-                                                    <SelectItem key={category.id} value={category.id.toString()}>
-                                                        {category.name}
-                                                    </SelectItem>
-                                                ))}
+                                                {/* Search Input */}
+                                                <div className="p-2 border-b border-gray-200">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+                                                        <Input
+                                                            placeholder="Search categories..."
+                                                            value={categorySearch}
+                                                            onChange={(e) => setCategorySearch(e.target.value)}
+                                                            className="pl-6 h-8 text-sm border-0 focus:ring-0 focus:border-0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Category List */}
+                                                {filteredCategories.length === 0 ? (
+                                                    <div className="p-2 text-sm text-gray-500 text-center">
+                                                        No categories found
+                                                    </div>
+                                                ) : (
+                                                    filteredCategories.map((category) => (
+                                                        <SelectItem key={category.id} value={category.id.toString()}>
+                                                            {category.name}
+                                                        </SelectItem>
+                                                    ))
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     )}
@@ -235,40 +326,104 @@ const CreateExpenseDialog = ({
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="w-full">
                                 <Label className="text-[#40444D] font-semibold mb-2 block">
-                                    Vendor ID
+                                    Vendor
                                 </Label>
                                 <Controller
                                     control={control}
                                     name="vendor_id"
                                     render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            type="number"
-                                            placeholder="Enter vendor ID"
+                                        <Select
+                                            onValueChange={field.onChange}
+                                            value={field.value || ''}
                                             disabled={isLoading}
-                                            className="h-12 w-full border-gray-300"
-                                        />
+                                        >
+                                            <SelectTrigger className={`h-12 w-full ${errors.vendor_id ? 'border-red-500' : 'border-gray-300'}`}>
+                                                <SelectValue placeholder="Select Vendor" />
+                                            </SelectTrigger>
+                                            <SelectContent className="z-[9999]">
+                                                {/* Search Input */}
+                                                <div className="p-2 border-b border-gray-200">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+                                                        <Input
+                                                            placeholder="Search vendors..."
+                                                            value={vendorSearch}
+                                                            onChange={(e) => setVendorSearch(e.target.value)}
+                                                            className="pl-6 h-8 text-sm border-0 focus:ring-0 focus:border-0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Vendor List */}
+                                                {filteredVendors.length === 0 ? (
+                                                    <div className="p-2 text-sm text-gray-500 text-center">
+                                                        No vendors found
+                                                    </div>
+                                                ) : (
+                                                    filteredVendors.map((vendor) => (
+                                                        <SelectItem key={vendor.id} value={vendor.id.toString()}>
+                                                            {vendor.name}
+                                                        </SelectItem>
+                                                    ))
+                                                )}
+                                            </SelectContent>
+                                        </Select>
                                     )}
                                 />
+                                {errors.vendor_id && (
+                                    <p className="text-xs text-red-500 mt-1">{errors.vendor_id.message}</p>
+                                )}
                             </div>
 
                             <div className="w-full">
                                 <Label className="text-[#40444D] font-semibold mb-2 block">
-                                    SubFirm ID
+                                    Firm 
                                 </Label>
                                 <Controller
                                     control={control}
                                     name="subfirm_id"
                                     render={({ field }) => (
-                                        <Input
-                                            {...field}
-                                            type="number"
-                                            placeholder="Enter subfirm ID"
+                                        <Select
+                                            onValueChange={field.onChange}
+                                            value={field.value || ''}
                                             disabled={isLoading}
-                                            className="h-12 w-full border-gray-300"
-                                        />
+                                        >
+                                            <SelectTrigger className={`h-12 w-full ${errors.subfirm_id ? 'border-red-500' : 'border-gray-300'}`}>
+                                                <SelectValue placeholder="Select Firm" />
+                                            </SelectTrigger>
+                                                                                    <SelectContent className="z-[9999]">
+                                                {/* Search Input */}
+                                                <div className="p-2 border-b border-gray-200">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+                                                        <Input
+                                                            placeholder="Search firms..."
+                                                            value={firmSearch}
+                                                            onChange={(e) => setFirmSearch(e.target.value)}
+                                                            className="pl-6 h-8 text-sm border-0 focus:ring-0 focus:border-0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Firm List */}
+                                                {filteredFirms.length === 0 ? (
+                                                    <div className="p-2 text-sm text-gray-500 text-center">
+                                                        No firms found
+                                                    </div>
+                                                ) : (
+                                                    filteredFirms.map((firm) => (
+                                                        <SelectItem key={firm.id} value={firm.id.toString()}>
+                                                            {firm.name}
+                                                        </SelectItem>
+                                                    ))
+                                                )}
+                                            </SelectContent>
+                                        </Select>
                                     )}
                                 />
+                                {errors.subfirm_id && (
+                                    <p className="text-xs text-red-500 mt-1">{errors.subfirm_id.message}</p>
+                                )}
                             </div>
 
                             <div className="w-full">
@@ -332,17 +487,25 @@ const CreateExpenseDialog = ({
                             </Label>
                         </div>
 
-                        {/* Attachments */}
-                        <div className="w-full">
-                            <FileUpload
-                                files={attachments}
-                                onChange={setAttachments}
-                                multiple={true}
-                                disabled={isLoading}
-                                accept="*/*"
-                                maxSize={50 * 1024 * 1024}
+                        {/* Folder ID */}
+                        {/* <div className="w-full">
+                            <Label className="text-[#40444D] font-semibold mb-2 block">
+                                Folder ID
+                            </Label>
+                            <Controller
+                                control={control}
+                                name="folder_id"
+                                render={({ field }) => (
+                                    <Input
+                                        {...field}
+                                        type="number"
+                                        placeholder="Enter folder ID"
+                                        disabled={isLoading}
+                                        className="h-12 w-full border-gray-300"
+                                    />
+                                )}
                             />
-                        </div>
+                        </div> */}
                     </form>
                 </div>
 
@@ -364,7 +527,7 @@ const CreateExpenseDialog = ({
                         disabled={isLoading}
                         className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
                     >
-                        {isLoading ? 'Creating...' : 'Create Expense'}
+                        {isLoading ? (editMode ? 'Updating...' : 'Creating...') : (editMode ? 'Update Expense' : 'Create Expense')}
                     </Button>
                 </div>
             </Stack>

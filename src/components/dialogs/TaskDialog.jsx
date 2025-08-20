@@ -74,7 +74,7 @@ const formFields = [
 export default function TaskDialog({
   open = false,
   onClose = () => {},
-  onSubmit = () => {},
+  // onSubmit = () => {},
   // task = null, // null for create, task object for update
   mode = 'create', // 'create' or 'update'
 }) {
@@ -221,16 +221,16 @@ export default function TaskDialog({
         status_id: parseInt(data.status_id) || data.status_id,
       };
 
-      if (isUpdateMode) {
-        // Update existing task
-        await onSubmit({ id: task.id, data: formattedData });
-      } else {
-        // Create new task
-        await onSubmit(formattedData);
-      }
+      // if (isUpdateMode) {
+      //   // Update existing task
+      //   await onSubmit({ id: task.id, data: formattedData });
+      // } else {
+      //   // Create new task
+      //   await onSubmit(formattedData);
+      // }
 
       // Call the parent's onSubmit if provided
-      onSubmit(formattedData);
+      // onSubmit(formattedData);
 
       onClose();
     } catch (error) {

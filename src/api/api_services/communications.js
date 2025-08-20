@@ -18,8 +18,18 @@ export const getCommunicationMeta = async (matterId = 1, type = 1) => {
 // Get all communications/emails
 export const getCommunications = async (matterSlug, type = 1) => {
   try {
+    let endpoint;
+    
+    if (matterSlug) {
+      // Matter-specific context - use slug-based endpoint
+      endpoint = `v2/communications/getCommunications/${type}/${matterSlug}`;
+    } else {
+      // Main dashboard context - use general endpoint
+      endpoint = `v2/communications/getCommunications/${type}`;
+    }
+
     const response = await apiService({
-      endpoint: `v2/communications/getCommunications/${type}/${matterSlug}`,
+      endpoint: endpoint,
       method: 'GET'
     });
     

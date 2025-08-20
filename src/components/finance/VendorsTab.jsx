@@ -1,16 +1,27 @@
-import React, { useState } from 'react';
-import { Stack, IconButton, Typography, Chip } from '@mui/material';
-import { Search, RotateCcw, Plus, Users, Mail, Phone, MapPin, DollarSign } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Stack, IconButton, Typography, Chip, Dialog, Menu, MenuItem, ListItemIcon } from '@mui/material';
+import { Search, RotateCcw, Plus, Users, Mail, Phone, MapPin, DollarSign, MoreVertical, Eye, Edit, Trash2, Grid3X3, List } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getVendors, createVendor } from '@/api/api_services/finance';
+import { getVendors, createVendor, deleteVendor, updateVendor } from '@/api/api_services/finance';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import CreateVendorDialog from './components/CreateVendorDialog';
 import { toast } from 'sonner';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
-const VendorsTab = () => {
+const VendorsTab = ({ slugId }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [viewMode, setViewMode] = useState('grid');
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [editingVendor, setEditingVendor] = useState(null);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [vendorToDelete, setVendorToDelete] = useState(null);
+    const [anchorEl, setAnchorEl] = useState(null);
+    const [selectedVendor, setSelectedVendor] = useState(null);
     const queryClient = useQueryClient();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     // Fetch vendors
     const { data: vendorsResponse, isLoading, refetch } = useQuery({
@@ -20,6 +31,20 @@ const VendorsTab = () => {
     });
 
     const vendors = vendorsResponse?.data || [];
+
+    useEffect(() => {
+        const editId = searchParams.get('edit');
+        if (editId && vendors.length) {
+            const vendor = vendors.find(v => String(v.id) === String(editId));
+            if (vendor) {
+                setEditingVendor(vendor);
+                setEditDialogOpen(true);
+            }
+        } else {
+            setEditDialogOpen(false);
+            setEditingVendor(null);
+        }
+    }, [searchParams, vendors]);
 
     const handleRefresh = () => {
         refetch();
@@ -39,8 +64,69 @@ const VendorsTab = () => {
         }
     });
 
+    // Update vendor mutation
+    const updateVendorMutation = useMutation({
+        mutationFn: ({ id, data }) => updateVendor(id, data),
+        onSuccess: () => {
+            toast.success('Vendor updated successfully!');
+            setEditDialogOpen(false);
+            setEditingVendor(null);
+            queryClient.invalidateQueries(['vendors']);
+            // Clear the edit parameter from URL
+            const params = new URLSearchParams(searchParams);
+            params.delete('edit');
+            navigate(`?${params.toString()}`, { replace: true });
+        },
+        onError: (error) => {
+            toast.error('Failed to update vendor. Please try again.');
+            console.error('Update vendor error:', error);
+        }
+    });
+
+    // Delete vendor mutation
+    const deleteVendorMutation = useMutation({
+        mutationFn: deleteVendor,
+        onSuccess: () => {
+            toast.success('Vendor deleted successfully!');
+            setDeleteDialogOpen(false);
+            setVendorToDelete(null);
+            queryClient.invalidateQueries(['vendors']);
+            // Navigate back to vendors tab
+            navigate(`/dashboard/inbox/finance?tab=vendors${slugId ? `&slugId=${slugId}` : ''}`);
+        },
+        onError: (error) => {
+            toast.error('Failed to delete vendor. Please try again.');
+            console.error('Delete vendor error:', error);
+        }
+    });
+
     const handleCreateVendor = (vendorData) => {
         createVendorMutation.mutate(vendorData);
+    };
+
+    const handleUpdateVendor = (data) => {
+        if (!editingVendor) return;
+        updateVendorMutation.mutate({ id: editingVendor.id, data });
+    };
+
+    const handleViewVendor = (vendorId) => {
+        navigate(`/dashboard/inbox/finance/${vendorId}?slugId=${slugId}&tab=vendors`);
+    };
+
+    const handleEditVendor = (vendorId) => {
+        // Open edit dialog via URL param for consistency
+        navigate(`/dashboard/inbox/finance?slugId=${slugId}&tab=vendors&edit=${vendorId}`);
+    };
+
+    const handleDeleteVendor = (vendor) => {
+        setVendorToDelete(vendor);
+        setDeleteDialogOpen(true);
+    };
+
+    const confirmDeleteVendor = () => {
+        if (vendorToDelete) {
+            deleteVendorMutation.mutate(vendorToDelete.id);
+        }
     };
 
     const filteredVendors = vendors.filter(vendor =>
@@ -86,6 +172,30 @@ const VendorsTab = () => {
                                 />
                             </div>
 
+                            {/* View Toggle */}
+                            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`p-2 rounded-md transition-colors ${
+                                        viewMode === 'grid' 
+                                            ? 'bg-white text-blue-600 shadow-sm' 
+                                            : 'text-gray-600 hover:text-gray-800'
+                                    }`}
+                                >
+                                    <Grid3X3 size={16} />
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    className={`p-2 rounded-md transition-colors ${
+                                        viewMode === 'list' 
+                                            ? 'bg-white text-blue-600 shadow-sm' 
+                                            : 'text-gray-600 hover:text-gray-800'
+                                    }`}
+                                >
+                                    <List size={16} />
+                                </button>
+                            </div>
+
                             <button
                                 onClick={() => setCreateDialogOpen(true)}
                                 className="px-4 py-2 bg-gradient-to-b from-[#7367F0] to-[#453E90] text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
@@ -116,57 +226,58 @@ const VendorsTab = () => {
                                 <Typography variant="h5" sx={{ fontWeight: 600, color: '#374151', mb: 2 }}>
                                     No vendors yet
                                 </Typography>
-                                <Typography variant="body1" color="text.secondary" sx={{ mb: 4, lineHeight: 1.6 }}>
-                                    {searchTerm ?
-                                        `No vendors found matching "${searchTerm}". Try adjusting your search terms.` :
-                                        "Start managing your vendor relationships by adding your first service provider."
-                                    }
+                                <Typography variant="body2" sx={{ color: '#6B7280' }}>
+                                    Create your first vendor to get started
                                 </Typography>
-                                {!searchTerm && (
-                                    <button
-                                        onClick={() => setCreateDialogOpen(true)}
-                                        className="px-6 py-3 bg-gradient-to-r from-[#7367F0] to-[#453E90] text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
-                                    >
-                                        <Plus size={18} className="mr-2 inline" />
-                                        Add First Vendor
-                                    </button>
-                                )}
                             </div>
                         ) : (
-                            <div className="w-full grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                            <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full" : "w-full"}>
                                 {filteredVendors.map((vendor) => (
                                     <div
                                         key={vendor.id}
-                                        className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-gray-300"
+                                        className={`bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-all duration-200 hover:border-gray-300 cursor-pointer ${
+                                            viewMode === 'grid' ? 'p-6' : 'p-4'
+                                        }`}
+                                        onClick={() => handleViewVendor(vendor.id)}
                                     >
                                         {/* Header */}
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 bg-gradient-to-br from-green-50 to-emerald-100 rounded-lg flex items-center justify-center">
-                                                    <Users className="w-6 h-6 text-green-600" />
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-semibold text-gray-900 text-sm mb-1">
-                                                        {vendor.name}
-                                                    </h3>
-                                                    <p className="text-xs text-gray-500">
-                                                        {vendor.net_terms} • {vendor.days} days
-                                                    </p>
-                                                </div>
+                                        <div className={`flex items-start justify-between ${viewMode === 'list' ? 'mb-3' : ''}`}>
+                                            <div>
+                                                <h3 className={`font-semibold text-gray-900 truncate ${
+                                                    viewMode === 'grid' ? 'text-lg mb-1' : 'text-base mb-0.5'
+                                                }`}>
+                                                    {vendor.name}
+                                                </h3>
+                                                <p className="text-gray-500 text-sm">
+                                                    Contact: {vendor.write_to}
+                                                </p>
                                             </div>
-                                            <Chip
-                                                label={vendor.w9_on_file ? 'W9 Filed' : 'W9 Pending'}
-                                                size="small"
-                                                sx={{
-                                                    ...getStatusColor(vendor.w9_on_file ? 'Active' : 'Pending'),
-                                                    fontSize: '0.75rem',
-                                                    fontWeight: 500
-                                                }}
-                                            />
+                                            <div className="flex items-center gap-2">
+                                                <Chip
+                                                    label={vendor.w9_on_file ? 'W9 Filed' : 'W9 Pending'}
+                                                    size="small"
+                                                    sx={{
+                                                        ...getStatusColor(vendor.w9_on_file ? 'Active' : 'Pending'),
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: 500
+                                                    }}
+                                                />
+                                                <IconButton
+                                                    size="small"
+                                                    className="text-gray-400 hover:text-gray-600"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setAnchorEl(e.currentTarget);
+                                                        setSelectedVendor(vendor);
+                                                    }}
+                                                >
+                                                    <MoreVertical size={16} />
+                                                </IconButton>
+                                            </div>
                                         </div>
 
                                         {/* Contact Info */}
-                                        <div className="space-y-2 mb-4">
+                                        <div className={`space-y-2 ${viewMode === 'grid' ? 'mb-4' : 'mb-3'}`}>
                                             <div className="flex items-center gap-2 text-sm text-gray-600">
                                                 <Mail className="w-4 h-4 text-gray-400" />
                                                 <span className="truncate">{vendor.primary_email}</span>
@@ -175,18 +286,20 @@ const VendorsTab = () => {
                                                 <Phone className="w-4 h-4 text-gray-400" />
                                                 <span>{vendor.primary_phone}</span>
                                             </div>
-                                            <div className="flex items-start gap-2 text-sm text-gray-600">
-                                                <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                                                <span className="text-xs leading-relaxed">
-                                                    {[vendor.address1, vendor.address2, vendor.city, vendor.state, vendor.zip, vendor.country]
-                                                        .filter(Boolean)
-                                                        .join(', ')}
-                                                </span>
-                                            </div>
+                                            {viewMode === 'grid' && (
+                                                <div className="flex items-start gap-2 text-sm text-gray-600">
+                                                    <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                                                    <span className="text-xs leading-relaxed">
+                                                        {[vendor.address1, vendor.address2, vendor.city, vendor.state, vendor.zip, vendor.country]
+                                                            .filter(Boolean)
+                                                            .join(', ')}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </div>
 
                                         {/* Vendor Details */}
-                                        <div className="space-y-2 mb-4 p-3 bg-gray-50 rounded-lg">
+                                        <div className={`space-y-2 ${viewMode === 'grid' ? 'mb-4 p-3' : 'mb-3 p-2'} bg-gray-50 rounded-lg`}>
                                             <div className="flex items-center justify-between text-xs">
                                                 <span className="text-gray-500">Tax ID:</span>
                                                 <span className="font-medium">{vendor.tax_id}</span>
@@ -204,12 +317,11 @@ const VendorsTab = () => {
                                         </div>
 
                                         {/* Footer */}
-                                        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                                        <div className={`flex items-center justify-between border-t border-gray-100 ${
+                                            viewMode === 'grid' ? 'pt-4' : 'pt-2'
+                                        }`}>
                                             <div className="text-xs text-gray-500">
                                                 Contact: {vendor.write_to}
-                                            </div>
-                                            <div className="text-xs text-gray-400">
-                                                Added {new Date(vendor.created_at).toLocaleDateString()}
                                             </div>
                                         </div>
                                     </div>
@@ -226,6 +338,113 @@ const VendorsTab = () => {
                 onSubmit={handleCreateVendor}
                 isLoading={createVendorMutation.isPending}
             />
+            <CreateVendorDialog
+                open={editDialogOpen}
+                onClose={() => {
+                    const params = new URLSearchParams(searchParams);
+                    params.delete('edit');
+                    navigate(`?${params.toString()}`, { replace: true });
+                }}
+                onSubmit={handleUpdateVendor}
+                isLoading={updateVendorMutation.isPending}
+                editMode={true}
+                editingVendor={editingVendor}
+            />
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <div className="p-6">
+                    <Typography variant="h6" className="font-semibold text-gray-900 mb-4">
+                        Delete Vendor
+                    </Typography>
+                    <Typography variant="body1" className="text-gray-600 mb-6">
+                        Are you sure you want to delete "{vendorToDelete?.name}"? This action cannot be undone.
+                    </Typography>
+                    <div className="flex justify-end gap-3">
+                        <Button
+                            onClick={() => setDeleteDialogOpen(false)}
+                            variant="outline"
+                            className="border-gray-300"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={confirmDeleteVendor}
+                            disabled={deleteVendorMutation.isPending}
+                            className="bg-red-600 text-white hover:bg-red-700"
+                        >
+                            {deleteVendorMutation.isPending ? 'Deleting...' : 'Delete Vendor'}
+                        </Button>
+                    </div>
+                </div>
+            </Dialog>
+
+            {/* Three-dot Menu */}
+            <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={() => {
+                    setAnchorEl(null);
+                    setSelectedVendor(null);
+                }}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+            >
+                <MenuItem
+                    onClick={() => {
+                        if (selectedVendor) {
+                            handleViewVendor(selectedVendor.id);
+                            setAnchorEl(null);
+                            setSelectedVendor(null);
+                        }
+                    }}
+                >
+                    <ListItemIcon>
+                        <Eye size={16} />
+                    </ListItemIcon>
+                    View Vendor Details
+                </MenuItem>
+                <MenuItem
+                    onClick={() => {
+                        if (selectedVendor) {
+                            handleEditVendor(selectedVendor.id);
+                            setAnchorEl(null);
+                            setSelectedVendor(null);
+                        }
+                    }}
+                >
+                    <ListItemIcon>
+                        <Edit size={16} />
+                    </ListItemIcon>
+                    Edit Vendor
+                </MenuItem>
+                <MenuItem
+                    onClick={() => {
+                        if (selectedVendor) {
+                            handleDeleteVendor(selectedVendor);
+                            setAnchorEl(null);
+                            setSelectedVendor(null);
+                        }
+                    }}
+                    sx={{ color: '#dc2626' }}
+                >
+                    <ListItemIcon>
+                        <Trash2 size={16} style={{ color: '#dc2626' }} />
+                    </ListItemIcon>
+                    Delete Vendor
+                </MenuItem>
+            </Menu>
 
         </>
     );
