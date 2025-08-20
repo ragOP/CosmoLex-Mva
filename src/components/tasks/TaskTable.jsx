@@ -155,7 +155,7 @@ const TaskTable = ({
       ),
     },
     {
-      field: 'status',
+      field: 'status_id',
       headerName: 'Status',
       width: 120,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
@@ -168,9 +168,8 @@ const TaskTable = ({
             {/* Uncomment when backend send id rather string for status */}
 
             <Select
-              disabled={params.value === 'Completed'}
               value={statusMeta
-                .find((s) => s.name === params.value)
+                .find((s) => s.id === params.value)
                 ?.id.toString()} // convert "Pending" → "1"
               onValueChange={(value) => {
                 handleUpdateTaskStatus(params.id, parseInt(value));

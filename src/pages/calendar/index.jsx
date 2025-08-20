@@ -8,6 +8,7 @@ import createEvent from './helpers/createEvent';
 import getEvent from './helpers/getEvent';
 import moment from 'moment';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useEvents } from '@/components/calendar/hooks/useEvent';
 
 const CalendarPage = () => {
   const params = useParams();
@@ -67,6 +68,22 @@ const CalendarPage = () => {
     navigate(`/dashboard/calendar/${selectedUser}`);
     getUsersEvents(selectedUser);
   }, [selectedUser]);
+
+  // const {
+  // events,
+  //   eventsLoading,
+  //   createEvent,
+  //   updateEvent,
+  //   deleteEvent,
+  //   deleteReminder,
+  //   getEvent,
+  //   getEvents,
+  //   getEventsUserList,
+  //   getUsersEvents,
+  //   searchEvent,
+  //   uploadEventFile,
+  //   deleteEventFile,
+  // } = useEvents();
 
   return (
     <div className="h-full w-full">

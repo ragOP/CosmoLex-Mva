@@ -33,6 +33,7 @@ import { searchTask } from '@/api/api_services/task';
 import { useQuery } from '@tanstack/react-query';
 import { Textarea } from '@/components/ui/textarea';
 import UploadMediaDialog from '@/components/UploadMediaDialog';
+import { SearchableComboBox } from '@/components/SearchableComboBox';
 
 const formFields = [
   {
@@ -310,6 +311,8 @@ export default function TaskDialog({
             </div>
 
             <Divider />
+
+            {/* <SearchableComboBox /> */}
 
             <div className="space-y-4 flex-1 overflow-auto p-4 no-scrollbar">
               <div className="flex flex-wrap gap-4 overflow-auto">
