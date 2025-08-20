@@ -186,3 +186,17 @@ input[type='date']::-webkit-calendar-picker-indicator {
   align-items: center;
   -webkit-appearance: none;
 } */
+
+/* Ensure Popover appears above everything */
+[data-radix-popper-content-wrapper] {
+  z-index: 999999 !important;
+}
+
+[data-radix-popover-content] {
+  z-index: 999999 !important;
+}
+
+/* Additional Popover z-index override */
+[data-slot="popover-content"] {
+  z-index: 999999 !important;
+}

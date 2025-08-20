@@ -10,7 +10,6 @@ import {
   Edit,
   Trash2,
   FileText,
-  Download,
   Eye,
   FileImage,
   FileVideo,
@@ -118,17 +117,6 @@ const NoteDetail = () => {
   const handleAttachmentClick = (attachment) => {
     if (attachment.url) {
       window.open(attachment.url, '_blank');
-    }
-  };
-
-  const handleAttachmentDownload = (attachment) => {
-    if (attachment.url) {
-      const a = document.createElement('a');
-      a.href = attachment.url;
-      a.download = attachment.name || 'attachment';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
     }
   };
 
@@ -287,15 +275,6 @@ const NoteDetail = () => {
                         title="View"
                       >
                         <Eye className="h-3 w-3 text-blue-600" />
-                      </Button>
-                      <Button
-                        onClick={() => handleAttachmentDownload(attachment)}
-                        size="sm"
-                        variant="outline"
-                        className="h-7 w-7 p-0 border-gray-300 hover:border-green-300 hover:bg-green-50"
-                        title="Download"
-                      >
-                        <Download className="h-3 w-3 text-green-600" />
                       </Button>
                     </div>
                   </div>

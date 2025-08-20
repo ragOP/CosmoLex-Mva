@@ -9,7 +9,6 @@ import {
   FileText as PdfIcon,
   FileText as DocumentIcon,
   Trash2,
-  Download,
   Eye
 } from 'lucide-react';
 
@@ -114,17 +113,6 @@ const FileUpload = ({
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const downloadFile = (file) => {
-    const url = URL.createObjectURL(file.file);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = file.name;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   const previewFile = (file) => {
@@ -252,15 +240,6 @@ const FileUpload = ({
                       <Eye className="h-3 w-3" />
                     </Button>
                   )}
-                  <Button
-                    type="button"
-                    onClick={() => downloadFile(fileItem)}
-                    className="bg-green-100 text-green-600 hover:bg-green-200 p-1 h-7 w-7"
-                    disabled={disabled}
-                    title="Download"
-                  >
-                    <Download className="h-3 w-3" />
-                  </Button>
                   <Button
                     type="button"
                     onClick={() => removeFile(fileItem.id)}

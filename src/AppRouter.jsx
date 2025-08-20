@@ -73,6 +73,8 @@ const AppRouter = () => (
           {/* <Route path="tasks" element={<TasksPage />} /> */}
           <Route path="notes" element={<NotesPage />} />
           <Route path="notes/:noteId" element={<NoteDetailPage />} />
+          <Route path="documentation" element={<Documentation />} />
+          <Route path="communication" element={<Communication />} />
           <Route
             path="inbox/*"
             element={

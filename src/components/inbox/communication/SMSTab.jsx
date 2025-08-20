@@ -17,7 +17,8 @@ const SMSTab = () => {
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [selectedSMS, setSelectedSMS] = useState(null);
 
-  const matterId = searchParams.get('slugId') || '2'; // SMS uses matterId 2
+  const slugId = searchParams.get('slugId');
+  const matterId = slugId; // Use slugId if present, otherwise null for main dashboard
 
   // Fetch SMS messages
   const { data: smsResponse, isLoading, refetch } = useQuery({

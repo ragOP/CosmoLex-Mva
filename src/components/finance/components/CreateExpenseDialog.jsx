@@ -9,13 +9,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectTrigger,
-    SelectValue,
-    SelectContent,
-    SelectItem,
-} from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
 import { Checkbox } from '@/components/ui/checkbox';
 import { X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -51,6 +45,12 @@ const CreateExpenseDialog = ({
         }
     });
 
+    // Search states for dropdowns
+    const [costTypeSearch, setCostTypeSearch] = React.useState('');
+    const [vendorSearch, setVendorSearch] = React.useState('');
+    const [firmSearch, setFirmSearch] = React.useState('');
+    const [categorySearch, setCategorySearch] = React.useState('');
+
     // Fetch meta data
     const { data: metaData } = useQuery({
         queryKey: ['financeMeta'],
@@ -75,7 +75,21 @@ const CreateExpenseDialog = ({
     const costTypes = metaData?.cost_type || [];
     const categories = metaData?.category || [];
     const vendors = vendorsResponse?.data || [];
-    const firms = firmsResponse?.data || [];
+    const firms = Array.isArray(firmsResponse?.data) ? firmsResponse.data : [];
+
+    // Filtered data based on search terms
+    const filteredCostTypes = costTypes.filter(type =>
+        type.name?.toLowerCase().includes(costTypeSearch.toLowerCase())
+    );
+    const filteredVendors = vendors.filter(vendor =>
+        vendor.name?.toLowerCase().includes(vendorSearch.toLowerCase())
+    );
+    const filteredFirms = firms.filter(firm =>
+        firm.name?.toLowerCase().includes(firmSearch.toLowerCase())
+    );
+    const filteredCategories = categories.filter(category =>
+        category.name?.toLowerCase().includes(categorySearch.toLowerCase())
+    );
 
     // Set form values when editing
     useEffect(() => {
@@ -100,8 +114,16 @@ const CreateExpenseDialog = ({
         onSubmit(submitData);
     };
 
+    const resetSearchTerms = () => {
+        setCostTypeSearch('');
+        setVendorSearch('');
+        setFirmSearch('');
+        setCategorySearch('');
+    };
+
     const handleClose = () => {
         reset();
+        resetSearchTerms();
         onClose();
     };
 
@@ -144,11 +166,31 @@ const CreateExpenseDialog = ({
                                                 <SelectValue placeholder="Select Cost Type" />
                                             </SelectTrigger>
                                             <SelectContent className="z-[9999]">
-                                                {costTypes.map((type) => (
-                                                    <SelectItem key={type.id} value={type.id.toString()}>
-                                                        {type.name}
-                                                    </SelectItem>
-                                                ))}
+                                                {/* Search Input */}
+                                                <div className="p-2 border-b border-gray-200">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+                                                        <Input
+                                                            placeholder="Search cost types..."
+                                                            value={costTypeSearch}
+                                                            onChange={(e) => setCostTypeSearch(e.target.value)}
+                                                            className="pl-6 h-8 text-sm border-0 focus:ring-0 focus:border-0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Cost Type List */}
+                                                {filteredCostTypes.length === 0 ? (
+                                                    <div className="p-2 text-sm text-gray-500 text-center">
+                                                        No cost types found
+                                                    </div>
+                                                ) : (
+                                                    filteredCostTypes.map((type) => (
+                                                        <SelectItem key={type.id} value={type.id.toString()}>
+                                                            {type.name}
+                                                        </SelectItem>
+                                                    ))
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     )}
@@ -177,11 +219,31 @@ const CreateExpenseDialog = ({
                                                 <SelectValue placeholder="Select Category" />
                                             </SelectTrigger>
                                             <SelectContent className="z-[9999]">
-                                                {categories.map((category) => (
-                                                    <SelectItem key={category.id} value={category.id.toString()}>
-                                                        {category.name}
-                                                    </SelectItem>
-                                                ))}
+                                                {/* Search Input */}
+                                                <div className="p-2 border-b border-gray-200">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+                                                        <Input
+                                                            placeholder="Search categories..."
+                                                            value={categorySearch}
+                                                            onChange={(e) => setCategorySearch(e.target.value)}
+                                                            className="pl-6 h-8 text-sm border-0 focus:ring-0 focus:border-0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Category List */}
+                                                {filteredCategories.length === 0 ? (
+                                                    <div className="p-2 text-sm text-gray-500 text-center">
+                                                        No categories found
+                                                    </div>
+                                                ) : (
+                                                    filteredCategories.map((category) => (
+                                                        <SelectItem key={category.id} value={category.id.toString()}>
+                                                            {category.name}
+                                                        </SelectItem>
+                                                    ))
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     )}
@@ -279,11 +341,31 @@ const CreateExpenseDialog = ({
                                                 <SelectValue placeholder="Select Vendor" />
                                             </SelectTrigger>
                                             <SelectContent className="z-[9999]">
-                                                {vendors.map((vendor) => (
-                                                    <SelectItem key={vendor.id} value={vendor.id.toString()}>
-                                                        {vendor.name}
-                                                    </SelectItem>
-                                                ))}
+                                                {/* Search Input */}
+                                                <div className="p-2 border-b border-gray-200">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+                                                        <Input
+                                                            placeholder="Search vendors..."
+                                                            value={vendorSearch}
+                                                            onChange={(e) => setVendorSearch(e.target.value)}
+                                                            className="pl-6 h-8 text-sm border-0 focus:ring-0 focus:border-0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Vendor List */}
+                                                {filteredVendors.length === 0 ? (
+                                                    <div className="p-2 text-sm text-gray-500 text-center">
+                                                        No vendors found
+                                                    </div>
+                                                ) : (
+                                                    filteredVendors.map((vendor) => (
+                                                        <SelectItem key={vendor.id} value={vendor.id.toString()}>
+                                                            {vendor.name}
+                                                        </SelectItem>
+                                                    ))
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     )}
@@ -295,7 +377,7 @@ const CreateExpenseDialog = ({
 
                             <div className="w-full">
                                 <Label className="text-[#40444D] font-semibold mb-2 block">
-                                    SubFirm
+                                    Firm 
                                 </Label>
                                 <Controller
                                     control={control}
@@ -307,14 +389,34 @@ const CreateExpenseDialog = ({
                                             disabled={isLoading}
                                         >
                                             <SelectTrigger className={`h-12 w-full ${errors.subfirm_id ? 'border-red-500' : 'border-gray-300'}`}>
-                                                <SelectValue placeholder="Select SubFirm" />
+                                                <SelectValue placeholder="Select Firm" />
                                             </SelectTrigger>
-                                            <SelectContent className="z-[9999]">
-                                                {firms.map((firm) => (
-                                                    <SelectItem key={firm.id} value={firm.id.toString()}>
-                                                        {firm.name}
-                                                    </SelectItem>
-                                                ))}
+                                                                                    <SelectContent className="z-[9999]">
+                                                {/* Search Input */}
+                                                <div className="p-2 border-b border-gray-200">
+                                                    <div className="relative">
+                                                        <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-3 w-3" />
+                                                        <Input
+                                                            placeholder="Search firms..."
+                                                            value={firmSearch}
+                                                            onChange={(e) => setFirmSearch(e.target.value)}
+                                                            className="pl-6 h-8 text-sm border-0 focus:ring-0 focus:border-0"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Firm List */}
+                                                {filteredFirms.length === 0 ? (
+                                                    <div className="p-2 text-sm text-gray-500 text-center">
+                                                        No firms found
+                                                    </div>
+                                                ) : (
+                                                    filteredFirms.map((firm) => (
+                                                        <SelectItem key={firm.id} value={firm.id.toString()}>
+                                                            {firm.name}
+                                                        </SelectItem>
+                                                    ))
+                                                )}
                                             </SelectContent>
                                         </Select>
                                     )}
