@@ -41,21 +41,20 @@ export default function CreateContactDialog({ open, setOpen }) {
     control,
     handleSubmit,
     formState: { errors },
-    getValues,
     reset,
     setValue,
   } = useForm({
     defaultValues: {
       nature: '',
-      contact_type_id: '',
-      prefix: '',
+      contact_type_id: null,
+      prefix_id: null,
       first_name: '',
       middle_name: '',
       last_name: '',
       suffix: '',
-      gender: '',
+      gender_id: null,
       alias: '',
-      marital_status: '',
+      marital_status_id: null,
       company_name: '',
       job_title: '',
       ssn: '',
@@ -74,9 +73,6 @@ export default function CreateContactDialog({ open, setOpen }) {
       date_of_death: '',
       date_of_bankruptcy: '',
       notes: '',
-      firm_id: '',
-      created_by: '',
-      ad_campaign: '',
       addresses: [],
     },
   });
@@ -96,8 +92,8 @@ export default function CreateContactDialog({ open, setOpen }) {
       name: 'nature',
       type: 'select',
       options: [
-        { id: 1, name: 'Individual' },
-        { id: 2, name: 'Business' },
+        { id: 'Individual', name: 'Individual' },
+        { id: 'Business', name: 'Business' },
       ],
     },
     {
@@ -108,7 +104,7 @@ export default function CreateContactDialog({ open, setOpen }) {
     },
     {
       label: 'Prefix',
-      name: 'prefix',
+      name: 'prefix_id',
       type: 'select',
       options: contactMeta?.prefix || [],
     },
@@ -118,14 +114,14 @@ export default function CreateContactDialog({ open, setOpen }) {
     { label: 'Suffix', name: 'suffix', type: 'text' },
     {
       label: 'Gender',
-      name: 'gender',
+      name: 'gender_id',
       type: 'select',
       options: contactMeta?.gender || [],
     },
     { label: 'Alias', name: 'alias', type: 'text' },
     {
       label: 'Marital Status',
-      name: 'marital_status',
+      name: 'marital_status_id',
       type: 'select',
       options: contactMeta?.marital_status || [],
     },
@@ -151,20 +147,23 @@ export default function CreateContactDialog({ open, setOpen }) {
 
   const createContactMutation = useMutation({
     mutationFn: createContact,
-    onSuccess: () => {
+    onSuccess: (res) => {
+      console.log('[DEBUG] Contact created successfully:', res);
       toast.success('Contact created successfully');
       setOpen(false);
     },
     onError: (error) => {
+      console.error('[DEBUG] Create contact error:', error);
       toast.error(error?.response?.data?.message || 'Failed to create contact');
     },
   });
 
   const onSubmit = (data) => {
+    console.log('[DEBUG] Submitting contact data:', data);
     createContactMutation.mutate({ data });
   };
 
-  // Nested Address Dialog form state
+  // Address state
   const [newAddress, setNewAddress] = useState({
     address_1: '',
     address_2: '',
@@ -174,10 +173,11 @@ export default function CreateContactDialog({ open, setOpen }) {
     zip: '',
     country: '',
     is_primary: false,
-    address_type: '',
+    address_type_id: null,
   });
 
   const handleAddAddressSubmit = () => {
+    console.log('[DEBUG] Adding new address:', newAddress);
     append(newAddress);
     setNewAddress({
       address_1: '',
@@ -188,14 +188,14 @@ export default function CreateContactDialog({ open, setOpen }) {
       zip: '',
       country: '',
       is_primary: false,
-      address_type: '',
+      address_type_id: null,
     });
     setAddressDialogOpen(false);
   };
 
   return (
     <>
-      {/* Main Contact Form Dialog */}
+      {/* Main Contact Form */}
       <Dialog
         open={open}
         onClose={() => setOpen(false)}
@@ -231,11 +231,8 @@ export default function CreateContactDialog({ open, setOpen }) {
                       render={({ field }) => (
                         <Select
                           onValueChange={(val) => {
-                            if (name === 'contact_type_id') {
-                              setValue('contact_type_id', Number(val));
-                            } else {
-                              field.onChange(val);
-                            }
+                            console.log(`[DEBUG] Setting ${name}:`, val);
+                            field.onChange(isNaN(val) ? val : Number(val));
                           }}
                           value={field.value?.toString() ?? ''}
                         >
@@ -248,14 +245,10 @@ export default function CreateContactDialog({ open, setOpen }) {
                             className="z-[9999]"
                           >
                             <SelectGroup>
-                              {options.map((option, index) => (
+                              {options.map((option) => (
                                 <SelectItem
-                                  key={option.id || index}
-                                  value={
-                                    name === 'contact_type_id'
-                                      ? Number(option.id)
-                                      : option.name
-                                  }
+                                  key={option.id}
+                                  value={option.id.toString()}
                                 >
                                   {option.name}
                                 </SelectItem>
@@ -265,20 +258,6 @@ export default function CreateContactDialog({ open, setOpen }) {
                         </Select>
                       )}
                     />
-                  ) : type === 'checkbox' ? (
-                    <div className="flex items-center space-x-2">
-                      <Controller
-                        control={control}
-                        name={name}
-                        render={({ field }) => (
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        )}
-                      />
-                      <Label>{label}</Label>
-                    </div>
                   ) : (
                     <Controller
                       control={control}
@@ -300,11 +279,15 @@ export default function CreateContactDialog({ open, setOpen }) {
                     <p className="text-sm">
                       {addr.address_1}, {addr.city}, {addr.state}
                     </p>
-                    <Tooltip arrow title="Remove Address">
+                    <Tooltip title="Remove Address">
                       <IconButton
-                        type="button"
-                        onClick={() => remove(idx)}
-                        variant="ghost"
+                        onClick={() => {
+                          console.log(
+                            '[DEBUG] Removing address at index:',
+                            idx
+                          );
+                          remove(idx);
+                        }}
                       >
                         <Trash2 className="h-4 w-4 text-red-500" />
                       </IconButton>
@@ -336,8 +319,8 @@ export default function CreateContactDialog({ open, setOpen }) {
               Cancel
             </Button>
             <Button
-              type="submit"
-              className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
+              onClick={handleSubmit(onSubmit)}
+              className="bg-[#6366F1] text-white"
             >
               Create Contact
             </Button>
@@ -345,7 +328,7 @@ export default function CreateContactDialog({ open, setOpen }) {
         </Stack>
       </Dialog>
 
-      {/* Nested Address Dialog */}
+      {/* Address Dialog */}
       <Dialog
         open={addressDialogOpen}
         onClose={() => setAddressDialogOpen(false)}
@@ -362,24 +345,23 @@ export default function CreateContactDialog({ open, setOpen }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
-              { label: 'Address 1', name: 'address_1' },
-              { label: 'Address 2', name: 'address_2' },
-              { label: 'City', name: 'city' },
-              { label: 'County', name: 'county' },
-              { label: 'State', name: 'state' },
-              { label: 'Zip', name: 'zip' },
-              { label: 'Country', name: 'country' },
-            ].map(({ label, name }) => (
-              <div key={name} className="w-full">
+              'address_1',
+              'address_2',
+              'city',
+              'county',
+              'state',
+              'zip',
+              'country',
+            ].map((field) => (
+              <div key={field}>
                 <Label className="text-[#40444D] font-semibold mb-2">
-                  {label}
+                  {field.replace('_', ' ')}
                 </Label>
                 <Input
-                  value={newAddress[name]}
+                  value={newAddress[field]}
                   onChange={(e) =>
-                    setNewAddress({ ...newAddress, [name]: e.target.value })
+                    setNewAddress({ ...newAddress, [field]: e.target.value })
                   }
-                  placeholder={name.replace('_', ' ')}
                 />
               </div>
             ))}
@@ -391,9 +373,9 @@ export default function CreateContactDialog({ open, setOpen }) {
               </Label>
               <Select
                 onValueChange={(val) =>
-                  setNewAddress({ ...newAddress, address_type: val })
+                  setNewAddress({ ...newAddress, address_type_id: Number(val) })
                 }
-                value={newAddress.address_type}
+                value={newAddress.address_type_id?.toString() || ''}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Address Type" />
@@ -404,7 +386,7 @@ export default function CreateContactDialog({ open, setOpen }) {
                   className="z-[9999]"
                 >
                   {contactMeta?.address_type?.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
+                    <SelectItem key={type.id} value={type.id.toString()}>
                       {type.name}
                     </SelectItem>
                   ))}
@@ -412,16 +394,12 @@ export default function CreateContactDialog({ open, setOpen }) {
               </Select>
             </div>
 
-            {/* Is Primary */}
             <div className="flex items-center gap-2">
-              <Label>Is Primary: </Label>
+              <Label>Is Primary:</Label>
               <Switch
                 checked={newAddress.is_primary}
                 onChange={(e) =>
-                  setNewAddress({
-                    ...newAddress,
-                    is_primary: e.target.checked,
-                  })
+                  setNewAddress({ ...newAddress, is_primary: e.target.checked })
                 }
               />
             </div>
