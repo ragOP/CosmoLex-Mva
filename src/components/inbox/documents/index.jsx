@@ -25,8 +25,9 @@ import CreateFolderDialog from './components/CreateFolderDialog';
 import UploadFileDialog from './components/UploadFileDialog';
 import RenameFolderDialog from './components/RenameFolderDialog';
 import DeleteConfirmationDialog from './components/DeleteConfirmationDialog';
-import { toast } from 'sonner';
+
 import { useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const DocumentationPage = () => {
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
@@ -252,20 +253,43 @@ const DocumentationPage = () => {
         navigateToRoot();
       }
     } else if (data.id === 'create_folder') {
+      // Check if current folder allows editing
+      if (selectedFolder && selectedFolder.is_editable === false) {
+        toast.error('Cannot create folders in this directory - permission not present');
+        return;
+      }
       setCreateFolderOpen(true);
     } else if (data.id === 'upload_file') {
+      // Check if current folder allows editing
+      if (selectedFolder && selectedFolder.is_editable === false) {
+        toast.error('Cannot upload files to this directory - permission not present');
+        return;
+      }
       setUploadFileOpen(true);
     } else if (data.id === 'rename_item') {
       const files = data.state?.selectedFiles || [];
       console.log('Rename action in main handler', files);
       if (files.length === 1) {
-        setFolderToRename(files[0]);
+        const file = files[0];
+        // Check if item is editable
+        if (file.isDir && file.is_editable === false) {
+          toast.error('This folder cannot be renamed - permission not present');
+          return;
+        }
+        setFolderToRename(file);
         setRenameFolderOpen(true);
       }
     } else if (data.id === 'delete_item') {
       console.log('Delete action in main handler');
       const files = data.state?.selectedFiles || [];
       if (files.length > 0) {
+        // Check if any selected item is not deletable
+        for (const file of files) {
+          if (file.isDir && file.is_deletable === false) {
+            toast.error('This folder cannot be deleted - permission not present');
+            return;
+          }
+        }
         setItemToDelete(files[0]);
         setDeleteDialogOpen(true);
       }
@@ -294,24 +318,22 @@ const DocumentationPage = () => {
     try {
       const itemType = folderToRename?.isDir ? 'folder' : 'file';
       await handleRenameItem(itemId, newName, itemType);
-      toast.success(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} renamed successfully!`);
       setRenameFolderOpen(false);
       setFolderToRename(null);
     } catch (error) {
       console.error('Error renaming item:', error);
-      toast.error(`Failed to rename ${folderToRename?.isDir ? 'folder' : 'file'}. Please try again.`);
+      // Error toast is now handled in the mutation
     }
   };
 
   const handleDeleteItemSubmit = async (itemId, itemType) => {
     try {
       await handleDeleteItem(itemId, itemType);
-      toast.success(`${itemType.charAt(0).toUpperCase() + itemType.slice(1)} deleted successfully!`);
       setDeleteDialogOpen(false);
       setItemToDelete(null);
     } catch (error) {
       console.error('Error deleting item:', error);
-      toast.error(`Failed to delete ${itemType}. Please try again.`);
+      // Error toast is now handled in the mutation
     }
   };
 
