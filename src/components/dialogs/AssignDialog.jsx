@@ -38,11 +38,15 @@ const AssignDialog = ({
   assignedToDialogOpen,
   setAssignedToDialogOpen,
   onSubmit,
+  editingAssignee = null, // New prop for editing
 }) => {
+  const isEditMode = editingAssignee !== null;
+
   const {
     control,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm({
     defaultValues: {
       user_id: '',
@@ -50,22 +54,41 @@ const AssignDialog = ({
     resolver: zodResolver(assignSchema),
   });
 
+  // Populate form when editing
+  useEffect(() => {
+    if (isEditMode && editingAssignee) {
+      reset({
+        user_id: editingAssignee.user_id?.toString() || '',
+      });
+    } else {
+      reset({ user_id: '' });
+    }
+  }, [editingAssignee, isEditMode, reset]);
+
   const handleAddAssignedToSubmit = (data) => {
     onSubmit(data);
+    reset({ user_id: '' });
+    setAssignedToDialogOpen(false);
+  };
+
+  const handleClose = () => {
+    reset({ user_id: '' });
     setAssignedToDialogOpen(false);
   };
 
   return (
     <Dialog
       open={assignedToDialogOpen}
-      onClose={() => setAssignedToDialogOpen(false)}
+      onClose={handleClose}
       maxWidth="md"
       fullWidth
     >
       <Stack className="bg-[#F5F5FA] rounded-lg">
         <div className="flex items-center justify-between p-4">
-          <h1 className="text-xl font-bold text-center">Add Assigned To</h1>
-          <IconButton onClick={() => setAssignedToDialogOpen(false)}>
+          <h1 className="text-xl font-bold text-center">
+            {isEditMode ? 'Edit Assignment' : 'Add Assigned To'}
+          </h1>
+          <IconButton onClick={handleClose}>
             <X className="text-black" />
           </IconButton>
         </div>
@@ -134,7 +157,7 @@ const AssignDialog = ({
                     render={({ field }) => (
                       <Switch
                         checked={field.value || false}
-                        onChange={(_, checked) => field.onChange(checked)} // ✅ fixed binding
+                        onChange={(_, checked) => field.onChange(checked)}
                       />
                     )}
                   />
@@ -157,7 +180,7 @@ const AssignDialog = ({
                       {...field}
                       value={
                         type === 'date' && field.value
-                          ? field.value.split('T')[0] // ✅ ensure correct date format
+                          ? field.value.split('T')[0]
                           : field.value || ''
                       }
                       onChange={(e) => field.onChange(e.target.value)}
@@ -182,7 +205,7 @@ const AssignDialog = ({
           <Button
             type="button"
             className="bg-gray-300 text-black hover:bg-gray-400"
-            onClick={() => setAssignedToDialogOpen(false)}
+            onClick={handleClose}
           >
             Cancel
           </Button>
@@ -191,7 +214,7 @@ const AssignDialog = ({
             className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
             onClick={handleSubmit(handleAddAssignedToSubmit)}
           >
-            Save Assigned To
+            {isEditMode ? 'Update Assignment' : 'Save Assigned To'}
           </Button>
         </div>
       </Stack>

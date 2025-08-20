@@ -26,14 +26,7 @@ const TasksPage = () => {
   if (matterSlug) {
     matter = useMatter();
   }
-  const {
-    tasks,
-    tasksLoading,
-    createTask,
-    updateTask,
-    updateStatus,
-    deleteTask,
-  } = useTasks();
+  const { tasks, tasksLoading, updateStatus, deleteTask } = useTasks();
 
   // Handlers
   const handleDelete = (id) => {
@@ -44,22 +37,6 @@ const TasksPage = () => {
     console.log('id', id);
     console.log('status', status);
     updateStatus({ taskId: id, status_id: parseInt(status) });
-  };
-
-  const handleCreateTask = async (data) => {
-    console.log('data', data);
-    setOpen(false);
-    await createTask(data);
-  };
-
-  const handleUpdateTask = async ({ id, data }) => {
-    const newData = {
-      ...data,
-      contact_id: matter?.contact_id,
-      slug: matterSlug,
-    };
-    await updateTask({ taskId: id, taskData: newData });
-    setShowUpdateDialog(false);
   };
 
   const handleNavigate = (taskId) => {
@@ -143,18 +120,15 @@ const TasksPage = () => {
         }}
       />
 
-      <TaskDialog
-        open={open}
-        onClose={() => setOpen(false)}
-        onSubmit={handleCreateTask}
-        mode="create"
-      />
+      <TaskDialog open={open} onClose={() => setOpen(false)} mode="create" />
 
       <TaskDialog
         open={showUpdateDialog}
-        onClose={() => setShowUpdateDialog(false)}
-        onSubmit={handleUpdateTask}
-        // task={selectedTask}
+        onClose={() => {
+          setShowUpdateDialog(false);
+          handleNavigate(null);
+        }}
+        task={selectedTask}
         mode="update"
       />
 

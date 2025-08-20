@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -28,11 +28,15 @@ const ReminderDialog = ({
   reminderDialogOpen,
   setReminderDialogOpen,
   onSubmit,
+  editingReminder = null, // New prop for editing
 }) => {
+  const isEditMode = editingReminder !== null;
+
   const {
     control,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm({
     defaultValues: {
       type_id: '',
@@ -41,23 +45,43 @@ const ReminderDialog = ({
     resolver: zodResolver(reminderSchema),
   });
 
+  // Populate form when editing
+  useEffect(() => {
+    if (isEditMode && editingReminder) {
+      reset({
+        type_id: editingReminder.type_id?.toString() || '',
+        scheduled_at: editingReminder.scheduled_at || '',
+      });
+    } else {
+      reset({ type_id: '', scheduled_at: '' });
+    }
+  }, [editingReminder, isEditMode, reset]);
+
   const handleAddReminderSubmit = (data) => {
     onSubmit(data);
+    reset({ type_id: '', scheduled_at: '' });
+    setReminderDialogOpen(false);
+  };
+
+  const handleClose = () => {
+    reset({ type_id: '', scheduled_at: '' });
     setReminderDialogOpen(false);
   };
 
   return (
     <Dialog
       open={reminderDialogOpen}
-      onClose={() => setReminderDialogOpen(false)}
+      onClose={handleClose}
       maxWidth="md"
       fullWidth
     >
       <Stack className="bg-[#F5F5FA] rounded-lg">
         {/* Header */}
         <div className="flex items-center justify-between p-4">
-          <h1 className="text-xl font-bold text-center">Add Reminder</h1>
-          <IconButton onClick={() => setReminderDialogOpen(false)}>
+          <h1 className="text-xl font-bold text-center">
+            {isEditMode ? 'Edit Reminder' : 'Add Reminder'}
+          </h1>
+          <IconButton onClick={handleClose}>
             <X className="text-black" />
           </IconButton>
         </div>
@@ -132,7 +156,7 @@ const ReminderDialog = ({
                     render={({ field }) => (
                       <Switch
                         checked={field.value || false}
-                        onChange={(_, checked) => field.onChange(checked)} // ✅ fixed binding
+                        onChange={(_, checked) => field.onChange(checked)}
                       />
                     )}
                   />
@@ -155,7 +179,7 @@ const ReminderDialog = ({
                       {...field}
                       value={
                         type === 'date' && field.value
-                          ? field.value.split('T')[0] // ✅ ensure correct date format
+                          ? field.value.split('T')[0]
                           : field.value || ''
                       }
                       onChange={(e) => field.onChange(e.target.value)}
@@ -181,7 +205,7 @@ const ReminderDialog = ({
           <Button
             type="button"
             className="bg-gray-300 text-black hover:bg-gray-400"
-            onClick={() => setReminderDialogOpen(false)}
+            onClick={handleClose}
           >
             Cancel
           </Button>
@@ -190,7 +214,7 @@ const ReminderDialog = ({
             className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
             onClick={handleSubmit(handleAddReminderSubmit)}
           >
-            Save Reminder
+            {isEditMode ? 'Update Reminder' : 'Save Reminder'}
           </Button>
         </div>
       </Stack>

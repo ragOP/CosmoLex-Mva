@@ -23,6 +23,7 @@ export const getTasks = async () => {
 
 // Get task by id
 export const getTaskById = async (id) => {
+  console.log('id', id);
   const response = await apiService({
     endpoint: `${endpoints.getTask}/${id}`,
     method: 'GET',

@@ -34,6 +34,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Textarea } from '@/components/ui/textarea';
 import UploadMediaDialog from '@/components/UploadMediaDialog';
 import { SearchableComboBox } from '@/components/SearchableComboBox';
+import { useMatter } from '@/components/inbox/MatterContext';
+import { useSearchParams } from 'react-router-dom';
 
 const formFields = [
   {
@@ -76,13 +78,24 @@ const formFields = [
 export default function TaskDialog({
   open = false,
   onClose = () => {},
-  // onSubmit = () => {},
-  // task = null, // null for create, task object for update
   mode = 'create', // 'create' or 'update'
+  task = null, // Task object for update mode
 }) {
+  const [searchParams] = useSearchParams();
+  const matterSlug = searchParams.get('slugId');
+
+  let matter = null;
+  if (matterSlug) {
+    matter = useMatter();
+  }
+
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [assignedToDialogOpen, setAssignedToDialogOpen] = useState(false);
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
+
+  // Edit states
+  const [editingReminder, setEditingReminder] = useState(null);
+  const [editingAssignee, setEditingAssignee] = useState(null);
 
   const [contact, setContact] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -99,7 +112,7 @@ export default function TaskDialog({
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 300); // 300ms debounce
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
@@ -108,7 +121,7 @@ export default function TaskDialog({
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedFromSearchTerm(fromSearchTerm);
-    }, 300); // 300ms debounce
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [fromSearchTerm]);
@@ -122,17 +135,18 @@ export default function TaskDialog({
 
   const {
     tasksMeta,
-    task,
+    task: taskFromHook,
     createTask,
     updateTask,
     isCreating,
     isUpdating,
-    searchTasks,
-    handleSearchTask,
   } = useTasks();
 
+  // Use task prop if provided, otherwise use task from hook
+  const currentTask = taskFromHook;
+
   // Determine if we're in update mode
-  const isUpdateMode = mode === 'update' || (task && task.id);
+  const isUpdateMode = mode === 'update' || (currentTask && currentTask.id);
   const isLoading = isCreating || isUpdating;
 
   const {
@@ -169,6 +183,7 @@ export default function TaskDialog({
     append: appendReminder,
     remove: removeReminder,
     replace: replaceReminders,
+    update: updateReminder,
   } = useFieldArray({
     control,
     name: 'reminders',
@@ -179,6 +194,7 @@ export default function TaskDialog({
     append: appendAssignedTo,
     remove: removeAssignedTo,
     replace: replaceAssignedTo,
+    update: updateAssignedTo,
   } = useFieldArray({
     control,
     name: 'assigned_to',
@@ -190,29 +206,58 @@ export default function TaskDialog({
   };
 
   const handleAddReminderSubmit = (data) => {
-    appendReminder(data);
+    if (editingReminder !== null) {
+      // Update existing reminder
+      updateReminder(editingReminder.index, data);
+      setEditingReminder(null);
+    } else {
+      // Add new reminder
+      appendReminder(data);
+    }
     setReminderDialogOpen(false);
   };
 
   const handleAddAssignedToSubmit = (data) => {
-    appendAssignedTo(data);
+    if (editingAssignee !== null) {
+      // Update existing assignee
+      updateAssignedTo(editingAssignee.index, data);
+      setEditingAssignee(null);
+    } else {
+      // Add new assignee
+      appendAssignedTo(data);
+    }
     setAssignedToDialogOpen(false);
   };
 
-  /**
-   * API DATA FOR SEARCH
-   *   "searchBar": "john",
-   *   "contact_type_id":""
-   */
+  const handleEditReminder = (reminder, index) => {
+    setEditingReminder({ ...reminder, index });
+    setReminderDialogOpen(true);
+  };
+
+  const handleEditAssignee = (assignee, index) => {
+    setEditingAssignee({ ...assignee, index });
+    setAssignedToDialogOpen(true);
+  };
+
+  const handleReminderDialogClose = () => {
+    setReminderDialogOpen(false);
+    setEditingReminder(null);
+  };
+
+  const handleAssignDialogClose = () => {
+    setAssignedToDialogOpen(false);
+    setEditingAssignee(null);
+  };
 
   const onFormSubmit = async (data) => {
     try {
       // Format the data for API
       const formattedData = {
         ...data,
-        contact_id: getValues('contact_id'),
+        contact_id:
+          parseInt(getValues('contact_id')) || getValues('contact_id'),
         slug: getValues('slug'),
-        type_id: parseInt(data.type_id) || data.type_id,
+        type_id: parseInt(getValues('type_id')) || getValues('type_id'),
         reminders: reminderFields.map((reminder) => ({
           type_id: parseInt(reminder.type_id),
           scheduled_at: reminder.scheduled_at,
@@ -221,21 +266,17 @@ export default function TaskDialog({
           user_id: parseInt(assignee.user_id),
         })),
         // Convert select values to IDs if needed
-        utbms_code_id: parseInt(data.utbms_code_id) || data.utbms_code_id,
-        priority_id: parseInt(data.priority_id) || data.priority_id,
-        status_id: parseInt(data.status_id) || data.status_id,
+        utbms_code_id: parseInt(data?.utbms_code_id) || data?.utbms_code_id,
+        priority_id: parseInt(data?.priority_id) || data?.priority_id,
+        status_id: parseInt(data?.status_id) || data?.status_id,
       };
+      console.log('formattedData', formattedData);
 
-      // if (isUpdateMode) {
-      //   // Update existing task
-      //   await onSubmit({ id: task.id, data: formattedData });
-      // } else {
-      //   // Create new task
-      //   await onSubmit(formattedData);
-      // }
-
-      // Call the parent's onSubmit if provided
-      // onSubmit(formattedData);
+      if (isUpdateMode) {
+        updateTask({ taskId: currentTask.id, taskData: formattedData });
+      } else {
+        createTask(formattedData);
+      }
 
       onClose();
     } catch (error) {
@@ -246,31 +287,60 @@ export default function TaskDialog({
     }
   };
 
+  // Cleanup effect when dialog closes
+  useEffect(() => {
+    if (!open) {
+      // Reset states when dialog closes
+      setContact(null);
+      setEditingReminder(null);
+      setEditingAssignee(null);
+      setSearchTerm('');
+      setFromSearchTerm('');
+    }
+  }, [open]);
+
   // Reset form when task changes or dialog opens
   useEffect(() => {
     if (open) {
-      if (isUpdateMode && task) {
+      console.log('currentTask', currentTask);
+      if (isUpdateMode && currentTask) {
+        console.log('currentTask', currentTask);
         // Populate form with existing task data
         const formData = {
-          ...task,
-          type_id: task.type_id?.toString() || '',
-          priority_id: task.priority_id?.toString() || '',
-          status_id: task.status_id?.toString() || '',
-          utbms_code_id: task.utbms_code_id?.toString() || '',
-          due_date: task.due_date ? task.due_date.split('T')[0] : '', // Format date for input
-          reminders: task.reminders || [],
+          ...currentTask,
+          type_id: currentTask.type_id?.toString() || '',
+          priority_id: currentTask.priority_id?.toString() || '',
+          status_id: currentTask.status_id?.toString() || '',
+          utbms_code_id: currentTask.utbms_code_id?.toString() || '',
+          due_date: currentTask.due_date
+            ? currentTask.due_date.split('T')[0]
+            : '',
+          reminders: currentTask.reminders || [],
           assigned_to:
-            task.assignees?.map((assignee) => ({
+            currentTask.assignees?.map((assignee) => ({
               user_id: assignee.id || assignee.user_id,
             })) ||
-            task.assigned_to ||
+            currentTask.assigned_to ||
             [],
         };
 
         reset(formData);
 
+        // Set contact if exists
+        if (currentTask.contact) {
+          setContact(currentTask.contact);
+        } else if (currentTask.contact_id && currentTask.contact_name) {
+          // Construct contact object from task data if contact object doesn't exist
+          setContact({
+            id: currentTask.contact_id,
+            contact_name: currentTask.contact_name,
+            primary_email: currentTask.contact_email || '',
+            slug: currentTask.slug || '',
+          });
+        }
+
         // Set field arrays
-        replaceReminders(task.reminders || []);
+        replaceReminders(currentTask.reminders || []);
         replaceAssignedTo(formData.assigned_to);
       } else {
         // Reset to default values for create mode
@@ -290,11 +360,19 @@ export default function TaskDialog({
           reminders: [],
         });
 
+        setContact(null);
         replaceReminders([]);
         replaceAssignedTo([]);
       }
     }
-  }, [open, task, isUpdateMode, reset, replaceReminders, replaceAssignedTo]);
+  }, [
+    open,
+    currentTask,
+    isUpdateMode,
+    reset,
+    replaceReminders,
+    replaceAssignedTo,
+  ]);
 
   return (
     <>
@@ -311,8 +389,6 @@ export default function TaskDialog({
             </div>
 
             <Divider />
-
-            {/* <SearchableComboBox /> */}
 
             <div className="space-y-4 flex-1 overflow-auto p-4 no-scrollbar">
               <div className="flex flex-wrap gap-4 overflow-auto">
@@ -343,7 +419,7 @@ export default function TaskDialog({
                     </Button>
                   )}
                 </div>
-                {/* Dont show until contact is selected */}
+                {/* Don't show until contact is selected */}
                 {contact &&
                   formFields.map(
                     ({ label, name, type, required, metaField }) => (
@@ -454,15 +530,28 @@ export default function TaskDialog({
                           Reminder: {formatDate(reminder.scheduled_at)}
                         </span>
                       </div>
-                      <Tooltip arrow title="Remove Reminder">
-                        <IconButton
-                          type="button"
-                          onClick={() => removeReminder(idx)}
-                          variant="ghost"
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </IconButton>
-                      </Tooltip>
+                      <div className="flex gap-1">
+                        <Tooltip arrow title="Edit Reminder">
+                          <IconButton
+                            type="button"
+                            onClick={() => handleEditReminder(reminder, idx)}
+                            variant="ghost"
+                            size="small"
+                          >
+                            <Edit className="h-4 w-4 text-blue-500" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip arrow title="Remove Reminder">
+                          <IconButton
+                            type="button"
+                            onClick={() => removeReminder(idx)}
+                            variant="ghost"
+                            size="small"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </IconButton>
+                        </Tooltip>
+                      </div>
                     </div>
                   ))}
 
@@ -492,15 +581,28 @@ export default function TaskDialog({
                           )?.name || 'Unknown User'}
                         </span>
                       </div>
-                      <Tooltip arrow title="Remove Assigned To">
-                        <IconButton
-                          type="button"
-                          onClick={() => removeAssignedTo(idx)}
-                          variant="ghost"
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </IconButton>
-                      </Tooltip>
+                      <div className="flex gap-1">
+                        <Tooltip arrow title="Edit Assignment">
+                          <IconButton
+                            type="button"
+                            onClick={() => handleEditAssignee(assignedTo, idx)}
+                            variant="ghost"
+                            size="small"
+                          >
+                            <Edit className="h-4 w-4 text-blue-500" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip arrow title="Remove Assigned To">
+                          <IconButton
+                            type="button"
+                            onClick={() => removeAssignedTo(idx)}
+                            variant="ghost"
+                            size="small"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </IconButton>
+                        </Tooltip>
+                      </div>
                     </div>
                   ))}
 
@@ -520,21 +622,7 @@ export default function TaskDialog({
             <Divider />
 
             <div className="flex items-center justify-between p-4 gap-2">
-              {/* <Button
-                type="button"
-                className="bg-gray-300 text-black hover:bg-gray-400"
-                onClick={onClose}
-              >
-                Cancel
-              </Button> */}
               <Stack direction="row" alignItems="center" spacing={1}>
-                {/* <input
-                          type="file"
-                          multiple
-                          onChange={handleFileAttachment}
-                          style={{ display: 'none' }}
-                          id="attachment-input"
-                        /> */}
                 <label htmlFor="attachment-input">
                   <IconButton
                     onClick={() => setShowUploadMediaDialog(true)}
@@ -574,16 +662,18 @@ export default function TaskDialog({
       <ReminderDialog
         metaObj={tasksMeta}
         reminderDialogOpen={reminderDialogOpen}
-        setReminderDialogOpen={setReminderDialogOpen}
+        setReminderDialogOpen={handleReminderDialogClose}
         onSubmit={handleAddReminderSubmit}
+        editingReminder={editingReminder}
       />
 
       {/* Assigned To Dialog */}
       <AssignDialog
         metaObj={tasksMeta}
         assignedToDialogOpen={assignedToDialogOpen}
-        setAssignedToDialogOpen={setAssignedToDialogOpen}
+        setAssignedToDialogOpen={handleAssignDialogClose}
         onSubmit={handleAddAssignedToSubmit}
+        editingAssignee={editingAssignee}
       />
 
       {/* Upload Media Dialog */}
@@ -602,7 +692,7 @@ export default function TaskDialog({
         searchPlaceholder="Search contacts..."
         maxWidth="sm"
         items={taskSearchResults}
-        selectedItems={task?.contact_id || []}
+        selectedItems={currentTask?.contact_id || []}
         loading={taskLoading}
         searchTerm={searchTerm}
         onSearchChange={(searchTerm) => setSearchTerm(searchTerm)}
