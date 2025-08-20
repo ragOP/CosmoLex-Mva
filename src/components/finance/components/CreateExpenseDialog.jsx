@@ -293,10 +293,13 @@ const CreateExpenseDialog = ({
                                             type="number"
                                             placeholder="Enter quantity"
                                             disabled={isLoading}
-                                            className="h-12 w-full border-gray-300"
+                                            className={`h-12 w-full ${errors.qty ? 'border-red-500' : 'border-gray-300'}`}
                                         />
                                     )}
                                 />
+                                {errors.qty && (
+                                    <p className="text-xs text-red-500 mt-1">{errors.qty.message}</p>
+                                )}
                             </div>
 
                             <div className="w-full">
@@ -438,10 +441,13 @@ const CreateExpenseDialog = ({
                                             {...field}
                                             placeholder="Enter invoice number"
                                             disabled={isLoading}
-                                            className="h-12 w-full border-gray-300"
+                                            className={`h-12 w-full ${errors.invoice_number ? 'border-red-500' : 'border-gray-300'}`}
                                         />
                                     )}
                                 />
+                                {errors.invoice_number && (
+                                    <p className="text-xs text-red-500 mt-1">{errors.invoice_number.message}</p>
+                                )}
                             </div>
                         </div>
 

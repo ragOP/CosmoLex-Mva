@@ -1,14 +1,20 @@
-import React from 'react';
-import { Stack, Typography, Chip, Box, IconButton, Skeleton } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { Stack, Typography, Chip, Box, IconButton, Skeleton, Dialog } from '@mui/material';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Receipt, DollarSign, Calendar, FileText, Edit, Trash2, Paperclip } from 'lucide-react';
-import { getExpense } from '@/api/api_services/finance';
+import { getExpense, deleteExpense } from '@/api/api_services/finance';
+import { toast } from 'sonner';
+import CreateExpenseDialog from './components/CreateExpenseDialog';
+import { Button } from '@/components/ui/button';
 
 const ExpenseDetail = ({ expenseId }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const slugId = searchParams.get('slugId');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   // Fetch expense details
   const { data: expenseResponse, isLoading, error } = useQuery({
@@ -20,18 +26,43 @@ const ExpenseDetail = ({ expenseId }) => {
 
   const expense = expenseResponse?.data;
   
+  // Delete expense mutation
+  const deleteExpenseMutation = useMutation({
+    mutationFn: deleteExpense,
+    onSuccess: () => {
+      toast.success('Expense deleted successfully!');
+      queryClient.invalidateQueries(['expenses']);
+      handleBack();
+    },
+    onError: (error) => {
+      const errorMessage = error?.message || 'Failed to delete expense';
+      toast.error(errorMessage);
+    },
+  });
+  
   const handleBack = () => {
     navigate(`/dashboard/inbox/finance?slugId=${slugId}&tab=expenses`);
   };
 
   const handleEdit = () => {
-    // Navigate to edit mode or open edit dialog
-    navigate(`/dashboard/inbox/finance?slugId=${slugId}&tab=expenses&edit=${expenseId}`);
+    setEditDialogOpen(true);
   };
 
   const handleDelete = () => {
-    // TODO: Implement delete confirmation dialog
-    console.log('Delete expense:', expenseId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    deleteExpenseMutation.mutate(expenseId);
+    setDeleteDialogOpen(false);
+  };
+
+  const handleEditSubmit = (expenseData) => {
+    // Handle edit submission
+    console.log('Edit expense data:', expenseData);
+    // Always close the dialog regardless of validation state
+    setEditDialogOpen(false);
+    // TODO: Implement update mutation
   };
 
   if (isLoading) {
@@ -127,8 +158,11 @@ const ExpenseDetail = ({ expenseId }) => {
               onClick={handleEdit}
               sx={{ 
                 color: '#7367F0',
-                '&:hover': { bgcolor: 'rgba(115, 103, 240, 0.1)' }
+                '&:hover': { 
+                  bgcolor: 'rgba(115, 103, 240, 0.1)' 
+                }
               }}
+              title="Edit expense"
             >
               <Edit size={18} />
             </IconButton>
@@ -136,8 +170,11 @@ const ExpenseDetail = ({ expenseId }) => {
               onClick={handleDelete}
               sx={{ 
                 color: '#dc2626',
-                '&:hover': { bgcolor: 'rgba(220, 38, 38, 0.1)' }
+                '&:hover': { 
+                  bgcolor: 'rgba(220, 38, 38, 0.1)' 
+                }
               }}
+                            title="Delete expense"
             >
               <Trash2 size={18} />
             </IconButton>
@@ -388,6 +425,48 @@ const ExpenseDetail = ({ expenseId }) => {
           </Stack>
         </Box>
       </Box>
+
+      {/* Edit Expense Dialog */}
+      <CreateExpenseDialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        onSubmit={handleEditSubmit}
+        isLoading={false}
+        editMode={true}
+        editingExpense={expense}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <Box sx={{ p: 3 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Delete Expense
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 3 }}>
+            Are you sure you want to delete "{expense?.description || expense?.invoice_number}"? This action cannot be undone.
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteConfirm}
+              disabled={deleteExpenseMutation.isPending}
+            >
+              {deleteExpenseMutation.isPending ? 'Deleting...' : 'Delete'}
+            </Button>
+          </Box>
+        </Box>
+      </Dialog>
     </div>
   );
 };

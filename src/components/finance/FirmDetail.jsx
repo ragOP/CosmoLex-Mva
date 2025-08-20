@@ -1,14 +1,20 @@
-import React from 'react';
-import { Stack, Typography, Chip, Box, IconButton, Skeleton } from '@mui/material';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { Stack, Typography, Chip, Box, IconButton, Skeleton, Dialog } from '@mui/material';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Building, Mail, Phone, MapPin, Edit, Trash2 } from 'lucide-react';
-import { getFirm } from '@/api/api_services/finance';
+import { getFirm, deleteFirm } from '@/api/api_services/finance';
+import { toast } from 'sonner';
+import CreateFirmDialog from './components/CreateFirmDialog';
+import { Button } from '@/components/ui/button';
 
 const FirmDetail = ({ firmId }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const slugId = searchParams.get('slugId');
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   // Fetch firm details
   const { data: firmResponse, isLoading, error } = useQuery({
@@ -24,18 +30,42 @@ const FirmDetail = ({ firmId }) => {
   console.log('Firm data:', firm);
   console.log('Boolean permissions:', Object.entries(firm || {}).filter(([key, value]) => typeof value === 'boolean' && key !== 'is_active'));
 
+  // Delete firm mutation
+  const deleteFirmMutation = useMutation({
+    mutationFn: deleteFirm,
+    onSuccess: () => {
+      toast.success('Firm deleted successfully!');
+      queryClient.invalidateQueries(['firms']);
+      handleBack();
+    },
+    onError: (error) => {
+      const errorMessage = error?.message || 'Failed to delete firm';
+      toast.error(errorMessage);
+    },
+  });
+
   const handleBack = () => {
     navigate(`/dashboard/inbox/finance?slugId=${slugId}&tab=firms`);
   };
 
   const handleEdit = () => {
-    // Navigate to edit mode or open edit dialog
-    navigate(`/dashboard/inbox/finance?slugId=${slugId}&tab=firms&edit=${firmId}`);
+    setEditDialogOpen(true);
   };
 
   const handleDelete = () => {
-    // TODO: Implement delete confirmation dialog
-    console.log('Delete firm:', firmId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    deleteFirmMutation.mutate(firmId);
+    setDeleteDialogOpen(false);
+  };
+
+  const handleEditSubmit = (firmData) => {
+    // Handle edit submission
+    console.log('Edit firm data:', firmData);
+    setEditDialogOpen(false);
+    // TODO: Implement update mutation
   };
 
   if (isLoading) {
@@ -362,6 +392,48 @@ const FirmDetail = ({ firmId }) => {
           </Stack>
         </Box>
       </Box>
+
+      {/* Edit Firm Dialog */}
+      <CreateFirmDialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        onSubmit={handleEditSubmit}
+        isLoading={false}
+        editMode={true}
+        editingFirm={firm}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <Box sx={{ p: 3 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Delete Firm
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 3 }}>
+            Are you sure you want to delete "{firm?.name}"? This action cannot be undone.
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteConfirm}
+              disabled={deleteFirmMutation.isPending}
+            >
+              {deleteFirmMutation.isPending ? 'Deleting...' : 'Delete'}
+            </Button>
+          </Box>
+        </Box>
+      </Dialog>
     </div>
   );
 };
