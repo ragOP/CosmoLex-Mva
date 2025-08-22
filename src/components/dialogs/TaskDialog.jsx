@@ -31,7 +31,6 @@ import { searchTask } from '@/api/api_services/task';
 import { useQuery } from '@tanstack/react-query';
 import { Textarea } from '@/components/ui/textarea';
 import UploadMediaDialog from '@/components/UploadMediaDialog';
-import { SearchableComboBox } from '@/components/SearchableComboBox';
 import { useMatter } from '@/components/inbox/MatterContext';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';

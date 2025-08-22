@@ -13,11 +13,16 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
-import FileUpload from '@/components/FileUpload';
+// import FileUpload from '@/components/FileUpload';
 import { Plus, Edit, X } from 'lucide-react';
 import { Stack, Divider, IconButton } from '@mui/material';
 import UploadMediaDialog from '@/components/UploadMediaDialog';
 import { useDocuments } from '@/components/inbox/documents/hooks/useDocuments';
+import { useMutation } from '@tanstack/react-query';
+import { uploadNoteAttachment } from '@/api/api_services/notes';
+import { toast } from 'sonner';
+import { useMatter } from '@/components/inbox/MatterContext';
+import { useSearchParams } from 'react-router-dom';
 
 // Quill modules configuration
 const quillModules = {
@@ -60,6 +65,13 @@ const CreateEditNoteDialog = ({
     },
   });
 
+  const { matter } = useMatter();
+  console.log('matter >>>>', matter);
+
+  const [searchParams] = useSearchParams();
+  const matterSlug = searchParams.get('slugId');
+  console.log('matterSlug >>>>', matterSlug);
+
   // Load note data for editing
   useEffect(() => {
     if (isEdit && note) {
@@ -95,6 +107,43 @@ const CreateEditNoteDialog = ({
     };
     console.log('Processed form data:', formData);
     onSubmit(formData);
+  };
+
+  const uploadAttachmentMutation = useMutation({
+    mutationFn: uploadNoteAttachment,
+    onSuccess: () => {
+      toast.success('Attachment uploaded successfully');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to upload attachment');
+      console.error('Error uploading attachment:', error);
+    },
+  });
+
+  const handleUploadAttachment = (payload) => {
+    const files = payload.files;
+    // const newPayload = {
+    //   ...payload,
+    //   slug: matterSlug,
+    //   contact_id: matter?.contact_id,
+    //   attachment: files,
+    // };
+    // delete newPayload.files;
+
+    const formData = new FormData();
+    Object.entries(payload).forEach(([key, value]) => {
+      if (key !== 'files') {
+        formData.append(key, value);
+      }
+    });
+    formData.append('slug', matterSlug);
+    formData.append('contact_id', matter?.contact_id);
+    files.forEach((fileItem) => {
+      formData.append('attachment', fileItem.file);
+    });
+
+    console.log('newPayload >>>>', formData);
+    uploadAttachmentMutation.mutate(formData);
   };
 
   const handleClose = () => {
@@ -287,7 +336,7 @@ const CreateEditNoteDialog = ({
       <UploadMediaDialog
         open={attachmentDialogOpen}
         onClose={() => setAttachmentDialogOpen(false)}
-        onSubmit={(payload) => console.log('Upload Media', payload)}
+        onSubmit={(payload) => handleUploadAttachment(payload)}
         isLoading={isUploadingFile}
       />
     </>

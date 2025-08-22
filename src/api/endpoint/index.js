@@ -79,4 +79,5 @@ export const endpoints = {
   updateNote: 'v2/matter/notes/update',
   deleteNote: 'v2/matter/notes/delete',
   getNotesMeta: 'v2/matter/notes/meta',
+  uploadNoteAttachment: 'v2/matter/notes/uploadAttachment',
 };

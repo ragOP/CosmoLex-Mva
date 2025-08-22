@@ -38,7 +38,9 @@ const Notes = () => <NotesPage />;
 const Event = () => <ErrorPage pageName="Event" />;
 const Tasks = () => <ErrorPage pageName="Tasks" />;
 const Documentation = () => <DocumentationPage />;
-const CommunicationPage = lazy(() => import('./components/inbox/communication/Communication'));
+const CommunicationPage = lazy(() =>
+  import('./components/inbox/communication/Communication')
+);
 const Communication = () => <CommunicationPage />;
 const FinancePage = lazy(() => import('./components/finance/Finance'));
 const Finance = () => <FinancePage />;
@@ -70,7 +72,6 @@ const AppRouter = () => (
           <Route path="user-management" element={<UserManagementPage />} />
           <Route path="bulk-import" element={<BulkImportPage />} />
           <Route path="calendar/:id" element={<CalendarPage />} />
-          {/* <Route path="tasks" element={<TasksPage />} /> */}
           <Route path="notes" element={<NotesPage />} />
           <Route path="notes/:noteId" element={<NoteDetailPage />} />
           <Route path="documentation" element={<Documentation />} />
