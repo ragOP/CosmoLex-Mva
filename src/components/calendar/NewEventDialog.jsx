@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import CustomButton from '../CustomButton';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -19,45 +19,118 @@ import {
   Stack,
   Switch,
   Tooltip,
+  Chip,
 } from '@mui/material';
-import { Trash2, Plus, X } from 'lucide-react';
-
-const repeatOptions = ['never', 'daily', 'weekly', 'monthly', 'yearly'];
+import { Trash2, Plus, X, Edit, Loader2, Paperclip } from 'lucide-react';
+import { useEvents } from '@/components/calendar/hooks/useEvent';
+import { toast } from 'sonner';
+import UploadMediaDialog from '@/components/UploadMediaDialog';
+import SearchDialog from '@/components/dialogs/SearchDialog';
+import { searchTask } from '@/api/api_services/task';
+import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
+import { ParticipantDialog } from './components/ParticipantDialog';
+import { ReminderDialog } from './components/ReminderDialog';
 
 export default function NewEventDialogRHF({
   open = false,
   onClose = () => {},
-  onSubmit = () => {},
   selectedDateRange = null,
+  mode = 'create',
+  event = null,
 }) {
+  const [searchParams] = useSearchParams();
+
+  // Dialog states
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const [participantDialogOpen, setParticipantDialogOpen] = useState(false);
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
+  const [showUploadMediaDialog, setShowUploadMediaDialog] = useState(false);
+
+  // Edit states
+  const [editingReminder, setEditingReminder] = useState(null);
+  const [editingParticipant, setEditingParticipant] = useState(null);
+
+  // Contact state
+  const [contact, setContact] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+  // Attachments state
+  const [attachments, setAttachments] = useState([]);
+
+  // Validation errors state
+  const [validationErrors, setValidationErrors] = useState({});
+
+  const {
+    eventsMeta,
+    requiredFields,
+    formFields,
+    getValidationRules,
+    createEvent,
+    updateEvent,
+    uploadEventFile,
+    isCreating,
+    isUpdating,
+    isUploadingFile,
+  } = useEvents();
+
+  // Determine if we're in update mode
+  const isUpdateMode = mode === 'update' || (event && event.id);
+  const isLoading = isCreating || isUpdating;
+
+  // Debounce effect for search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Contact search query
+  const { data: contactSearchResults, isLoading: contactLoading } = useQuery({
+    queryKey: ['contact-search', debouncedSearchTerm],
+    queryFn: () =>
+      searchTask({ searchBar: debouncedSearchTerm, contact_type_id: '' }, 1),
+    enabled: open && debouncedSearchTerm.length > 0,
+  });
+
   const {
     control,
-    register,
-    getValues,
-    setValue,
+    handleSubmit,
     formState: { errors },
+    reset,
+    setValue,
+    watch,
   } = useForm({
-    defaultValues: {
-      title: '',
-      description: '',
-      start_time: '',
-      end_time: '',
-      category_id: '',
-      all_day: false,
-      priority: '',
-      status: '',
-      repeat: '',
-      reminders: [],
-      participants: [],
-    },
+    defaultValues: requiredFields,
+  });
+
+  const {
+    fields: reminderFields,
+    append: appendReminder,
+    remove: removeReminder,
+    replace: replaceReminders,
+    update: updateReminder,
+  } = useFieldArray({
+    control,
+    name: 'reminders',
+  });
+
+  const {
+    fields: participantFields,
+    append: appendParticipant,
+    remove: removeParticipant,
+    replace: replaceParticipants,
+    update: updateParticipant,
+  } = useFieldArray({
+    control,
+    name: 'participants',
   });
 
   // Auto-populate dates when selectedDateRange changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedDateRange && selectedDateRange.start && selectedDateRange.end) {
-      // Format dates for datetime-local input (YYYY-MM-DDTHH:MM)
       const formatDateForInput = (date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -72,55 +145,199 @@ export default function NewEventDialogRHF({
     }
   }, [selectedDateRange, setValue]);
 
-  const {
-    fields: reminderFields,
-    append: appendReminder,
-    remove: removeReminder,
-  } = useFieldArray({
-    control,
-    name: 'reminders',
-  });
+  // Reset form when dialog opens/closes or event changes
+  useEffect(() => {
+    if (open) {
+      if (isUpdateMode && event) {
+        // Populate form with existing event data
+        const formData = {
+          ...event,
+          all_day: event.all_day ? 1 : 0,
+          start_time: event.start_time ? event.start_time.slice(0, 16) : '',
+          end_time: event.end_time ? event.end_time.slice(0, 16) : '',
+          reminders: event.reminders || [],
+          participants: event.participants || [],
+          attachment_ids: event.attachment_ids || [],
+        };
 
-  const {
-    fields: participantFields,
-    append: appendParticipant,
-    remove: removeParticipant,
-  } = useFieldArray({
-    control,
-    name: 'participants',
-  });
+        reset(formData);
 
-  const [newParticipant, setNewParticipant] = useState({
-    email: '',
-    role: '',
-    status: '',
-    comment: '',
-    address_type: '',
-    is_primary: false,
-  });
+        if (event.contact) {
+          setContact(event.contact);
+        }
 
-  const handleAddParticipantSubmit = () => {
-    appendParticipant(newParticipant);
-    setNewParticipant({
-      email: '',
-      role: '',
-      status: '',
-      comment: '',
-      address_type: '',
-      is_primary: false,
-    });
+        replaceReminders(event.reminders || []);
+        replaceParticipants(event.participants || []);
+        setAttachments(event.attachments || []);
+      } else {
+        reset(requiredFields);
+        setContact(null);
+        replaceReminders([]);
+        replaceParticipants([]);
+        setAttachments([]);
+      }
+      setValidationErrors({});
+    } else {
+      // Reset states when dialog closes
+      setContact(null);
+      setEditingReminder(null);
+      setEditingParticipant(null);
+      setSearchTerm('');
+      setAttachments([]);
+      setValidationErrors({});
+    }
+  }, [open, event, isUpdateMode, reset, replaceReminders, replaceParticipants]);
+
+  // Manual validation function
+  const validateForm = (data) => {
+    const errors = {};
+
+    // if (!data.contacts_id) {
+    //   errors.contacts_id = 'Contact is required';
+    // }
+
+    if (!data.title || data.title.trim() === '') {
+      errors.title = 'Title is required';
+    }
+
+    if (!data.start_time) {
+      errors.start_time = 'Start time is required';
+    }
+
+    if (!data.end_time) {
+      errors.end_time = 'End time is required';
+    }
+
+    if (data.start_time && data.end_time && data.start_time >= data.end_time) {
+      errors.end_time = 'End time must be after start time';
+    }
+
+    if (!data.category_id) {
+      errors.category_id = 'Category is required';
+    }
+
+    if (!data.priority_id) {
+      errors.priority_id = 'Priority is required';
+    }
+
+    if (!data.status_id) {
+      errors.status_id = 'Status is required';
+    }
+
+    return errors;
+  };
+
+  // Reminder handlers
+  const handleAddReminderSubmit = (data) => {
+    if (editingReminder !== null) {
+      updateReminder(editingReminder.index, data);
+      setEditingReminder(null);
+    } else {
+      appendReminder(data);
+    }
+    setReminderDialogOpen(false);
+  };
+
+  const handleEditReminder = (reminder, index) => {
+    setEditingReminder({ ...reminder, index });
+    setReminderDialogOpen(true);
+  };
+
+  const handleReminderDialogClose = () => {
+    setReminderDialogOpen(false);
+    setEditingReminder(null);
+  };
+
+  // Participant handlers
+  const handleAddParticipantSubmit = (data) => {
+    if (editingParticipant !== null) {
+      updateParticipant(editingParticipant.index, data);
+      setEditingParticipant(null);
+    } else {
+      console.log('participant data >>>', data);
+      appendParticipant(data);
+    }
     setParticipantDialogOpen(false);
   };
 
-  const handleAddReminderSubmit = () => {
-    appendReminder(newReminder);
-    setNewReminder({
-      sound: '',
-      value: '',
-      timing: '',
-      relative_to: '',
-    });
-    setReminderDialogOpen(false);
+  const handleEditParticipant = (participant, index) => {
+    setEditingParticipant({ ...participant, index });
+    setParticipantDialogOpen(true);
+  };
+
+  const handleParticipantDialogClose = () => {
+    setParticipantDialogOpen(false);
+    setEditingParticipant(null);
+  };
+
+  // Attachment handlers
+  const handleUploadSubmit = async (payload) => {
+    try {
+      const uploadedFile = await uploadEventFile(payload);
+      setAttachments((prev) => [...prev, uploadedFile]);
+      toast.success('Attachment uploaded successfully');
+    } catch (error) {
+      toast.error('Failed to upload attachment');
+    }
+  };
+
+  const handleRemoveAttachment = (attachmentId) => {
+    setAttachments((prev) => prev.filter((att) => att.id !== attachmentId));
+  };
+
+  // Form submission
+  const onFormSubmit = async (data) => {
+    try {
+      setValidationErrors({});
+
+      const errors = validateForm(data);
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        toast.error('Please fix the validation errors');
+        return;
+      }
+
+      const formattedData = {
+        ...data,
+        contacts_id: parseInt(data.contacts_id) || data.contacts_id,
+        category_id: parseInt(data.category_id) || data.category_id,
+        priority_id: parseInt(data.priority_id) || data.priority_id,
+        status_id: parseInt(data.status_id) || data.status_id,
+        repeat_id: data.repeat_id
+          ? parseInt(data.repeat_id) || data.repeat_id
+          : null,
+        all_day: data.all_day ? 1 : 0,
+        reminders: reminderFields.map((reminder) => ({
+          type_id: parseInt(reminder.type_id),
+          timing_id: parseInt(reminder.timing_id),
+          relative_to_id: parseInt(reminder.relative_to_id),
+          value: parseInt(reminder.value),
+        })),
+        participants: participantFields.map((participant) => ({
+          user_id: parseInt(participant.user_id),
+          role_id: parseInt(participant.role_id),
+          status_id: parseInt(participant.status_id),
+          comment: participant.comment || '',
+        })),
+        attachment_ids: attachments.map((att) => att.id),
+      };
+
+      if (isUpdateMode) {
+        await updateEvent({ eventId: event.id, eventData: formattedData });
+        toast.success('Event updated successfully');
+      } else {
+        await createEvent(formattedData);
+        toast.success('Event created successfully');
+      }
+
+      onClose();
+    } catch (error) {
+      console.error(
+        `Error ${isUpdateMode ? 'updating' : 'creating'} event:`,
+        error
+      );
+      toast.error(`Error ${isUpdateMode ? 'updating' : 'creating'} event`);
+    }
   };
 
   if (!open) return null;
@@ -128,466 +345,470 @@ export default function NewEventDialogRHF({
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
-        <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000] ">
-          <div className="flex items-center justify-between p-4">
-            <h1 className="text-xl text-[#40444D] text-center font-bold font-sans ">
-              Create New Event
-            </h1>
-            <IconButton onClick={onClose}>
-              <X className="text-black" />
-            </IconButton>
-          </div>
+        <form onSubmit={handleSubmit(onFormSubmit)}>
+          <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000]">
+            <div className="flex items-center justify-between p-4">
+              <h1 className="text-xl text-[#40444D] text-center font-bold font-sans">
+                {isUpdateMode ? 'Update Event' : 'Create New Event'}
+              </h1>
+              <IconButton onClick={onClose}>
+                <X className="text-black" />
+              </IconButton>
+            </div>
 
-          <Divider />
+            <Divider />
 
-          <div className="space-y-4 flex-1 overflow-auto p-4 no-scrollbar">
-            <div className="flex flex-wrap gap-4">
-              <div className="w-full md:w-[49%] flex flex-col gap-2">
-                <Label>Title: </Label>
-                <Controller
-                  control={control}
-                  name="title"
-                  rules={{ required: 'Title is required' }}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      className={`border ${
-                        errors.title ? 'border-red-500' : ''
-                      }`}
-                    />
-                  )}
-                />
-                {errors.title && (
-                  <p className="text-red-500 text-sm">{errors.title.message}</p>
-                )}
-              </div>
-
-              <div className="w-full md:w-[49%] flex flex-col gap-2">
-                <Label>Description: </Label>
-                <Controller
-                  control={control}
-                  name="description"
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      className={`border ${
-                        errors.description ? 'border-red-500' : ''
-                      }`}
-                    />
-                  )}
-                />
-                {errors.description && (
-                  <p className="text-red-500 text-sm">
-                    {errors.description.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="w-full md:w-[49%] flex flex-col gap-2">
-                <Label>Start Time: </Label>
-                <Controller
-                  control={control}
-                  name="start_time"
-                  rules={{ required: 'Start time is required' }}
-                  render={({ field }) => (
-                    <Input
-                      type="datetime-local"
-                      {...field}
-                      className={`border ${
-                        errors.start_time ? 'border-red-500' : ''
-                      }`}
-                    />
-                  )}
-                />
-                {errors.start_time && (
-                  <p className="text-red-500 text-sm">
-                    {errors.start_time.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="w-full md:w-[49%] flex flex-col gap-2">
-                <Label>End Time: </Label>
-                <Controller
-                  control={control}
-                  name="end_time"
-                  rules={{ required: 'End time is required' }}
-                  render={({ field }) => (
-                    <Input
-                      type="datetime-local"
-                      {...field}
-                      className={`border ${
-                        errors.end_time ? 'border-red-500' : ''
-                      }`}
-                    />
-                  )}
-                />
-                {errors.end_time && (
-                  <p className="text-red-500 text-sm">
-                    {errors.end_time.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="w-full md:w-[49%] flex flex-col gap-2">
-                <Label>Category ID: </Label>
-                <Controller
-                  control={control}
-                  name="category_id"
-                  render={({ field }) => (
-                    <Input
-                      type="text"
-                      {...field}
-                      className={`border ${
-                        errors.category_id ? 'border-red-500' : ''
-                      }`}
-                    />
-                  )}
-                />
-                {errors.category_id && (
-                  <p className="text-red-500 text-sm">
-                    {errors.category_id.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="w-full md:w-[49%] flex flex-col gap-2">
-                <Label>All Day: </Label>
-                <Switch
-                  checked={getValues('all_day')}
-                  onChange={(e) => setValue('all_day', e.target.checked)}
-                />
-                {/* <Controller
-                control={control}
-                name="all_day"
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    onValueChange={field.onChange}
-                    value={field.value.toString()}
+            <div className="space-y-4 flex-1 overflow-auto p-4 no-scrollbar">
+              {/* Contact Selection */}
+              <div className="w-full space-y-2">
+                <Label className="text-[#40444D] font-semibold">Contact</Label>
+                {contact ? (
+                  <Chip
+                    label={contact?.contact_name}
+                    onDelete={() => {
+                      setContact(null);
+                      setValue('contacts_id', '');
+                      setValue('slug', '');
+                    }}
+                    deleteIcon={<X size={16} />}
+                    size="small"
+                    sx={{ bgcolor: '#e8f5e8', color: '#2e7d32', p: 1 }}
+                  />
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setSearchDialogOpen(true)}
+                    className="w-fit"
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select All Day Option" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value={true}>True</SelectItem>
-                        <SelectItem value={false}>False</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                    Select Contact
+                  </Button>
                 )}
-              /> */}
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-4">
-              <div className="w-full md:w-[49%] flex flex-col space-y-2">
-                <Label>Repeat</Label>
-                <Controller
-                  control={control}
-                  name="repeat"
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Repeat Option" />
-                      </SelectTrigger>
-                      <SelectContent
-                        position="popper"
-                        portal={false}
-                        className="z-[9999]"
-                      >
-                        <SelectGroup>
-                          {repeatOptions.map((opt) => (
-                            <SelectItem key={opt} value={opt}>
-                              {opt}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-
-              <div className="w-full md:w-[49%] flex flex-col space-y-2">
-                <Label>Priority</Label>
-                <Controller
-                  control={control}
-                  name="priority"
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Priority Option" />
-                      </SelectTrigger>
-                      <SelectContent
-                        position="popper"
-                        portal={false}
-                        className="z-[9999]"
-                      >
-                        <SelectGroup>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="low">Low</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-
-              <div className="w-full md:w-[49%] flex flex-col space-y-2">
-                <Label>Status</Label>
-                <Controller
-                  control={control}
-                  name="status"
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Status Option" />
-                      </SelectTrigger>
-                      <SelectContent
-                        position="popper"
-                        portal={false}
-                        className="z-[9999]"
-                      >
-                        <SelectGroup>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-            </div>
-
-            {/* Reminders Section */}
-            <div className="w-full">
-              <h3 className="text-lg font-semibold mb-1">Reminders</h3>
-              {reminderFields.map((reminder, idx) => (
-                <div
-                  key={reminder.id}
-                  className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
-                >
-                  <p className="text-sm">
-                    {reminder.sound}, {reminder.value}, {reminder.timing},{' '}
-                    {reminder.relative_to}
+                {validationErrors.contacts_id && (
+                  <p className="text-xs text-red-500">
+                    {validationErrors.contacts_id}
                   </p>
-                  <Tooltip arrow title="Remove Participant">
-                    <IconButton
-                      type="button"
-                      onClick={() => remove(idx)}
-                      variant="ghost"
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </IconButton>
-                  </Tooltip>
-                </div>
-              ))}
+                )}
+              </div>
 
-              <Button
-                type="button"
-                onClick={() => setReminderDialogOpen(true)}
-                variant="outline"
-                className="w-fit mt-2 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Reminder
-              </Button>
-            </div>
+              {/* Form Fields */}
+              <div className="flex flex-wrap gap-4">
+                {formFields.map(({ label, name, type, options, maxLength }) => (
+                  <div key={name} className="w-full md:w-[49%]">
+                    {type !== 'checkbox' && (
+                      <Label className="text-[#40444D] font-semibold mb-2">
+                        {label}
+                        <span className="text-red-500 ml-1">*</span>
+                      </Label>
+                    )}
 
-            {/* Participants Section */}
-            <div className="w-full">
-              <h3 className="text-lg font-semibold mb-1">Participants</h3>
-              {participantFields.map((participant, idx) => (
-                <div
-                  key={participant.id}
-                  className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
+                    {type === 'select' ? (
+                      <Controller
+                        control={control}
+                        name={name}
+                        rules={getValidationRules(name)}
+                        render={({ field }) => (
+                          <Select
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              if (validationErrors[name]) {
+                                setValidationErrors((prev) => ({
+                                  ...prev,
+                                  [name]: undefined,
+                                }));
+                              }
+                            }}
+                            value={field.value?.toString()}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder={`Select ${label}`} />
+                            </SelectTrigger>
+                            <SelectContent
+                              position="popper"
+                              portal={false}
+                              className="z-[9999]"
+                            >
+                              <SelectGroup>
+                                {options?.map((option) => (
+                                  <SelectItem
+                                    key={option.id}
+                                    value={option.id.toString()}
+                                  >
+                                    {option.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    ) : type === 'checkbox' ? (
+                      <div className="flex items-center space-x-2">
+                        <Label className="text-[#40444D] font-semibold">
+                          {label}:
+                        </Label>
+                        <Controller
+                          control={control}
+                          name={name}
+                          render={({ field }) => (
+                            <Switch
+                              checked={field.value}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+                    ) : type === 'textarea' ? (
+                      <Controller
+                        control={control}
+                        name={name}
+                        render={({ field }) => (
+                          <Textarea
+                            className="w-full bg-white"
+                            minRows={3}
+                            maxRows={5}
+                            {...field}
+                          />
+                        )}
+                      />
+                    ) : (
+                      <Controller
+                        control={control}
+                        name={name}
+                        rules={getValidationRules(name)}
+                        render={({ field }) => (
+                          <Input
+                            type={type}
+                            {...field}
+                            maxLength={maxLength}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              if (validationErrors[name]) {
+                                setValidationErrors((prev) => ({
+                                  ...prev,
+                                  [name]: undefined,
+                                }));
+                              }
+                            }}
+                          />
+                        )}
+                      />
+                    )}
+
+                    {(validationErrors[name] || errors[name]) && (
+                      <p className="text-xs text-red-500">
+                        {validationErrors[name] || errors[name]?.message}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Reminders Section */}
+              <div className="w-full">
+                <h3 className="text-lg font-semibold mb-1">Reminders</h3>
+                {reminderFields.map((reminder, idx) => (
+                  <div
+                    key={reminder.id || idx}
+                    className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
+                  >
+                    <div className="text-sm flex flex-col gap-1">
+                      <span>
+                        Type:{' '}
+                        {eventsMeta?.event_reminders_type?.find(
+                          (type) => type.id === parseInt(reminder.type_id)
+                        )?.name || 'Unknown Type'}
+                      </span>
+                      <span>
+                        Timing:{' '}
+                        {eventsMeta?.event_reminders_timing?.find(
+                          (timing) => timing.id === parseInt(reminder.timing_id)
+                        )?.name || 'Unknown Timing'}
+                      </span>
+                      <span>Value: {reminder.value}</span>
+                    </div>
+                    <div className="flex gap-1">
+                      <Tooltip arrow title="Edit Reminder">
+                        <IconButton
+                          type="button"
+                          onClick={() => handleEditReminder(reminder, idx)}
+                          size="small"
+                        >
+                          <Edit className="h-4 w-4 text-blue-500" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip arrow title="Remove Reminder">
+                        <IconButton
+                          type="button"
+                          onClick={() => removeReminder(idx)}
+                          size="small"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </IconButton>
+                      </Tooltip>
+                    </div>
+                  </div>
+                ))}
+
+                <Button
+                  type="button"
+                  onClick={() => setReminderDialogOpen(true)}
+                  variant="outline"
+                  className="w-fit mt-2 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
                 >
-                  <p className="text-sm">
-                    {participant.email}, {participant.role},{' '}
-                    {participant.status}
-                  </p>
-                  <Tooltip arrow title="Remove Participant">
-                    <IconButton
-                      type="button"
-                      onClick={() => remove(idx)}
-                      variant="ghost"
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </IconButton>
-                  </Tooltip>
-                </div>
-              ))}
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Reminder
+                </Button>
+              </div>
 
-              <Button
-                type="button"
-                onClick={() => setParticipantDialogOpen(true)}
-                variant="outline"
-                className="w-fit mt-2 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Participant
-              </Button>
+              {/* Participants Section */}
+              <div className="w-full">
+                <h3 className="text-lg font-semibold mb-1">Participants</h3>
+                {participantFields.map((participant, idx) => (
+                  <div
+                    key={participant.id || idx}
+                    className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
+                  >
+                    <div className="text-sm flex flex-col gap-1">
+                      <span>
+                        Email:{' '}
+                        {eventsMeta?.participants_email?.find(
+                          (email) => email.id === parseInt(participant.email_id)
+                        )?.email || 'Unknown Email'}
+                      </span>
+                      <span>
+                        Role:{' '}
+                        {eventsMeta?.participants_roles?.find(
+                          (role) => role.id === parseInt(participant.role_id)
+                        )?.name || 'Unknown Role'}
+                      </span>
+                      <span>
+                        Status:{' '}
+                        {eventsMeta?.event_participants_status?.find(
+                          (status) =>
+                            status.id === parseInt(participant.status_id)
+                        )?.name || 'Unknown Status'}
+                      </span>
+                      {participant.comment && (
+                        <span>Comment: {participant.comment}</span>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      <Tooltip arrow title="Edit Participant">
+                        <IconButton
+                          type="button"
+                          onClick={() =>
+                            handleEditParticipant(participant, idx)
+                          }
+                          size="small"
+                        >
+                          <Edit className="h-4 w-4 text-blue-500" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip arrow title="Remove Participant">
+                        <IconButton
+                          type="button"
+                          onClick={() => removeParticipant(idx)}
+                          size="small"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </IconButton>
+                      </Tooltip>
+                    </div>
+                  </div>
+                ))}
+
+                <Button
+                  type="button"
+                  onClick={() => setParticipantDialogOpen(true)}
+                  variant="outline"
+                  className="w-fit mt-2 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Participant
+                </Button>
+              </div>
+
+              {/* Attachments Section */}
+              <div className="w-full">
+                <h3 className="text-lg font-semibold mb-1">Attachments</h3>
+                {attachments.map((attachment, idx) => (
+                  <div
+                    key={attachment.id || idx}
+                    className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
+                  >
+                    <div className="text-sm flex flex-col gap-1">
+                      <span>
+                        Name: {attachment.name || attachment.original_name}
+                      </span>
+                      <span>
+                        Type: {attachment.type || attachment.file_type}
+                      </span>
+                      {attachment.url && (
+                        <a
+                          href={attachment.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:underline"
+                        >
+                          View File
+                        </a>
+                      )}
+                    </div>
+                    <div className="flex gap-1">
+                      <Tooltip arrow title="Remove Attachment">
+                        <IconButton
+                          type="button"
+                          onClick={() => handleRemoveAttachment(attachment.id)}
+                          size="small"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </IconButton>
+                      </Tooltip>
+                    </div>
+                  </div>
+                ))}
+
+                <Button
+                  type="button"
+                  onClick={() => setShowUploadMediaDialog(true)}
+                  variant="outline"
+                  className="w-fit mt-2 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Attachment
+                </Button>
+              </div>
             </div>
-          </div>
 
-          <Divider />
+            <Divider />
 
-          <div className="flex items-center justify-end p-4 gap-2">
-            <Button
-              onClick={onClose}
-              className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={(data) => onSubmit(data)}
-              className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
-            >
-              Submit
-            </Button>
-          </div>
-        </Stack>
+            <div className="flex items-center justify-between p-4 gap-2">
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <label htmlFor="attachment-input">
+                  <IconButton
+                    onClick={() => setShowUploadMediaDialog(true)}
+                    component="span"
+                    size="small"
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 1,
+                      '&:hover': {
+                        bgcolor: '#e3f2fd',
+                      },
+                    }}
+                  >
+                    <Paperclip size={18} color="#666" />
+                  </IconButton>
+                </label>
+              </Stack>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  onClick={onClose}
+                  className="bg-gray-300 text-black hover:bg-gray-400"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
+                >
+                  {isLoading
+                    ? isUpdateMode
+                      ? 'Updating...'
+                      : 'Creating...'
+                    : isUpdateMode
+                    ? 'Update Event'
+                    : 'Create Event'}
+                </Button>
+              </div>
+            </div>
+          </Stack>
+        </form>
       </Dialog>
 
-      {/* Dialog for Reminder */}
-      <Dialog
+      {/* Reminder Dialog */}
+      <ReminderDialog
         open={reminderDialogOpen}
-        onClose={() => setReminderDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <Stack className="bg-[#F5F5FA] rounded-lg p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-center">Add Reminder</h1>
-            <IconButton onClick={() => setReminderDialogOpen(false)}>
-              <X className="text-black" />
-            </IconButton>
-          </div>
+        onClose={handleReminderDialogClose}
+        onSubmit={handleAddReminderSubmit}
+        editingReminder={editingReminder}
+        eventsMeta={eventsMeta}
+      />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { label: 'Sound', name: 'sound', type: 'text' },
-              { label: 'Value', name: 'value', type: 'number' },
-              { label: 'Timing', name: 'timing', type: 'date' },
-              { label: 'Relative To', name: 'relative_to', type: 'text' },
-            ].map(({ label, name, type }) => (
-              <div key={name} className="w-full">
-                <Label className="text-[#40444D] font-semibold mb-2">
-                  {label}
-                </Label>
-                <Controller
-                  control={control}
-                  name={name}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      type={type}
-                      value={field.value}
-                      onChange={(e) => setValue(name, e.target.value)}
-                      placeholder={name.replace('_', ' ')}
-                    />
-                  )}
-                />
-              </div>
-            ))}
-          </div>
-
-          <div className="flex items-center justify-end p-4 gap-2">
-            <Button
-              type="button"
-              className="bg-gray-300 text-black hover:bg-gray-400"
-              onClick={() => setReminderDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
-              onClick={handleAddReminderSubmit}
-            >
-              Save Reminder
-            </Button>
-          </div>
-        </Stack>
-      </Dialog>
-
-      {/* Dialog for participants */}
-      <Dialog
+      {/* Participant Dialog */}
+      <ParticipantDialog
         open={participantDialogOpen}
-        onClose={() => setParticipantDialogOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <Stack className="bg-[#F5F5FA] rounded-lg p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-center">Add Participant</h1>
-            <IconButton onClick={() => setParticipantDialogOpen(false)}>
-              <X className="text-black" />
-            </IconButton>
-          </div>
+        onClose={handleParticipantDialogClose}
+        onSubmit={handleAddParticipantSubmit}
+        editingParticipant={editingParticipant}
+        eventsMeta={eventsMeta}
+      />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { label: 'Email', name: 'email', type: 'email' },
-              { label: 'Role', name: 'role', type: 'text' },
-              { label: 'Status', name: 'status', type: 'text' },
-              { label: 'Comment', name: 'comment', type: 'text' },
-            ].map(({ label, name, type }) => (
-              <div key={name} className="w-full">
-                <Label className="text-[#40444D] font-semibold mb-2">
-                  {label}
-                </Label>
-                <Controller
-                  control={control}
-                  name={name}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      type={type}
-                      value={field.value}
-                      onChange={(e) => setValue(name, e.target.value)}
-                      placeholder={name.replace('_', ' ')}
-                    />
-                  )}
-                />
-              </div>
-            ))}
-          </div>
+      {/* Contact Search Dialog */}
+      <SearchDialog
+        open={searchDialogOpen}
+        onClose={() => setSearchDialogOpen(false)}
+        title="Select Contact"
+        searchPlaceholder="Search contacts..."
+        maxWidth="sm"
+        items={contactSearchResults}
+        loading={contactLoading}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        onItemSelect={(item) => {
+          setContact(item);
+          setSearchDialogOpen(false);
+          setValue('contacts_id', item.id);
+          setValue('slug', item.slug);
+          if (validationErrors.contacts_id) {
+            setValidationErrors((prev) => ({
+              ...prev,
+              contacts_id: undefined,
+              slug: undefined,
+            }));
+          }
+        }}
+        onItemDeselect={() => {
+          setContact(null);
+          setValue('contacts_id', '');
+          setValue('slug', '');
+        }}
+        getItemKey={(item, index) => item.id || index}
+        getItemDisplay={(item) => ({
+          primary: item.contact_name,
+          secondary: item.primary_email,
+          avatar: item.contact_name.charAt(0).toUpperCase(),
+        })}
+        emptyStateText="No contacts found"
+        loadingText="Searching..."
+        getEmptySearchText={(searchTerm) =>
+          `No contacts found for "${searchTerm}"`
+        }
+        onCancel={() => setSearchDialogOpen(false)}
+        onConfirm={(selectedItems) => {
+          setContact(selectedItems);
+          setSearchDialogOpen(false);
+          setValue('contacts_id', selectedItems.id);
+          setValue('slug', selectedItems.slug);
+          if (validationErrors.contacts_id) {
+            setValidationErrors((prev) => ({
+              ...prev,
+              contacts_id: undefined,
+              slug: undefined,
+            }));
+          }
+        }}
+      />
 
-          <div className="flex items-center justify-end p-4 gap-2">
-            <Button
-              type="button"
-              className="bg-gray-300 text-black hover:bg-gray-400"
-              onClick={() => setParticipantDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
-              onClick={handleAddParticipantSubmit}
-            >
-              Save Participant
-            </Button>
-          </div>
-        </Stack>
-      </Dialog>
+      {/* Upload Media Dialog */}
+      <UploadMediaDialog
+        open={showUploadMediaDialog}
+        onClose={() => setShowUploadMediaDialog(false)}
+        onSubmit={handleUploadSubmit}
+      />
     </>
   );
 }

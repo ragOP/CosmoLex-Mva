@@ -8,7 +8,7 @@ export const getEventMeta = async () => {
     method: 'GET',
   });
   if (response.error) throw new Error('Failed to fetch event meta');
-  return response.response?.event_categories || [];
+  return response.response || [];
 };
 
 // Get all events

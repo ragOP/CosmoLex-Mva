@@ -33,7 +33,7 @@ const CustomToolBar = ({
           New Event
         </Button>
 
-        <Select
+        {/* <Select
           value={selectedUser}
           onChange={(e) => setSelectedUser(e.target.value)}
           displayEmpty
@@ -49,7 +49,7 @@ const CustomToolBar = ({
               {user.name}
             </MenuItem>
           ))}
-        </Select>
+        </Select> */}
       </Box>
 
       {/* Center Group */}
