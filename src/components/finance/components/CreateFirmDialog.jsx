@@ -37,7 +37,8 @@ const CreateFirmDialog = ({
         control,
         handleSubmit,
         formState: { errors },
-        reset
+        reset,
+        watch
     } = useForm({
         defaultValues: {
             firm_type_id: '',
@@ -57,34 +58,34 @@ const CreateFirmDialog = ({
             category_id: '',
             folder_id: '',
             // Document permissions
-            api_files: false,
-            case_export_file: false,
-            closing_statement: false,
-            communications_client: false,
-            email_attachment: false,
-            intake: false,
-            intake_form_doc: false,
-            intake_form_pdf: false,
-            invoice: false,
-            lien_subrogation: false,
-            mailed_document: false,
-            medical_authorization: false,
-            medical_billing: false,
-            medical_records: false,
-            notes: false,
-            photographs: false,
-            police_records: false,
-            release: false,
-            service_bills: false,
-            shipping_label: false,
-            signed_contracts: false,
-            vendor: false,
-            voice_memo: false,
+            api_files: 0,
+            case_export_file: 0,
+            closing_statement: 0,
+            communications_client: 0,
+            email_attachment: 0,
+            intake: 0,
+            intake_form_doc: 0,
+            intake_form_pdf: 0,
+            invoice: 0,
+            lien_subrogation: 0,
+            mailed_document: 0,
+            medical_authorization: 0,
+            medical_billing: 0,
+            medical_records: 0,
+            notes: 0,
+            photographs: 0,
+            police_records: 0,
+            release: 0,
+            service_bills: 0,
+            shipping_label: 0,
+            signed_contracts: 0,
+            vendor: 0,
+            voice_memo: 0,
             // Referral status
-            sent_to_referral_firm: false,
-            referral_accepted: false,
-            referral_declined: false,
-            is_active: true
+            sent_to_referral_firm: 0,
+            referral_accepted: 0,
+            referral_declined: 0,
+            is_active: 1
         }
     });
 
@@ -129,6 +130,18 @@ const CreateFirmDialog = ({
         }
     }, [firmTypes, editMode, editingFirm, open, reset]);
 
+    // Debug: Watch form values to see what's happening
+    useEffect(() => {
+        if (open) {
+            const subscription = watch((value, { name, type }) => {
+                if (type === 'change' && name && name.includes('_')) {
+                    console.log(`Field ${name} changed to:`, value[name]);
+                }
+            });
+            return () => subscription.unsubscribe();
+        }
+    }, [watch, open]);
+
     const onFormSubmit = async (data) => {
         // Prevent multiple submissions
         if (isLoading || isSubmitting) {
@@ -138,19 +151,13 @@ const CreateFirmDialog = ({
         setIsSubmitting(true);
 
         try {
-            // Comment out FormData for now, use normal JSON
-            // const formData = {
-            //     ...data,
-            //     attachments: attachments.filter(att => !att.isExisting) // Only send new attachments
-            // };
+            // Data is already in 0/1 format, no transformation needed
+            const submitData = data;
+            
+            // Debug: Log the submit data
+            console.log('Submit data:', submitData);
 
-            // Use normal JSON data
-            const jsonData = {
-                ...data,
-                // attachments: attachments.filter(att => !att.isExisting) // Comment out attachments for now
-            };
-
-            const result = await onSubmit(editMode ? { ...jsonData, id: editingFirm.id } : jsonData);
+            const result = await onSubmit(editMode ? { ...submitData, id: editingFirm.id } : submitData);
 
             if (result && result.errors) {
                 setApiErrors(result.errors);
@@ -184,6 +191,7 @@ const CreateFirmDialog = ({
     };
 
     const resetAllStates = () => {
+        console.log('Resetting form to default values');
         reset(); // Reset form data
         setApiErrors({}); // Clear API errors
         setIsSubmitting(false); // Reset submission state
@@ -613,8 +621,10 @@ const CreateFirmDialog = ({
                                                 render={({ field }) => (
                                                     <Checkbox
                                                         id={item.key}
-                                                        checked={field.value}
-                                                        onCheckedChange={field.onChange}
+                                                        checked={field.value === 1}
+                                                        onCheckedChange={(checked) => {
+                                                            field.onChange(checked ? 1 : 0);
+                                                        }}
                                                         disabled={isLoading}
                                                         className={apiErrors[item.key] ? 'border-red-500' : ''}
                                                     />

@@ -527,11 +527,23 @@ const CreateExpenseDialog = ({
                                         ${watch('amount') || '0.00'}
                                     </span>
                                 </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Quantity:</span>
+                                    <span className="font-medium">
+                                        {watch('qty') || '1'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Subtotal:</span>
+                                    <span className="font-medium">
+                                        ${((parseFloat(watch('amount') || 0) * parseFloat(watch('qty') || 1)).toFixed(2))}
+                                    </span>
+                                </div>
                                 {watch('is_taxable') && (
                                     <div className="flex justify-between">
-                                        <span className="text-gray-600">Tax (8.25%):</span>
+                                        <span className="text-gray-600">GST (18%):</span>
                                         <span className="font-medium text-green-600">
-                                            ${((parseFloat(watch('amount') || 0) * 0.0825)).toFixed(2)}
+                                            ${((parseFloat(watch('amount') || 0) * parseFloat(watch('qty') || 1) * 0.18)).toFixed(2)}
                                         </span>
                                     </div>
                                 )}
@@ -539,10 +551,14 @@ const CreateExpenseDialog = ({
                                     <div className="flex justify-between">
                                         <span className="text-[#40444D] font-semibold">Total Amount:</span>
                                         <span className="text-[#40444D] font-bold text-lg">
-                                            ${watch('is_taxable') 
-                                                ? (parseFloat(watch('amount') || 0) * 1.0825).toFixed(2)
-                                                : (parseFloat(watch('amount') || 0)).toFixed(2)
-                                            }
+                                            ${(() => {
+                                                const amount = parseFloat(watch('amount') || 0);
+                                                const qty = parseFloat(watch('qty') || 1);
+                                                const subtotal = amount * qty;
+                                                return watch('is_taxable') 
+                                                    ? (subtotal * 1.18).toFixed(2)
+                                                    : subtotal.toFixed(2);
+                                            })()}
                                         </span>
                                     </div>
                                 </div>
