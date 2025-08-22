@@ -23,7 +23,7 @@ import {
   Chip,
   TextareaAutosize,
 } from '@mui/material';
-import { Edit, Paperclip, Plus, Trash2, X } from 'lucide-react';
+import { Edit, Loader2, Paperclip, Plus, Trash2, X } from 'lucide-react';
 import ReminderDialog from '@/components/dialogs/ReminderDialog';
 import AssignDialog from '@/components/dialogs/AssignDialog';
 import SearchDialog from '@/components/dialogs/SearchDialog';
@@ -36,6 +36,7 @@ import UploadMediaDialog from '@/components/UploadMediaDialog';
 import { SearchableComboBox } from '@/components/SearchableComboBox';
 import { useMatter } from '@/components/inbox/MatterContext';
 import { useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const formFields = [
   {
@@ -140,6 +141,8 @@ export default function TaskDialog({
     updateTask,
     isCreating,
     isUpdating,
+    handleDeleteReminder,
+    isDeletingReminder,
   } = useTasks();
 
   // Use task prop if provided, otherwise use task from hook
@@ -266,16 +269,28 @@ export default function TaskDialog({
           user_id: parseInt(assignee.user_id),
         })),
         // Convert select values to IDs if needed
-        utbms_code_id: parseInt(data?.utbms_code_id) || data?.utbms_code_id,
-        priority_id: parseInt(data?.priority_id) || data?.priority_id,
-        status_id: parseInt(data?.status_id) || data?.status_id,
+        utbms_code_id:
+          parseInt(getValues('utbms_code_id')) || getValues('utbms_code_id'),
+        priority_id:
+          parseInt(getValues('priority_id')) || getValues('priority_id'),
+        status_id: parseInt(getValues('status_id')) || getValues('status_id'),
       };
       console.log('formattedData', formattedData);
 
       if (isUpdateMode) {
         updateTask({ taskId: currentTask.id, taskData: formattedData });
+
+        // Showing toast
+        if (!isUpdating) {
+          toast.success('Task updated successfully');
+        }
       } else {
         createTask(formattedData);
+
+        // Showing toast
+        if (!isCreating) {
+          toast.success('Task created successfully');
+        }
       }
 
       onClose();
@@ -308,6 +323,12 @@ export default function TaskDialog({
         // Populate form with existing task data
         const formData = {
           ...currentTask,
+          billable: currentTask.billable === 0 ? false : true,
+          notify_text: currentTask.notify_text === 0 ? false : true,
+          add_calendar_event:
+            currentTask.add_calendar_event === 0 ? false : true,
+          trigger_appointment_reminders:
+            currentTask.trigger_appointment_reminders === 0 ? false : true,
           type_id: currentTask.type_id?.toString() || '',
           priority_id: currentTask.priority_id?.toString() || '',
           status_id: currentTask.status_id?.toString() || '',
@@ -373,6 +394,8 @@ export default function TaskDialog({
     replaceReminders,
     replaceAssignedTo,
   ]);
+
+  console.log('reminderDialogOpen', reminderFields);
 
   return (
     <>
@@ -542,14 +565,22 @@ export default function TaskDialog({
                           </IconButton>
                         </Tooltip>
                         <Tooltip arrow title="Remove Reminder">
-                          <IconButton
-                            type="button"
-                            onClick={() => removeReminder(idx)}
-                            variant="ghost"
-                            size="small"
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </IconButton>
+                          {isDeletingReminder ? (
+                            <Loader2 className="animate-spin" />
+                          ) : (
+                            <IconButton
+                              type="button"
+                              onClick={() => {
+                                console.log(reminder);
+                                handleDeleteReminder(reminder.id || idx);
+                                removeReminder(idx);
+                              }}
+                              variant="ghost"
+                              size="small"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </IconButton>
+                          )}
                         </Tooltip>
                       </div>
                     </div>
@@ -665,6 +696,8 @@ export default function TaskDialog({
         setReminderDialogOpen={handleReminderDialogClose}
         onSubmit={handleAddReminderSubmit}
         editingReminder={editingReminder}
+        handleDeleteReminder={handleDeleteReminder}
+        isDeletingReminder={isDeletingReminder}
       />
 
       {/* Assigned To Dialog */}

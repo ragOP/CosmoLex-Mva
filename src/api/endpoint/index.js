@@ -40,6 +40,7 @@ export const endpoints = {
   uploadTaskFile: 'v2/task/uploadAttachment',
   deleteTaskFile: 'v2/task/deleteAttachment',
   filterTask: 'v2/task/filter',
+  deleteTaskReminder: 'v2/task/deleteReminder',
 
   getMatterMeta: 'v2/matter/meta',
   getMatters: 'v2/matter/list',

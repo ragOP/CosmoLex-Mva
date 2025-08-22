@@ -2,33 +2,25 @@ import { apiService } from '@/api/api_services';
 import { endpoints } from '@/api/endpoint';
 
 const createContact = async ({ data }) => {
-  console.log(data);
   try {
-    const result = await apiService({
+    const { response } = await apiService({
       endpoint: endpoints.createContact,
       method: 'POST',
       data,
     });
 
-    // Check if request was successful - API returns Apistatus: true for success
-    if (
-      result.response &&
-      (result.response.Apistatus === true || result.response.success === true)
-    ) {
-      return result.response;
-    } else {
-      console.error(
-        'Contact API error:',
-        result.response?.message || 'Failed to create contact'
-      );
-      throw new Error(
-        'Contact API error:',
-        result.response?.message || 'Failed to create contact'
-      );
+    // Normalize API success flag
+    const isSuccess =
+      response?.Apistatus === true || response?.success === true;
+
+    if (!isSuccess) {
+      throw new Error(response?.message || 'Failed to create contact');
     }
+
+    return response;
   } catch (error) {
-    console.error(error);
-    throw error;
+    console.error('Create contact error:', error);
+    throw error instanceof Error ? error : new Error('Unexpected error');
   }
 };
 

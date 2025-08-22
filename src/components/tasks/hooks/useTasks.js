@@ -13,7 +13,9 @@ import {
   deleteTask,
   uploadTaskFile,
   deleteTaskFile,
+  deleteReminder,
 } from '@/api/api_services/task';
+import { toast } from 'sonner';
 
 export const useTasks = () => {
   const [currentPath, setCurrentPath] = useState([]);
@@ -97,6 +99,15 @@ export const useTasks = () => {
     },
   });
 
+  const deleteReminderMutation = useMutation({
+    mutationFn: (reminderId) => deleteReminder(reminderId),
+    onSuccess: () => {
+      toast.success('Reminder deleted successfully');
+      queryClient.invalidateQueries(['tasks']);
+    },
+    onError: () => toast.error('Failed to delete reminder'),
+  });
+
   const handleSearchTask = useCallback(
     (searchBar, contact_type_id) => {
       searchTasksMutation.mutateAsync({
@@ -105,6 +116,13 @@ export const useTasks = () => {
       });
     },
     [searchTasksMutation]
+  );
+
+  const handleDeleteReminder = useCallback(
+    (reminderId) => {
+      deleteReminderMutation.mutateAsync(reminderId);
+    },
+    [deleteReminderMutation]
   );
 
   // Navigation (optional – mimic folder-style nav)
@@ -149,6 +167,7 @@ export const useTasks = () => {
     navigateBack,
     navigateToRoot,
     handleSearchTask,
+    handleDeleteReminder,
 
     // Mutations
     searchTasks: searchTasksMutation.mutateAsync,
@@ -166,5 +185,6 @@ export const useTasks = () => {
     isDeleting: deleteTaskMutation.isPending,
     isUploadingFile: uploadFileMutation.isPending,
     isDeletingFile: deleteFileMutation.isPending,
+    isDeletingReminder: deleteReminderMutation.isPending,
   };
 };

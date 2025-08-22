@@ -117,3 +117,13 @@ export const deleteTaskFile = async (fileId) => {
   if (response.error) throw new Error('Failed to delete task file');
   return response.response?.data;
 };
+
+// Delete reminder
+export const deleteReminder = async (reminderId) => {
+  const response = await apiService({
+    endpoint: `${endpoints.deleteTaskReminder}/${reminderId}`,
+    method: 'DELETE',
+  });
+  if (response.error) throw new Error('Failed to delete reminder');
+  return response.response?.data;
+};

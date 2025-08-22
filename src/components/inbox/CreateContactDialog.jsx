@@ -43,6 +43,7 @@ export default function CreateContactDialog({ open, setOpen }) {
     formState: { errors },
     reset,
     setValue,
+    watch,
   } = useForm({
     defaultValues: {
       nature: '',
@@ -77,6 +78,8 @@ export default function CreateContactDialog({ open, setOpen }) {
     },
   });
 
+  const nature = watch('nature');
+
   const {
     fields: addressFields,
     append,
@@ -86,11 +89,92 @@ export default function CreateContactDialog({ open, setOpen }) {
     name: 'addresses',
   });
 
+  // Define validation rules for each field
+  const getValidationRules = (name) => {
+    const rules = {};
+
+    switch (name) {
+      case 'nature':
+        rules.required = 'Nature is required';
+        break;
+      case 'contact_type_id':
+        rules.required = 'Contact type is required';
+        break;
+      case 'first_name':
+        if (nature === 'Individual') {
+          rules.required = 'First name is required for individuals';
+        }
+        rules.maxLength = {
+          value: 255,
+          message: 'First name must be 255 characters or less',
+        };
+        break;
+      case 'last_name':
+        if (nature === 'Individual') {
+          rules.required = 'Last name is required for individuals';
+        }
+        rules.maxLength = {
+          value: 255,
+          message: 'Last name must be 255 characters or less',
+        };
+        break;
+      case 'company_name':
+        if (nature === 'Business') {
+          rules.required = 'Company name is required for businesses';
+        }
+        rules.maxLength = {
+          value: 255,
+          message: 'Company name must be 255 characters or less',
+        };
+        break;
+      case 'addresses':
+        rules.validate = (value) => {
+          if (!value || value.length === 0) {
+            return 'At least one address is required';
+          }
+          return true;
+        };
+        break;
+      default:
+        // Apply maxLength to other text fields
+        if (
+          [
+            'middle_name',
+            'suffix',
+            'alias',
+            'job_title',
+            'ssn',
+            'federal_tax_id',
+            'work_phone',
+            'home_phone',
+            'primary_phone',
+            'fax',
+            'primary_email',
+            'secondary_email',
+            'when_to_contact',
+            'contact_preference',
+            'language',
+            'drivers_license',
+            'notes',
+          ].includes(name)
+        ) {
+          rules.maxLength = {
+            value: 255,
+            message: `${name.replace('_', ' ')} must be 255 characters or less`,
+          };
+        }
+        break;
+    }
+
+    return rules;
+  };
+
   const formFields = [
     {
       label: 'Nature',
       name: 'nature',
       type: 'select',
+      required: true,
       options: [
         { id: 'Individual', name: 'Individual' },
         { id: 'Business', name: 'Business' },
@@ -100,6 +184,7 @@ export default function CreateContactDialog({ open, setOpen }) {
       label: 'Contact Type',
       name: 'contact_type_id',
       type: 'select',
+      required: true,
       options: contactMeta?.contact_type || [],
     },
     {
@@ -108,9 +193,19 @@ export default function CreateContactDialog({ open, setOpen }) {
       type: 'select',
       options: contactMeta?.prefix || [],
     },
-    { label: 'First Name', name: 'first_name', type: 'text', required: true },
+    {
+      label: 'First Name',
+      name: 'first_name',
+      type: 'text',
+      required: nature === 'Individual',
+    },
     { label: 'Middle Name', name: 'middle_name', type: 'text' },
-    { label: 'Last Name', name: 'last_name', type: 'text', required: true },
+    {
+      label: 'Last Name',
+      name: 'last_name',
+      type: 'text',
+      required: nature === 'Individual',
+    },
     { label: 'Suffix', name: 'suffix', type: 'text' },
     {
       label: 'Gender',
@@ -125,7 +220,12 @@ export default function CreateContactDialog({ open, setOpen }) {
       type: 'select',
       options: contactMeta?.marital_status || [],
     },
-    { label: 'Company Name', name: 'company_name', type: 'text' },
+    {
+      label: 'Company Name',
+      name: 'company_name',
+      type: 'text',
+      required: nature === 'Business',
+    },
     { label: 'Job Title', name: 'job_title', type: 'text' },
     { label: 'SSN', name: 'ssn', type: 'text' },
     { label: 'Federal Tax ID', name: 'federal_tax_id', type: 'text' },
@@ -151,10 +251,11 @@ export default function CreateContactDialog({ open, setOpen }) {
       console.log('[DEBUG] Contact created successfully:', res);
       toast.success('Contact created successfully');
       setOpen(false);
+      reset();
     },
     onError: (error) => {
       console.error('[DEBUG] Create contact error:', error);
-      toast.error(error?.response?.data?.message || 'Failed to create contact');
+      toast.error(error.message || 'Failed to create contact');
     },
   });
 
@@ -176,21 +277,68 @@ export default function CreateContactDialog({ open, setOpen }) {
     address_type_id: null,
   });
 
+  const [addressErrors, setAddressErrors] = useState({});
+
+  const validateAddress = (address) => {
+    const errors = {};
+
+    if (!address.address_1?.trim()) {
+      errors.address_1 = 'Address line 1 is required';
+    } else if (address.address_1.length > 255) {
+      errors.address_1 = 'Address line 1 must be 255 characters or less';
+    }
+
+    if (!address.city?.trim()) {
+      errors.city = 'City is required';
+    } else if (address.city.length > 100) {
+      errors.city = 'City must be 100 characters or less';
+    }
+
+    // Optional field validations
+    if (address.address_2 && address.address_2.length > 255) {
+      errors.address_2 = 'Address line 2 must be 255 characters or less';
+    }
+
+    if (address.county && address.county.length > 100) {
+      errors.county = 'County must be 100 characters or less';
+    }
+
+    if (address.state && address.state.length > 100) {
+      errors.state = 'State must be 100 characters or less';
+    }
+
+    if (address.zip && address.zip.length > 20) {
+      errors.zip = 'ZIP code must be 20 characters or less';
+    }
+
+    if (address.country && address.country.length > 100) {
+      errors.country = 'Country must be 100 characters or less';
+    }
+
+    return errors;
+  };
+
   const handleAddAddressSubmit = () => {
-    console.log('[DEBUG] Adding new address:', newAddress);
-    append(newAddress);
-    setNewAddress({
-      address_1: '',
-      address_2: '',
-      city: '',
-      county: '',
-      state: '',
-      zip: '',
-      country: '',
-      is_primary: false,
-      address_type_id: null,
-    });
-    setAddressDialogOpen(false);
+    const errors = validateAddress(newAddress);
+    setAddressErrors(errors);
+
+    if (Object.keys(errors).length === 0) {
+      console.log('[DEBUG] Adding new address:', newAddress);
+      append(newAddress);
+      setNewAddress({
+        address_1: '',
+        address_2: '',
+        city: '',
+        county: '',
+        state: '',
+        zip: '',
+        country: '',
+        is_primary: false,
+        address_type_id: null,
+      });
+      setAddressDialogOpen(false);
+      setAddressErrors({});
+    }
   };
 
   return (
@@ -215,12 +363,15 @@ export default function CreateContactDialog({ open, setOpen }) {
           <Divider />
 
           <div className="space-y-4 flex-1 overflow-auto p-4 no-scrollbar">
-            <div className="flex flex-wrap  gap-4 overflow-auto">
+            <div className="flex flex-wrap gap-4 overflow-auto">
               {formFields.map(({ label, name, type, required, options }) => (
                 <div key={name} className="w-full md:w-[49%]">
                   {type !== 'checkbox' && (
                     <Label className="text-[#40444D] font-semibold mb-2">
                       {label}
+                      {(required || getValidationRules(name).required) && (
+                        <span className="text-red-500 ml-1">*</span>
+                      )}
                     </Label>
                   )}
 
@@ -228,6 +379,7 @@ export default function CreateContactDialog({ open, setOpen }) {
                     <Controller
                       control={control}
                       name={name}
+                      rules={getValidationRules(name)}
                       render={({ field }) => (
                         <Select
                           onValueChange={(val) => {
@@ -236,7 +388,11 @@ export default function CreateContactDialog({ open, setOpen }) {
                           }}
                           value={field.value?.toString() ?? ''}
                         >
-                          <SelectTrigger className="w-full">
+                          <SelectTrigger
+                            className={`w-full ${
+                              errors[name] ? 'border-red-500' : ''
+                            }`}
+                          >
                             <SelectValue placeholder={`Select ${label}`} />
                           </SelectTrigger>
                           <SelectContent
@@ -245,7 +401,7 @@ export default function CreateContactDialog({ open, setOpen }) {
                             className="z-[9999]"
                           >
                             <SelectGroup>
-                              {options.map((option) => (
+                              {options?.map((option) => (
                                 <SelectItem
                                   key={option.id}
                                   value={option.id.toString()}
@@ -262,15 +418,31 @@ export default function CreateContactDialog({ open, setOpen }) {
                     <Controller
                       control={control}
                       name={name}
-                      render={({ field }) => <Input type={type} {...field} />}
+                      rules={getValidationRules(name)}
+                      render={({ field }) => (
+                        <Input
+                          type={type}
+                          {...field}
+                          className={errors[name] ? 'border-red-500' : ''}
+                        />
+                      )}
                     />
+                  )}
+
+                  {errors[name] && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors[name]?.message}
+                    </p>
                   )}
                 </div>
               ))}
 
               {/* Address Section */}
               <div className="w-full">
-                <h3 className="text-lg font-semibold mb-1">Addresses</h3>
+                <h3 className="text-lg font-semibold mb-1">
+                  Addresses
+                  <span className="text-red-500 ml-1">*</span>
+                </h3>
                 {addressFields.map((addr, idx) => (
                   <div
                     key={addr.id}
@@ -304,6 +476,26 @@ export default function CreateContactDialog({ open, setOpen }) {
                   <Plus className="mr-2 h-4 w-4" />
                   Add Address
                 </Button>
+
+                {errors?.addresses?.root?.message && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors?.addresses?.root?.message}
+                  </p>
+                )}
+
+                {/* Hidden field to enforce address validation */}
+                <Controller
+                  control={control}
+                  name="addresses"
+                  rules={getValidationRules('addresses')}
+                  render={({ field }) => (
+                    <input
+                      type="hidden"
+                      {...field}
+                      value={field.value?.length ? 'hasAddresses' : ''}
+                    />
+                  )}
+                />
               </div>
             </div>
           </div>
@@ -321,8 +513,11 @@ export default function CreateContactDialog({ open, setOpen }) {
             <Button
               onClick={handleSubmit(onSubmit)}
               className="bg-[#6366F1] text-white"
+              disabled={createContactMutation.isPending}
             >
-              Create Contact
+              {createContactMutation.isPending
+                ? 'Creating...'
+                : 'Create Contact'}
             </Button>
           </div>
         </Stack>
@@ -345,24 +540,31 @@ export default function CreateContactDialog({ open, setOpen }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
-              'address_1',
-              'address_2',
-              'city',
-              'county',
-              'state',
-              'zip',
-              'country',
-            ].map((field) => (
+              { field: 'address_1', label: 'Address Line 1', required: true },
+              { field: 'address_2', label: 'Address Line 2', required: false },
+              { field: 'city', label: 'City', required: true },
+              { field: 'county', label: 'County', required: false },
+              { field: 'state', label: 'State', required: false },
+              { field: 'zip', label: 'ZIP Code', required: false },
+              { field: 'country', label: 'Country', required: false },
+            ].map(({ field, label, required }) => (
               <div key={field}>
                 <Label className="text-[#40444D] font-semibold mb-2">
-                  {field.replace('_', ' ')}
+                  {label}
+                  {required && <span className="text-red-500 ml-1">*</span>}
                 </Label>
                 <Input
                   value={newAddress[field]}
                   onChange={(e) =>
                     setNewAddress({ ...newAddress, [field]: e.target.value })
                   }
+                  className={addressErrors[field] ? 'border-red-500' : ''}
                 />
+                {addressErrors[field] && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {addressErrors[field]}
+                  </p>
+                )}
               </div>
             ))}
 
@@ -409,7 +611,10 @@ export default function CreateContactDialog({ open, setOpen }) {
             <Button
               type="button"
               className="bg-gray-300 text-black hover:bg-gray-400"
-              onClick={() => setAddressDialogOpen(false)}
+              onClick={() => {
+                setAddressDialogOpen(false);
+                setAddressErrors({});
+              }}
             >
               Cancel
             </Button>

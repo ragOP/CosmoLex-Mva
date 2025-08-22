@@ -13,8 +13,6 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { createMatterSchema } from '@/pages/matter/intake/schema/createMatterSchema';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import getMatterMeta from '@/pages/matter/intake/helpers/getMatterMeta';
 import getContactMeta from '@/pages/matter/intake/helpers/getContactMeta';
@@ -22,8 +20,18 @@ import searchContact from '@/pages/matter/intake/helpers/searchContact';
 import createMatter from '@/pages/matter/intake/helpers/createMatter';
 import { useNavigate } from 'react-router-dom';
 import CreateContactDialog from './CreateContactDialog';
-import { Edit, X, ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import {
+  Edit,
+  X,
+  ChevronDown,
+  ChevronRight,
+  Plus,
+  Loader2,
+} from 'lucide-react';
 import BreadCrumb from '@/components/BreadCrumb';
+import { toast } from 'sonner';
+import { Textarea } from '../ui/textarea';
+import { IconButton, Stack } from '@mui/material';
 
 export default function CreateIntake() {
   const navigate = useNavigate();
@@ -41,11 +49,16 @@ export default function CreateIntake() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['matters'] });
       console.log('DATA', data);
+      toast.success(data.message || 'Intake created successfully!');
       if (data && data.slug) {
         navigate(`/dashboard/inbox/overview?slugId=${data.slug}`);
       } else {
         navigate('/dashboard/inbox');
       }
+    },
+    onError: (error) => {
+      console.error('Create matter error:', error);
+      toast.error(error.message || 'Failed to create intake');
     },
   });
 
@@ -83,16 +96,62 @@ export default function CreateIntake() {
     return () => debouncedSearch.cancel();
   }, [searchContactQuery, selectedContactType, debouncedSearch]);
 
-  const handleCreateIntake = (data) => {
-    createMatterMutation.mutate({ data });
+  // Manual validation function
+  const validateForm = (data) => {
+    const errors = {};
+
+    // Required field validation
+    if (!data.contact_id) {
+      errors.contact_id = 'Contact selection is required';
+    }
+
+    if (!data.case_type_id) {
+      errors.case_type_id = 'Case type is required';
+    }
+
+    if (!data.marketing_source_id) {
+      errors.marketing_source_id = 'Marketing source is required';
+    }
+
+    // Optional field validation with constraints
+    if (data.case_description && data.case_description.length > 1000) {
+      errors.case_description =
+        'Case description must be 1000 characters or less';
+    }
+
+    // Number validation for ID fields
+    const numericFields = [
+      'case_role_id',
+      'case_type_id',
+      'case_status_id',
+      'marketing_source_id',
+      'assignee_id',
+      'owner_id',
+      'ad_campaign_id',
+      'contact_id',
+    ];
+
+    numericFields.forEach((field) => {
+      if (data[field] && (isNaN(data[field]) || data[field] <= 0)) {
+        errors[field] = `${field.replace('_', ' ')} must be a valid selection`;
+      }
+    });
+
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors,
+    };
   };
 
   const {
     control,
     handleSubmit,
-    formState: { errors },
+    formState: { errors: formErrors },
     getValues,
     setValue,
+    setError,
+    clearErrors,
+    trigger,
   } = useForm({
     defaultValues: {
       case_role_id: '',
@@ -105,8 +164,57 @@ export default function CreateIntake() {
       case_description: '',
       contact_id: '',
     },
-    resolver: zodResolver(createMatterSchema),
+    mode: 'onChange',
   });
+
+  const handleCreateIntake = (data) => {
+    // Clear previous errors
+    Object.keys(formErrors).forEach((key) => clearErrors(key));
+
+    // Manual validation
+    const validation = validateForm(data);
+
+    if (!validation.isValid) {
+      // Set errors for invalid fields
+      Object.entries(validation.errors).forEach(([field, message]) => {
+        setError(field, { type: 'manual', message });
+      });
+
+      toast.error('Please fix the validation errors before submitting');
+      return;
+    }
+
+    // Additional contact validation
+    if (!selectedContact && !data.contact_id) {
+      setError('contact_id', {
+        type: 'manual',
+        message: 'Please select a contact or create a new one',
+      });
+      toast.error('Contact selection is required');
+      return;
+    }
+
+    console.log('[DEBUG] Submitting intake data:', data);
+    createMatterMutation.mutate({ data });
+  };
+
+  // Real-time validation for specific fields
+  const handleFieldChange = (fieldName, value, onChange) => {
+    onChange(value);
+
+    // Clear error when user starts typing/selecting
+    if (formErrors[fieldName]) {
+      clearErrors(fieldName);
+    }
+
+    // Real-time validation for case description length
+    if (fieldName === 'case_description' && value && value.length > 1000) {
+      setError(fieldName, {
+        type: 'manual',
+        message: 'Case description must be 1000 characters or less',
+      });
+    }
+  };
 
   const contactType = contactMeta?.contact_type || [];
 
@@ -115,340 +223,456 @@ export default function CreateIntake() {
       label: 'Case Role',
       name: 'case_role_id',
       type: 'select',
-      required: true,
+      required: false,
       options: matterMeta?.case_role || [],
     },
     {
       label: 'Case Type',
       name: 'case_type_id',
       type: 'select',
+      required: true,
       options: matterMeta?.case_type || [],
     },
     {
       label: 'Case Status',
       name: 'case_status_id',
       type: 'select',
-      required: true,
+      required: false,
       options: matterMeta?.case_status || [],
     },
     {
       label: 'Marketing Source',
       name: 'marketing_source_id',
       type: 'select',
+      required: true,
       options: matterMeta?.marketing_source || [],
     },
     {
       label: 'Assignee',
       name: 'assignee_id',
       type: 'select',
+      required: false,
       options: matterMeta?.assignees || [],
     },
     {
       label: 'Owner',
       name: 'owner_id',
       type: 'select',
+      required: false,
       options: matterMeta?.owners || [],
     },
     {
       label: 'Ad Campaign',
       name: 'ad_campaign_id',
       type: 'select',
+      required: false,
       options: matterMeta?.ad_campaign_id || [],
     },
-    { label: 'Case Description', name: 'case_description', type: 'text' },
+    {
+      label: 'Case Description',
+      name: 'case_description',
+      type: 'textarea',
+      required: false,
+      maxLength: 1000,
+    },
   ];
 
   return (
     <div className="flex p-4 w-full h-full">
-      <div className="flex flex-col items-center  p-4 bg-white/30 w-full rounded-2xl">
+      <div className="flex flex-col items-center p-4 bg-white/30 w-full rounded-2xl">
         <BreadCrumb label="Create Intake" />
         <div className="bg-white/50 rounded-lg w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto no-scrollbar flex-1">
-          {/* <h1 className="text-2xl text-[#40444D] text-center font-bold font-sans">
-           
-        </h1> */}
-
           <form
             onSubmit={handleSubmit((data) => handleCreateIntake(data))}
             className="space-y-4 w-full h-full flex flex-col"
           >
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {formFields.map(({ label, name, type, options }) => (
-                  <div key={name} className="w-full">
-                    {type !== 'checkbox' && (
-                      <Label className="text-[#40444D] font-semibold mb-2">
-                        {label}
-                      </Label>
-                    )}
-                    {type === 'select' ? (
-                      <Controller
-                        control={control}
-                        name={name}
-                        render={({ field }) => (
-                          <Select
-                            onValueChange={(val) => field.onChange(Number(val))}
-                            value={field.value?.toString() ?? ''}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder={`Select ${label}`} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectGroup>
-                                {options.map((option) => (
-                                  <SelectItem
-                                    key={option.id}
-                                    value={option.id.toString()}
-                                  >
-                                    {option.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectGroup>
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                    ) : type === 'checkbox' ? (
-                      <Controller
-                        control={control}
-                        name={name}
-                        render={({ field }) => (
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            className={`border ${
-                              errors[name] ? 'border-red-500' : ''
+                {formFields.map(
+                  ({ label, name, type, required, options, maxLength }) => (
+                    <div key={name} className="w-full">
+                      {type !== 'checkbox' && (
+                        <Label className="text-[#40444D] font-semibold mb-2">
+                          {label}
+                          {required && (
+                            <span className="text-red-500 ml-1">*</span>
+                          )}
+                        </Label>
+                      )}
+
+                      {type === 'select' ? (
+                        <Controller
+                          control={control}
+                          name={name}
+                          render={({ field }) => (
+                            <Select
+                              onValueChange={(val) =>
+                                handleFieldChange(
+                                  name,
+                                  Number(val),
+                                  field.onChange
+                                )
+                              }
+                              value={field.value?.toString() ?? ''}
+                            >
+                              <SelectTrigger
+                                className={`w-full ${
+                                  formErrors[name] ? 'border-red-500' : ''
+                                }`}
+                              >
+                                <SelectValue placeholder={`Select ${label}`} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectGroup>
+                                  {options?.map((option) => (
+                                    <SelectItem
+                                      key={option.id}
+                                      value={option.id.toString()}
+                                    >
+                                      {option.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      ) : type === 'textarea' ? (
+                        <Controller
+                          control={control}
+                          name={name}
+                          render={({ field }) => (
+                            <div className="space-y-1">
+                              <Textarea
+                                {...field}
+                                className={`w-full min-h-[100px] px-3 py-2 border rounded-md resize-vertical ${
+                                  formErrors[name]
+                                    ? 'border-red-500'
+                                    : 'border-gray-300'
+                                } focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent`}
+                                placeholder={`Enter ${label.toLowerCase()}...`}
+                                onChange={(e) =>
+                                  handleFieldChange(
+                                    name,
+                                    e.target.value,
+                                    field.onChange
+                                  )
+                                }
+                              />
+                              {maxLength && (
+                                <div className="text-xs text-gray-500 text-right">
+                                  {field.value?.length || 0} / {maxLength}{' '}
+                                  characters
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        />
+                      ) : type === 'checkbox' ? (
+                        <Controller
+                          control={control}
+                          name={name}
+                          render={({ field }) => (
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) =>
+                                handleFieldChange(name, checked, field.onChange)
+                              }
+                              className={`border ${
+                                formErrors[name] ? 'border-red-500' : ''
+                              }`}
+                            />
+                          )}
+                        />
+                      ) : (
+                        <Controller
+                          control={control}
+                          name={name}
+                          render={({ field }) => (
+                            <Input
+                              type={type}
+                              {...field}
+                              className={
+                                formErrors[name] ? 'border-red-500' : ''
+                              }
+                              onChange={(e) =>
+                                handleFieldChange(
+                                  name,
+                                  e.target.value,
+                                  field.onChange
+                                )
+                              }
+                            />
+                          )}
+                        />
+                      )}
+
+                      {formErrors[name] && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {formErrors[name].message}
+                        </p>
+                      )}
+                    </div>
+                  )
+                )}
+              </div>
+
+              {/* Contact Selection Section */}
+              <div className="space-y-4">
+                <div
+                  className={`flex gap-4 w-full ${
+                    selectedContact ? 'hidden' : ''
+                  }`}
+                >
+                  <div className="w-[24vw] space-y-2">
+                    <Label className="text-[#40444D] w-full font-semibold block">
+                      Contact Type
+                      <span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Select
+                      onValueChange={(value) => {
+                        setSelectedContactType(value);
+                        // Clear contact search when type changes
+                        setSearchContactQuery('');
+                        setSelectedContact(null);
+                        setValue('contact_id', '');
+                        setShowContactTable(false);
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Contact Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {contactType.map((c) => (
+                          <SelectItem key={c.id} value={c.name}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Search Contact */}
+                  <div className="w-full space-y-2">
+                    <Label className="text-[#40444D] font-semibold block">
+                      Search Contact
+                      <span className="text-red-500 ml-1">*</span>
+                    </Label>
+                    <Controller
+                      control={control}
+                      name="contact_id"
+                      render={() => (
+                        <>
+                          <Input
+                            placeholder="Search by name or email..."
+                            value={searchContactQuery}
+                            onChange={(e) => {
+                              setSearchContactQuery(e.target.value);
+                              setShowContactTable(true);
+                              setSelectedContact(null);
+                              setValue('contact_id', '');
+                              if (formErrors.contact_id) {
+                                clearErrors('contact_id');
+                              }
+                            }}
+                            className={`w-1/2 bg-white ${
+                              formErrors.contact_id ? 'border-red-500' : ''
                             }`}
+                            disabled={!selectedContactType}
                           />
-                        )}
-                      />
-                    ) : (
-                      <Controller
-                        control={control}
-                        name={name}
-                        render={({ field }) => <Input type={type} {...field} />}
-                      />
-                    )}
-                    {errors[name] && (
-                      <p className="text-xs text-red-500">
-                        {errors[name].message}
+                        </>
+                      )}
+                    />
+                    {!selectedContactType && (
+                      <p className="text-xs text-gray-500">
+                        Please select a contact type first
                       </p>
                     )}
+                    <p className="text-[0.7rem] text-[#40444D] text-start w-1/2">
+                      Don't have a contact?{' '}
+                      <span
+                        onClick={() => setOpen(true)}
+                        className="text-[#6366F1] cursor-pointer hover:underline"
+                      >
+                        Add a new contact
+                      </span>
+                    </p>
                   </div>
-                ))}
-              </div>
-
-              {/* Contact Type Select */}
-
-              <div
-                className={`flex gap-4 w-full ${
-                  selectedContact ? 'hidden' : ''
-                }`}
-              >
-                <div className="w-[24vw] space-y-2">
-                  <Label className="text-[#40444D] w-full font-semibold block">
-                    Contact Type
-                  </Label>
-                  <Select onValueChange={setSelectedContactType}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Contact Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {contactType.map((c) => (
-                        <SelectItem key={c.id} value={c.name}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
 
-                {/* Search Contact */}
-                <div className="w-full  space-y-2">
-                  <Label className="text-[#40444D] font-semibold block">
-                    Search Contact
-                  </Label>
-                  <Controller
-                    control={control}
-                    name="contact_id"
-                    render={() => (
-                      <>
-                        <Input
-                          placeholder="Search by name or email..."
-                          value={searchContactQuery}
-                          onChange={(e) => {
-                            setSearchContactQuery(e.target.value);
-                            setShowContactTable(true);
-                            setSelectedContact(null);
-                          }}
-                          className="w-1/2 bg-white"
-                          disabled={!selectedContactType}
-                        />
-                      </>
-                    )}
-                  />
-                  <p className="text-[0.7rem] text-[#40444D] text-start w-1/2">
-                    Don't have a contact?{' '}
-                    <span
-                      onClick={() => setOpen(true)}
-                      className="text-[#6366F1] cursor-pointer hover:underline"
-                    >
-                      Add a new contact
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              {searchContactQuery && showContactTable && !selectedContact && (
-                <div
-                  className="flex w-full mt-4"
-                  style={{ minHeight: '220px' }}
-                >
-                  <div className="w-1/2 border rounded-lg bg-white shadow overflow-y-auto">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="py-2 px-4">Name</th>
-                          <th className="py-2 px-2">Case Type</th>
-                          <th className="py-2 px-2">Email</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {searchContactData?.length > 0 ? (
-                          searchContactData
-                            .filter(
-                              (c) =>
-                                c.contact_name
-                                  .toLowerCase()
-                                  .includes(searchContactQuery.toLowerCase()) ||
-                                c.primary_email
-                                  .toLowerCase()
-                                  .includes(searchContactQuery.toLowerCase())
-                            )
-                            .map((contact) => (
-                              <tr
-                                key={contact.id}
-                                className={`cursor-pointer hover:bg-indigo-100 transition duration-300 ease-in-out ${
-                                  hoveredContact?.id === contact.id
-                                    ? 'bg-indigo-50'
-                                    : ''
-                                }`}
-                                onMouseEnter={() => setHoveredContact(contact)}
-                                onMouseLeave={() => setHoveredContact(null)}
-                                onClick={() => {
-                                  setSelectedContact(contact);
-                                  setShowContactTable(false);
-                                  setValue('contact_id', contact.id);
-                                }}
-                              >
-                                <td className="py-2 px-4">
-                                  {contact.contact_name}
-                                </td>
-                                <td className="py-2 px-2">
-                                  {contact.contact_type}
-                                </td>
-                                <td className="py-2 px-2">
-                                  {contact.primary_email}
-                                </td>
-                              </tr>
-                            ))
-                        ) : (
-                          <tr>
-                            <td colSpan={3} className="py-2 px-2 text-center">
-                              No contacts found
-                            </td>
+                {/* Contact Search Results */}
+                {searchContactQuery && showContactTable && !selectedContact && (
+                  <div
+                    className="flex w-full mt-4"
+                    style={{ minHeight: '220px' }}
+                  >
+                    <div className="w-1/2 border rounded-lg bg-white shadow overflow-y-auto">
+                      <table className="w-full text-left">
+                        <thead>
+                          <tr className="bg-gray-100">
+                            <th className="py-2 px-4">Name</th>
+                            <th className="py-2 px-2">Case Type</th>
+                            <th className="py-2 px-2">Email</th>
                           </tr>
-                        )}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {searchContactData?.length > 0 ? (
+                            searchContactData
+                              .filter(
+                                (c) =>
+                                  c.contact_name
+                                    .toLowerCase()
+                                    .includes(
+                                      searchContactQuery.toLowerCase()
+                                    ) ||
+                                  c.primary_email
+                                    .toLowerCase()
+                                    .includes(searchContactQuery.toLowerCase())
+                              )
+                              .map((contact) => (
+                                <tr
+                                  key={contact.id}
+                                  className={`cursor-pointer hover:bg-indigo-100 transition duration-300 ease-in-out ${
+                                    hoveredContact?.id === contact.id
+                                      ? 'bg-indigo-50'
+                                      : ''
+                                  }`}
+                                  onMouseEnter={() =>
+                                    setHoveredContact(contact)
+                                  }
+                                  onMouseLeave={() => setHoveredContact(null)}
+                                  onClick={() => {
+                                    setSelectedContact(contact);
+                                    setShowContactTable(false);
+                                    setValue('contact_id', contact.id);
+                                    if (formErrors.contact_id) {
+                                      clearErrors('contact_id');
+                                    }
+                                  }}
+                                >
+                                  <td className="py-2 px-4">
+                                    {contact.contact_name}
+                                  </td>
+                                  <td className="py-2 px-2">
+                                    {contact.contact_type}
+                                  </td>
+                                  <td className="py-2 px-2">
+                                    {contact.primary_email}
+                                  </td>
+                                </tr>
+                              ))
+                          ) : (
+                            <tr>
+                              <td colSpan={3} className="py-2 px-2 text-center">
+                                No contacts found
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Contact Preview */}
+                    <div className="w-1/2 pl-4">
+                      {hoveredContact && (
+                        <div className="border rounded-lg bg-white shadow p-4">
+                          <h2 className="font-bold text-lg mb-2">
+                            Contact Preview
+                          </h2>
+                          <div className="space-y-1 text-sm">
+                            <p>
+                              <span className="font-semibold">Name:</span>{' '}
+                              {hoveredContact?.contact_name}
+                            </p>
+                            <p>
+                              <span className="font-semibold">Case Type:</span>{' '}
+                              {hoveredContact?.contact_type}
+                            </p>
+                            <p>
+                              <span className="font-semibold">Email:</span>{' '}
+                              {hoveredContact?.primary_email}
+                            </p>
+                            <p>
+                              <span className="font-semibold">Phone:</span>{' '}
+                              {hoveredContact?.phone}
+                            </p>
+                            <p>
+                              <span className="font-semibold">Address:</span>{' '}
+                              {hoveredContact?.primary_address}
+                            </p>
+                            <p>
+                              <span className="font-semibold">Created:</span>{' '}
+                              {hoveredContact?.date_created}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="w-1/2 pl-4">
-                    {hoveredContact && (
-                      <div className="border rounded-lg bg-white shadow p-4">
+                )}
+
+                {/* Selected Contact Display */}
+                {selectedContact && (
+                  <div className="w-full mt-4">
+                    <div className="relative border rounded-lg bg-white shadow p-4">
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                      >
                         <h2 className="font-bold text-lg mb-2">
-                          Contact Preview
+                          Selected Contact
                         </h2>
+                        <IconButton
+                          onClick={() => {
+                            setSelectedContact(null);
+                            setValue('contact_id', '');
+                            setShowContactTable(true);
+                          }}
+                        >
+                          <Edit className="w-5 h-5" />
+                        </IconButton>
+                      </Stack>
+                      <div className="space-y-1 text-sm">
                         <p>
                           <span className="font-semibold">Name:</span>{' '}
-                          {hoveredContact?.contact_name}
+                          {selectedContact.contact_name}
                         </p>
                         <p>
                           <span className="font-semibold">Case Type:</span>{' '}
-                          {hoveredContact?.contact_type}
+                          {selectedContact.contact_type}
                         </p>
                         <p>
                           <span className="font-semibold">Email:</span>{' '}
-                          {hoveredContact?.primary_email}
+                          {selectedContact.primary_email}
                         </p>
                         <p>
                           <span className="font-semibold">Phone:</span>{' '}
-                          {hoveredContact?.phone}
+                          {selectedContact.phone}
                         </p>
                         <p>
                           <span className="font-semibold">Address:</span>{' '}
-                          {hoveredContact?.primary_address}
+                          {selectedContact.primary_address}
                         </p>
                         <p>
                           <span className="font-semibold">Created:</span>{' '}
-                          {hoveredContact?.date_created}
+                          {selectedContact.date_created}
                         </p>
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {selectedContact && (
-                <div className="w-full mt-4">
-                  <div className="relative border rounded-lg bg-white shadow p-4">
-                    <h2 className="font-bold text-lg mb-2">Selected Contact</h2>
-                    <Button
-                      variant={'ghost'}
-                      type="icon"
-                      className="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-500 hover:text-white transition-colors duration-200 cursor-pointer"
-                      onClick={() => {
-                        setSelectedContact(null);
-                        setValue('contact_id', '');
-                        setShowContactTable(true);
-                      }}
-                    >
-                      <Edit className="w-8 h-8" />
-                    </Button>
-                    <p>
-                      <span className="font-semibold">Name:</span>{' '}
-                      {selectedContact.contact_name}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Type:</span>{' '}
-                      {selectedContact.contact_type}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Email:</span>{' '}
-                      {selectedContact.primary_email}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Phone:</span>{' '}
-                      {selectedContact.phone}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Address:</span>{' '}
-                      {selectedContact.primary_address}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Created:</span>{' '}
-                      {selectedContact.date_created}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {errors.contact_id && (
-                <p className="text-xs text-red-500">
-                  {errors.contact_id.message || 'Contact is required.'}
-                </p>
-              )}
+                {/* Contact Error Display */}
+                {formErrors.contact_id && (
+                  <p className="text-xs text-red-500">
+                    {formErrors.contact_id.message}
+                  </p>
+                )}
+              </div>
             </div>
 
-            {/* Upcoming Events */}
+            {/* Upcoming Events Section */}
             <div className="bg-white rounded-lg shadow p-4">
               <div
                 className="flex items-center justify-between cursor-pointer mb-2"
@@ -508,20 +732,18 @@ export default function CreateIntake() {
               )}
             </div>
 
-            {/* Buttons */}
+            {/* Submit Button */}
             <div className="pt-4 flex justify-end gap-4 pb-4">
-              <Button
-                type="button"
-                className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
-                onClick={() => navigate(-1)}
-              >
-                Cancel
-              </Button>
               <Button
                 type="submit"
                 className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
+                disabled={createMatterMutation.isPending}
               >
-                Create Intake
+                {createMatterMutation.isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  'Create Intake'
+                )}
               </Button>
             </div>
           </form>
