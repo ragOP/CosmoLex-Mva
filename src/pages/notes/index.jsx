@@ -24,6 +24,7 @@ import {
   updateNote,
   deleteNote,
   getNotesMeta,
+  getNote,
 } from '@/api/api_services/notes';
 import { toast } from 'sonner';
 
@@ -34,7 +35,6 @@ const NotesPage = () => {
 
   // Categories will be fetched from API
   const [categories, setCategories] = useState([]);
-
   console.log('categoriesData', categories);
 
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
@@ -42,6 +42,7 @@ const NotesPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
+  const [noteId, setNoteId] = useState(null);
 
   // Function to clear all states
   const clearStates = () => {
@@ -76,7 +77,7 @@ const NotesPage = () => {
   });
 
   // Fetch notes
-  const { data: notes = [], isLoading } = useQuery({
+  const { data: notes = [], isNoteLoading } = useQuery({
     queryKey: ['notes', matterSlug],
     queryFn: async () => {
       const apiResponse = await getNotes(matterSlug);
@@ -87,7 +88,27 @@ const NotesPage = () => {
       }
     },
   });
+
   console.log('notes >>>>', notes);
+
+  // Fetch note details
+  const { data: note, isLoading } = useQuery({
+    queryKey: ['note', noteId],
+    queryFn: () => getNote(noteId),
+    enabled: !!noteId,
+    select: (data) => {
+      // Handle the actual API response structure
+      const noteData = data?.data || data?.response || data || null;
+      if (noteData) {
+        return {
+          ...noteData,
+          category_id: noteData.category_id?.toString() || '175',
+          body: noteData.body || 'No content available',
+        };
+      }
+      return null;
+    },
+  });
 
   // Create note mutation
   const createNoteMutation = useMutation({
@@ -140,7 +161,6 @@ const NotesPage = () => {
         !searchTerm ||
         note.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         note.body?.toLowerCase().includes(searchTerm.toLowerCase());
-
       return matchesSearch;
     });
   }, [notes, searchTerm]);
@@ -171,7 +191,15 @@ const NotesPage = () => {
   };
 
   const handleEditNote = (note) => {
-    setEditingNote(note);
+    // Transform the note data similar to NoteDetail component
+    const transformedNote = {
+      ...note,
+      category_id: note.category_id?.toString() || '175',
+      body: note.body || 'No content available',
+    };
+
+    console.log('Editing note:', transformedNote);
+    setEditingNote(transformedNote);
     setDialogOpen(true);
   };
 
@@ -274,22 +302,6 @@ const NotesPage = () => {
             </Button>
           </div>
         </div>
-
-        {/* Category Filter */}
-        {/* <div className="mb-6">
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="w-full md:w-48">
-            <SelectValue placeholder="Filter by category" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div> */}
 
         {/* Loading State */}
         {isLoading && (
@@ -408,7 +420,10 @@ const NotesPage = () => {
                               <Eye className="h-3 w-3" />
                             </Button>
                             <Button
-                              onClick={() => handleEditNote(note)}
+                              onClick={() => {
+                                setNoteId(note.id);
+                                handleEditNote(note);
+                              }}
                               size="sm"
                               variant="ghost"
                               className="bg-green-50 text-green-600 hover:bg-green-100 p-1 h-6 w-6 transition-colors"
@@ -428,7 +443,6 @@ const NotesPage = () => {
                           </div>
                         )}
                       </div>
-
                       <p
                         className={`text-gray-600 mb-3 ${
                           viewMode === 'list' ? 'text-sm' : 'text-base'
@@ -439,7 +453,6 @@ const NotesPage = () => {
                           viewMode === 'list' ? 80 : 120
                         )}
                       </p>
-
                       <div className="flex items-center gap-4 text-xs text-gray-500">
                         <div className="flex items-center gap-1">
                           <Tag className="h-3 w-3" />
@@ -454,7 +467,6 @@ const NotesPage = () => {
                         <div>{formatDate(note.created_at)}</div>
                       </div>
                     </div>
-
                     {viewMode === 'list' && (
                       <div className="flex gap-2 ml-4">
                         <Button
@@ -467,7 +479,10 @@ const NotesPage = () => {
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button
-                          onClick={() => handleEditNote(note)}
+                          onClick={() => {
+                            setNoteId(note.id);
+                            handleEditNote(note);
+                          }}
                           size="sm"
                           variant="ghost"
                           className="bg-green-50 text-green-600 hover:bg-green-100 p-2 h-8 w-8 transition-colors"
@@ -499,9 +514,13 @@ const NotesPage = () => {
         open={dialogOpen}
         onClose={handleDialogClose}
         onSubmit={editingNote ? handleUpdateNote : handleCreateNote}
-        isLoading={createNoteMutation.isPending || updateNoteMutation.isPending}
-        note={editingNote}
-        isEdit={!!editingNote}
+        isLoading={
+          createNoteMutation.isPending ||
+          updateNoteMutation.isPending ||
+          isNoteLoading
+        }
+        note={note}
+        isEdit={!!note}
         categories={categories}
       />
     </div>
