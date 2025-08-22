@@ -133,13 +133,10 @@ const CreateFeeSplitDialog = ({
     };
 
     const handleClose = () => {
-        // Only close if there are no validation errors
-        if (Object.keys(apiErrors).length > 0) {
-            toast.warning('Form has validation errors. Please fix them before closing.');
-            return;
-        }
+        // Always allow closing the dialog regardless of validation errors
         reset();
         resetSearchTerms();
+        setApiErrors({}); // Clear any existing API errors
         onClose(false); // false indicates normal close (not success)
     };
 
