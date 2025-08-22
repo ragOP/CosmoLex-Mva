@@ -70,7 +70,7 @@ const CreateEditNoteDialog = ({
     console.log('Current form state:', {
       title: watchedValues.title,
       body: watchedValues.body,
-      category_id: watchedValues.category_id
+      category_id: watchedValues.category_id,
     });
   }, [watchedValues]);
 
@@ -83,7 +83,7 @@ const CreateEditNoteDialog = ({
       console.log('Note title:', note.title);
       console.log('Note body:', note.body);
       console.log('Note category_id:', note.category_id);
-      
+
       // Reset form immediately with the note data
       reset({
         title: note.title || '',
@@ -108,7 +108,7 @@ const CreateEditNoteDialog = ({
   // Load note data for editing - handle attachments
   useEffect(() => {
     console.log('useEffect triggered - isEdit:', isEdit, 'note:', note);
-    
+
     if (isEdit && note) {
       console.log('Loading note data for editing:', note);
 
@@ -134,13 +134,17 @@ const CreateEditNoteDialog = ({
 
   const onFormSubmit = (data) => {
     console.log('Form submitted with data:', data);
-    
+
     // Validate required fields
     if (!data.title || !data.body || !data.category_id) {
-      console.error('Missing required fields:', { title: !!data.title, body: !!data.body, category_id: !!data.category_id });
+      console.error('Missing required fields:', {
+        title: !!data.title,
+        body: !!data.body,
+        category_id: !!data.category_id,
+      });
       return;
     }
-    
+
     const formData = {
       ...data,
       attachments: attachments.filter((att) => !att.isExisting), // Only send new attachments
@@ -189,7 +193,7 @@ const CreateEditNoteDialog = ({
     reset({
       title: '',
       body: '',
-      category_id: ''
+      category_id: '',
     });
     setAttachments([]);
     onClose();
@@ -236,7 +240,12 @@ const CreateEditNoteDialog = ({
                   name="title"
                   rules={{ required: 'Title is required' }}
                   render={({ field }) => {
-                    console.log('Title field render - value:', field.value, 'field props:', field);
+                    console.log(
+                      'Title field render - value:',
+                      field.value,
+                      'field props:',
+                      field
+                    );
                     console.log('Current note prop:', note);
                     return (
                       <Input
@@ -268,10 +277,22 @@ const CreateEditNoteDialog = ({
                   name="category_id"
                   rules={{ required: 'Category is required' }}
                   render={({ field }) => {
-                    console.log('Category field render - value:', field.value, 'Available categories:', categories);
+                    console.log(
+                      'Category field render - value:',
+                      field.value,
+                      'Available categories:',
+                      categories
+                    );
                     console.log('Category field props:', field);
                     console.log('Category value type:', typeof field.value);
-                    console.log('Categories data:', categories.map(cat => ({ id: cat.id, type: typeof cat.id, name: cat.name })));
+                    console.log(
+                      'Categories data:',
+                      categories.map((cat) => ({
+                        id: cat.id,
+                        type: typeof cat.id,
+                        name: cat.name,
+                      }))
+                    );
                     return (
                       <Select
                         onValueChange={(value) => {
@@ -290,7 +311,11 @@ const CreateEditNoteDialog = ({
                           }`}
                         >
                           <SelectValue placeholder="Select Category">
-                            {field.value ? categories.find(cat => cat.id === field.value.toString())?.name : 'Select Category'}
+                            {field.value
+                              ? categories.find(
+                                  (cat) => cat.id === field.value.toString()
+                                )?.name
+                              : 'Select Category'}
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent className="z-[9999]">
