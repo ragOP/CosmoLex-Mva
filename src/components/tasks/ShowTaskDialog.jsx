@@ -206,7 +206,7 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
             <Divider />
 
             {/* Comments */}
-            <Stack className="overflow-auto no-scrollbar">
+            {/* <Stack className="overflow-auto no-scrollbar">
               <h3 className="text-lg font-semibold text-[#40444D] mb-2">
                 Comments
               </h3>
@@ -242,7 +242,7 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
                 <Plus className="mr-2 h-4 w-4" />
                 Add Comment
               </Button>
-            </Stack>
+            </Stack> */}
           </div>
 
           {/* Footer */}
