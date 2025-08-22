@@ -33,6 +33,13 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
   const [selectOpen, setSelectOpen] = useState(false);
   const searchInputRef = useRef(null);
 
+  // Set first category as default when categories change or component mounts
+  useEffect(() => {
+    if (categories.length > 0) {
+      setSelectedCategory(categories[0].id?.toString() || '');
+    }
+  }, [categories]);
+
   // Auto-focus search input when Select opens
   useEffect(() => {
     if (selectOpen && searchInputRef.current) {
@@ -102,16 +109,20 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
         await onSubmit(fileItem.file, selectedCategory);
       }
       setFiles([]);
-      setSelectedCategory('');
+      // Reset to first category
+      setSelectedCategory(categories.length > 0 ? categories[0].id?.toString() || '' : '');
       onClose();
-    } catch {
-      setError('Error uploading files. Please try again.');
+    } catch (error) {
+      // Show specific error message from API if available
+      const errorMessage = error?.message || 'Error uploading files. Please try again.';
+      setError(errorMessage);
     }
   };
 
   const handleClose = () => {
     setFiles([]);
-    setSelectedCategory('');
+    // Reset to first category
+    setSelectedCategory(categories.length > 0 ? categories[0].id?.toString() || '' : '');
     setCategorySearchTerm('');
     setSelectOpen(false);
     setError('');

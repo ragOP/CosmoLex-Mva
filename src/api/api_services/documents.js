@@ -153,8 +153,8 @@ export const createFolderWithSlug = async (
         slug: parentFolderSlug, // null for root level, parent slug for subfolders
       };
     } else {
-      // Main dashboard context - use list endpoint without slug
-      endpoint = endpoints.getFoldersBySlug;
+      // Main dashboard context - use addFolder endpoint without slug
+      endpoint = endpoints.addFolder;
       requestData = {
         ...folderData,
         slug: parentFolderSlug, // null for root level, parent slug for subfolders
@@ -187,8 +187,8 @@ export const uploadFile = async (fileData, parentFolderSlug, mainSlug) => {
       // Matter-specific context - use slug-based endpoint
       endpoint = `${endpoints.uploadFile}/${mainSlug}`;
     } else {
-      // Main dashboard context - use list endpoint without slug
-      endpoint = endpoints.getFoldersBySlug;
+      // Main dashboard context - use upload endpoint without slug
+      endpoint = endpoints.uploadFile;
     }
 
     const response = await apiService({
@@ -200,8 +200,15 @@ export const uploadFile = async (fileData, parentFolderSlug, mainSlug) => {
       },
     });
 
+    // Check if the API call failed
     if (response.error) {
       throw new Error('Failed to upload file');
+    }
+
+    // Check API status from response data
+    if (response.response && response.response.Apistatus === false) {
+      const errorMessage = response.response.message || 'Failed to upload file';
+      throw new Error(errorMessage);
     }
 
     return response.response?.data;

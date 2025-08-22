@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import {
   getDocumentsMeta,
   getFoldersBySlug,
@@ -55,6 +56,11 @@ export const useDocuments = () => {
       if (selectedFolder) {
         queryClient.invalidateQueries(['folderContents', selectedFolder.id]);
       }
+      toast.success('Folder created successfully!');
+    },
+    onError: (error) => {
+      const errorMessage = error?.message || 'Failed to create folder';
+      toast.error(errorMessage);
     },
   });
 
@@ -66,6 +72,11 @@ export const useDocuments = () => {
       if (selectedFolder) {
         queryClient.invalidateQueries(['folderContents', selectedFolder.id]);
       }
+      toast.success('Item renamed successfully!');
+    },
+    onError: (error) => {
+      const errorMessage = error?.message || 'Failed to rename item';
+      toast.error(errorMessage);
     },
   });
 
@@ -80,6 +91,11 @@ export const useDocuments = () => {
       if (selectedFolder) {
         queryClient.invalidateQueries(['folderContents', selectedFolder.id]);
       }
+      toast.success('File uploaded successfully!');
+    },
+    onError: (error) => {
+      const errorMessage = error?.message || 'Failed to upload file';
+      toast.error(errorMessage);
     },
   });
 
@@ -91,6 +107,11 @@ export const useDocuments = () => {
       if (selectedFolder) {
         queryClient.invalidateQueries(['folderContents', selectedFolder.id]);
       }
+      toast.success('Item deleted successfully!');
+    },
+    onError: (error) => {
+      const errorMessage = error?.message || 'Failed to delete item';
+      toast.error(errorMessage);
     },
   });
 
@@ -143,6 +164,11 @@ export const useDocuments = () => {
   const handleCreateFolder = useCallback(
     async (folderName) => {
       try {
+        // Check if current folder allows editing
+        if (selectedFolder && selectedFolder.is_editable === false) {
+          throw new Error('Cannot create folders in this directory - permission not present');
+        }
+
         const folderData = {
           name: folderName,
         };
@@ -160,13 +186,18 @@ export const useDocuments = () => {
         throw error;
       }
     },
-    [getCurrentFolderSlug, createFolderMutation, slugId]
+    [getCurrentFolderSlug, createFolderMutation, slugId, selectedFolder]
   );
 
   // Upload file
   const handleUploadFile = useCallback(
     async (file, description = '', categoryId = '373') => {
       try {
+        // Check if current folder allows editing
+        if (selectedFolder && selectedFolder.is_editable === false) {
+          throw new Error('Cannot upload files to this directory - permission not present');
+        }
+
         const formData = new FormData();
 
         // Create the attachment structure as expected by the API
@@ -192,33 +223,57 @@ export const useDocuments = () => {
         throw error;
       }
     },
-    [getCurrentFolderSlug, uploadFileMutation, slugId]
+    [getCurrentFolderSlug, uploadFileMutation, slugId, selectedFolder]
   );
 
   // Rename item (folder or file)
   const handleRenameItem = useCallback(
     async (itemId, newName, itemType = 'folder') => {
       try {
+        // For folders, check if they are editable
+        if (itemType === 'folder') {
+          // Find the folder in current context to check its properties
+          const folderToRename = selectedFolder ? 
+            folderContents.find(item => item.id === itemId) : 
+            folders.find(item => item.id === itemId);
+          
+          if (folderToRename && folderToRename.is_editable === false) {
+            throw new Error('This folder cannot be renamed - permission not present');
+          }
+        }
+
         await renameFolderMutation.mutateAsync({ folderId: itemId, newName, type: itemType });
       } catch (error) {
         console.error('Error renaming item:', error);
         throw error;
       }
     },
-    [renameFolderMutation]
+    [renameFolderMutation, selectedFolder, folderContents, folders]
   );
 
   // Delete item
   const handleDeleteItem = useCallback(
     async (itemId, itemType) => {
       try {
+        // For folders, check if they are deletable
+        if (itemType === 'folder') {
+          // Find the folder in current context to check its properties
+          const folderToDelete = selectedFolder ? 
+            folderContents.find(item => item.id === itemId) : 
+            folders.find(item => item.id === itemId);
+          
+          if (folderToDelete && folderToDelete.is_deletable === false) {
+            throw new Error('This folder cannot be deleted - permission not present');
+          }
+        }
+
         await deleteItemMutation.mutateAsync({ itemId, itemType });
       } catch (error) {
         console.error('Error deleting item:', error);
         throw error;
       }
     },
-    [deleteItemMutation]
+    [deleteItemMutation, selectedFolder, folderContents, folders]
   );
 
   return {
