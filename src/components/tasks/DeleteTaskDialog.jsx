@@ -7,13 +7,14 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 const DeleteTaskDialog = ({
   task,
   open = false,
   onClose = () => {},
   onConfirm = () => {},
+  isDeleting = false,
 }) => {
   if (!task) return null;
 
@@ -47,11 +48,16 @@ const DeleteTaskDialog = ({
           </Button>
           <Button
             className="bg-red-600 hover:bg-red-700 text-white cursor-pointer"
+            disabled={isDeleting}
             onClick={() => {
               onConfirm(task.id);
             }}
           >
-            Delete Task
+            {isDeleting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              'Delete Task'
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

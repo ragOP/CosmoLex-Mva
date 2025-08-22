@@ -395,8 +395,6 @@ export default function TaskDialog({
     replaceAssignedTo,
   ]);
 
-  console.log('reminderDialogOpen', reminderFields);
-
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>

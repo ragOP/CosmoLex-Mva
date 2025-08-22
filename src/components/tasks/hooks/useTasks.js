@@ -14,6 +14,10 @@ import {
   uploadTaskFile,
   deleteTaskFile,
   deleteReminder,
+  getCommentMeta,
+  getAllComments,
+  createComment,
+  uploadCommentAttachment,
 } from '@/api/api_services/task';
 import { toast } from 'sonner';
 
@@ -78,7 +82,13 @@ export const useTasks = () => {
   // Delete
   const deleteTaskMutation = useMutation({
     mutationFn: (taskId) => deleteTask(taskId),
-    onSuccess: () => queryClient.invalidateQueries(['tasks']),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tasks']);
+      toast.success('Task deleted successfully');
+    },
+    onError: () => {
+      toast.error('Failed to delete task');
+    },
   });
 
   // Upload file
@@ -107,6 +117,59 @@ export const useTasks = () => {
     },
     onError: () => toast.error('Failed to delete reminder'),
   });
+
+  // Get comment meta
+  const { data: commentMeta = [], isLoading: commentMetaLoading } = useQuery({
+    queryKey: ['commentMeta'],
+    queryFn: getCommentMeta,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Get all Comments
+  const { data: comments = [], isLoading: commentsLoading } = useQuery({
+    queryKey: ['comments', taskId],
+    queryFn: () => getAllComments(taskId),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Create comment
+  const createCommentMutation = useMutation({
+    mutationFn: (commentData) => {
+      console.log('commentData', commentData);
+      console.log('taskId', taskId);
+      createComment({ commentData, task_id: taskId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['comments']);
+      toast.success('Comment created successfully');
+    },
+    onError: () => toast.error('Failed to create comment'),
+  });
+
+  // Upload comment attachment
+  const uploadCommentAttachmentMutation = useMutation({
+    mutationFn: (attachmentData) => uploadCommentAttachment(attachmentData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['comments']);
+      toast.success('Attachment uploaded successfully');
+    },
+    onError: () => toast.error('Failed to upload attachment'),
+  });
+
+  const handleCreateComment = useCallback(
+    (commentData) => {
+      console.log('commentData', commentData);
+      createCommentMutation.mutateAsync(commentData);
+    },
+    [createCommentMutation]
+  );
+
+  const handleUploadCommentAttachment = useCallback(
+    (attachmentData) => {
+      uploadCommentAttachmentMutation.mutateAsync(attachmentData);
+    },
+    [uploadCommentAttachmentMutation]
+  );
 
   const handleSearchTask = useCallback(
     (searchBar, contact_type_id) => {
@@ -156,11 +219,15 @@ export const useTasks = () => {
     task,
     selectedTask,
     currentPath,
+    comments,
+    commentMeta,
 
     // Loading
     tasksMetaLoading,
     tasksLoading,
     taskLoading,
+    commentMetaLoading,
+    commentsLoading,
 
     // Actions
     navigateToTask,
@@ -168,6 +235,8 @@ export const useTasks = () => {
     navigateToRoot,
     handleSearchTask,
     handleDeleteReminder,
+    handleCreateComment,
+    handleUploadCommentAttachment,
 
     // Mutations
     searchTasks: searchTasksMutation.mutateAsync,
@@ -182,9 +251,12 @@ export const useTasks = () => {
     // States
     isCreating: createTaskMutation.isPending,
     isUpdating: updateTaskMutation.isPending,
+    isUpdatingStatus: updateStatusMutation.isPending,
     isDeleting: deleteTaskMutation.isPending,
     isUploadingFile: uploadFileMutation.isPending,
     isDeletingFile: deleteFileMutation.isPending,
     isDeletingReminder: deleteReminderMutation.isPending,
+    isCreatingComment: createCommentMutation.isPending,
+    isUploadingCommentAttachment: uploadCommentAttachmentMutation.isPending,
   };
 };

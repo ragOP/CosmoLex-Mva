@@ -42,6 +42,12 @@ export const endpoints = {
   filterTask: 'v2/task/filter',
   deleteTaskReminder: 'v2/task/deleteReminder',
 
+  // Comment endpoint
+  getCommentMeta: 'v2/task/comment/meta',
+  getAllComments: 'v2/task/comment/list',
+  createComment: 'v2/task/comment/store',
+  uploadCommentAttachment: 'v2/task/comment/uploadAttachment',
+
   getMatterMeta: 'v2/matter/meta',
   getMatters: 'v2/matter/list',
   matterIntake: 'v2/matter/intake',

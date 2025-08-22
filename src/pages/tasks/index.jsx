@@ -26,18 +26,16 @@ const TasksPage = () => {
   if (matterSlug) {
     matter = useMatter();
   }
-  const { tasks, tasksLoading, updateStatus, deleteTask } = useTasks();
+  const { tasks, tasksLoading, updateStatus, deleteTask, isDeleting } =
+    useTasks();
 
   // Handlers
   const handleDelete = (id) => {
     deleteTask(id).then(() => setShowDeleteConfirm(false));
   };
 
-  const handleUpdateTaskStatus = (id, status) => {
-    console.log('id', id);
-    console.log('status', status);
+  const handleUpdateTaskStatus = (id, status) =>
     updateStatus({ taskId: id, status_id: parseInt(status) });
-  };
 
   const handleNavigate = (taskId) => {
     if (matterSlug) {
@@ -138,6 +136,7 @@ const TasksPage = () => {
         onClose={() => setShowDeleteConfirm(false)}
         task={selectedTask}
         onConfirm={() => handleDelete(selectedTask?.id)}
+        isDeleting={isDeleting}
       />
     </div>
   );

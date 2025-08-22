@@ -127,3 +127,48 @@ export const deleteReminder = async (reminderId) => {
   if (response.error) throw new Error('Failed to delete reminder');
   return response.response?.data;
 };
+
+// Get comment Meta
+export const getCommentMeta = async () => {
+  const response = await apiService({
+    endpoint: endpoints.getCommentMeta,
+    method: 'GET',
+  });
+  if (response.error) throw new Error('Failed to get comment meta');
+  return response.response?.data;
+};
+
+// Get All comments
+export const getAllComments = async (taskId) => {
+  const response = await apiService({
+    endpoint: `${endpoints.getAllComments}/${taskId}`,
+    method: 'GET',
+  });
+  if (response.error) throw new Error('Failed to get all comments');
+  return response.response?.data;
+};
+
+// Upload comment
+export const createComment = async ({ commentData, task_id }) => {
+  const response = await apiService({
+    endpoint: `${endpoints.createComment}/${task_id}`,
+    method: 'POST',
+    data: {
+      comment: commentData,
+    },
+  });
+  if (response.error) throw new Error('Failed to create comment');
+  return response.response?.data;
+};
+
+// Upload comment attachment
+export const uploadCommentAttachment = async (fileData) => {
+  const response = await apiService({
+    endpoint: endpoints.uploadCommentAttachment,
+    method: 'POST',
+    data: fileData,
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  if (response.error) throw new Error('Failed to upload comment attachment');
+  return response.response?.data;
+};
