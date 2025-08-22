@@ -581,8 +581,12 @@ export default function TaskDialog({
                     </>
                   ) : (
                     <Button
+                      type="button"
                       variant="outline"
-                      onClick={() => setSearchDialogOpen(true)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSearchDialogOpen(true);
+                      }}
                       className="w-fit"
                     >
                       Select Contact
