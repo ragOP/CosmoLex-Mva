@@ -1,5 +1,5 @@
 import { ChevronDown, Plus } from 'lucide-react';
-import {  Select, MenuItem, Box, Typography } from '@mui/material';
+import { Select, MenuItem, Box, Typography } from '@mui/material';
 import { Button } from '../ui/button';
 
 const CustomToolBar = ({
@@ -24,7 +24,11 @@ const CustomToolBar = ({
     >
       {/* Left Group */}
       <Box display="flex" gap={2} alignItems="center">
-        <Button variant="contained" onClick={() => setOpen(true)} className="flex flex-row items-center gap-2">
+        <Button
+          variant="contained"
+          onClick={() => setOpen(true)}
+          className="flex flex-row items-center gap-2"
+        >
           {/* <Plus className="w-4 h-4" /> */}
           New Event
         </Button>
@@ -53,24 +57,34 @@ const CustomToolBar = ({
         <Button
           size="small"
           variant="outlined"
-          onClick={() => onNavigate('TODAY')}
+          onClick={() => {
+            console.log('[Toolbar] Today button clicked');
+            onNavigate('TODAY');
+          }}
         >
           Today
         </Button>
         <Button
           size="small"
           variant="outlined"
-          onClick={() => onNavigate('PREV')}
+          onClick={() => {
+            console.log('[Toolbar] Prev button clicked');
+            onNavigate('PREV');
+          }}
         >
           Back
         </Button>
         <Button
           size="small"
           variant="outlined"
-          onClick={() => onNavigate('NEXT')}
+          onClick={() => {
+            console.log('[Toolbar] Next button clicked');
+            onNavigate('NEXT');
+          }}
         >
           Next
         </Button>
+
         <Typography variant="subtitle1" sx={{ ml: 2 }}>
           {label}
         </Typography>
@@ -80,31 +94,34 @@ const CustomToolBar = ({
       <Box display="flex" gap={1}>
         <Button
           size="small"
-          variant={view === 'work_week' ? 'contained' : 'outlined'}
-          onClick={() => onView('work_week')}
-        >
-          Work Week
-        </Button>
-        <Button
-          size="small"
-          variant={view === 'day' ? 'contained' : 'outlined'}
-          onClick={() => onView('day')}
-        >
-          Day
-        </Button>
-        <Button
-          size="small"
-          variant={view === 'week' ? 'contained' : 'outlined'}
-          onClick={() => onView('week')}
+          variant={view === 'timeGridWeek' ? 'contained' : 'outlined'}
+          onClick={() => onView('timeGridWeek')}
         >
           Week
         </Button>
+
         <Button
           size="small"
-          variant={view === 'month' ? 'contained' : 'outlined'}
-          onClick={() => onView('month')}
+          variant={view === 'timeGridDay' ? 'contained' : 'outlined'}
+          onClick={() => onView('timeGridDay')}
+        >
+          Day
+        </Button>
+
+        <Button
+          size="small"
+          variant={view === 'dayGridMonth' ? 'contained' : 'outlined'}
+          onClick={() => onView('dayGridMonth')}
         >
           Month
+        </Button>
+
+        <Button
+          size="small"
+          variant={view === 'listWeek' ? 'contained' : 'outlined'}
+          onClick={() => onView('listWeek')}
+        >
+          Agenda
         </Button>
       </Box>
     </Box>

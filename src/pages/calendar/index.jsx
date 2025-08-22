@@ -65,7 +65,7 @@ const CalendarPage = () => {
 
   useEffect(() => {
     if (!selectedUser) return;
-    navigate(`/dashboard/calendar/${selectedUser}`);
+    navigate(`/dashboard/event?eventId=${selectedUser}`);
     getUsersEvents(selectedUser);
   }, [selectedUser]);
 
@@ -84,6 +84,9 @@ const CalendarPage = () => {
   //   uploadEventFile,
   //   deleteEventFile,
   // } = useEvents();
+
+  console.log('events >>>', events);
+  console.log('selectedUser >>>', selectedUser);
 
   return (
     <div className="h-full w-full">

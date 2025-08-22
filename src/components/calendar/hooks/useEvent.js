@@ -13,6 +13,7 @@ import {
   uploadEventFile,
   deleteEventFile,
 } from '@/api/api_services/event';
+import { toast } from 'sonner';
 
 export const useEvents = () => {
   const [currentPath, setCurrentPath] = useState([]);
@@ -50,19 +51,37 @@ export const useEvents = () => {
   // Create
   const createEventMutation = useMutation({
     mutationFn: (eventData) => createEvent(eventData),
-    onSuccess: () => queryClient.invalidateQueries(['events']),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['events']);
+      toast.success('Event created successfully!');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to create event!');
+    },
   });
 
   // Update
   const updateEventMutation = useMutation({
     mutationFn: ({ eventId, eventData }) => updateEvent(eventId, eventData),
-    onSuccess: () => queryClient.invalidateQueries(['events']),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['events']);
+      toast.success('Event updated successfully!');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update event!');
+    },
   });
 
   // Delete
   const deleteEventMutation = useMutation({
     mutationFn: (eventId) => deleteEvent(eventId),
-    onSuccess: () => queryClient.invalidateQueries(['events']),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['events']);
+      toast.success('Event deleted successfully!');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete event!');
+    },
   });
 
   // Upload file
@@ -71,6 +90,10 @@ export const useEvents = () => {
     onSuccess: () => {
       if (selectedEvent)
         queryClient.invalidateQueries(['events', selectedEvent.id]);
+      toast.success('File uploaded successfully!');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to upload file!');
     },
   });
 
@@ -80,8 +103,40 @@ export const useEvents = () => {
     onSuccess: () => {
       if (selectedEvent)
         queryClient.invalidateQueries(['events', selectedEvent.id]);
+      toast.success('File deleted successfully!');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete file!');
     },
   });
+
+  const handleCreateEvent = useCallback((eventData) => {
+    createEventMutation.mutateAsync(eventData);
+  }, []);
+
+  const handleSearchEvents = useCallback((searchData) => {
+    searchEventsMutation.mutateAsync(searchData);
+  }, []);
+
+  const handleFilterEvents = useCallback((queryParams) => {
+    filterEventsMutation.mutateAsync(queryParams);
+  }, []);
+
+  const handleUpdateEvent = useCallback(({ eventId, eventData }) => {
+    updateEventMutation.mutateAsync({ eventId, eventData });
+  }, []);
+
+  const handleDeleteEvent = useCallback((eventId) => {
+    deleteEventMutation.mutateAsync(eventId);
+  }, []);
+
+  const handleUploadFile = useCallback((fileData) => {
+    uploadFileMutation.mutateAsync(fileData);
+  }, []);
+
+  const handleDeleteFile = useCallback((fileId) => {
+    deleteFileMutation.mutateAsync(fileId);
+  }, []);
 
   // Navigation helpers (optional)
   const navigateToEvent = useCallback((event) => {
@@ -122,6 +177,13 @@ export const useEvents = () => {
     navigateToEvent,
     navigateBack,
     navigateToRoot,
+    handleCreateEvent,
+    handleSearchEvents,
+    handleFilterEvents,
+    handleUpdateEvent,
+    handleDeleteEvent,
+    handleUploadFile,
+    handleDeleteFile,
 
     // Mutations
     searchEvents: searchEventsMutation.mutateAsync,
