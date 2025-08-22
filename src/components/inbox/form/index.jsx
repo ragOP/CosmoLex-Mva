@@ -27,12 +27,14 @@ const Form = () => {
 
   // Get case type from matter with proper default
   const caseType = matter?.case_type || 'Auto Accident';
+  console.log('caseType', caseType);
 
   // Mode state that depends on API response, not slugId
   const [mode, setMode] = useState('add');
 
   // Get form fields based on case type
   const formFields = getFormFields(caseType);
+  console.log('formFields', formFields);
 
   // Form state
   const [formData, setFormData] = useState({});
@@ -250,6 +252,7 @@ const Form = () => {
 
   // Group fields by section
   const sections = groupFieldsBySection(formFields);
+  console.log('sections', sections);
 
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl overflow-hidden no-scrollbar p-4">

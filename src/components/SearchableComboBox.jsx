@@ -14,132 +14,69 @@ import {
 } from '@/components/ui/command';
 import {
   Popover,
-  PopoverContent,
   PopoverTrigger,
+  PopoverContent,
 } from '@/components/ui/popover';
 
-const options = Array.from({ length: 500 }, (_, i) => ({
-  value: `${i + 1}`,
-  label: `Option ${i + 1}`,
-}));
-
-const DEBUG = true;
-const dlog = (...args) => DEBUG && console.log('[SearchableComboBox]', ...args);
-
-export function SearchableComboBox() {
+export function SearchableCombobox({
+  options,
+  value,
+  onValueChange,
+  placeholder,
+  emptyText,
+}) {
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState('');
-  const [search, setSearch] = React.useState('');
+  const selected = options.find((o) => o.value === value);
 
-  // derived (for debug only, Command’s own fuzzy filter still runs)
-  const filteredCount = React.useMemo(() => {
-    if (!search) return options.length;
-    const s = search.toLowerCase();
-    return options.filter(
-      (o) =>
-        o.label.toLowerCase().includes(s) || o.value.toLowerCase().includes(s)
-    ).length;
-  }, [search]);
-
-  React.useEffect(() => {
-    dlog('mount');
-    return () => dlog('unmount');
-  }, []);
-
-  React.useEffect(() => {
-    dlog('open state ->', open);
-  }, [open]);
-
-  React.useEffect(() => {
-    const selected = options.find((o) => o.value === value);
-    dlog('value changed ->', value, 'label:', selected?.label);
-  }, [value]);
+  console.log('[Combobox] render →', {
+    value,
+    selected,
+    optionsCount: options?.length,
+  });
 
   return (
-    <Popover
-      open={open}
-      onOpenChange={(next) => {
-        dlog('onOpenChange', next);
-        setOpen(next);
-      }}
-    >
+    <Popover>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           role="combobox"
-          aria-expanded={open}
-          className="w-[240px] justify-between"
-          onClick={() => dlog('trigger click')}
-          data-testid="combobox-trigger"
+          className="w-full justify-between"
+          onClick={() => {
+            setOpen((prev) => !prev);
+            console.log('[Combobox] trigger clicked', open);
+          }}
         >
-          {value
-            ? options.find((option) => option.value === value)?.label
-            : 'Select option...'}
+          {selected ? selected.label : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent
-        className="w-[240px] p-0"
-        align="start"
-        onOpenAutoFocus={(e) => {
-          dlog('popover onOpenAutoFocus');
-          // keep default focus behavior
-        }}
-        onEscapeKeyDown={() => dlog('popover escape')}
-      >
+      <PopoverContent className="w-[200px] p-0" side="bottom" align="start">
         <Command>
           <CommandInput
-            placeholder="Search option..."
-            value={search}
-            onValueChange={(v) => {
-              setSearch(v);
-              dlog('search change ->', v);
-            }}
-            data-testid="combobox-search"
+            placeholder={placeholder}
+            onValueChange={(val) =>
+              console.log('[Combobox] search input:', val)
+            }
           />
           <CommandList>
-            <CommandEmpty>No option found.</CommandEmpty>
-            <CommandGroup heading="Options">
-              {options.map((option) => (
+            <CommandEmpty>{emptyText ?? 'No options found'}</CommandEmpty>
+            <CommandGroup>
+              {options.map((o) => (
                 <CommandItem
-                  key={option.value}
-                  value={option.value}
-                  onSelect={(currentValue) => {
-                    dlog('onSelect', {
-                      currentValue,
-                      prevValue: value,
-                      option,
-                    });
-                    try {
-                      setValue(currentValue === value ? '' : currentValue);
-                      setOpen(false);
-                    } catch (err) {
-                      console.error(
-                        '[SearchableComboBox] setValue error:',
-                        err
-                      );
-                    }
+                  key={o.value}
+                  value={o.value}
+                  onSelect={(val) => {
+                    console.log('[Combobox] onSelect fired with:', val);
+                    onValueChange(val); // use provided val
                   }}
-                  data-testid={`combobox-item-${option.value}`}
                 >
-                  <Check
-                    className={cn(
-                      'mr-2 h-4 w-4',
-                      value === option.value ? 'opacity-100' : 'opacity-0'
-                    )}
-                  />
-                  {option.label}
+                  {o.label}
+                  {o.value === value && <Check className="ml-auto h-4 w-4" />}
                 </CommandItem>
               ))}
             </CommandGroup>
           </CommandList>
-
-          {/* tiny debug footer */}
-          <div className="border-t px-2 py-1 text-xs text-muted-foreground">
-            debug · open: {String(open)} · selected: {value || '∅'} · search: "
-            {search}" · showing ≈ {filteredCount}/{options.length}
-          </div>
         </Command>
       </PopoverContent>
     </Popover>

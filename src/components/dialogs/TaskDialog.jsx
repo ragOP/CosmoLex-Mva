@@ -11,8 +11,6 @@ import {
   SelectGroup,
   SelectItem,
 } from '@/components/ui/select';
-import { taskSchema } from '@/pages/tasks/schema/createTaskSchema';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Dialog,
   Stack,
@@ -33,7 +31,6 @@ import { searchTask } from '@/api/api_services/task';
 import { useQuery } from '@tanstack/react-query';
 import { Textarea } from '@/components/ui/textarea';
 import UploadMediaDialog from '@/components/UploadMediaDialog';
-import { SearchableComboBox } from '@/components/SearchableComboBox';
 import { useMatter } from '@/components/inbox/MatterContext';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -44,37 +41,80 @@ const formFields = [
     name: 'type_id',
     type: 'select',
     metaField: 'taks_type',
+    required: true,
   },
-  { label: 'Due Date', name: 'due_date', type: 'date' },
-  { label: 'Subject', name: 'subject', type: 'text', required: true },
-  { label: 'Description', name: 'description', type: 'textarea' },
+  {
+    label: 'Due Date',
+    name: 'due_date',
+    type: 'date',
+    required: true,
+  },
+  {
+    label: 'Subject',
+    name: 'subject',
+    type: 'text',
+    required: true,
+    maxLength: 255,
+  },
+  {
+    label: 'Description',
+    name: 'description',
+    type: 'textarea',
+    required: false,
+  },
   {
     label: 'UTBMS Code',
     name: 'utbms_code_id',
     type: 'select',
     metaField: 'taks_UTBMSCode',
+    required: false,
   },
   {
     label: 'Priority',
     name: 'priority_id',
     type: 'select',
     metaField: 'taks_priority',
+    required: true,
   },
   {
     label: 'Status',
     name: 'status_id',
     type: 'select',
     metaField: 'taks_status',
+    required: true,
   },
-  { label: 'Billable', name: 'billable', type: 'checkbox' },
-  { label: 'Notify Text', name: 'notify_text', type: 'checkbox' },
-  { label: 'Add Calendar Event', name: 'add_calendar_event', type: 'checkbox' },
+  {
+    label: 'Billable',
+    name: 'billable',
+    type: 'checkbox',
+    required: false,
+  },
+  {
+    label: 'Notify Text',
+    name: 'notify_text',
+    type: 'checkbox',
+    required: false,
+  },
+  {
+    label: 'Add Calendar Event',
+    name: 'add_calendar_event',
+    type: 'checkbox',
+    required: false,
+  },
   {
     label: 'Trigger Appointment Reminders',
     name: 'trigger_appointment_reminders',
     type: 'checkbox',
+    required: false,
   },
 ];
+
+// Helper function to convert backend boolean values (0/1) to actual booleans
+const convertBackendBoolean = (value) => {
+  if (value === 1 || value === '1' || value === true) return true;
+  if (value === 0 || value === '0' || value === false) return false;
+  return false; // default to false for undefined/null
+};
 
 export default function TaskDialog({
   open = false,
@@ -104,6 +144,9 @@ export default function TaskDialog({
 
   // Upload media
   const [showUploadMediaDialog, setShowUploadMediaDialog] = useState(false);
+
+  // Validation errors state
+  const [validationErrors, setValidationErrors] = useState({});
 
   // Debounced search terms
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -160,6 +203,7 @@ export default function TaskDialog({
     getValues,
     reset,
     setValue,
+    watch,
   } = useForm({
     defaultValues: {
       slug: '',
@@ -178,7 +222,7 @@ export default function TaskDialog({
       assigned_to: [],
       reminders: [],
     },
-    resolver: zodResolver(taskSchema),
+    mode: 'onChange',
   });
 
   const {
@@ -203,6 +247,84 @@ export default function TaskDialog({
     name: 'assigned_to',
   });
 
+  // Watch form values for validation
+  const watchedValues = watch();
+
+  // Manual validation function
+  const validateForm = (data) => {
+    const errors = {};
+
+    // Required field validations
+    if (!data.contact_id) {
+      errors.contact_id = 'Contact is required';
+    }
+
+    if (!data.slug) {
+      errors.slug = 'Contact slug is required';
+    }
+
+    if (!data.type_id) {
+      errors.type_id = 'Task type is required';
+    }
+
+    if (!data.subject || data.subject.trim() === '') {
+      errors.subject = 'Subject is required';
+    } else if (data.subject.length > 255) {
+      errors.subject = 'Subject must not exceed 255 characters';
+    }
+
+    if (!data.due_date) {
+      errors.due_date = 'Due date is required';
+    }
+
+    if (!data.status_id) {
+      errors.status_id = 'Status is required';
+    }
+
+    if (!data.priority_id) {
+      errors.priority_id = 'Priority is required';
+    }
+
+    // Array validations
+    if (!data.assigned_to || data.assigned_to.length === 0) {
+      errors.assigned_to = 'At least one assignee is required';
+    } else {
+      // Validate each assignee
+      data.assigned_to.forEach((assignee, index) => {
+        if (!assignee.user_id) {
+          errors[`assigned_to_${index}`] = 'User ID is required for assignee';
+        }
+      });
+    }
+
+    if (!data.reminders || data.reminders.length === 0) {
+      errors.reminders = 'At least one reminder is required';
+    } else {
+      // Validate each reminder
+      data.reminders.forEach((reminder, index) => {
+        if (!reminder.type_id) {
+          errors[`reminder_type_${index}`] = 'Reminder type is required';
+        }
+        // if (!reminder.scheduled_at) {
+        //   errors[`reminder_date_${index}`] = 'Reminder date is required';
+        // }
+
+        if (!reminder.scheduled_at) {
+          errors[`reminder_date_${index}`] = 'Reminder date is required';
+        } else {
+          const now = new Date();
+          const reminderDate = new Date(reminder.scheduled_at);
+          if (reminderDate <= now) {
+            errors[`reminder_date_${index}`] =
+              'Reminder date must be in the future';
+          }
+        }
+      });
+    }
+
+    return errors;
+  };
+
   // Get options from meta data
   const getMetaOptions = (metaField) => {
     return tasksMeta[metaField] || [];
@@ -218,6 +340,11 @@ export default function TaskDialog({
       appendReminder(data);
     }
     setReminderDialogOpen(false);
+    // Clear reminder validation error if exists
+    setValidationErrors((prev) => ({
+      ...prev,
+      reminders: undefined,
+    }));
   };
 
   const handleAddAssignedToSubmit = (data) => {
@@ -230,6 +357,11 @@ export default function TaskDialog({
       appendAssignedTo(data);
     }
     setAssignedToDialogOpen(false);
+    // Clear assignee validation error if exists
+    setValidationErrors((prev) => ({
+      ...prev,
+      assigned_to: undefined,
+    }));
   };
 
   const handleEditReminder = (reminder, index) => {
@@ -254,43 +386,49 @@ export default function TaskDialog({
 
   const onFormSubmit = async (data) => {
     try {
+      // Clear previous validation errors
+      setValidationErrors({});
+
+      // Perform manual validation
+      const errors = validateForm(data);
+
+      if (Object.keys(errors).length > 0) {
+        setValidationErrors(errors);
+        toast.error('Please fix the validation errors');
+        return;
+      }
+
       // Format the data for API
       const formattedData = {
         ...data,
-        contact_id:
-          parseInt(getValues('contact_id')) || getValues('contact_id'),
-        slug: getValues('slug'),
-        type_id: parseInt(getValues('type_id')) || getValues('type_id'),
-        reminders: reminderFields.map((reminder) => ({
+        contact_id: parseInt(data.contact_id) || data.contact_id,
+        slug: data.slug,
+        type_id: parseInt(data.type_id) || data.type_id,
+        reminders: reminderFields.map((reminder, index) => ({
+          id: isUpdateMode ? reminder.id : undefined, // Only send ID for update
           type_id: parseInt(reminder.type_id),
           scheduled_at: reminder.scheduled_at,
+          tempKey: !isUpdateMode ? index : undefined, // Local key for frontend only
         })),
         assigned_to: assignedToFields.map((assignee) => ({
           user_id: parseInt(assignee.user_id),
         })),
-        // Convert select values to IDs if needed
-        utbms_code_id:
-          parseInt(getValues('utbms_code_id')) || getValues('utbms_code_id'),
-        priority_id:
-          parseInt(getValues('priority_id')) || getValues('priority_id'),
-        status_id: parseInt(getValues('status_id')) || getValues('status_id'),
+        // Convert select values to IDs if needed, handle empty values properly
+        utbms_code_id: data.utbms_code_id
+          ? parseInt(data.utbms_code_id) || data.utbms_code_id
+          : null, // Send null instead of undefined
+        priority_id: parseInt(data.priority_id) || data.priority_id,
+        status_id: parseInt(data.status_id) || data.status_id,
       };
+
       console.log('formattedData', formattedData);
 
       if (isUpdateMode) {
-        updateTask({ taskId: currentTask.id, taskData: formattedData });
-
-        // Showing toast
-        if (!isUpdating) {
-          toast.success('Task updated successfully');
-        }
+        await updateTask({ taskId: currentTask.id, taskData: formattedData });
+        toast.success('Task updated successfully');
       } else {
-        createTask(formattedData);
-
-        // Showing toast
-        if (!isCreating) {
-          toast.success('Task created successfully');
-        }
+        await createTask(formattedData);
+        toast.success('Task created successfully');
       }
 
       onClose();
@@ -299,6 +437,7 @@ export default function TaskDialog({
         `Error ${isUpdateMode ? 'updating' : 'creating'} task:`,
         error
       );
+      toast.error(`Error ${isUpdateMode ? 'updating' : 'creating'} task`);
     }
   };
 
@@ -311,6 +450,7 @@ export default function TaskDialog({
       setEditingAssignee(null);
       setSearchTerm('');
       setFromSearchTerm('');
+      setValidationErrors({});
     }
   }, [open]);
 
@@ -323,12 +463,15 @@ export default function TaskDialog({
         // Populate form with existing task data
         const formData = {
           ...currentTask,
-          billable: currentTask.billable === 0 ? false : true,
-          notify_text: currentTask.notify_text === 0 ? false : true,
-          add_calendar_event:
-            currentTask.add_calendar_event === 0 ? false : true,
-          trigger_appointment_reminders:
-            currentTask.trigger_appointment_reminders === 0 ? false : true,
+          // Handle boolean conversions from backend (0/1 to false/true)
+          billable: convertBackendBoolean(currentTask.billable),
+          notify_text: convertBackendBoolean(currentTask.notify_text),
+          add_calendar_event: convertBackendBoolean(
+            currentTask.add_calendar_event
+          ),
+          trigger_appointment_reminders: convertBackendBoolean(
+            currentTask.trigger_appointment_reminders
+          ),
           type_id: currentTask.type_id?.toString() || '',
           priority_id: currentTask.priority_id?.toString() || '',
           status_id: currentTask.status_id?.toString() || '',
@@ -366,6 +509,8 @@ export default function TaskDialog({
       } else {
         // Reset to default values for create mode
         reset({
+          slug: '',
+          contact_id: '',
           type_id: '',
           subject: '',
           description: '',
@@ -385,6 +530,7 @@ export default function TaskDialog({
         replaceReminders([]);
         replaceAssignedTo([]);
       }
+      setValidationErrors({});
     }
   }, [
     open,
@@ -395,6 +541,7 @@ export default function TaskDialog({
     replaceAssignedTo,
   ]);
 
+  console.log('validationErrors', validationErrors);
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -414,7 +561,9 @@ export default function TaskDialog({
             <div className="space-y-4 flex-1 overflow-auto p-4 no-scrollbar">
               <div className="flex flex-wrap gap-4 overflow-auto">
                 <div className="w-full space-y-2">
-                  <Label>Contact: </Label>
+                  <Label className="text-[#40444D] font-semibold">
+                    Contact <span className="text-red-500">*</span>
+                  </Label>
                   {contact ? (
                     <>
                       <Chip
@@ -439,15 +588,24 @@ export default function TaskDialog({
                       Select Contact
                     </Button>
                   )}
+                  {validationErrors.contact_id && (
+                    <p className="text-xs text-red-500">
+                      {validationErrors.contact_id}
+                    </p>
+                  )}
                 </div>
+
                 {/* Don't show until contact is selected */}
                 {contact &&
                   formFields.map(
-                    ({ label, name, type, required, metaField }) => (
+                    ({ label, name, type, required, metaField, maxLength }) => (
                       <div key={name} className="w-full md:w-[49%]">
                         {type !== 'checkbox' && (
                           <Label className="text-[#40444D] font-semibold mb-2">
                             {label}
+                            {required && (
+                              <span className="text-red-500 ml-1">*</span>
+                            )}
                           </Label>
                         )}
 
@@ -457,7 +615,16 @@ export default function TaskDialog({
                             name={name}
                             render={({ field }) => (
                               <Select
-                                onValueChange={field.onChange}
+                                onValueChange={(value) => {
+                                  field.onChange(value);
+                                  // Clear validation error when user selects a value
+                                  if (validationErrors[name]) {
+                                    setValidationErrors((prev) => ({
+                                      ...prev,
+                                      [name]: undefined,
+                                    }));
+                                  }
+                                }}
                                 value={field.value?.toString()}
                               >
                                 <SelectTrigger className="w-full">
@@ -510,6 +677,16 @@ export default function TaskDialog({
                                 minRows={3}
                                 maxRows={5}
                                 {...field}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  // Clear validation error when user types
+                                  if (validationErrors[name]) {
+                                    setValidationErrors((prev) => ({
+                                      ...prev,
+                                      [name]: undefined,
+                                    }));
+                                  }
+                                }}
                               />
                             )}
                           />
@@ -518,13 +695,28 @@ export default function TaskDialog({
                             control={control}
                             name={name}
                             render={({ field }) => (
-                              <Input type={type} {...field} />
+                              <Input
+                                type={type}
+                                {...field}
+                                maxLength={maxLength}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  // Clear validation error when user types
+                                  if (validationErrors[name]) {
+                                    setValidationErrors((prev) => ({
+                                      ...prev,
+                                      [name]: undefined,
+                                    }));
+                                  }
+                                }}
+                              />
                             )}
                           />
                         )}
-                        {errors[name] && (
+
+                        {validationErrors[name] && (
                           <p className="text-xs text-red-500">
-                            {errors[name].message}
+                            {validationErrors[name]}
                           </p>
                         )}
                       </div>
@@ -534,54 +726,67 @@ export default function TaskDialog({
 
               <div className="flex flex-wrap gap-4 overflow-auto">
                 <div className="w-full">
-                  <h3 className="text-lg font-semibold mb-1">Reminders</h3>
+                  <h3 className="text-lg font-semibold mb-1">
+                    Reminders <span className="text-red-500">*</span>
+                  </h3>
                   {reminderFields.map((reminder, idx) => (
-                    <div
-                      key={reminder.id || idx}
-                      className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
-                    >
-                      <div className="text-sm flex flex-col gap-1">
-                        <span>
-                          Type:{' '}
-                          {getMetaOptions('taks_reminders_type').find(
-                            (type) => type.id === parseInt(reminder.type_id)
-                          )?.name || 'Unknown Type'}
-                        </span>
-                        <span>
-                          Reminder: {formatDate(reminder.scheduled_at)}
-                        </span>
-                      </div>
-                      <div className="flex gap-1">
-                        <Tooltip arrow title="Edit Reminder">
-                          <IconButton
-                            type="button"
-                            onClick={() => handleEditReminder(reminder, idx)}
-                            variant="ghost"
-                            size="small"
-                          >
-                            <Edit className="h-4 w-4 text-blue-500" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip arrow title="Remove Reminder">
-                          {isDeletingReminder ? (
-                            <Loader2 className="animate-spin" />
-                          ) : (
+                    <>
+                      <div
+                        key={reminder.id || idx}
+                        className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
+                      >
+                        <div className="text-sm flex flex-col gap-1">
+                          <span>
+                            Type:{' '}
+                            {getMetaOptions('taks_reminders_type').find(
+                              (type) => type.id === parseInt(reminder.type_id)
+                            )?.name || 'Unknown Type'}
+                          </span>
+                          <span>
+                            Reminder: {formatDate(reminder.scheduled_at)}
+                          </span>
+                        </div>
+                        <div className="flex gap-1">
+                          <Tooltip arrow title="Edit Reminder">
                             <IconButton
                               type="button"
-                              onClick={() => {
-                                console.log(reminder);
-                                handleDeleteReminder(reminder.id || idx);
-                                removeReminder(idx);
-                              }}
+                              onClick={() => handleEditReminder(reminder, idx)}
                               variant="ghost"
                               size="small"
                             >
-                              <Trash2 className="h-4 w-4 text-red-500" />
+                              <Edit className="h-4 w-4 text-blue-500" />
                             </IconButton>
-                          )}
-                        </Tooltip>
+                          </Tooltip>
+                          <Tooltip arrow title="Remove Reminder">
+                            {isDeletingReminder ? (
+                              <Loader2 className="animate-spin" />
+                            ) : (
+                              <IconButton
+                                type="button"
+                                onClick={() => {
+                                  if (reminder.id) {
+                                    // Existing reminder → hit backend
+                                    handleDeleteReminder(reminder.id);
+                                  }
+                                  // Always remove from UI
+                                  removeReminder(idx);
+                                }}
+                                variant="ghost"
+                                size="small"
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </IconButton>
+                            )}
+                          </Tooltip>
+                        </div>
                       </div>
-                    </div>
+
+                      {validationErrors[`reminder_date_${idx}`] && (
+                        <p className="text-xs text-red-500 mt-1">
+                          {validationErrors[`reminder_date_${idx}`]}
+                        </p>
+                      )}
+                    </>
                   ))}
 
                   <Button
@@ -593,10 +798,18 @@ export default function TaskDialog({
                     <Plus className="mr-2 h-4 w-4" />
                     Add Reminder
                   </Button>
+
+                  {validationErrors.reminders && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {validationErrors.reminders}
+                    </p>
+                  )}
                 </div>
 
                 <div className="w-full">
-                  <h3 className="text-lg font-semibold mb-1">Assigned To</h3>
+                  <h3 className="text-lg font-semibold mb-1">
+                    Assigned To <span className="text-red-500">*</span>
+                  </h3>
                   {assignedToFields.map((assignedTo, idx) => (
                     <div
                       key={assignedTo.id || idx}
@@ -644,6 +857,12 @@ export default function TaskDialog({
                     <Plus className="mr-2 h-4 w-4" />
                     Add Assigned To
                   </Button>
+
+                  {validationErrors.assigned_to && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {validationErrors.assigned_to}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -733,13 +952,21 @@ export default function TaskDialog({
           setSearchDialogOpen(false);
           setValue('contact_id', item.id);
           setValue('slug', item.slug);
+          // Clear validation error when contact is selected
+          if (validationErrors.contact_id) {
+            setValidationErrors((prev) => ({
+              ...prev,
+              contact_id: undefined,
+              slug: undefined,
+            }));
+          }
         }}
         onItemDeselect={(item) => {
           console.log(item);
           setContact(null);
           setSearchDialogOpen(false);
-          setValue('contact_id', item.id);
-          setValue('slug', item.slug);
+          setValue('contact_id', '');
+          setValue('slug', '');
         }}
         getItemKey={(item, index) => item.id || index}
         getItemDisplay={(item) => ({
@@ -757,8 +984,16 @@ export default function TaskDialog({
           console.log(selectedItems);
           setSearchDialogOpen(false);
           setContact(selectedItems);
-          setValue('contact_id', selectedItems);
+          setValue('contact_id', selectedItems.id);
           setValue('slug', selectedItems.slug);
+          // Clear validation error when contact is selected
+          if (validationErrors.contact_id) {
+            setValidationErrors((prev) => ({
+              ...prev,
+              contact_id: undefined,
+              slug: undefined,
+            }));
+          }
         }}
       />
     </>

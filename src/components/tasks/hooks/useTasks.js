@@ -64,19 +64,37 @@ export const useTasks = () => {
   // Create
   const createTaskMutation = useMutation({
     mutationFn: (taskData) => createTask(taskData),
-    onSuccess: () => queryClient.invalidateQueries(['tasks']),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tasks']);
+      toast.success('Task created successfully');
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to create task');
+    },
   });
 
   // Update
   const updateTaskMutation = useMutation({
     mutationFn: ({ taskId, taskData }) => updateTask(taskId, taskData),
-    onSuccess: () => queryClient.invalidateQueries(['tasks']),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tasks']);
+      toast.success('Task updated successfully');
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to update task');
+    },
   });
 
   // Update status
   const updateStatusMutation = useMutation({
     mutationFn: ({ taskId, status_id }) => updateTaskStatus(taskId, status_id),
-    onSuccess: () => queryClient.invalidateQueries(['tasks']),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['tasks']);
+      toast.success('Task status updated successfully');
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to update task status');
+    },
   });
 
   // Delete
@@ -97,6 +115,10 @@ export const useTasks = () => {
     onSuccess: () => {
       if (selectedTask)
         queryClient.invalidateQueries(['tasks', selectedTask.id]);
+      toast.success('File uploaded successfully');
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to upload file');
     },
   });
 
@@ -106,6 +128,10 @@ export const useTasks = () => {
     onSuccess: () => {
       if (selectedTask)
         queryClient.invalidateQueries(['tasks', selectedTask.id]);
+      toast.success('File deleted successfully');
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to delete file');
     },
   });
 
@@ -115,7 +141,8 @@ export const useTasks = () => {
       toast.success('Reminder deleted successfully');
       queryClient.invalidateQueries(['tasks']);
     },
-    onError: () => toast.error('Failed to delete reminder'),
+    onError: (error) =>
+      toast.error(error?.message || 'Failed to delete reminder'),
   });
 
   // Get comment meta
@@ -143,7 +170,8 @@ export const useTasks = () => {
       queryClient.invalidateQueries(['comments']);
       toast.success('Comment created successfully');
     },
-    onError: () => toast.error('Failed to create comment'),
+    onError: (error) =>
+      toast.error(error?.message || 'Failed to create comment'),
   });
 
   // Upload comment attachment
@@ -153,7 +181,8 @@ export const useTasks = () => {
       queryClient.invalidateQueries(['comments']);
       toast.success('Attachment uploaded successfully');
     },
-    onError: () => toast.error('Failed to upload attachment'),
+    onError: (error) =>
+      toast.error(error?.message || 'Failed to upload attachment'),
   });
 
   const handleCreateComment = useCallback(

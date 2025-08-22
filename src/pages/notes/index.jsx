@@ -36,7 +36,6 @@ const NotesPage = () => {
 
   // Categories will be fetched from API
   const [categories, setCategories] = useState([]);
-
   console.log('categoriesData', categories);
 
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
@@ -98,7 +97,7 @@ const NotesPage = () => {
   });
 
   // Fetch notes
-  const { data: notes = [], isLoading } = useQuery({
+  const { data: notes = [], isLoading: notesLoading } = useQuery({
     queryKey: ['notes', matterSlug],
     queryFn: async () => {
       const apiResponse = await getNotes(matterSlug);
@@ -164,7 +163,6 @@ const NotesPage = () => {
         !searchTerm ||
         note.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         note.body?.toLowerCase().includes(searchTerm.toLowerCase());
-
       return matchesSearch;
     });
   }, [notes, searchTerm]);
@@ -201,7 +199,6 @@ const NotesPage = () => {
         return;
       }
       
-      setEditingNoteId(note.id); // Set the ID for the editing state
       console.log('Starting to fetch note data for ID:', note.id);
       
       // Fetch complete note data from API
@@ -250,7 +247,7 @@ const NotesPage = () => {
 
   const getCategoryName = (categoryId) => {
     const category = categories.find((cat) => cat.id === categoryId);
-    return category?.name || 'Unknown';
+    return category?.name || '';
   };
 
   const truncateText = (htmlText, maxLength = 100) => {
@@ -343,24 +340,8 @@ const NotesPage = () => {
           </div>
         </div>
 
-        {/* Category Filter */}
-        {/* <div className="mb-6">
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="w-full md:w-48">
-            <SelectValue placeholder="Filter by category" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div> */}
-
         {/* Loading State */}
-        {isLoading && (
+        {notesLoading && (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, index) => (
               <div
@@ -410,7 +391,7 @@ const NotesPage = () => {
         )}
 
         {/* Notes Display */}
-        {!isLoading && (
+        {!notesLoading && (
           <>
             {filteredNotes.length === 0 ? (
               <div className="text-center py-16">
@@ -476,7 +457,10 @@ const NotesPage = () => {
                               <Eye className="h-3 w-3" />
                             </Button>
                             <Button
-                              onClick={() => handleEditNote(note)}
+                              onClick={() => {
+                                setEditingNoteId(note.id);
+                                handleEditNote(note);
+                              }}
                               size="sm"
                               variant="ghost"
                               className="bg-green-50 text-green-600 hover:bg-green-100 p-1 h-6 w-6 transition-colors"
@@ -501,7 +485,6 @@ const NotesPage = () => {
                           </div>
                         )}
                       </div>
-
                       <p
                         className={`text-gray-600 mb-3 ${
                           viewMode === 'list' ? 'text-sm' : 'text-base'
@@ -512,7 +495,6 @@ const NotesPage = () => {
                           viewMode === 'list' ? 80 : 120
                         )}
                       </p>
-
                       <div className="flex items-center gap-4 text-xs text-gray-500">
                         <div className="flex items-center gap-1">
                           <Tag className="h-3 w-3" />
@@ -527,7 +509,6 @@ const NotesPage = () => {
                         <div>{formatDate(note.created_at)}</div>
                       </div>
                     </div>
-
                     {viewMode === 'list' && (
                       <div className="flex gap-2 ml-4">
                         <Button
@@ -540,7 +521,10 @@ const NotesPage = () => {
                           <Eye className="h-4 w-4" />
                         </Button>
                         <Button
-                          onClick={() => handleEditNote(note)}
+                          onClick={() => {
+                            setEditingNoteId(note.id);
+                            handleEditNote(note);
+                          }}
                           size="sm"
                           variant="ghost"
                           className="bg-green-50 text-green-600 hover:bg-green-100 p-2 h-8 w-8 transition-colors"
