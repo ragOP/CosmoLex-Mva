@@ -21,8 +21,6 @@ import { useDocuments } from '@/components/inbox/documents/hooks/useDocuments';
 import { useMutation } from '@tanstack/react-query';
 import { uploadNoteAttachment } from '@/api/api_services/notes';
 import { toast } from 'sonner';
-import { useMatter } from '@/components/inbox/MatterContext';
-import { useSearchParams } from 'react-router-dom';
 
 // Quill modules configuration
 const quillModules = {
@@ -86,19 +84,17 @@ const CreateEditNoteDialog = ({
       console.log('Note body:', note.body);
       console.log('Note category_id:', note.category_id);
       
-      // Add a small delay to ensure the dialog is fully opened
-      setTimeout(() => {
-        reset({
-          title: note.title || '',
-          body: note.body || '',
-          category_id: note.category_id || '',
-        });
-        console.log('Form reset completed with values:', {
-          title: note.title || '',
-          body: note.body || '',
-          category_id: note.category_id || '',
-        });
-      }, 100);
+      // Reset form immediately with the note data
+      reset({
+        title: note.title || '',
+        body: note.body || '',
+        category_id: note.category_id || '',
+      });
+      console.log('Form reset completed with values:', {
+        title: note.title || '',
+        body: note.body || '',
+        category_id: note.category_id || '',
+      });
     } else if (!note && !isEdit) {
       // Reset form for new note creation
       reset({
@@ -109,7 +105,7 @@ const CreateEditNoteDialog = ({
     }
   }, [note, isEdit, reset]);
 
-  // Load note data for editing
+  // Load note data for editing - handle attachments
   useEffect(() => {
     console.log('useEffect triggered - isEdit:', isEdit, 'note:', note);
     
@@ -180,8 +176,6 @@ const CreateEditNoteDialog = ({
         formData.append(key, value);
       }
     });
-    formData.append('slug', matterSlug);
-    formData.append('contact_id', matter?.contact_id);
     files.forEach((fileItem) => {
       formData.append('attachment', fileItem.file);
     });
@@ -230,7 +224,7 @@ const CreateEditNoteDialog = ({
               className="space-y-6"
               noValidate
               id="note-form"
-              key={`note-form-${note?.id || 'new'}-${isEdit ? 'edit' : 'create'}`}
+              key={`note-form-${note?.id || 'new'}`}
             >
               {/* Note Title - Full Width */}
               <div className="w-full">
@@ -345,7 +339,7 @@ const CreateEditNoteDialog = ({
                             width: '100%',
                           }}
                           className="bg-white w-full"
-                          key={`quill-${note?.id || 'new'}-${field.value ? 'has-content' : 'no-content'}`}
+                          key={`quill-${note?.id || 'new'}`}
                         />
                       </div>
                     );
