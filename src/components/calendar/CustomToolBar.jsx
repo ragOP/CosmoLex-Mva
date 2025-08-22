@@ -23,14 +23,14 @@ const CustomToolBar = ({
       // p={2}
     >
       {/* Left Group */}
-      <Box display="flex" gap={2} alignItems="center">
+      <Box display="flex" gap={2} alignItems="center" className="w-fit">
         <Button
           variant="contained"
           onClick={() => setOpen(true)}
-          className="flex flex-row items-center gap-2"
+          className="flex flex-row w-fit items-center gap-2"
         >
           {/* <Plus className="w-4 h-4" /> */}
-          New Event
+          <span>New Event</span>
         </Button>
 
         {/* <Select

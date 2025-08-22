@@ -140,6 +140,8 @@ export default function NewEventDialogRHF({
         return `${year}-${month}-${day}T${hours}:${minutes}`;
       };
 
+      console.log('selectedDateRange >>>', selectedDateRange);
+
       setValue('start_time', formatDateForInput(selectedDateRange.start));
       setValue('end_time', formatDateForInput(selectedDateRange.end));
     }
