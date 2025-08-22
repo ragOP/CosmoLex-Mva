@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Combobox } from '@/components/ui/combobox';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search } from 'lucide-react';
 import { X } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getFinanceMeta, getVendors, getFirms } from '@/api/api_services/finance';
@@ -28,7 +30,8 @@ const CreateExpenseDialog = ({
         handleSubmit,
         formState: { errors },
         reset,
-        setValue
+        setValue,
+        watch
     } = useForm({
         defaultValues: {
             cost_type_id: '',
@@ -36,6 +39,7 @@ const CreateExpenseDialog = ({
             subfirm_id: '',
             amount: '',
             billable_client: false,
+            is_taxable: false,
             description: '',
             date_issued: '',
             invoice_number: '',
@@ -99,6 +103,7 @@ const CreateExpenseDialog = ({
             setValue('subfirm_id', editingExpense.subfirm_id?.toString() || '');
             setValue('amount', editingExpense.amount || '');
             setValue('billable_client', editingExpense.billable_client || false);
+            setValue('is_taxable', editingExpense.is_taxable || false);
             setValue('description', editingExpense.description || '');
             setValue('date_issued', editingExpense.date_issued || '');
             setValue('invoice_number', editingExpense.invoice_number || '');
@@ -491,6 +496,57 @@ const CreateExpenseDialog = ({
                             <Label htmlFor="billable_client" className="text-sm text-gray-700">
                                 Billable to Client
                             </Label>
+                        </div>
+
+                        {/* Taxable */}
+                        <div className="flex items-center space-x-2">
+                            <Controller
+                                control={control}
+                                name="is_taxable"
+                                render={({ field }) => (
+                                    <Checkbox
+                                        id="is_taxable"
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                        disabled={isLoading}
+                                    />
+                                )}
+                            />
+                            <Label htmlFor="is_taxable" className="text-sm text-gray-700">
+                                Taxable
+                            </Label>
+                        </div>
+
+                        {/* Calculated Amount Display */}
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h4 className="text-sm font-semibold text-[#40444D] mb-3">Amount Summary</h4>
+                            <div className="space-y-2 text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Base Amount:</span>
+                                    <span className="font-medium">
+                                        ${watch('amount') || '0.00'}
+                                    </span>
+                                </div>
+                                {watch('is_taxable') && (
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-600">Tax (8.25%):</span>
+                                        <span className="font-medium text-green-600">
+                                            ${((parseFloat(watch('amount') || 0) * 0.0825)).toFixed(2)}
+                                        </span>
+                                    </div>
+                                )}
+                                <div className="border-t border-gray-200 pt-2">
+                                    <div className="flex justify-between">
+                                        <span className="text-[#40444D] font-semibold">Total Amount:</span>
+                                        <span className="text-[#40444D] font-bold text-lg">
+                                            ${watch('is_taxable') 
+                                                ? (parseFloat(watch('amount') || 0) * 1.0825).toFixed(2)
+                                                : (parseFloat(watch('amount') || 0)).toFixed(2)
+                                            }
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Folder ID */}

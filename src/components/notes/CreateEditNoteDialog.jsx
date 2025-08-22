@@ -51,7 +51,7 @@ const CreateEditNoteDialog = ({
     handleSubmit,
     formState: { errors },
     reset,
-    setValue,
+    watch,
   } = useForm({
     defaultValues: {
       title: '',
@@ -60,12 +60,56 @@ const CreateEditNoteDialog = ({
     },
   });
 
+  // Watch form values for debugging
+  const watchedValues = watch();
+  useEffect(() => {
+    console.log('Form values changed:', watchedValues);
+    console.log('Current form state:', {
+      title: watchedValues.title,
+      body: watchedValues.body,
+      category_id: watchedValues.category_id
+    });
+  }, [watchedValues]);
+
+  // Reset form when note changes
+  useEffect(() => {
+    console.log('Note prop changed in dialog:', note);
+    console.log('isEdit value:', isEdit);
+    if (note && isEdit) {
+      console.log('Note prop changed, resetting form with:', note);
+      console.log('Note title:', note.title);
+      console.log('Note body:', note.body);
+      console.log('Note category_id:', note.category_id);
+      
+      // Add a small delay to ensure the dialog is fully opened
+      setTimeout(() => {
+        reset({
+          title: note.title || '',
+          body: note.body || '',
+          category_id: note.category_id || '',
+        });
+        console.log('Form reset completed with values:', {
+          title: note.title || '',
+          body: note.body || '',
+          category_id: note.category_id || '',
+        });
+      }, 100);
+    } else if (!note && !isEdit) {
+      // Reset form for new note creation
+      reset({
+        title: '',
+        body: '',
+        category_id: '',
+      });
+    }
+  }, [note, isEdit, reset]);
+
   // Load note data for editing
   useEffect(() => {
+    console.log('useEffect triggered - isEdit:', isEdit, 'note:', note);
+    
     if (isEdit && note) {
-      setValue('title', note.title || '');
-      setValue('body', note.body || '');
-      setValue('category_id', note.category_id || '');
+      console.log('Loading note data for editing:', note);
 
       // Convert existing attachments to the format expected by FileUpload
       if (note.attachments) {
@@ -82,13 +126,20 @@ const CreateEditNoteDialog = ({
         setAttachments(existingAttachments);
       }
     } else {
-      reset();
+      console.log('Resetting form - not in edit mode or no note data');
       setAttachments([]);
     }
-  }, [isEdit, note, setValue, reset]);
+  }, [isEdit, note]);
 
   const onFormSubmit = (data) => {
     console.log('Form submitted with data:', data);
+    
+    // Validate required fields
+    if (!data.title || !data.body || !data.category_id) {
+      console.error('Missing required fields:', { title: !!data.title, body: !!data.body, category_id: !!data.category_id });
+      return;
+    }
+    
     const formData = {
       ...data,
       attachments: attachments.filter((att) => !att.isExisting), // Only send new attachments
@@ -98,7 +149,12 @@ const CreateEditNoteDialog = ({
   };
 
   const handleClose = () => {
-    reset();
+    console.log('Closing dialog, resetting form');
+    reset({
+      title: '',
+      body: '',
+      category_id: ''
+    });
     setAttachments([]);
     onClose();
   };
@@ -131,6 +187,8 @@ const CreateEditNoteDialog = ({
               onSubmit={handleSubmit(onFormSubmit)}
               className="space-y-6"
               noValidate
+              id="note-form"
+              key={`note-form-${note?.id || 'new'}-${isEdit ? 'edit' : 'create'}`}
             >
               {/* Note Title - Full Width */}
               <div className="w-full">
@@ -141,16 +199,21 @@ const CreateEditNoteDialog = ({
                   control={control}
                   name="title"
                   rules={{ required: 'Title is required' }}
-                  render={({ field }) => (
-                    <Input
-                      {...field}
-                      placeholder="Enter note title"
-                      disabled={isLoading}
-                      className={`h-12 w-full ${
-                        errors.title ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    />
-                  )}
+                  render={({ field }) => {
+                    console.log('Title field render - value:', field.value, 'field props:', field);
+                    console.log('Current note prop:', note);
+                    return (
+                      <Input
+                        {...field}
+                        placeholder="Enter note title"
+                        disabled={isLoading}
+                        className={`h-12 w-full ${
+                          errors.title ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                        value={field.value || ''}
+                      />
+                    );
+                  }}
                 />
                 {errors.title && (
                   <p className="text-xs text-red-500 mt-1">
@@ -168,33 +231,42 @@ const CreateEditNoteDialog = ({
                   control={control}
                   name="category_id"
                   rules={{ required: 'Category is required' }}
-                  render={({ field }) => (
-                    <Select
-                      onValueChange={(value) => {
-                        console.log('Category selected:', value);
-                        field.onChange(value);
-                      }}
-                      value={field.value || ''}
-                      disabled={isLoading}
-                    >
-                      <SelectTrigger
-                        className={`h-12 w-full ${
-                          errors.category_id
-                            ? 'border-red-500'
-                            : 'border-gray-300'
-                        }`}
+                  render={({ field }) => {
+                    console.log('Category field render - value:', field.value, 'Available categories:', categories);
+                    console.log('Category field props:', field);
+                    console.log('Category value type:', typeof field.value);
+                    console.log('Categories data:', categories.map(cat => ({ id: cat.id, type: typeof cat.id, name: cat.name })));
+                    return (
+                      <Select
+                        onValueChange={(value) => {
+                          console.log('Category selected:', value);
+                          field.onChange(value);
+                        }}
+                        value={field.value || ''}
+                        disabled={isLoading}
+                        key={`category-select-${field.value || 'empty'}`}
                       >
-                        <SelectValue placeholder="Select Category" />
-                      </SelectTrigger>
-                      <SelectContent className="z-[9999]">
-                        {categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                        <SelectTrigger
+                          className={`h-12 w-full ${
+                            errors.category_id
+                              ? 'border-red-500'
+                              : 'border-gray-300'
+                          }`}
+                        >
+                          <SelectValue placeholder="Select Category">
+                            {field.value ? categories.find(cat => cat.id === field.value.toString())?.name : 'Select Category'}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent className="z-[9999]">
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    );
+                  }}
                 />
                 {errors.category_id && (
                   <p className="text-xs text-red-500 mt-1">
@@ -212,26 +284,30 @@ const CreateEditNoteDialog = ({
                   control={control}
                   name="body"
                   rules={{ required: 'Content is required' }}
-                  render={({ field }) => (
-                    <div
-                      className={`border rounded-md ${
-                        errors.body ? 'border-red-500' : 'border-gray-300'
-                      }`}
-                    >
-                      <ReactQuill
-                        theme="snow"
-                        value={field.value}
-                        onChange={field.onChange}
-                        modules={quillModules}
-                        placeholder="Write your note content here..."
-                        style={{
-                          height: '400px',
-                          width: '100%',
-                        }}
-                        className="bg-white w-full"
-                      />
-                    </div>
-                  )}
+                  render={({ field }) => {
+                    console.log('Body field render - value:', field.value);
+                    return (
+                      <div
+                        className={`border rounded-md ${
+                          errors.body ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                      >
+                        <ReactQuill
+                          theme="snow"
+                          value={field.value || ''}
+                          onChange={field.onChange}
+                          modules={quillModules}
+                          placeholder="Write your note content here..."
+                          style={{
+                            height: '400px',
+                            width: '100%',
+                          }}
+                          className="bg-white w-full"
+                          key={`quill-${note?.id || 'new'}-${field.value ? 'has-content' : 'no-content'}`}
+                        />
+                      </div>
+                    );
+                  }}
                 />
                 {errors.body && (
                   <p className="text-xs text-red-500 mt-1">
@@ -270,7 +346,7 @@ const CreateEditNoteDialog = ({
             </Button>
             <Button
               type="submit"
-              onClick={handleSubmit(onFormSubmit)}
+              form="note-form"
               disabled={isLoading}
               className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
             >

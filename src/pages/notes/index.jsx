@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import BreadCrumb from '@/components/BreadCrumb';
 import CreateEditNoteDialog from '@/components/notes/CreateEditNoteDialog';
+import DeleteConfirmationDialog from '@/components/notes/DeleteConfirmationDialog';
 import { Skeleton, Stack } from '@mui/material';
 import {
   Plus,
@@ -24,6 +25,7 @@ import {
   updateNote,
   deleteNote,
   getNotesMeta,
+  getNote,
 } from '@/api/api_services/notes';
 import { toast } from 'sonner';
 
@@ -42,6 +44,9 @@ const NotesPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState(null);
+  const [editingNoteId, setEditingNoteId] = useState(null);
 
   // Function to clear all states
   const clearStates = () => {
@@ -49,6 +54,9 @@ const NotesPage = () => {
     setEditingNote(null);
     setSearchTerm('');
     setSelectedCategory('all');
+    setDeleteConfirmationOpen(false);
+    setNoteToDelete(null);
+    setEditingNoteId(null);
   };
 
   // Get matter slug from URL params (assuming notes are matter-specific)
@@ -59,20 +67,34 @@ const NotesPage = () => {
   console.log('Extracted matter slug:', matterSlug);
 
   // Fetch categories from API
-  useQuery({
+  const { data: categoriesData } = useQuery({
     queryKey: ['notesMeta'],
     queryFn: async () => {
-      const response = await getNotesMeta();
-      console.log('response >>>>', response);
-      if (response?.Apistatus) {
-        const categories = response.note_categories.map((cat) => ({
-          id: cat.id.toString(),
-          name: cat.name,
-        }));
-        setCategories(categories);
-        setSelectedCategory(categories[0].id);
+      try {
+        const response = await getNotesMeta();
+        console.log('Categories API response:', response);
+        if (response?.Apistatus) {
+          const categories = response.note_categories.map((cat) => ({
+            id: cat.id.toString(),
+            name: cat.name,
+          }));
+          console.log('Processed categories:', categories);
+          setCategories(categories);
+          if (categories.length > 0) {
+            setSelectedCategory(categories[0].id);
+          }
+          return categories;
+        } else {
+          console.error('Categories API returned no data');
+          return [];
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+        return [];
       }
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 3,
   });
 
   // Fetch notes
@@ -124,6 +146,8 @@ const NotesPage = () => {
     onSuccess: () => {
       toast.success('Note deleted successfully!');
       queryClient.invalidateQueries(['notes', matterSlug]);
+      setDeleteConfirmationOpen(false);
+      setNoteToDelete(null);
     },
     onError: (error) => {
       console.error('Delete note error:', error);
@@ -165,14 +189,50 @@ const NotesPage = () => {
   };
 
   const handleDeleteNote = (noteId) => {
-    if (confirm('Are you sure you want to delete this note?')) {
-      deleteNoteMutation.mutate(noteId);
-    }
+    setNoteToDelete(noteId);
+    setDeleteConfirmationOpen(true);
   };
 
-  const handleEditNote = (note) => {
-    setEditingNote(note);
-    setDialogOpen(true);
+  const handleEditNote = async (note) => {
+    try {
+      // Check if categories are loaded
+      if (!categoriesData && categories.length === 0) {
+        toast.error('Please wait for categories to load before editing');
+        return;
+      }
+      
+      setEditingNoteId(note.id); // Set the ID for the editing state
+      console.log('Starting to fetch note data for ID:', note.id);
+      
+      // Fetch complete note data from API
+      const completeNote = await getNote(note.id);
+      console.log('Complete note data fetched:', completeNote);
+      console.log('Note ID being edited:', note.id);
+      console.log('Raw API response:', completeNote);
+      
+      // Check the data structure
+      const noteData = completeNote?.data || completeNote?.response || completeNote;
+      console.log('Processed note data:', noteData);
+      console.log('Note data structure:', {
+        hasData: !!noteData,
+        hasTitle: !!noteData?.title,
+        hasBody: !!noteData?.body,
+        hasCategoryId: !!noteData?.category_id,
+        title: noteData?.title,
+        body: noteData?.body,
+        category_id: noteData?.category_id
+      });
+      
+      // Set the complete note data for editing
+      setEditingNote(noteData);
+      console.log('Editing note state set to:', noteData);
+      setDialogOpen(true);
+    } catch (error) {
+      console.error('Error fetching complete note data:', error);
+      toast.error('Failed to load note data for editing');
+    } finally {
+      setEditingNoteId(null); // Clear the editing ID after the operation
+    }
   };
 
   const handleViewNote = (noteId) => {
@@ -216,9 +276,17 @@ const NotesPage = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-4 mb-6">
           {/* Left Side - Notes Count */}
-          <h1 className="text-2xl font-bold text-gray-900">
-            Notes ({filteredNotes.length})
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-gray-900">
+              Notes ({filteredNotes.length})
+            </h1>
+            {!categoriesData && (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                Loading categories...
+              </div>
+            )}
+          </div>
 
           {/* Right Side - Search, View Toggle, and Create Button */}
           <div className="flex items-center gap-4 w-full md:w-auto">
@@ -413,8 +481,13 @@ const NotesPage = () => {
                               variant="ghost"
                               className="bg-green-50 text-green-600 hover:bg-green-100 p-1 h-6 w-6 transition-colors"
                               title="Edit"
+                              disabled={!categoriesData}
                             >
-                              <Edit className="h-3 w-3" />
+                              {editingNoteId === note.id ? (
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-600"></div>
+                              ) : (
+                                <Edit className="h-3 w-3" />
+                              )}
                             </Button>
                             <Button
                               onClick={() => handleDeleteNote(note.id)}
@@ -472,8 +545,13 @@ const NotesPage = () => {
                           variant="ghost"
                           className="bg-green-50 text-green-600 hover:bg-green-100 p-2 h-8 w-8 transition-colors"
                           title="Edit"
+                          disabled={!categoriesData}
                         >
-                          <Edit className="h-4 w-4" />
+                          {editingNoteId === note.id ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                          ) : (
+                            <Edit className="h-4 w-4" />
+                          )}
                         </Button>
                         <Button
                           onClick={() => handleDeleteNote(note.id)}
@@ -499,10 +577,22 @@ const NotesPage = () => {
         open={dialogOpen}
         onClose={handleDialogClose}
         onSubmit={editingNote ? handleUpdateNote : handleCreateNote}
-        isLoading={createNoteMutation.isPending || updateNoteMutation.isPending}
+        isLoading={createNoteMutation.isPending || updateNoteMutation.isPending || editingNoteId !== null}
         note={editingNote}
         isEdit={!!editingNote}
-        categories={categories}
+        categories={categoriesData || categories}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={deleteConfirmationOpen}
+        onClose={() => setDeleteConfirmationOpen(false)}
+        onConfirm={() => {
+          if (noteToDelete) {
+            deleteNoteMutation.mutate(noteToDelete);
+          }
+        }}
+        isLoading={deleteNoteMutation.isPending}
       />
     </div>
   );

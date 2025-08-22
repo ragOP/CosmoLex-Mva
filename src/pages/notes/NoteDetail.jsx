@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import BreadCrumb from '@/components/BreadCrumb';
 import BackButton from '@/components/BackButton';
 import CreateEditNoteDialog from '@/components/notes/CreateEditNoteDialog';
+import DeleteConfirmationDialog from '@/components/notes/DeleteConfirmationDialog';
 import { Skeleton, IconButton, Tooltip } from '@mui/material';
 import { 
   Edit,
@@ -26,6 +27,7 @@ const NoteDetail = () => {
   const queryClient = useQueryClient();
   
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Get matter slug from URL params
   const matterSlug = searchParams.get('slugId');
@@ -54,11 +56,15 @@ const NoteDetail = () => {
       // Handle the actual API response structure
       const noteData = data?.data || data?.response || data || null;
       if (noteData) {
-        return {
+        console.log('Raw note data:', noteData);
+        const processedNote = {
           ...noteData,
           category_id: noteData.category_id?.toString() || '175',
-          body: noteData.body || 'No content available'
+          body: noteData.body || 'No content available',
+          title: noteData.title || 'Untitled Note'
         };
+        console.log('Processed note data:', processedNote);
+        return processedNote;
       }
       return null;
     }
@@ -88,9 +94,12 @@ const NoteDetail = () => {
   };
 
   const handleDeleteNote = () => {
-    if (confirm('Are you sure you want to delete this note?')) {
-      deleteNoteMutation.mutate();
-    }
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    deleteNoteMutation.mutate();
+    setDeleteDialogOpen(false);
   };
 
   const getCategoryName = (categoryId) => {
@@ -190,21 +199,32 @@ const NoteDetail = () => {
         </div>
 
         <div className="flex gap-2">
-          <Button
-            onClick={() => setEditDialogOpen(true)}
-            variant="outline"
-          >
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
-          <Button
-            onClick={handleDeleteNote}
-            variant="outline"
-            disabled={deleteNoteMutation.isPending}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            {deleteNoteMutation.isPending ? 'Deleting...' : 'Delete'}
-          </Button>
+          <Tooltip title="Edit note">
+            <IconButton 
+              onClick={() => setEditDialogOpen(true)}
+              sx={{ 
+                color: '#7367F0',
+                '&:hover': { 
+                  bgcolor: 'rgba(115, 103, 240, 0.1)' 
+                }
+              }}
+            >
+              <Edit size={18} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete note">
+            <IconButton 
+              onClick={handleDeleteNote}
+              sx={{ 
+                color: '#dc2626',
+                '&:hover': { 
+                  bgcolor: 'rgba(220, 38, 38, 0.1)' 
+                }
+              }}
+            >
+              <Trash2 size={18} />
+            </IconButton>
+          </Tooltip>
         </div>
       </div>
 
@@ -294,6 +314,16 @@ const NoteDetail = () => {
         note={note}
         isEdit={true}
         categories={categoriesData || []}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        isLoading={deleteNoteMutation.isPending}
+        title="Delete Note"
+        message="Are you sure you want to delete this note? This action cannot be undone."
       />
     </div>
   );
