@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { Avatar, Box, Tooltip } from '@mui/material';
+import { Avatar, Box, Tooltip, IconButton } from '@mui/material';
 import formatDate from '@/utils/formatDate';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -11,7 +11,7 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Pencil, CircleOff, Trash2 } from 'lucide-react';
+import { Pencil, CircleOff, Trash2, Eye } from 'lucide-react';
 import { useTasks } from '@/components/tasks/hooks/useTasks';
 import getMetaOptions from '@/utils/getMetaFields';
 
@@ -41,15 +41,6 @@ const TaskTable = ({
     {
       field: 'subject',
       headerName: 'Subject',
-      flex: 1,
-      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
-      cellClassName: 'text-[#6366F1]',
-      headerAlign: 'center',
-      align: 'center',
-    },
-    {
-      field: 'description',
-      headerName: 'Description',
       flex: 1,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
@@ -209,6 +200,28 @@ const TaskTable = ({
       },
     },
     {
+      field: 'view',
+      headerName: 'View',
+      width: 80,
+      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
+      renderCell: (params) => (
+        <IconButton
+          onClick={(e) => {
+            e.stopPropagation();
+
+            console.log('params.row', params);
+            onRowClick(params);
+          }}
+          className="cursor-pointer"
+        >
+          <Eye className="h-4 w-4" />
+        </IconButton>
+      ),
+    },
+    {
       field: 'edit',
       headerName: 'Edit',
       width: 80,
@@ -219,15 +232,19 @@ const TaskTable = ({
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-center">
           {params?.row?.is_editable ? (
-            <Pencil
+            <IconButton
               onClick={(e) => {
                 e.stopPropagation();
                 handleEdit(params.row);
               }}
-              className="h-4 w-4 cursor-pointer hover:text-blue-500 transition-colors duration-300"
-            />
+              className="cursor-pointer"
+            >
+              <Pencil className="h-4 w-4 text-[#6366F1]" />
+            </IconButton>
           ) : (
-            <CircleOff className="h-4 w-4 cursor-pointer hover:text-blue-500 transition-colors duration-300" />
+            <IconButton className="cursor-pointer">
+              <CircleOff className="h-4 w-4 text-[#6366F1]" />
+            </IconButton>
           )}
         </div>
       ),
@@ -243,15 +260,19 @@ const TaskTable = ({
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-center">
           {params?.row?.is_deletable ? (
-            <Trash2
+            <IconButton
               onClick={(e) => {
                 e.stopPropagation();
                 handleDelete(params.row);
               }}
-              className="h-4 w-4 cursor-pointer hover:text-red-500 transition-colors duration-300"
-            />
+              className="cursor-pointer"
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </IconButton>
           ) : (
-            <CircleOff className="h-4 w-4 cursor-pointer hover:text-blue-500 transition-colors duration-300" />
+            <IconButton className="cursor-pointer">
+              <CircleOff className="h-4 w-4" />
+            </IconButton>
           )}
         </div>
       ),
@@ -311,7 +332,7 @@ const TaskTable = ({
             '& .MuiDataGrid-cell': {
               border: 'none',
               backgroundColor: 'transparent',
-              cursor: 'pointer',
+              // cursor: 'pointer',
             },
             '& .MuiDataGrid-cell:focus': {
               outline: 'none',
@@ -329,13 +350,13 @@ const TaskTable = ({
               marginBottom: '0.5rem',
               overflow: 'hidden',
             },
-            '& .MuiDataGrid-row:hover': {
-              backgroundColor: 'rgba(255, 255, 255, 0.3)',
-              // background:
-              //   'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
-              color: 'white',
-              transition: 'all 0.3s ease-in-out',
-            },
+            // '& .MuiDataGrid-row:hover': {
+            //   backgroundColor: 'rgba(255, 255, 255, 0.3)',
+            //   // background:
+            //   //   'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
+            //   color: 'white',
+            //   transition: 'all 0.3s ease-in-out',
+            // },
 
             // FOOTER
             '& .MuiDataGrid-footerContainer': {
@@ -354,7 +375,6 @@ const TaskTable = ({
           }}
           disableRowSelectionOnClick
           disableSelectionOnClick
-          onRowClick={onRowClick}
         />
       </Box>
     </>
