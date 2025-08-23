@@ -48,9 +48,15 @@ export const endpoints = {
   createComment: 'v2/task/comment/store',
   uploadCommentAttachment: 'v2/task/comment/uploadAttachment',
 
+  // Matter endpoint
   getMatterMeta: 'v2/matter/meta',
   getMatters: 'v2/matter/list',
   matterIntake: 'v2/matter/intake',
+  storeCaseKeyDates: 'v2/matter/case-key-dates/store',
+  addForm: 'v2/matter/form/store',
+  updateForm: 'v2/matter/form/update',
+
+  // Contact endpoint
   getContacts: 'v2/matter/contacts/list',
   getContact: 'v2/matter/contacts/show',
   getContactMeta: 'v2/matter/contacts/meta',
@@ -58,9 +64,7 @@ export const endpoints = {
   searchContact: 'v2/matter/contacts/search',
   updateContact: 'v2/matter/contacts/update',
   deleteContact: 'v2/matter/contacts/delete',
-  storeCaseKeyDates: 'v2/matter/case-key-dates/store',
-  addForm: 'v2/matter/form/store',
-  updateForm: 'v2/matter/form/update',
+
   // Documents endpoints
   getDocumentsMeta: 'v2/documents/meta',
   getFolders: 'v2/documents/folders',

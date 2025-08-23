@@ -2,98 +2,123 @@ import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import {
-  getTaskMeta,
-  getTasks,
-  getTaskById,
-  searchTask,
-  filterTask,
-  createTask,
-  updateTask,
-  updateTaskStatus,
-  deleteTask,
-  uploadTaskFile,
-  deleteTaskFile,
+  getContactMeta,
+  getContacts,
+  getContactById,
+  searchContact,
+  filterContact,
+  createContact,
+  updateContact,
+  deleteContact,
 } from '@/api/api_services/contact';
+import { toast } from 'sonner';
 
-export const useTasks = () => {
+export const useContact = () => {
   const [currentPath, setCurrentPath] = useState([]);
-  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedContact, setSelectedContact] = useState(null);
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
-  // Extract taskId from URL
-  const taskId = searchParams.get('taskId');
+  // Extract contactId from URL
+  const contactId = searchParams.get('contactId');
 
-  // Task meta
-  const { data: tasksMeta = [], isLoading: tasksMetaLoading } = useQuery({
-    queryKey: ['tasksMeta'],
-    queryFn: getTaskMeta,
+  // Contact meta
+  const { data: contactsMeta = [], isLoading: contactsMetaLoading } = useQuery({
+    queryKey: ['contactsMeta'],
+    queryFn: getContactMeta,
     staleTime: 5 * 60 * 1000,
   });
 
-  // All tasks or single task
-  const { data: tasks = [], isLoading: tasksLoading } = useQuery({
-    queryKey: ['tasks', taskId],
-    queryFn: () => (taskId ? getTaskById(taskId) : getTasks()),
+  // All contacts
+  const { data: contacts = [], isLoading: contactsLoading } = useQuery({
+    queryKey: ['contacts'],
+    queryFn: () => getContacts(),
     staleTime: 5 * 60 * 1000,
   });
 
-  // Search tasks
-  const searchTasksMutation = useMutation({
-    mutationFn: (searchData) => searchTask(searchData),
+  // Single contact
+  const { data: contact = {}, isLoading: contactLoading } = useQuery({
+    queryKey: ['contact', contactId],
+    queryFn: () => getContactById(contactId),
+    staleTime: 5 * 60 * 1000,
+    enabled: !!contactId,
   });
 
-  // Filter tasks
-  const filterTasksMutation = useMutation({
-    mutationFn: (queryParams) => filterTask(queryParams),
+  // Search contacts
+  const searchContactsMutation = useMutation({
+    mutationFn: (searchData) => searchContact(searchData),
+  });
+
+  // Filter contacts
+  const filterContactsMutation = useMutation({
+    mutationFn: (queryParams) => filterContact(queryParams),
   });
 
   // Create
-  const createTaskMutation = useMutation({
-    mutationFn: (taskData) => createTask(taskData),
-    onSuccess: () => queryClient.invalidateQueries(['tasks']),
+  const createContactMutation = useMutation({
+    mutationFn: (contactData) => createContact(contactData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['contacts']);
+      toast.success('Contact created successfully!');
+    },
+    onError: (error) => {
+      console.error('Error creating contact:', error);
+      toast.error(error.message || 'Failed to create contact');
+    },
   });
 
   // Update
-  const updateTaskMutation = useMutation({
-    mutationFn: ({ taskId, taskData }) => updateTask(taskId, taskData),
-    onSuccess: () => queryClient.invalidateQueries(['tasks']),
-  });
-
-  // Update status
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ taskId, status }) => updateTaskStatus(taskId, status),
-    onSuccess: () => queryClient.invalidateQueries(['tasks']),
+  const updateContactMutation = useMutation({
+    mutationFn: ({ contactId, contactData }) =>
+      updateContact(contactId, contactData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['contacts']);
+      toast.success('Contact updated successfully!');
+    },
+    onError: (error) => {
+      console.error('Error updating contact:', error);
+      console.log('error', error);
+      toast.error(error.message || 'Failed to update contact');
+    },
   });
 
   // Delete
-  const deleteTaskMutation = useMutation({
-    mutationFn: (taskId) => deleteTask(taskId),
-    onSuccess: () => queryClient.invalidateQueries(['tasks']),
-  });
-
-  // Upload file
-  const uploadFileMutation = useMutation({
-    mutationFn: (fileData) => uploadTaskFile(fileData),
+  const deleteContactMutation = useMutation({
+    mutationFn: (contactId) => deleteContact(contactId),
     onSuccess: () => {
-      if (selectedTask)
-        queryClient.invalidateQueries(['tasks', selectedTask.id]);
+      queryClient.invalidateQueries(['contacts']);
+      toast.success('Contact deleted successfully!');
+    },
+    onError: (error) => {
+      console.error('Error deleting contact:', error);
+      toast.error(error.message || 'Failed to delete contact');
     },
   });
 
-  // Delete file
-  const deleteFileMutation = useMutation({
-    mutationFn: (fileId) => deleteTaskFile(fileId),
-    onSuccess: () => {
-      if (selectedTask)
-        queryClient.invalidateQueries(['tasks', selectedTask.id]);
-    },
-  });
+  const handleSearchContacts = useCallback((searchData) => {
+    searchContactsMutation.mutateAsync(searchData);
+  }, []);
+
+  const handleFilterContacts = useCallback((queryParams) => {
+    filterContactsMutation.mutateAsync(queryParams);
+  }, []);
+
+  const handleCreateContact = useCallback((contactData) => {
+    createContactMutation.mutateAsync(contactData);
+  }, []);
+
+  const handleUpdateContact = useCallback(({ contactId, contactData }) => {
+    updateContactMutation.mutateAsync({ contactId, contactData });
+  }, []);
+
+  const handleDeleteContact = useCallback((contactId) => {
+    deleteContactMutation.mutateAsync(contactId);
+  }, []);
 
   // Navigation (optional – mimic folder-style nav)
-  const navigateToTask = useCallback((task) => {
-    setSelectedTask(task);
-    setCurrentPath((prev) => [...prev, task]);
+  const navigateToContact = useCallback((contact) => {
+    setSelectedContact(contact);
+    setCurrentPath((prev) => [...prev, contact]);
   }, []);
 
   const navigateBack = useCallback(() => {
@@ -116,35 +141,31 @@ export const useTasks = () => {
 
   return {
     // State
-    tasksMeta,
-    tasks,
-    selectedTask,
+    contactsMeta,
+    contacts,
+    contact,
+    selectedContact,
     currentPath,
 
     // Loading
-    tasksMetaLoading,
-    tasksLoading,
+    contactsMetaLoading,
+    contactsLoading,
 
     // Actions
-    navigateToTask,
+    navigateToContact,
     navigateBack,
     navigateToRoot,
 
     // Mutations
-    searchTasks: searchTasksMutation.mutateAsync,
-    filterTasks: filterTasksMutation.mutateAsync,
-    createTask: createTaskMutation.mutateAsync,
-    updateTask: updateTaskMutation.mutateAsync,
-    updateStatus: updateStatusMutation.mutateAsync,
-    deleteTask: deleteTaskMutation.mutateAsync,
-    uploadTaskFile: uploadFileMutation.mutateAsync,
-    deleteTaskFile: deleteFileMutation.mutateAsync,
+    handleSearchContacts,
+    handleFilterContacts,
+    handleCreateContact,
+    handleUpdateContact,
+    handleDeleteContact,
 
     // States
-    isCreating: createTaskMutation.isPending,
-    isUpdating: updateTaskMutation.isPending,
-    isDeleting: deleteTaskMutation.isPending,
-    isUploadingFile: uploadFileMutation.isPending,
-    isDeletingFile: deleteFileMutation.isPending,
+    isCreating: createContactMutation.isPending,
+    isUpdating: updateContactMutation.isPending,
+    isDeleting: deleteContactMutation.isPending,
   };
 };
