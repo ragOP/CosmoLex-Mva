@@ -65,40 +65,28 @@ export const createNote = async (matterSlug, noteData) => {
       );
     }
 
-    const formData = new FormData();
+    // Create JSON payload with attachment_ids
+    const jsonPayload = {
+      title: noteData.title || '',
+      body: noteData.body || '',
+      category_id: noteData.category_id || '',
+      attachment_ids: noteData.attachment_ids || [],
+    };
 
-    // Add basic fields with validation
-    formData.append('title', noteData.title || '');
-    formData.append('body', noteData.body || '');
-    formData.append('category_id', noteData.category_id || '');
-
-    // Add attachments safely
-    if (
-      noteData.attachments &&
-      Array.isArray(noteData.attachments) &&
-      noteData.attachments.length > 0
-    ) {
-      noteData.attachments.forEach((attachment) => {
-        if (attachment && attachment.file) {
-          formData.append(`attachments[]`, attachment.file);
-        }
-      });
-    }
-
-    console.log('Creating note with data:', {
+    console.log('Creating note with JSON data:', {
       matterSlug,
-      title: noteData.title,
-      body: noteData.body,
-      category_id: noteData.category_id,
-      attachmentsCount: noteData.attachments?.length || 0,
+      title: jsonPayload.title,
+      body: jsonPayload.body,
+      category_id: jsonPayload.category_id,
+      attachment_ids: jsonPayload.attachment_ids,
     });
 
     const response = await apiService({
       endpoint: `${endpoints.createNote}/${matterSlug}`,
       method: 'POST',
-      data: formData,
+      data: jsonPayload,
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'application/json',
       },
     });
 
@@ -118,29 +106,29 @@ export const createNote = async (matterSlug, noteData) => {
 // Update note
 export const updateNote = async (noteId, noteData) => {
   try {
-    const formData = new FormData();
+    // Create JSON payload with attachment_ids
+    const jsonPayload = {
+      title: noteData.title || '',
+      body: noteData.body || '',
+      category_id: noteData.category_id || '',
+      attachment_ids: noteData.attachment_ids || [],
+      _method: 'PUT', // Laravel method spoofing
+    };
 
-    // Add basic fields
-    formData.append('title', noteData.title);
-    formData.append('body', noteData.body);
-    formData.append('category_id', noteData.category_id);
-    formData.append('_method', 'PUT'); // Laravel method spoofing
-
-    // Add new attachments
-    if (noteData.attachments && noteData.attachments.length > 0) {
-      noteData.attachments.forEach((attachment) => {
-        if (attachment.file) {
-          formData.append(`attachments[]`, attachment.file);
-        }
-      });
-    }
+    console.log('Updating note with JSON data:', {
+      noteId,
+      title: jsonPayload.title,
+      body: jsonPayload.body,
+      category_id: jsonPayload.category_id,
+      attachment_ids: jsonPayload.attachment_ids,
+    });
 
     const response = await apiService({
       endpoint: `${endpoints.updateNote}/${noteId}`,
       method: 'POST',
-      data: formData,
+      data: jsonPayload,
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'application/json',
       },
     });
 
@@ -190,6 +178,30 @@ export const uploadNoteAttachment = async (payload) => {
     return response.response;
   } catch (error) {
     console.error('Error fetching note attachments:', error);
+    throw error;
+  }
+};
+
+// Delete note attachment
+export const deleteNoteAttachment = async (attachmentId) => {
+  try {
+    const response = await apiService({
+      endpoint: `${endpoints.deleteNoteAttachment}/${attachmentId}`,
+      method: 'DELETE',
+      // data: {
+      //   category_id: '',
+      //   title: '',
+      //   body: '',
+      // },
+    });
+
+    if (response.error) {
+      throw new Error('Failed to delete note attachment');
+    }
+
+    return response.response;
+  } catch (error) {
+    console.error('Error deleting note attachment:', error);
     throw error;
   }
 };

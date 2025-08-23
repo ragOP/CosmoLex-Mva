@@ -52,7 +52,7 @@ const StyledAutocompletePaper = styled(Paper)(() => ({
 
 const FormFields = ({
   label,
-  onChange = () => {},
+  onChange = () => { },
   options = [],
   value: _value = '',
   textFieldProps,
@@ -239,7 +239,7 @@ const FormFields = ({
         )}
         {type === 'dropdown' && (
           <Select
-            value={value || ''}
+            value={value !== null && value !== undefined ? (value === 0 ? '0' : String(value)) : ''}
             onValueChange={(val) => onChange(val)}
             {...textFieldProps}
           >
@@ -255,14 +255,14 @@ const FormFields = ({
                 options.map((i, index) => (
                   <SelectItem
                     key={index}
-                    value={i.value}
+                    value={String(i.value)}
                     disabled={i?.disableProps?.disable || false}
-                    className={`py-2 px-4 ${
-                      i?.disableProps?.disable
+                    className={`py-2 px-4 ${i?.disableProps?.disable
                         ? 'cursor-not-allowed'
                         : 'cursor-pointer'
-                    }`}
+                      }`}
                   >
+                    {/* Debug: {i.label} = {i.value} (type: {typeof i.value}) */}
                     <div className="flex items-center justify-between w-full">
                       <span className="text-[0.9rem]">{i.label}</span>
                       {i?.disableProps?.disableText && (
@@ -329,10 +329,10 @@ const FormFields = ({
               type === 'date'
                 ? 'date'
                 : type === 'time'
-                ? 'time'
-                : type === 'datetime'
-                ? 'datetime-local'
-                : 'text'
+                  ? 'time'
+                  : type === 'datetime'
+                    ? 'datetime-local'
+                    : 'text'
             }
             {...textFieldProps}
           />
@@ -626,9 +626,9 @@ const FormFields = ({
               value={
                 value?.startDate && value?.endDate
                   ? `${format(
-                      new Date(value.startDate),
-                      'dd/MM/yyyy'
-                    )} - ${format(new Date(value.endDate), 'dd/MM/yyyy')}`
+                    new Date(value.startDate),
+                    'dd/MM/yyyy'
+                  )} - ${format(new Date(value.endDate), 'dd/MM/yyyy')}`
                   : ''
               }
               size="small"
@@ -644,7 +644,7 @@ const FormFields = ({
               error={error}
               {...textFieldProps}
               onClick={handleOpenPopover}
-              // onClick={(e) => e.preventDefault()} // Prevent focus on the text field
+            // onClick={(e) => e.preventDefault()} // Prevent focus on the text field
             />
           </>
         )}

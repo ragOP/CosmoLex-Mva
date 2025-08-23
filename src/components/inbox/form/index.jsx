@@ -125,10 +125,12 @@ const Form = () => {
     setFormData(initialData);
   }, [formResponse, mode, caseType]);
 
+  console.log('formData', formData);
+
   // Handle field value changes
   const handleFieldChange = (fieldName, value) => {
     const field = formFields.find((f) => f.name === fieldName);
-
+    console.log("FIELD NAME", fieldName, value, typeof value);
     let processedValue = value;
 
     // Handle date field conversion
@@ -141,6 +143,21 @@ const Form = () => {
         const date = new Date(value);
         if (!isNaN(date.getTime())) {
           processedValue = formatDateForAPI(date);
+        }
+      }
+    }
+
+    // Handle dropdown fields with YES_NO options - ensure numeric values
+    if (field && field.type === 'dropdown' && field.options && field.options.length > 0) {
+      // Check if this is a YES_NO dropdown by looking at the first option value
+      const firstOption = field.options[0];
+      if (firstOption && (firstOption.value === 1 || firstOption.value === 0)) {
+        // This is a YES_NO dropdown, ensure the value is a number
+        if (value !== null && value !== undefined && value !== '') {
+          processedValue = Number(value);
+        } else if (value === 0) {
+          // Handle the case where value is 0 (which is falsy but valid)
+          processedValue = 0;
         }
       }
     }
@@ -335,12 +352,12 @@ const Form = () => {
                           sx={{
                             ...(isTextarea
                               ? {
-                                  pageBreakBefore: 'always',
-                                  breakBefore: 'always',
-                                  clear: 'both',
-                                  display: 'block',
-                                  width: '100%',
-                                }
+                                pageBreakBefore: 'always',
+                                breakBefore: 'always',
+                                clear: 'both',
+                                display: 'block',
+                                width: '100%',
+                              }
                               : {}),
                             '&.MuiGrid-item': {
                               flexBasis: 'auto',
@@ -361,7 +378,7 @@ const Form = () => {
                               options={field.options}
                               maxLength={field.maxLength}
                               required={field.required}
-                              value={formData[field.name] || ''}
+                              value={formData[field.name] !== null && formData[field.name] !== undefined ? formData[field.name] : ''}
                               onChange={(value) =>
                                 handleFieldChange(field.name, value)
                               }

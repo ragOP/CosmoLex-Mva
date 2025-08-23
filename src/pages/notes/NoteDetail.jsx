@@ -123,17 +123,11 @@ const NoteDetail = () => {
     return <File className="h-5 w-5 text-gray-500" />;
   };
 
-  const formatFileSize = (bytes) => {
-    if (!bytes) return 'Unknown size';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
+
 
   const handleAttachmentClick = (attachment) => {
-    if (attachment.url) {
-      window.open(attachment.url, '_blank');
+    if (attachment.file_path) {
+      window.open(attachment.file_path, '_blank');
     }
   };
 
@@ -282,17 +276,17 @@ const NoteDetail = () => {
                     className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200"
                   >
                     <div className="flex-shrink-0">
-                      {attachment.type?.startsWith('image/') &&
-                      attachment.url ? (
+                      {attachment.file_type?.startsWith('image/') &&
+                      attachment.file_path ? (
                         <img
-                          src={attachment.url}
-                          alt={attachment.name}
+                          src={attachment.file_path}
+                          alt={attachment.file_name}
                           className="w-12 h-12 object-cover rounded border border-gray-200 cursor-pointer"
                           onClick={() => handleAttachmentClick(attachment)}
                         />
                       ) : (
                         <div className="w-12 h-12 bg-white rounded border border-gray-200 flex items-center justify-center">
-                          {getFileIcon(attachment.type)}
+                          {getFileIcon(attachment.file_type)}
                         </div>
                       )}
                     </div>
@@ -300,14 +294,13 @@ const NoteDetail = () => {
                     <div className="flex-1 min-w-0">
                       <p
                         className="font-medium text-[#40444D] truncate text-sm"
-                        title={attachment.name}
+                        title={attachment.file_name}
                       >
-                        {attachment.name || `Attachment ${index + 1}`}
+                        {attachment.file_name || `Attachment ${index + 1}`}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {formatFileSize(attachment.size)}
-                        {attachment.type &&
-                          ` • ${attachment.type.split('/')[1]?.toUpperCase()}`}
+                        {attachment.file_type &&
+                          `${attachment.file_type.split('/')[1]?.toUpperCase()}`}
                       </p>
                     </div>
 

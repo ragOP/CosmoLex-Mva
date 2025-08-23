@@ -175,7 +175,7 @@ const CreateFeeSplitDialog = ({
                                 render={({ field }) => (
                                     <Select
                                         onValueChange={field.onChange}
-                                        value={field.value || ''}
+                                        value={field.value ? field.value.toString() : ''}
                                         disabled={isLoading}
                                     >
                                         <SelectTrigger className={`h-12 w-full ${errors.subfirm_id ? 'border-red-500' : 'border-gray-300'}`}>
@@ -232,7 +232,7 @@ const CreateFeeSplitDialog = ({
                                     render={({ field }) => (
                                         <Select
                                             onValueChange={field.onChange}
-                                            value={field.value || ''}
+                                            value={field.value ? field.value.toString() : ''}
                                             disabled={isLoading}
                                         >
                                             <SelectTrigger className={`h-12 w-full ${errors.override_type_id ? 'border-red-500' : 'border-gray-300'}`}>
@@ -315,7 +315,7 @@ const CreateFeeSplitDialog = ({
                                     render={({ field }) => (
                                         <Select
                                             onValueChange={field.onChange}
-                                            value={field.value || ''}
+                                            value={field.value ? field.value.toString() : ''}
                                             disabled={isLoading}
                                         >
                                             <SelectTrigger className={`h-12 w-full ${errors.firm_agreement_id ? 'border-red-500' : 'border-gray-300'}`}>
@@ -370,7 +370,7 @@ const CreateFeeSplitDialog = ({
                                     render={({ field }) => (
                                         <Select
                                             onValueChange={field.onChange}
-                                            value={field.value || ''}
+                                            value={field.value ? field.value.toString() : ''}
                                             disabled={isLoading}
                                         >
                                             <SelectTrigger className={`h-12 w-full ${errors.referral_status_id ? 'border-red-500' : 'border-gray-300'}`}>
