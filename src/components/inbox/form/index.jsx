@@ -27,14 +27,12 @@ const Form = () => {
 
   // Get case type from matter with proper default
   const caseType = matter?.case_type || 'Auto Accident';
-  console.log('caseType', caseType);
 
   // Mode state that depends on API response, not slugId
   const [mode, setMode] = useState('add');
 
   // Get form fields based on case type
   const formFields = getFormFields(caseType);
-  console.log('formFields', formFields);
 
   // Form state
   const [formData, setFormData] = useState({});
@@ -53,27 +51,6 @@ const Form = () => {
     cacheTime: 10 * 60 * 1000, // 10 minutes
   });
 
-  // Determine mode based on API response
-  useEffect(() => {
-    if (formResponse) {
-      if (
-        formResponse.response.Apistatus === false &&
-        formResponse.response.message === 'Case not found.'
-      ) {
-        setMode('add');
-      } else if (
-        formResponse.response.Apistatus &&
-        formResponse.response.data
-      ) {
-        setMode('edit');
-      } else {
-        setMode('add');
-      }
-    } else {
-      setMode('add');
-    }
-  }, [formResponse]);
-
   // Date format conversion functions
   const formatDateForAPI = (dateValue) => {
     if (!dateValue) return '';
@@ -91,17 +68,34 @@ const Form = () => {
     return date;
   };
 
-  // Initialize form data based on API response or defaults
+  // Handle mode determination and form data initialization together
   useEffect(() => {
+    console.log(">>>> formResponse", formResponse)
+
+    if (!formResponse) {
+      setMode('add');
+      return;
+    }
+
+
     let initialData;
+    let newMode;
 
     if (
-      mode === 'edit' &&
-      formResponse?.response.status === 200 &&
-      formResponse?.response.data
+      formResponse.Apistatus === false &&
+      formResponse.message === 'Case not found.'
     ) {
-      // Use API data if form exists
-      const apiFormData = formResponse.response.data;
+      newMode = 'add';
+      initialData = getInitialFormData(caseType, null, 'add');
+    } else if (
+      formResponse.Apistatus &&
+      formResponse.data
+    ) {
+      newMode = 'edit';
+
+      // Use API data for edit mode
+      const apiFormData = formResponse.data;
+      console.log('Using API data for edit mode:', apiFormData);
 
       // Convert date fields from API format to form format
       const processedData = {};
@@ -117,20 +111,21 @@ const Form = () => {
       });
 
       initialData = processedData;
+      console.log('Processed form data:', processedData);
     } else {
-      // Use default initialization for add mode or when no data
-      initialData = getInitialFormData(caseType, null, mode);
+      newMode = 'add';
+      initialData = getInitialFormData(caseType, null, 'add');
     }
 
+    setMode(newMode);
     setFormData(initialData);
-  }, [formResponse, mode, caseType]);
+  }, [formResponse, caseType]);
 
   console.log('formData', formData);
 
   // Handle field value changes
   const handleFieldChange = (fieldName, value) => {
     const field = formFields.find((f) => f.name === fieldName);
-    console.log("FIELD NAME", fieldName, value, typeof value);
     let processedValue = value;
 
     // Handle date field conversion
@@ -269,7 +264,6 @@ const Form = () => {
 
   // Group fields by section
   const sections = groupFieldsBySection(formFields);
-  console.log('sections', sections);
 
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl overflow-hidden no-scrollbar p-4">
