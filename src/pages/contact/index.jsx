@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Button from '@/components/Button';
 import ContactDialog from '@/components/contact/components/ContactDialog';
 // import ShowContactDialog from '@/components/contact/components/ShowContactDialog';
-// import DeleteContactDialog from '@/components/contact/components/DeleteContactDialog';
+import DeleteContactDialog from '@/components/contact/components/DeleteContactDialog';
 import ContactTable from '@/components/contact/components/ContactTable';
 import { Loader2, Plus } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -15,7 +15,6 @@ const ContactPage = () => {
   const [open, setOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState(null);
   const [selectedContactId, setSelectedContactId] = useState(null);
-  const [showViewDialog, setShowViewDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
@@ -27,10 +26,8 @@ const ContactPage = () => {
     matter = useMatter();
   }
 
-  const { contacts, contactsLoading } = useContact();
-
-  console.log('contacts >>>', contacts);
-  console.log('contactsLoading >>>', contactsLoading);
+  const { contacts, contactsLoading, handleDeleteContact, isDeleting } =
+    useContact();
 
   const handleNavigate = (contactId) => {
     if (matterSlug) {
@@ -102,18 +99,6 @@ const ContactPage = () => {
         }}
       />
 
-      {/* View */}
-      {/* <ShowContactDialog
-        open={showViewDialog}
-        onClose={() => {
-          // remove taskId from url params
-          handleNavigate(null);
-          setShowViewDialog(false);
-        }}
-      />
-
-      <TaskDialog open={open} onClose={() => setOpen(false)} mode="create" /> */}
-
       <ContactDialog
         open={open}
         setOpen={setOpen}
@@ -129,13 +114,17 @@ const ContactPage = () => {
       />
 
       {/* Delete */}
-      {/* <DeleteTaskDialog
+      <DeleteContactDialog
         open={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
-        task={selectedTask}
-        onConfirm={() => handleDelete(selectedTask?.id)}
+        contact={selectedContact}
+        onConfirm={() => {
+          handleDeleteContact(selectedContact?.id);
+          setShowDeleteConfirm(false);
+          handleNavigate(null);
+        }}
         isDeleting={isDeleting}
-      /> */}
+      />
     </div>
   );
 };
