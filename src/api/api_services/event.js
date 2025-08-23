@@ -8,7 +8,7 @@ export const getEventMeta = async () => {
     method: 'GET',
   });
   if (response.error) throw new Error('Failed to fetch event meta');
-  return response.response?.event_categories || [];
+  return response.response || [];
 };
 
 // Get all events
@@ -18,7 +18,7 @@ export const getEvents = async () => {
     method: 'GET',
   });
   if (response.error) throw new Error('Failed to fetch events');
-  return response.response?.data || [];
+  return response?.response?.events || [];
 };
 
 // Get event by id
@@ -28,7 +28,7 @@ export const getEventById = async (id) => {
     method: 'GET',
   });
   if (response.error) throw new Error('Failed to fetch event');
-  return response.response?.data || {};
+  return response?.response?.event || {};
 };
 
 // Search event
@@ -93,7 +93,7 @@ export const uploadEventFile = async (fileData) => {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   if (response.error) throw new Error('Failed to upload event file');
-  return response.response?.data;
+  return response?.response;
 };
 
 // Delete event file
@@ -103,5 +103,5 @@ export const deleteEventFile = async (fileId) => {
     method: 'DELETE',
   });
   if (response.error) throw new Error('Failed to delete event file');
-  return response.response?.data;
+  return response.response;
 };

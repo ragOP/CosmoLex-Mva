@@ -30,7 +30,7 @@ const TasksPage = () => {
           onClick={() => navigate(`/dashboard/inbox/overview/create`)}
           className="cursor-pointer max-w-48"
           icon={Plus}
-          iconPosition='left'
+          iconPosition="left"
         >
           Create Matter
         </Button>

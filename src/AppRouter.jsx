@@ -35,7 +35,7 @@ const InboxPage = lazy(() => import('./components/inbox/InboxPage'));
 const Form = lazy(() => import('./components/inbox/form'));
 const KeyDates = lazy(() => import('./components/inbox/KeyDates'));
 const Notes = () => <NotesPage />;
-const Event = () => <ErrorPage pageName="Event" />;
+const Event = () => <CalendarPage />;
 const Tasks = () => <ErrorPage pageName="Tasks" />;
 const Documentation = () => <DocumentationPage />;
 const CommunicationPage = lazy(() =>
@@ -71,7 +71,7 @@ const AppRouter = () => (
           <Route path="matter" element={<MatterPage />} />
           <Route path="user-management" element={<UserManagementPage />} />
           <Route path="bulk-import" element={<BulkImportPage />} />
-          <Route path="calendar/:id" element={<CalendarPage />} />
+          <Route path="event/" element={<CalendarPage />} />
           <Route path="notes" element={<NotesPage />} />
           <Route path="notes/:noteId" element={<NoteDetailPage />} />
           <Route path="documentation" element={<Documentation />} />
@@ -90,7 +90,7 @@ const AppRouter = () => (
             <Route path="form/" element={<Form />} />
             <Route path="key-dates/" element={<KeyDates />} />
             <Route path="notes/" element={<Notes />} />
-            <Route path="event/" element={<Event />} />
+            <Route path="event/" element={<CalendarPage />} />
             <Route path="tasks/" element={<TasksPage />} />
             <Route path="documentation/" element={<Documentation />} />
             <Route path="communication/" element={<Communication />} />

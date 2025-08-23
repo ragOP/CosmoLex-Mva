@@ -12,13 +12,12 @@ const CalendarWrapper = ({
   setEvents,
   handleShowEvent,
   setOpen,
-  users,
-  selectedUser,
-  setSelectedUser,
   onDateRangeSelect,
 }) => {
   const calendarRef = useRef(null);
   const [currentView, setCurrentView] = React.useState('dayGridMonth');
+
+  const [label, setLabel] = React.useState('');
 
   // Convert events to FullCalendar format
   const fullCalendarEvents = events.map((event) => ({
@@ -50,7 +49,10 @@ const CalendarWrapper = ({
 
   // Handle event click
   const handleEventClick = (clickInfo) => {
-    const event = events.find((e) => e.id === clickInfo.event.id);
+    console.log('clickInfo >>>', clickInfo?.event?.id);
+    console.log('events >>>', events);
+    const event = events.find((e) => e.id === parseInt(clickInfo?.event?.id));
+    console.log('event >>>', event);
     if (event) {
       handleShowEvent(event);
     }
@@ -86,6 +88,51 @@ const CalendarWrapper = ({
     );
   };
 
+  const handleDatesSet = (arg) => {
+    console.log('[handleDatesSet] new title:', arg.view.title);
+    setLabel(arg.view.title);
+    setCurrentView(arg.view.type); // 🔑 update state when FC changes view
+  };
+  const handleNavigate = (action) => {
+    console.log('[handleNavigate] called with:', action);
+
+    const calendarApi = calendarRef.current?.getApi();
+    console.log('[handleNavigate] calendarApi:', calendarApi);
+
+    if (!calendarApi) return;
+
+    if (action === 'TODAY') {
+      console.log('[handleNavigate] going to TODAY');
+      calendarApi.today();
+    } else if (action === 'NEXT') {
+      console.log('[handleNavigate] going to NEXT');
+      calendarApi.next();
+    } else if (action === 'PREV') {
+      console.log('[handleNavigate] going to PREV');
+      calendarApi.prev();
+    }
+
+    console.log('[handleNavigate] new date range:', calendarApi.view?.title);
+  };
+
+  const handleViewChange = (view) => {
+    console.log('[handleViewChange] called with:', view);
+    const calendarApi = calendarRef.current?.getApi();
+    console.log('[handleViewChange] calendarApi:', calendarApi);
+
+    if (calendarApi) {
+      console.log('[handleViewChange] attempting to change view to:', view);
+      calendarApi.changeView(view);
+      console.log(
+        '[handleViewChange] active view after change:',
+        calendarApi.view.type
+      );
+
+      // 🔑 keep React state in sync with FullCalendar
+      setCurrentView(calendarApi.view.type);
+    }
+  };
+
   return (
     <div className="h-full w-full p-4">
       <div className="h-full bg-gradient-to-br from-white/90 via-white/80 to-blue-50/30 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/30 relative overflow-hidden">
@@ -97,13 +144,11 @@ const CalendarWrapper = ({
         {/* Custom Toolbar */}
         <div className="relative px-6 pt-4 pb-2 border-b border-white/20 bg-gradient-to-r from-white/40 to-transparent backdrop-blur-sm">
           <CustomToolBar
+            onNavigate={handleNavigate}
+            onView={handleViewChange}
+            label={label}
+            view={currentView}
             setOpen={setOpen}
-            users={users}
-            selectedUser={selectedUser}
-            setSelectedUser={setSelectedUser}
-            calendarRef={calendarRef}
-            currentView={currentView}
-            onViewChange={setCurrentView}
           />
         </div>
 
@@ -139,6 +184,7 @@ const CalendarWrapper = ({
             dayMaxEvents={true}
             weekends={true}
             events={fullCalendarEvents}
+            datesSet={handleDatesSet}
             select={handleDateSelect}
             eventClick={handleEventClick}
             eventDrop={handleEventDrop}

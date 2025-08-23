@@ -50,7 +50,7 @@ const sidebarItems = [
     iconType: 'dashboard',
   },
   {
-    id: '/dashboard/calendar/1',
+    id: '/dashboard/event',
     label: ' Event Calendar',
     type: 'link',
     iconType: 'calendar',

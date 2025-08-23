@@ -2,35 +2,45 @@ import EventPreviewDialog from '@/components/calendar/EventPreviewDialog';
 import { useState, useEffect } from 'react';
 import CalendarWrapper from '@/components/calendar/Calendar';
 import NewEventDialog from '@/components/calendar/NewEventDialog';
-import getEventsUserList from './helpers/getEventsUserList';
-import getUserEvents from './helpers/getUserEvents';
 import createEvent from './helpers/createEvent';
 import getEvent from './helpers/getEvent';
-import moment from 'moment';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useMatter } from '@/components/inbox/MatterContext';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEvents } from '@/components/calendar/hooks/useEvent';
+import moment from 'moment';
 
 const CalendarPage = () => {
-  const params = useParams();
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+
+  // Dialog states
   const [open, setOpen] = useState(false);
-  const [users, setUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
+
+  // Event states
   const [event, setEvent] = useState(null);
   const [events, setEvents] = useState([]);
   const [selectedDateRange, setSelectedDateRange] = useState(null);
 
-  const handleShowEvent = async (event) => {
-    const res = await getEvent(event.id);
-    setIsOpen(true);
-    setEvent(res);
-  };
+  // use matter
+  // Get matter slug from URL params (assuming notes are matter-specific)
+  const matterSlug = searchParams.get('slugId');
 
-  const getUsersEvents = async (userId) => {
-    try {
-      const events = await getUserEvents(userId);
-      const mappedEvents = events.map((event) => ({
+  let matter = null;
+  if (matterSlug) {
+    matter = useMatter();
+  }
+
+  // Use events
+  const {
+    events: allEvents,
+    event: singleEvent,
+    eventLoading,
+    eventsLoading,
+  } = useEvents();
+
+  useEffect(() => {
+    if (!eventsLoading) {
+      const mappedEvents = allEvents.map((event) => ({
         id: event.id,
         title: event.title,
         start: moment(event.start_time).toDate(),
@@ -38,52 +48,48 @@ const CalendarPage = () => {
         priority: event.priority,
       }));
       setEvents(mappedEvents);
-    } catch (err) {
-      console.error('Error fetching user events:', err);
     }
+
+    if (!eventLoading && singleEvent) {
+      setEvent(singleEvent);
+      setOpen(true);
+    }
+  }, [allEvents, eventsLoading, singleEvent, eventLoading]);
+
+  const handleShowEvent = async (event) => {
+    handleNavigate(event.id);
   };
 
-  const handleCreateEvent = async (data) => {
-    try {
-      const res = await createEvent(data);
-      console.log(res);
-    } catch (err) {
-      console.error(err?.message || 'Failed to create event');
+  const handleNavigate = (eventId) => {
+    if (matterSlug) {
+      if (eventId) {
+        navigate(
+          `/dashboard/inbox/event?slugId=${matterSlug}&eventId=${eventId}`,
+          {
+            replace: false,
+          }
+        );
+      } else {
+        navigate(`/dashboard/inbox/event?slugId=${matterSlug}`, {
+          replace: false,
+        });
+      }
+    } else {
+      if (eventId) {
+        navigate(`/dashboard/event?eventId=${eventId}`, {
+          replace: false,
+        });
+      } else {
+        navigate(`/dashboard/event`, {
+          replace: false,
+        });
+      }
     }
   };
 
   const handleDateRangeSelect = (dateRange) => {
     setSelectedDateRange(dateRange);
   };
-
-  useEffect(() => {
-    setSelectedUser(params.id || 1);
-    getEventsUserList().then((usersData) => {
-      setUsers(usersData);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!selectedUser) return;
-    navigate(`/dashboard/calendar/${selectedUser}`);
-    getUsersEvents(selectedUser);
-  }, [selectedUser]);
-
-  // const {
-  // events,
-  //   eventsLoading,
-  //   createEvent,
-  //   updateEvent,
-  //   deleteEvent,
-  //   deleteReminder,
-  //   getEvent,
-  //   getEvents,
-  //   getEventsUserList,
-  //   getUsersEvents,
-  //   searchEvent,
-  //   uploadEventFile,
-  //   deleteEventFile,
-  // } = useEvents();
 
   return (
     <div className="h-full w-full">
@@ -94,27 +100,29 @@ const CalendarPage = () => {
         NewEventDialog={NewEventDialog}
         open={open}
         setOpen={setOpen}
-        users={users}
-        selectedUser={selectedUser}
-        setSelectedUser={setSelectedUser}
         onDateRangeSelect={handleDateRangeSelect}
       />
 
-      <EventPreviewDialog
+      {/* <EventPreviewDialog
         event={event}
         open={isOpen}
         onClose={() => setIsOpen(false)}
-      />
+      /> */}
 
       <NewEventDialog
         open={open}
-        onClose={() => setOpen(false)}
-        onSubmit={(data) => {
-          console.log(data);
-          handleCreateEvent(data);
-          setOpen(false);
-        }}
+        onClose={
+          event
+            ? () => {
+                setOpen(false);
+                setEvent(null);
+                handleNavigate(null);
+              }
+            : () => setOpen(false)
+        }
         selectedDateRange={selectedDateRange}
+        event={event ? event : null}
+        mode={event ? 'update' : 'create'}
       />
     </div>
   );
