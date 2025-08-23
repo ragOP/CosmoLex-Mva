@@ -81,4 +81,13 @@ export const endpoints = {
   getNotesMeta: 'v2/matter/notes/meta',
   uploadNoteAttachment: 'v2/matter/notes/uploadAttachment',
   deleteNoteAttachment: 'v2/matter/notes/deleteAttachment',
+  
+  // Users endpoints
+  getUsersMeta: 'v2/setup/users/meta',
+  getUsers: 'v2/setup/users/list',
+  getUser: 'v2/setup/users/show',
+  createUser: 'v2/setup/users/store',
+  updateUser: 'v2/setup/users/update',
+  deleteUser: 'v2/setup/users/delete',
+  searchUser: 'v2/setup/users/search',
 };

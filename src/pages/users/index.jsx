@@ -1,83 +1,61 @@
 import React, { useState } from 'react';
 import Button from '@/components/Button';
-// import TaskDialog from '@/components/dialogs/TaskDialog';
-// import ShowTaskDialog from '@/components/tasks/ShowTaskDialog';
-// import DeleteTaskDialog from '@/components/tasks/DeleteTaskDialog';
-// import TaskTable from '@/components/tasks/TaskTable';
+import UserDialog from '@/components/dialogs/UserDialog';
+import ShowUserDialog from '@/components/users/ShowUserDialog';
+import DeleteUserDialog from '@/components/users/DeleteUserDialog';
+import UsersTable from '@/components/users/UsersTable';
 import { Loader2, Plus } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-// import { useTasks } from '@/components/tasks/hooks/useTasks';
-// import { useMatter } from '@/components/inbox/MatterContext';
+import { useNavigate } from 'react-router-dom';
+import { useUsers } from '@/components/users/hooks/useUsers';
 
 const UsersPage = () => {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  //   const [open, setOpen] = useState(false);
-  //   const [selectedTask, setSelectedTask] = useState(null);
-  //   const [selectedTaskId, setSelectedTaskId] = useState(null);
-  //   const [showViewDialog, setShowViewDialog] = useState(false);
-  //   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  //   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
-  // Get matter slug from URL params (assuming notes are matter-specific)
-  //   const matterSlug = searchParams.get('slugId');
-
-  //   let matter = null;
-  //   if (matterSlug) {
-  //     matter = useMatter();
-  //   }
-  //   const { tasks, tasksLoading, updateStatus, deleteTask, isDeleting } =
-  //     useTasks();
+  const { users, usersLoading, deleteUser, isDeleting, fetchUser, isFetchingUser } = useUsers();
 
   // Handlers
-  //   const handleDelete = (id) => {
-  //     deleteTask(id).then(() => setShowDeleteConfirm(false));
-  //   };
+  const handleDelete = async () => {
+    if (!selectedUser) return;
+    
+    try {
+      await deleteUser(selectedUser.id);
+      setShowDeleteConfirm(false);
+      setSelectedUser(null);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    }
+  };
 
-  //   const handleUpdateTaskStatus = (id, status) =>
-  //     updateStatus({ taskId: id, status_id: parseInt(status) });
+  const handleNavigate = (userId) => {
+    if (userId) {
+      navigate(`/dashboard/users?userId=${userId}`, {
+        replace: false,
+      });
+    } else {
+      navigate(`/dashboard/users`, {
+        replace: false,
+      });
+    }
+  };
 
-  //   const handleNavigate = (taskId) => {
-  //     if (matterSlug) {
-  //       if (taskId) {
-  //         navigate(
-  //           `/dashboard/inbox/tasks?slugId=${matterSlug}&taskId=${taskId}`,
-  //           {
-  //             replace: false,
-  //           }
-  //         );
-  //       } else {
-  //         navigate(`/dashboard/inbox/tasks?slugId=${matterSlug}`, {
-  //           replace: false,
-  //         });
-  //       }
-  //     } else {
-  //       if (taskId) {
-  //         navigate(`/dashboard/tasks?taskId=${taskId}`, {
-  //           replace: false,
-  //         });
-  //       } else {
-  //         navigate(`/dashboard/tasks`, {
-  //           replace: false,
-  //         });
-  //       }
-  //     }
-  //   };
-
-  //   if (tasksLoading) {
-  //     return (
-  //       <div className="flex items-center justify-center h-screen">
-  //         <Loader2 className="w-12 h-12 animate-spin" />
-  //       </div>
-  //     );
-  //   }
+  if (usersLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-12 h-12 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 h-full w-full p-4">
       <div className="flex justify-between w-full items-center">
         <p className="text-2xl font-bold">
-          Users
-          {/* ({users?.length || 0}) */}
+          Users ({users?.length || 0})
         </p>
         <Button
           onClick={() => setOpen(true)}
@@ -89,58 +67,68 @@ const UsersPage = () => {
         </Button>
       </div>
 
-      {/* <TaskTable
-        tasks={tasks || []}
-        handleUpdateTaskStatus={handleUpdateTaskStatus}
-        onRowClick={(params) => {
-          // append taskId to url params
-          handleNavigate(params.row.id);
-          setSelectedTaskId(params.row.id);
-          setSelectedTask(params.row);
-          setShowViewDialog(true);
+      <UsersTable
+        users={users || []}
+        onRowClick={async (params) => {
+          try {
+            // Fetch user details from API
+            const response = await fetchUser(params.row.id);
+            // Set the detailed user data from API response
+            setSelectedUser(response.data);
+            setShowViewDialog(true);
+            // append userId to url params
+            handleNavigate(params.row.id);
+          } catch (error) {
+            console.error('Error fetching user details:', error);
+            // Fallback to using the table row data if API fails
+            setSelectedUser(params.row);
+            setShowViewDialog(true);
+            handleNavigate(params.row.id);
+          }
         }}
-        handleEdit={(task) => {
-          handleNavigate(task.id);
-          setSelectedTaskId(task.id);
-          setSelectedTask(task);
+        handleEdit={(user) => {
+          handleNavigate(user.id);
+          setSelectedUser(user);
           setShowUpdateDialog(true);
         }}
-        handleDelete={(task) => {
-          setSelectedTask(task);
+        handleDelete={(user) => {
+          setSelectedUser(user);
           setShowDeleteConfirm(true);
         }}
-      /> */}
+      />
 
       {/* View */}
-      {/* <ShowTaskDialog
+      <ShowUserDialog
         open={showViewDialog}
         onClose={() => {
-          // remove taskId from url params
+          // remove userId from url params
           handleNavigate(null);
           setShowViewDialog(false);
         }}
-      /> */}
+        user={selectedUser}
+        isLoading={isFetchingUser}
+      />
 
-      {/* <TaskDialog open={open} onClose={() => setOpen(false)} mode="create" /> */}
+      <UserDialog open={open} onClose={() => setOpen(false)} mode="create" />
 
-      {/* <TaskDialog
+      <UserDialog
         open={showUpdateDialog}
         onClose={() => {
           setShowUpdateDialog(false);
           handleNavigate(null);
         }}
-        task={selectedTask}
+        user={selectedUser}
         mode="update"
-      /> */}
+      />
 
       {/* Delete */}
-      {/* <DeleteTaskDialog
+      <DeleteUserDialog
         open={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
-        task={selectedTask}
-        onConfirm={() => handleDelete(selectedTask?.id)}
+        user={selectedUser}
+        onConfirm={handleDelete}
         isDeleting={isDeleting}
-      /> */}
+      />
     </div>
   );
 };
