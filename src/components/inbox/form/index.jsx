@@ -70,7 +70,6 @@ const Form = () => {
 
   // Handle mode determination and form data initialization together
   useEffect(() => {
-    console.log(">>>> formResponse", formResponse)
 
     if (!formResponse) {
       setMode('add');
@@ -95,7 +94,6 @@ const Form = () => {
 
       // Use API data for edit mode
       const apiFormData = formResponse.data;
-      console.log('Using API data for edit mode:', apiFormData);
 
       // Convert date fields from API format to form format
       const processedData = {};

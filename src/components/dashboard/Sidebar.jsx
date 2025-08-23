@@ -126,6 +126,18 @@ const sidebarItems = [
     iconType: 'tasks',
   },
   {
+    id: '/dashboard/agenda',
+    label: 'Agenda',
+    type: 'link',
+    iconType: 'calendar',
+  },
+  {
+    id: '/dashboard/advanced-search',
+    label: 'Advanced Search',
+    type: 'link',
+    iconType: 'data',
+  },
+  {
     id: '/dashboard/inbox',
     label: 'Inbox',
     type: 'link',
