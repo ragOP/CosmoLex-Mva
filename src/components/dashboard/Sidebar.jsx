@@ -15,6 +15,7 @@ import {
   Activity,
   FormInput,
   StickyNote,
+  User,
 } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -39,6 +40,7 @@ const typeToIcon = {
   documentation: FileText,
   communication: MessageSquare,
   finance: DollarSign,
+  users: User,
   'activity-logs': Activity,
 };
 
@@ -142,6 +144,12 @@ const sidebarItems = [
     label: 'Communication',
     type: 'link',
     iconType: 'communication',
+  },
+  {
+    id: '/dashboard/users',
+    label: 'Users',
+    type: 'link',
+    iconType: 'users',
   },
 
   // {
