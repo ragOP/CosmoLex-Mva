@@ -11,6 +11,7 @@ const InboxPage = () => {
 
   const searchParams = new URLSearchParams(window.location.search);
   const slugId = searchParams.get('slugId');
+  console.log('slugId >>>', slugId);
 
   const { data: matter } = useQuery({
     queryKey: ['matters', slugId],
@@ -27,7 +28,7 @@ const InboxPage = () => {
   }, [location]);
 
   return (
-    <MatterProvider matter={matter} matterMeta={matterMeta}>
+    <MatterProvider matter={matter} matterMeta={matterMeta} matterSlug={slugId}>
       <Outlet />
     </MatterProvider>
   );

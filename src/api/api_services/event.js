@@ -18,7 +18,7 @@ export const getEvents = async () => {
     method: 'GET',
   });
   if (response.error) throw new Error('Failed to fetch events');
-  return response.response?.data || [];
+  return response?.response?.events || [];
 };
 
 // Get event by id
@@ -93,7 +93,7 @@ export const uploadEventFile = async (fileData) => {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   if (response.error) throw new Error('Failed to upload event file');
-  return response.response?.data;
+  return response?.response;
 };
 
 // Delete event file

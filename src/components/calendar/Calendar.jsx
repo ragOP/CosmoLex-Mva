@@ -12,9 +12,6 @@ const CalendarWrapper = ({
   setEvents,
   handleShowEvent,
   setOpen,
-  users,
-  selectedUser,
-  setSelectedUser,
   onDateRangeSelect,
 }) => {
   const calendarRef = useRef(null);
@@ -149,9 +146,6 @@ const CalendarWrapper = ({
             label={label}
             view={currentView}
             setOpen={setOpen}
-            users={users}
-            selectedUser={selectedUser}
-            setSelectedUser={setSelectedUser}
           />
         </div>
 

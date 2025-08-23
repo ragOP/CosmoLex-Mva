@@ -32,10 +32,19 @@ export const useEvents = () => {
   });
   console.log('eventsMeta >>>', eventsMeta);
 
-  // All events or single event
+  // All events
   const { data: events = [], isLoading: eventsLoading } = useQuery({
-    queryKey: ['events', eventId],
-    queryFn: () => (eventId ? getEventById(eventId) : getEvents()),
+    queryKey: ['events'],
+    queryFn: () => getEvents(),
+    staleTime: 5 * 60 * 1000,
+  });
+  console.log('events from hook >>>', events);
+
+  // single event
+  const { data: event = null, isLoading: eventLoading } = useQuery({
+    queryKey: ['event', eventId],
+    queryFn: () => getEventById(eventId),
+    enabled: !!eventId,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -89,11 +98,10 @@ export const useEvents = () => {
   const uploadFileMutation = useMutation({
     mutationFn: (fileData) => uploadEventFile(fileData),
     onSuccess: () => {
-      if (selectedEvent)
-        queryClient.invalidateQueries(['events', selectedEvent.id]);
       toast.success('File uploaded successfully!');
     },
     onError: (error) => {
+      console.log('error >>>', error);
       toast.error(error.message || 'Failed to upload file!');
     },
   });
@@ -102,8 +110,6 @@ export const useEvents = () => {
   const deleteFileMutation = useMutation({
     mutationFn: (fileId) => deleteEventFile(fileId),
     onSuccess: () => {
-      if (selectedEvent)
-        queryClient.invalidateQueries(['events', selectedEvent.id]);
       toast.success('File deleted successfully!');
     },
     onError: (error) => {
@@ -379,6 +385,7 @@ participants_roles
 
     // State
     eventsMeta,
+    event,
     events,
     selectedEvent,
     currentPath,
@@ -386,6 +393,7 @@ participants_roles
     // Loading
     eventsMetaLoading,
     eventsLoading,
+    eventLoading,
 
     // Actions
     navigateToEvent,

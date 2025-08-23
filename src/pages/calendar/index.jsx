@@ -2,35 +2,34 @@ import EventPreviewDialog from '@/components/calendar/EventPreviewDialog';
 import { useState, useEffect } from 'react';
 import CalendarWrapper from '@/components/calendar/Calendar';
 import NewEventDialog from '@/components/calendar/NewEventDialog';
-import getEventsUserList from './helpers/getEventsUserList';
-import getUserEvents from './helpers/getUserEvents';
 import createEvent from './helpers/createEvent';
 import getEvent from './helpers/getEvent';
-import moment from 'moment';
+import { useMatter } from '@/components/inbox/MatterContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEvents } from '@/components/calendar/hooks/useEvent';
+import moment from 'moment';
 
 const CalendarPage = () => {
-  const params = useParams();
   const navigate = useNavigate();
+
+  // Dialog states
   const [isOpen, setIsOpen] = useState(false);
   const [open, setOpen] = useState(false);
-  const [users, setUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
+
+  // Event states
   const [event, setEvent] = useState(null);
   const [events, setEvents] = useState([]);
   const [selectedDateRange, setSelectedDateRange] = useState(null);
 
-  const handleShowEvent = async (event) => {
-    const res = await getEvent(event.id);
-    setIsOpen(true);
-    setEvent(res);
-  };
+  // use matter
+  const { matter, matterSlug } = useMatter();
 
-  const getUsersEvents = async (userId) => {
-    try {
-      const events = await getUserEvents(userId);
-      const mappedEvents = events.map((event) => ({
+  // Use events
+  const { events: allEvents, eventsLoading } = useEvents();
+
+  useEffect(() => {
+    if (!eventsLoading) {
+      const mappedEvents = allEvents.map((event) => ({
         id: event.id,
         title: event.title,
         start: moment(event.start_time).toDate(),
@@ -38,8 +37,39 @@ const CalendarPage = () => {
         priority: event.priority,
       }));
       setEvents(mappedEvents);
-    } catch (err) {
-      console.error('Error fetching user events:', err);
+    }
+  }, [allEvents, eventsLoading]);
+
+  const handleShowEvent = async (event) => {
+    const res = await getEvent(event.id);
+    setIsOpen(true);
+    setEvent(res);
+  };
+
+  const handleNavigate = (taskId) => {
+    if (matterSlug) {
+      if (taskId) {
+        navigate(
+          `/dashboard/inbox/tasks?slugId=${matterSlug}&taskId=${taskId}`,
+          {
+            replace: false,
+          }
+        );
+      } else {
+        navigate(`/dashboard/inbox/tasks?slugId=${matterSlug}`, {
+          replace: false,
+        });
+      }
+    } else {
+      if (taskId) {
+        navigate(`/dashboard/tasks?taskId=${taskId}`, {
+          replace: false,
+        });
+      } else {
+        navigate(`/dashboard/tasks`, {
+          replace: false,
+        });
+      }
     }
   };
 
@@ -55,19 +85,6 @@ const CalendarPage = () => {
   const handleDateRangeSelect = (dateRange) => {
     setSelectedDateRange(dateRange);
   };
-
-  useEffect(() => {
-    setSelectedUser(params.id || 1);
-    getEventsUserList().then((usersData) => {
-      setUsers(usersData);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!selectedUser) return;
-    navigate(`/dashboard/event?eventId=${selectedUser}`);
-    getUsersEvents(selectedUser);
-  }, [selectedUser]);
 
   // const {
   // events,
@@ -86,7 +103,6 @@ const CalendarPage = () => {
   // } = useEvents();
 
   console.log('events >>>', events);
-  console.log('selectedUser >>>', selectedUser);
 
   return (
     <div className="h-full w-full">
@@ -97,9 +113,6 @@ const CalendarPage = () => {
         NewEventDialog={NewEventDialog}
         open={open}
         setOpen={setOpen}
-        users={users}
-        selectedUser={selectedUser}
-        setSelectedUser={setSelectedUser}
         onDateRangeSelect={handleDateRangeSelect}
       />
 
@@ -112,11 +125,6 @@ const CalendarPage = () => {
       <NewEventDialog
         open={open}
         onClose={() => setOpen(false)}
-        onSubmit={(data) => {
-          console.log(data);
-          handleCreateEvent(data);
-          setOpen(false);
-        }}
         selectedDateRange={selectedDateRange}
       />
     </div>

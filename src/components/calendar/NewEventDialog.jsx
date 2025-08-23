@@ -32,6 +32,15 @@ import { useSearchParams } from 'react-router-dom';
 import { ParticipantDialog } from './components/ParticipantDialog';
 import { ReminderDialog } from './components/ReminderDialog';
 
+const formatDateForInput = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 export default function NewEventDialogRHF({
   open = false,
   onClose = () => {},
@@ -101,6 +110,7 @@ export default function NewEventDialogRHF({
     formState: { errors },
     reset,
     setValue,
+    getValues,
     watch,
   } = useForm({
     defaultValues: requiredFields,
@@ -131,19 +141,19 @@ export default function NewEventDialogRHF({
   // Auto-populate dates when selectedDateRange changes
   useEffect(() => {
     if (selectedDateRange && selectedDateRange.start && selectedDateRange.end) {
-      const formatDateForInput = (date) => {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
-      };
-
       console.log('selectedDateRange >>>', selectedDateRange);
 
       setValue('start_time', formatDateForInput(selectedDateRange.start));
       setValue('end_time', formatDateForInput(selectedDateRange.end));
+
+      console.log(
+        'start_time >>>',
+        formatDateForInput(selectedDateRange.start)
+      );
+      console.log('end_time >>>', formatDateForInput(selectedDateRange.end));
+
+      console.log('start time', getValues('start_time'));
+      console.log('end time', getValues('end_time'));
     }
   }, [selectedDateRange, setValue]);
 
@@ -151,6 +161,7 @@ export default function NewEventDialogRHF({
   useEffect(() => {
     if (open) {
       if (isUpdateMode && event) {
+        console.log('event >>>', event);
         // Populate form with existing event data
         const formData = {
           ...event,
@@ -172,7 +183,17 @@ export default function NewEventDialogRHF({
         replaceParticipants(event.participants || []);
         setAttachments(event.attachments || []);
       } else {
-        reset(requiredFields);
+        const defaultFormData = {
+          ...requiredFields,
+          start_time: selectedDateRange?.start
+            ? formatDateForInput(selectedDateRange.start)
+            : '',
+          end_time: selectedDateRange?.end
+            ? formatDateForInput(selectedDateRange.end)
+            : '',
+        };
+
+        reset(defaultFormData);
         setContact(null);
         replaceReminders([]);
         replaceParticipants([]);
@@ -213,6 +234,13 @@ export default function NewEventDialogRHF({
     if (data.start_time && data.end_time && data.start_time >= data.end_time) {
       errors.end_time = 'End time must be after start time';
     }
+
+    // const currentDate = new Date();
+    // currentDate.setHours(0, 0, 0, 0);
+
+    // if (data.start_time < currentDate) {
+    //   errors.start_time = 'Start time must be after current time';
+    // }
 
     if (!data.category_id) {
       errors.category_id = 'Category is required';
@@ -275,11 +303,25 @@ export default function NewEventDialogRHF({
   // Attachment handlers
   const handleUploadSubmit = async (payload) => {
     try {
-      const uploadedFile = await uploadEventFile(payload);
+      const files = payload.files;
+
+      const formData = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        if (key !== 'files') {
+          formData.append(key, value);
+        }
+      });
+      files.forEach((fileItem) => {
+        formData.append('attachment', fileItem.file);
+      });
+
+      console.log('newPayload >>>>', formData);
+
+      const uploadedFile = await uploadEventFile(formData);
+      console.log('uploadedFile >>>>', uploadedFile);
       setAttachments((prev) => [...prev, uploadedFile]);
-      toast.success('Attachment uploaded successfully');
     } catch (error) {
-      toast.error('Failed to upload attachment');
+      console.log('error uploading attachment >>>', error);
     }
   };
 
@@ -295,6 +337,7 @@ export default function NewEventDialogRHF({
       const errors = validateForm(data);
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
+        console.log('validation errors >>>', errors);
         toast.error('Please fix the validation errors');
         return;
       }
@@ -321,15 +364,13 @@ export default function NewEventDialogRHF({
           status_id: parseInt(participant.status_id),
           comment: participant.comment || '',
         })),
-        attachment_ids: attachments.map((att) => att.id),
+        attachment_ids: attachments.map((att) => att.attachment_id),
       };
 
       if (isUpdateMode) {
         await updateEvent({ eventId: event.id, eventData: formattedData });
-        toast.success('Event updated successfully');
       } else {
         await createEvent(formattedData);
-        toast.success('Event created successfully');
       }
 
       onClose();
@@ -338,11 +379,12 @@ export default function NewEventDialogRHF({
         `Error ${isUpdateMode ? 'updating' : 'creating'} event:`,
         error
       );
-      toast.error(`Error ${isUpdateMode ? 'updating' : 'creating'} event`);
     }
   };
 
   if (!open) return null;
+
+  console.log('attachments >>>>', attachments);
 
   return (
     <>
@@ -636,19 +678,22 @@ export default function NewEventDialogRHF({
                 <h3 className="text-lg font-semibold mb-1">Attachments</h3>
                 {attachments.map((attachment, idx) => (
                   <div
-                    key={attachment.id || idx}
+                    key={attachment.attachment_id || idx}
                     className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
                   >
                     <div className="text-sm flex flex-col gap-1">
                       <span>
-                        Name: {attachment.name || attachment.original_name}
+                        Name:{' '}
+                        {attachment?.file_name || attachment?.original_name}
                       </span>
                       <span>
-                        Type: {attachment.type || attachment.file_type}
+                        Type:{' '}
+                        {attachment?.file_name.split('.').pop() ||
+                          attachment?.file_type}
                       </span>
-                      {attachment.url && (
+                      {attachment?.file_path && (
                         <a
-                          href={attachment.url}
+                          href={attachment?.file_path}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-500 hover:underline"
@@ -661,7 +706,9 @@ export default function NewEventDialogRHF({
                       <Tooltip arrow title="Remove Attachment">
                         <IconButton
                           type="button"
-                          onClick={() => handleRemoveAttachment(attachment.id)}
+                          onClick={() =>
+                            handleRemoveAttachment(attachment.attachment_id)
+                          }
                           size="small"
                         >
                           <Trash2 className="h-4 w-4 text-red-500" />
@@ -810,6 +857,7 @@ export default function NewEventDialogRHF({
         open={showUploadMediaDialog}
         onClose={() => setShowUploadMediaDialog(false)}
         onSubmit={handleUploadSubmit}
+        isLoading={isUploadingFile}
       />
     </>
   );

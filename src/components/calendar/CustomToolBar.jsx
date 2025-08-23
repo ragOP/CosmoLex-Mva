@@ -2,16 +2,7 @@ import { ChevronDown, Plus } from 'lucide-react';
 import { Select, MenuItem, Box, Typography } from '@mui/material';
 import { Button } from '../ui/button';
 
-const CustomToolBar = ({
-  onNavigate,
-  onView,
-  label,
-  view,
-  setOpen,
-  users,
-  selectedUser,
-  setSelectedUser,
-}) => {
+const CustomToolBar = ({ onNavigate, onView, label, view, setOpen }) => {
   return (
     <Box
       className="rbc-toolbar"
