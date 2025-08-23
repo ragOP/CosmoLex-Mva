@@ -371,7 +371,7 @@ export default function NewEventDialogRHF({
           status_id: parseInt(participant.status_id),
           comment: participant.comment || '',
         })),
-        attachment_ids: attachments.map((att) => att.attachment_id),
+        attachment_ids: attachments.map((att) => att?.attachment_id || att?.id),
       };
 
       if (isUpdateMode) {

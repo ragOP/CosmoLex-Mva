@@ -38,20 +38,32 @@ export const ReminderDialog = ({
   editingReminder,
   eventsMeta,
 }) => {
-  /**
-   *       "type_id": 23,
-      "timing_id": 27,
-      "value": 15,
-      "relative_id": 31
-   */
+  const [validationErrors, setValidationErrors] = useState({});
   const { control, handleSubmit, reset, setValue } = useForm({
     defaultValues: {
       type_id: '',
       timing_id: '',
-      relative_to_id: '',
+      relative_id: '',
       value: '',
     },
   });
+
+  const validateForm = () => {
+    const errors = {};
+    if (!control.getValues('type_id')) {
+      errors.type_id = 'Reminder type is required';
+    }
+    if (!control.getValues('timing_id')) {
+      errors.timing_id = 'Timing is required';
+    }
+    if (!control.getValues('relative_id')) {
+      errors.relative_id = 'Relative to is required';
+    }
+    if (!control.getValues('value')) {
+      errors.value = 'Value is required';
+    }
+    return errors;
+  };
 
   useEffect(() => {
     if (editingReminder) {
@@ -60,16 +72,24 @@ export const ReminderDialog = ({
       reset({
         type_id: '',
         timing_id: '',
-        relative_to_id: '',
+        relative_id: '',
         value: '',
       });
     }
   }, [editingReminder, reset]);
 
   const handleFormSubmit = (data) => {
+    const errors = validateForm();
+    console.log('errors >>>', errors);
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
     onSubmit(data);
     reset();
   };
+
+  console.log('validationErrors >>>', validationErrors);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -87,7 +107,7 @@ export const ReminderDialog = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="w-full">
               <Label className="text-[#40444D] font-semibold mb-2">
-                Reminder Type *
+                Reminder Type <span className="text-red-500">*</span>
               </Label>
               <Controller
                 control={control}
@@ -122,11 +142,16 @@ export const ReminderDialog = ({
                   </Select>
                 )}
               />
+              {validationErrors.type_id && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.type_id}
+                </p>
+              )}
             </div>
 
             <div className="w-full">
               <Label className="text-[#40444D] font-semibold mb-2">
-                Timing *
+                Timing <span className="text-red-500">*</span>
               </Label>
               <Controller
                 control={control}
@@ -161,15 +186,20 @@ export const ReminderDialog = ({
                   </Select>
                 )}
               />
+              {validationErrors.timing_id && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.timing_id}
+                </p>
+              )}
             </div>
 
             <div className="w-full">
               <Label className="text-[#40444D] font-semibold mb-2">
-                Relative To *
+                Relative To <span className="text-red-500">*</span>
               </Label>
               <Controller
                 control={control}
-                name="relative_to_id"
+                name="relative_id"
                 rules={{ required: 'Relative to is required' }}
                 render={({ field }) => (
                   <Select
@@ -200,11 +230,16 @@ export const ReminderDialog = ({
                   </Select>
                 )}
               />
+              {validationErrors.relative_id && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.relative_id}
+                </p>
+              )}
             </div>
 
             <div className="w-full">
               <Label className="text-[#40444D] font-semibold mb-2">
-                Value *
+                Value <span className="text-red-500">*</span>
               </Label>
               <Controller
                 control={control}
@@ -214,6 +249,11 @@ export const ReminderDialog = ({
                   <Input {...field} type="number" placeholder="Enter value" />
                 )}
               />
+              {validationErrors.value && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.value}
+                </p>
+              )}
             </div>
           </div>
 
