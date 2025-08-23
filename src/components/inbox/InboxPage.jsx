@@ -11,7 +11,6 @@ const InboxPage = () => {
 
   const searchParams = new URLSearchParams(window.location.search);
   const slugId = searchParams.get('slugId');
-  console.log('slugId >>>', slugId);
 
   const { data: matter } = useQuery({
     queryKey: ['matters', slugId],
@@ -23,9 +22,9 @@ const InboxPage = () => {
     queryFn: () => getMatterMeta({ slug: slugId }),
   });
 
-  React.useEffect(() => {
-    console.log(location.pathname);
-  }, [location]);
+  // React.useEffect(() => {
+  //   console.log(location.pathname);
+  // }, [location]);
 
   return (
     <MatterProvider matter={matter} matterMeta={matterMeta} matterSlug={slugId}>

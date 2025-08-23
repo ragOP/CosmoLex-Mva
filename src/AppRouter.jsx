@@ -44,6 +44,12 @@ const CommunicationPage = lazy(() =>
 const Communication = () => <CommunicationPage />;
 const FinancePage = lazy(() => import('./components/finance/Finance'));
 const Finance = () => <FinancePage />;
+const AgendaPage = lazy(() => import('./components/agenda/Agenda'));
+const Agenda = () => <AgendaPage />;
+const AdvancedSearchPage = lazy(() =>
+  import('./components/advancedSearch/AdvancedSearch')
+);
+const AdvancedSearch = () => <AdvancedSearchPage />;
 const ActivityLogs = () => <ErrorPage pageName="Activity Logs" />;
 const UsersPage = lazy(() => import('./pages/users'));
 const ContactPage = lazy(() => import('./pages/contact'));
@@ -80,6 +86,8 @@ const AppRouter = () => (
           <Route path="communication" element={<Communication />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="contacts" element={<ContactPage />} />
+          <Route path="agenda" element={<Agenda />} />
+          <Route path="advanced-search" element={<AdvancedSearch />} />
           <Route
             path="inbox/*"
             element={

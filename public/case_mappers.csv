@@ -1,0 +1,335 @@
+CATEGORY,Name,Type
+Auto Accident,,
+,First Name,input
+,Middle Name,input
+,Last Name,input
+,What is the best cell phone number to reach you at?,input + number
+,Accident Information,heading
+,"When did the accident occur?",input +date
+,Where did the accident occur?,input
+,How did the accident occur ?,textarea
+,Were you a driver or passenger when the incident occurred?,input
+,"Who was at fault?",input
+,Did the police respond to the scene?,radio button
+,Did the paramedics respond to the scene?,radio button
+,Do you have photos of the accident?,radio button
+,Were there witnesses?,radio button
+,"Have you spoken to anyone regarding this accident?",radio button
+,,
+,Vehicle Information,Heading
+,What is the make/model of your vehicle?,input
+,How much damage was done to your vehicle?,input
+,"What is the make/model of the other driver’s vehicle?",input
+,"How much damage was done to the other driver’s vehicle?",input
+,,
+,Insurance Information,Heading
+,Do you have auto insurance?,radio button
+,What are your limits?,input
+,Who is your carrier?,input
+,Do you have uninsured or underinsured motorist coverage (UM)?,radio button
+,Do you have health insurance?,radio button
+,Who is your carrier?,input
+,,
+,Injuries and Medical Treatment,Heading
+,Describe your injuries:,textarea
+,Have you received any treatment for your injuries?,radio button
+,Have you ever been involved in accident before where you suffered similar injuries?,radio button
+,,
+,Lost Wages,Heading
+,Are you currently employed?,radio button
+,Have you incurred lost wages?,radio button
+,,
+,Representation,Heading
+,Have you spoken to another attorney about this case?,radio button
+,Has another attorney turned your case down?,radio button
+Bankruptcy,,
+,Name,Type
+,First Name,input
+,Middle Name,input
+,Last Name,input
+,What is the best cell phone number to reach you at?,input + Number
+,,
+,Case Information,Heading
+,Case Number,input
+,Confirmation Hearing Date,input
+,Judge's Name,input
+,Judge's Room Number,input
+,Repayment Amount,input
+,Meeting Date,input
+,Meeting Time,input
+Criminal Defense Law,,
+,First Name,input
+,Middle Name,input
+,Last Name,input
+,What is the best cell phone number to reach you at?,input + Number
+,Date of Arrest,input
+,Which police department made the arrest?,input
+,Do you have a court date scheduled?,radio button
+,When is your court date?,input
+,Do you already have an attorney or have you previously hired an attorney?,radio button
+,Do you have any prior convictions?,radio button
+,Describe what happened:,textarea
+Custody,,
+,Divorce With Children,Heading
+,First Name,input
+,Middle Name,input
+,Last Name,input
+,What is the best cell phone number to reach you at?,input + Number
+,,
+,Case Information,Heading
+,Were you ever married to the children’s other parent?,radio button
+,"1. If yes, please select all that apply ",checkbox heading
+,1.1 Divorced children’s other parent,checkbox 
+,1.2 Presently paying child support,checkbox 
+,1.3 Presenting paying spousal support (alimony),checkbox 
+,1.4 There is an existing “Parenting Plan” from the divorce,checkbox 
+,1.5 Not paying child support (never have or have stopped),checkbox 
+,"2. If no, please select all that apply",checkbox heading
+,2.1 Presently paying child support,checkbox 
+,2.2 Certain the children are mine,checkbox 
+,2.3 Need to prove parentage – Not certain the children are mine,checkbox 
+,2.4 Not paying child support (never have or have stopped),checkbox 
+,Last time you saw the children,input
+,Is there a written Parenting Plan or other agreement on when and how you visit the children?,radio button
+,Where are the children living now?,input
+,Who are the children living with?,input
+,Is there a scheduled hearing or trial date?,radio button
+,"If yes, hearing or trial date information",input
+,Have there been prior court proceedings (hearings or trials) involving custody or visitation issues with your children?,radio button
+,Briefly describe your legal concern:,textarea
+,,
+,Employment Information,heading
+,Are you currently employed?,radio button
+,What is your annual pay?,input
+,"If not employed, amount and source of income",input
+,Do you have a history or drug or alcohol abuse?,radio button
+,Have you ever filed for bankruptcy?,radio button
+,Do you plan on filing for bankruptcy?,radio button
+,,
+,Spouse/Ex's Information,heading
+,Spouse/Ex-Spouse’s Name,input
+,All known alias’ for spouse/ex-spouse,input
+,Spouse/Ex-Spouse’s present address:,input
+,Spouse/Ex-Spouse’s cell phone number,input + Number
+,Spouse/Ex-Spouse’s email address:,input
+,Spouse/Ex-Spouse’s date of birth,input
+,Does your spouse/ex-spouse have a history of drug or alcohol abuse?,radio button
+,Is your spouse/ex-spouse currently working?,radio button
+,What is your spouse/ex-spouse’s annual income?,input
+,Does your spouse/ex-spouse have an attorney?,radio button
+,"Please provide names, DOBs, and genders for all children",textarea
+Divorce Without Children,,
+,Divorce Without Children,heading
+,First Name,input
+,Middle Name,input
+,Last Name,input
+,What is the best cell phone number to reach you at?,input + Number
+,,
+,Case Information,heading
+,Is there a custody or visitation issue?,radio button
+,Describe,textarea
+,Do you own property (primary residence) and/or investment property?,radio button
+,Describe,textarea
+,Do you have a retirement plan(s)?,radio button
+,Describe,textarea
+,Do you or your spouse own a business?,radio button
+,Describe,textarea
+,"Do you have any debit (credit cards, loans, car payments, etc.)?",radio button
+,Approximate total amount:,input
+,Is there a scheduled hearing or trial date?,radio button
+,Information regarding hearing/trial:,textarea
+,Does your divorce involve domestic violence?,radio button
+,Does your divorce involve child support?,radio button
+,Does your divorce involve spousal support (alimony)?,radio button
+,,
+,Employment Information,heading
+,Are you currently employed?,radio button
+,What is your annual pay?,input
+,"If not employed, amount and source of income",input
+,Do you have a history or drug or alcohol abuse?,radio button
+,Have you ever filed for bankruptcy?,radio button
+,Do you plan on filing for bankruptcy?,radio button
+,,
+,Spouse/Ex's Information,heading
+,Spouse/Ex-Spouse’s Name:,input
+,All known alias’ for spouse/ex-spouse:,input
+,Spouse/Ex-Spouse’s present address:,input
+,Spouse/Ex-Spouse’s cell phone number,input + Number
+,Spouse/Ex-Spouse’s email address:,input
+,Spouse/Ex-Spouse’s date of birth,input
+,Does your spouse/ex-spouse have a history of drug or alcohol abuse?,radio button
+,Is your spouse/ex-spouse currently working?,radio button
+,What is your spouse/ex-spouse’s annual income?,input
+,Does your spouse/ex-spouse have an attorney?,radio button
+Dog Bite,,
+,Dog Bite,heading
+,First Name,input
+,Middle Name,input
+,Last Name,input
+,What is the best cell phone number to reach you at?,input + number
+,,
+,Incident Information,heading
+,When did the accident occur?,input
+,Where did the accident occur?,input
+,How did the accident occur?,textarea
+,Was an Animal Control report filed?,input
+,What kind of dog bit you?,input
+,Do you know the name of the dog owner?,radio button
+,Did the police respond to the scene?,radio button
+,Did the paramedics respond to the scene?,radio button
+,Describe your injuries:,textarea
+,Have you received treatment for these injuries?,radio button
+,Do you have health insurance?,input
+,Who is your carrier?,input
+,Are you currently employed?,radio button
+,Have you incurred lost wages?,radio button
+,Have you spoken to another attorney about this case?,radio button
+,Has another attorney turned your case down?,radio button
+Domestic Violence/Restraining Orders,,
+,Domestic Violence/Restraining Orders,heading
+,First Name,input
+,Middle Name,input
+,Last Name,input
+,What is the best cell phone number to reach you at?,input + number
+,Please select the appropriate case scenario:,input
+,Are there minor children involved?,radio button
+,Describe why you need this protection:,textarea
+,Describe what you are accused of,textarea
+,What is your relationship to the accuser?,input
+,Court Location,input
+,Date and Time for Court Appearance,input
+,Were the police involved?,radio button
+,Is there a divorce custody case also active or pending?,radio button
+,Are you currently employed?,radio button
+,What is your annual pay?,input
+,"If not employed, amount and source of income",input
+,Do you have a history or drug or alcohol abuse?,radio button
+,Have you ever filed for bankruptcy?,radio button
+,Do you plan on filing for bankruptcy?,radio button
+,Other party’s name:,input
+,Other party’s cell phone number:,input + number
+,Other party’s email address:,input
+,Other party’s date of birth:,input
+,Does this individual have a history of drug or alcohol abuse?,radio button
+,Is this person working?,radio button
+,Does this other party have an attorney?,radio button
+,"If there were witnesses, please provide their name, phone number, email address and advise if they would be willing to testify regarding what they saw:",textarea
+,"Please provide names, DOBs, and genders for all children",textarea
+Employment Law,,
+,Employment Law,heading
+,First Name,input
+,Middle Name,input
+,Last Name,input
+,What is the best cell phone number to reach you at?,input + number
+,What is your employer’s name?,input
+,Does your employer have more than one office location?,radio button
+,How many employees in your location?,input
+,What is your job title?,input
+,Do you work full time or part time?,input
+,How many hours per week do you work on average?,input
+,Employment start date:,input
+,Are you still employed?,radio button
+,Reason for termination:,textarea
+,Termination date:,input
+,Are you paid hourly or salary?,input
+,What is your hourly rate or salary?,input
+,Describe your job duties and responsibilities:,textarea
+,Describe your legal issue:,textarea
+Estate Law,,
+,Real Estate Law,heading
+,First Name,input
+,Middle Name,input
+,Last Name,input
+,What is the best cell phone number to reach you at?,input + number
+,What is the purpose of this meeting:,input
+,Are you calling on your behalf or on behalf of someone else?,radio button
+,,
+,Personal Information,heading
+,Marital Status:,input
+,Do you have any children?,radio button
+,"If yes, please provide names and DOBs",textarea
+,,
+,Legal Information,heading
+,Brief description of legal issue:,textarea
+,Is this matter currently in litigation?,radio button
+,"If yes, list all parties:",textarea
+,Is there a possibility of future litigation?,radio button
+,Have you spoken to another attorney about this case?,radio button
+Medical Malpractice,,
+,Medical Malpractice,heading
+,First Name,input
+,Middle Name,input
+,Last Name,input
+,What is the best cell phone number to reach you at?,input + number
+,,
+,Incident Information,heading
+,When did the accident occur?,input
+,Where did the accident occur?,input
+,Describe the accident:,textarea
+,Describe your injuries:,textarea
+,Have you received treatment for these injuries?,radio button
+,,
+,Personal Information,heading
+,Do you have health insurance?,radio button
+,Who is your carrier?,input
+,What is your height and weight?,input
+,Have you spoken to another attorney about this case?,radio button
+,Has another attorney turned your case down?,radio button
+Slip and Fall,,
+,Slip and Fall,heading
+,First Name,input
+,Middle Name,input
+,Last Name,input
+,What is the best cell phone number to reach you at?,input + number
+,,
+,Incident Information,heading
+,When did the accident occur?,input
+,Where did the accident occur?,input
+,How did the accident occur?,textarea
+,Was a report filed?,radio button
+,Did the paramedics respond to the scene?,radio button
+,Describe your injuries:,textarea
+,,
+,Personal Information,heading
+,What is your height and weight?,input
+,Have you received treatment for these injuries?,radio button
+,Do you have health insurance?,radio button
+,Who is your carrier?,input
+,Are you currently employed?,radio button
+,Have you incurred lost wages?,radio button
+,Have you spoken to another attorney about this case?,radio button
+,Has another attorney turned your case down?,radio button
+Social Security Disability,,
+,Social Security Disability,heading
+,First Name,input
+,Middle Name,input
+,Last Name,input
+,What is the best cell phone number to reach you at?,input + number
+,,
+,Personal Information,heading
+,What is your date of birth?,input
+,What is your social security number?,input
+,Have you applied for Social Security Benefits in the past?,radio button
+,"If yes, what is the date of your last denial?",input
+,,
+,Personal Information,heading
+,Did you graduate High School?,radio button
+,Did you graduate college?,radio button
+,How many doctors are you currently seeing?,input
+,Do your doctors support your decision to seek social security benefits?,radio button
+,How many times have you been hospitalized in the past five years?,input
+,How many medications are you taking?,input
+,What are your disabilities? (list them),textarea
+,,
+,Employment Information,heading
+,Have you worked for the past five years?,radio button
+,Who was your last employer?,input
+,What did you do for work?,input
+,"When did you start and end your last job, approximately?",input
+,,
+,Family Information,heading
+,Do you have any children?,radio button
+,"If yes, how old and how many?",input
+,What is your mother’s maiden name?,input
+,What is your father’s full name?,input
+,What city and state were you born in?,input

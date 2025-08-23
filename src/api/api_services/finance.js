@@ -328,32 +328,16 @@ export const getFeeSplit = async (feeSplitId) => {
 };
 
 // Update fee split
-export const updateFeeSplit = async (feeSplitId, feeSplitData, slug = null) => {
+export const updateFeeSplit = async (feeSplitId, feeSplitData) => {
   try {
-    const formData = new FormData();
-    
-    // Add all fee split fields
-    Object.keys(feeSplitData).forEach(key => {
-      if (feeSplitData[key] !== null && feeSplitData[key] !== undefined) {
-        formData.append(key, feeSplitData[key]);
-      }
-    });
-    
-    // Add slug if provided
-    if (slug) {
-      formData.append('slug', slug);
-    }
-    
-    const endpoint = slug ? 
-      `v2/matter/finance/fee-splits/update/${feeSplitId}/${slug}` : 
-      `v2/matter/finance/fee-splits/update/${feeSplitId}`;
+    const endpoint = `v2/matter/finance/fee-splits/update/${feeSplitId}`;
     
     const response = await apiService({
       endpoint: endpoint,
       method: 'PUT',
-      data: formData,
+      data: feeSplitData,
       headers: {
-        'Content-Type': 'multipart/form-data',
+        'Content-Type': 'application/json',
       },
     });
     

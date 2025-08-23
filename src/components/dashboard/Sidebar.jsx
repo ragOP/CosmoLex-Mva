@@ -44,6 +44,7 @@ const typeToIcon = {
   users: User,
   contact: Contact,
   'activity-logs': Activity,
+  agenda: ClipboardList,
 };
 
 const sidebarItems = [
@@ -128,6 +129,18 @@ const sidebarItems = [
     label: 'Tasks',
     type: 'link',
     iconType: 'tasks',
+  },
+  {
+    id: '/dashboard/agenda',
+    label: 'Agenda',
+    type: 'link',
+    iconType: 'agenda',
+  },
+  {
+    id: '/dashboard/advanced-search',
+    label: 'Advanced Search',
+    type: 'link',
+    iconType: 'data',
   },
   {
     id: '/dashboard/inbox',

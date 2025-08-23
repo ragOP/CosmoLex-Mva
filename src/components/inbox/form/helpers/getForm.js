@@ -6,7 +6,7 @@ export const getForm = async ({ slugId }) => {
       endpoint: `v2/matter/form/show/${slugId}`,
     });
 
-    return apiResponse;
+    return apiResponse?.response;
   } catch (error) {
     console.error('Error fetching form data:', error);
   }

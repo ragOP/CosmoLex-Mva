@@ -8,11 +8,6 @@ import {
   CASE_TYPE_FIELD_MAPPERS,
 } from './caseTypeMappers.js';
 
-// Debug grid configuration
-console.log('GRID_CONFIG:', GRID_CONFIG);
-console.log('QUARTER_WIDTH:', GRID_CONFIG.QUARTER_WIDTH);
-console.log('HALF_WIDTH:', GRID_CONFIG.HALF_WIDTH);
-
 /**
  * Get form fields based on case type
  * @param {string} caseType - The case type (e.g., 'Auto Accident', 'Bankruptcy', etc.)
