@@ -79,12 +79,12 @@ const FeeSplitsTab = ({ slugId }) => {
   const handleCreateFeeSplit = async (feeSplitData, setApiErrors) => {
     try {
       const result = await createFeeSplitMutation.mutateAsync({ ...feeSplitData, slugId });
-      
+
       // Return the result to the dialog for proper error handling
       return result;
     } catch (error) {
       console.error('Create fee split error:', error);
-      
+
       // Handle API validation errors
       if (error.response?.data) {
         const errorData = error.response.data;
@@ -93,7 +93,7 @@ const FeeSplitsTab = ({ slugId }) => {
           return errorData; // Return error data to dialog
         }
       }
-      
+
       // Return generic error
       return {
         Apistatus: false,
@@ -104,15 +104,15 @@ const FeeSplitsTab = ({ slugId }) => {
 
   const handleUpdateFeeSplit = async (data) => {
     if (!editingFeeSplit) return;
-    
+
     try {
       const result = await updateFeeSplitMutation.mutateAsync({ id: editingFeeSplit.id, data });
-      
+
       // Return the result to the dialog for proper error handling
       return result;
     } catch (error) {
       console.error('Update fee split error:', error);
-      
+
       // Handle API validation errors
       if (error.response?.data) {
         const errorData = error.response.data;
@@ -120,7 +120,7 @@ const FeeSplitsTab = ({ slugId }) => {
           return errorData; // Return error data to dialog
         }
       }
-      
+
       // Return generic error
       return {
         Apistatus: false,
@@ -149,11 +149,21 @@ const FeeSplitsTab = ({ slugId }) => {
     }
   };
 
-  const filteredFeeSplits = feeSplits.filter(split => 
-    split.case_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    split.case_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    split.firm_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    const filteredFeeSplits = feeSplits.filter(split => {
+    const firmName = split.firm_name?.toLowerCase() || '';
+    const overrideType = split.override_type?.toLowerCase() || '';
+    const referralStatus = split.referral_status?.toLowerCase() || '';
+    const firmAgreement = split.firm_agreement?.toLowerCase() || '';
+    const createdBy = split.created_by?.toLowerCase() || '';
+    const overrideValue = split.override?.toLowerCase() || '';
+    
+    return firmName.includes(searchTerm.toLowerCase()) ||
+           overrideType.includes(searchTerm.toLowerCase()) ||
+           referralStatus.includes(searchTerm.toLowerCase()) ||
+           firmAgreement.includes(searchTerm.toLowerCase()) ||
+           createdBy.includes(searchTerm.toLowerCase()) ||
+           overrideValue.includes(searchTerm.toLowerCase());
+  });
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -174,7 +184,7 @@ const FeeSplitsTab = ({ slugId }) => {
         {/* Header */}
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <h2 className="text-xl font-semibold text-gray-900">Fee Splits Management</h2>
-          
+
           <Stack direction="row" spacing={2} alignItems="center">
             <IconButton onClick={handleRefresh} size="small">
               <RotateCcw size={18} />
@@ -194,27 +204,25 @@ const FeeSplitsTab = ({ slugId }) => {
             <div className="flex items-center bg-gray-100 rounded-lg p-1">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'grid' 
-                    ? 'bg-white text-blue-600 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
+                className={`p-2 rounded-md transition-colors ${viewMode === 'grid'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+                  }`}
               >
                 <Grid3X3 size={16} />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'list' 
-                    ? 'bg-white text-blue-600 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
+                className={`p-2 rounded-md transition-colors ${viewMode === 'list'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+                  }`}
               >
                 <List size={16} />
               </button>
             </div>
-            
-            <button 
+
+            <button
               onClick={() => setCreateDialogOpen(true)}
               className="px-4 py-2 bg-gradient-to-b from-[#7367F0] to-[#453E90] text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
             >
@@ -223,7 +231,7 @@ const FeeSplitsTab = ({ slugId }) => {
             </button>
           </Stack>
         </Stack>
-        
+
         {/* Fee Splits List */}
         <div className="flex items-center justify-center">
           {isLoading ? (
@@ -245,13 +253,13 @@ const FeeSplitsTab = ({ slugId }) => {
                 No fee splits yet
               </Typography>
               <Typography variant="body1" color="text.secondary" sx={{ mb: 4, lineHeight: 1.6 }}>
-                {searchTerm ? 
+                {searchTerm ?
                   `No fee splits found matching "${searchTerm}". Try adjusting your search terms.` :
                   "Start managing your fee agreements by adding your first fee split arrangement."
                 }
               </Typography>
               {!searchTerm && (
-                <button 
+                <button
                   onClick={() => setCreateDialogOpen(true)}
                   className="px-6 py-3 bg-gradient-to-r from-[#7367F0] to-[#453E90] text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
                 >
@@ -279,10 +287,10 @@ const FeeSplitsTab = ({ slugId }) => {
                           </div>
                           <div>
                             <h3 className="font-semibold text-gray-900 text-sm mb-1">
-                              {split.case_name}
+                              Fee Split #{split.id}
                             </h3>
                             <p className="text-xs text-gray-500">
-                              {split.case_number}
+                              Created by {split.created_by || 'Unknown'}
                             </p>
                           </div>
                         </div>
@@ -302,18 +310,18 @@ const FeeSplitsTab = ({ slugId }) => {
                       {/* Firm Info */}
                       <div className="mb-4">
                         <p className="font-medium text-gray-900 text-sm mb-1">{split.firm_name}</p>
-                        <p className="text-xs text-gray-500">{split.split_type}</p>
+                        <p className="text-xs text-gray-500">{split.override_type}</p>
                       </div>
 
                       {/* Split Details */}
                       <div className="space-y-2 mb-4">
                         <div className="flex items-center gap-2">
                           <TrendingUp className="w-4 h-4 text-blue-500" />
-                          <span className="text-sm font-medium text-blue-600">Us: {split.our_percentage}</span>
+                          <span className="text-sm font-medium text-blue-600">Override: {split.override}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <TrendingUp className="w-4 h-4 text-orange-500" />
-                          <span className="text-sm font-medium text-orange-600">Them: {split.their_percentage}</span>
+                          <Calculator className="w-4 h-4 text-green-500" />
+                          <span className="text-sm font-medium text-green-600">Agreement: {split.firm_agreement}</span>
                         </div>
                       </div>
 
@@ -321,12 +329,12 @@ const FeeSplitsTab = ({ slugId }) => {
                       <div className="bg-gray-50 rounded-lg p-3 mb-4">
                         <div className="space-y-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">Total:</span>
-                            <span className="font-semibold text-gray-900">{split.total_settlement}</span>
+                            <span className="text-xs text-gray-500">Override Type:</span>
+                            <span className="font-semibold text-gray-900">{split.override_type}</span>
                           </div>
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-blue-600">Our Share:</span>
-                            <span className="font-medium text-blue-600">{split.our_share}</span>
+                            <span className="text-xs text-blue-600">Override Value:</span>
+                            <span className="font-medium text-blue-600">{split.override}</span>
                           </div>
                         </div>
                       </div>
@@ -334,17 +342,20 @@ const FeeSplitsTab = ({ slugId }) => {
                       {/* Footer */}
                       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                         <Chip
-                          label={split.status}
+                          label={split.referral_status}
                           size="small"
                           sx={{
-                            ...getStatusColor(split.status),
+                            ...getStatusColor(split.referral_status),
                             fontSize: '0.75rem',
                             fontWeight: 500
                           }}
                         />
-                        <p className="text-xs text-gray-500">
-                          {new Date(split.created_at).toLocaleDateString()}
-                        </p>
+                        <div className="text-xs text-gray-500">
+                          <p>{new Date(split.created_at).toLocaleDateString()}</p>
+                          {split.created_by && (
+                            <p className="text-xs text-gray-400">by {split.created_by}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -355,10 +366,10 @@ const FeeSplitsTab = ({ slugId }) => {
                   {/* Table Header */}
                   <div className="bg-gray-50 rounded-t-lg border border-gray-200 px-6 py-4">
                     <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-700">
-                      <div className="col-span-3">Case Information</div>
+                      <div className="col-span-3">Fee Split Info</div>
                       <div className="col-span-2">Partner Firm</div>
-                      <div className="col-span-2">Split Details</div>
-                      <div className="col-span-3">Financial Breakdown</div>
+                      <div className="col-span-2">Override Details</div>
+                      <div className="col-span-3">Agreement & Status</div>
                       <div className="col-span-1">Status</div>
                       <div className="col-span-1">Date</div>
                     </div>
@@ -369,12 +380,11 @@ const FeeSplitsTab = ({ slugId }) => {
                     {filteredFeeSplits.map((split, index) => (
                       <div
                         key={split.id}
-                        className={`px-6 py-4 border-gray-100 hover:bg-gray-50 transition-colors ${
-                          index !== filteredFeeSplits.length - 1 ? 'border-b' : ''
-                        }`}
+                        className={`px-6 py-4 border-gray-100 hover:bg-gray-50 transition-colors ${index !== filteredFeeSplits.length - 1 ? 'border-b' : ''
+                          }`}
                       >
                         <div className="grid grid-cols-12 gap-4 items-center">
-                          {/* Case Information */}
+                          {/* Fee Split Information */}
                           <div className="col-span-3">
                             <div className="flex items-start gap-3">
                               <div className="w-10 h-10 bg-gradient-to-br from-purple-50 to-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -382,10 +392,10 @@ const FeeSplitsTab = ({ slugId }) => {
                               </div>
                               <div>
                                 <h3 className="font-semibold text-gray-900 text-sm mb-1">
-                                  {split.case_name}
+                                  Fee Split #{split.id}
                                 </h3>
                                 <p className="text-xs text-gray-500">
-                                  {split.case_number}
+                                  Created by {split.created_by || 'Unknown'}
                                 </p>
                               </div>
                             </div>
@@ -394,18 +404,18 @@ const FeeSplitsTab = ({ slugId }) => {
                           {/* Partner Firm */}
                           <div className="col-span-2">
                             <p className="font-medium text-gray-900 text-sm">{split.firm_name}</p>
-                            <p className="text-xs text-gray-500">{split.split_type}</p>
+                            <p className="text-xs text-gray-500">{split.override_type}</p>
                           </div>
 
                           {/* Split Details */}
                           <div className="col-span-2">
                             <div className="flex items-center gap-2 mb-1">
                               <TrendingUp className="w-4 h-4 text-blue-500" />
-                              <span className="text-sm font-medium text-blue-600">Us: {split.our_percentage}</span>
+                              <span className="text-sm font-medium text-blue-600">Override: {split.override}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <TrendingUp className="w-4 h-4 text-orange-500" />
-                              <span className="text-sm font-medium text-orange-600">Them: {split.their_percentage}</span>
+                              <Calculator className="w-4 h-4 text-green-500" />
+                              <span className="text-sm font-medium text-green-600">Agreement: {split.firm_agreement}</span>
                             </div>
                           </div>
 
@@ -413,16 +423,16 @@ const FeeSplitsTab = ({ slugId }) => {
                           <div className="col-span-3">
                             <div className="space-y-1">
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500">Total:</span>
-                                <span className="font-semibold text-gray-900">{split.total_settlement}</span>
+                                <span className="text-xs text-gray-500">Override Type:</span>
+                                <span className="font-semibold text-gray-900">{split.override_type}</span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-blue-600">Our Share:</span>
-                                <span className="font-medium text-blue-600">{split.our_share}</span>
+                                <span className="text-xs text-blue-600">Override Value:</span>
+                                <span className="font-medium text-blue-600">{split.override}</span>
                               </div>
                               <div className="flex items-center justify-between">
-                                <span className="text-xs text-orange-600">Their Share:</span>
-                                <span className="font-medium text-orange-600">{split.their_share}</span>
+                                <span className="text-xs text-green-600">Firm Agreement:</span>
+                                <span className="font-medium text-green-600">{split.firm_agreement}</span>
                               </div>
                             </div>
                           </div>
@@ -430,10 +440,10 @@ const FeeSplitsTab = ({ slugId }) => {
                           {/* Status */}
                           <div className="col-span-1">
                             <Chip
-                              label={split.status}
+                              label={split.referral_status}
                               size="small"
                               sx={{
-                                ...getStatusColor(split.status),
+                                ...getStatusColor(split.referral_status),
                                 fontSize: '0.75rem',
                                 fontWeight: 500
                               }}
@@ -442,9 +452,12 @@ const FeeSplitsTab = ({ slugId }) => {
 
                           {/* Date */}
                           <div className="col-span-1">
-                            <p className="text-xs text-gray-500">
-                              {new Date(split.created_at).toLocaleDateString()}
-                            </p>
+                            <div className="text-xs text-gray-500">
+                              <p>{new Date(split.created_at).toLocaleDateString()}</p>
+                              {split.created_by && (
+                                <p className="text-xs text-gray-400">by {split.created_by}</p>
+                              )}
+                            </div>
                           </div>
 
                           {/* Actions */}

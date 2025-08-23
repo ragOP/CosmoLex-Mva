@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Stack, IconButton, Typography, Chip, Dialog, Box } from '@mui/material';
@@ -17,31 +17,21 @@ import {
 import { getFeeSplit, updateFeeSplit, deleteFeeSplit } from '@/api/api_services/finance';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useQuery as useReactQuery } from '@tanstack/react-query';
 import { getFinanceMeta } from '@/api/api_services/finance';
+import CreateFeeSplitDialog from './components/CreateFeeSplitDialog';
 
 const FeeSplitDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const queryClient = useQueryClient();
-    const [editMode, setEditMode] = useState(false);
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [editData, setEditData] = useState({});
-    
+
     const slugId = searchParams.get('slugId');
 
-    // Check if edit mode is requested via URL parameter
-    useEffect(() => {
-        const editParam = searchParams.get('edit');
-        if (editParam === 'true') {
-            setEditMode(true);
-        }
-    }, [searchParams]);
+
 
     // Fetch fee split details
     const { data: feeSplitResponse, isLoading, error } = useQuery({
@@ -52,27 +42,21 @@ const FeeSplitDetail = () => {
 
     const feeSplit = feeSplitResponse?.data;
 
-    // Fetch meta data for edit form
+    // Fetch meta data for ID-to-name mapping
     const { data: metaData } = useReactQuery({
         queryKey: ['financeMeta'],
         queryFn: getFinanceMeta,
-        enabled: editMode && open
+        enabled: true
     });
 
-    // Update fee split mutation
-    const updateFeeSplitMutation = useMutation({
-        mutationFn: (data) => updateFeeSplit(id, data, slugId),
-        onSuccess: () => {
-            toast.success('Fee split updated successfully!');
-            setEditMode(false);
-            queryClient.invalidateQueries(['feeSplit', id]);
-            queryClient.invalidateQueries(['feeSplits', slugId]);
-        },
-        onError: (error) => {
-            toast.error('Failed to update fee split. Please try again.');
-            console.error('Update fee split error:', error);
-        }
-    });
+    // Helper function to get name by ID from metadata
+    const getNameById = (id, metadataType) => {
+        if (!metaData || !metaData[metadataType]) return id || 'N/A';
+        const item = metaData[metadataType].find(item => item.id === id);
+        return item ? item.name : (id || 'N/A');
+    };
+
+
 
     // Delete fee split mutation
     const deleteFeeSplitMutation = useMutation({
@@ -93,7 +77,7 @@ const FeeSplitDetail = () => {
     };
 
     const handleEdit = () => {
-        navigate(`/dashboard/inbox/finance?slugId=${slugId || ''}&tab=fee-splits&edit=${id}`);
+        setEditDialogOpen(true);
     };
 
     const handleDelete = () => {
@@ -101,20 +85,15 @@ const FeeSplitDetail = () => {
         setDeleteDialogOpen(false);
     };
 
-    const handleInputChange = (field, value) => {
-        setEditData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
+
 
     if (isLoading) {
         return (
             <div className="px-4">
-                <Box sx={{ 
-                    bgcolor: 'rgba(255, 255, 255, 0.5)', 
+                <Box sx={{
+                    bgcolor: 'rgba(255, 255, 255, 0.5)',
                     backdropFilter: 'blur(8px)',
-                    borderRadius: 3, 
+                    borderRadius: 3,
                     boxShadow: '0 4px 24px 0px rgba(0, 0, 0, 0.1)',
                     border: '1px solid rgba(226, 232, 240, 0.8)',
                     p: 4
@@ -132,10 +111,10 @@ const FeeSplitDetail = () => {
     if (error) {
         return (
             <div className="px-4">
-                <Box sx={{ 
-                    bgcolor: 'rgba(255, 255, 255, 0.5)', 
+                <Box sx={{
+                    bgcolor: 'rgba(255, 255, 255, 0.5)',
                     backdropFilter: 'blur(8px)',
-                    borderRadius: 3, 
+                    borderRadius: 3,
                     boxShadow: '0 4px 24px 0px rgba(0, 0, 0, 0.1)',
                     border: '1px solid rgba(226, 232, 240, 0.8)',
                     p: 4
@@ -151,10 +130,10 @@ const FeeSplitDetail = () => {
     if (!feeSplit) {
         return (
             <div className="px-4">
-                <Box sx={{ 
-                    bgcolor: 'rgba(255, 255, 255, 0.5)', 
+                <Box sx={{
+                    bgcolor: 'rgba(255, 255, 255, 0.5)',
                     backdropFilter: 'blur(8px)',
-                    borderRadius: 3, 
+                    borderRadius: 3,
                     boxShadow: '0 4px 24px 0px rgba(0, 0, 0, 0.1)',
                     border: '1px solid rgba(226, 232, 240, 0.8)',
                     p: 4
@@ -169,17 +148,17 @@ const FeeSplitDetail = () => {
 
     return (
         <div className="px-2">
-            <Box sx={{ 
-                bgcolor: 'rgba(255, 255, 255, 0.5)', 
+            <Box sx={{
+                bgcolor: 'rgba(255, 255, 255, 0.5)',
                 backdropFilter: 'blur(8px)',
-                borderRadius: 3, 
+                borderRadius: 3,
                 boxShadow: '0 4px 24px 0px rgba(0, 0, 0, 0.1)',
                 border: '1px solid rgba(226, 232, 240, 0.8)',
                 overflow: 'hidden'
             }}>
                 {/* Header */}
-                <Box sx={{ 
-                    px: 3, 
+                <Box sx={{
+                    px: 3,
                     py: 2,
                     borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
                     display: 'flex',
@@ -194,20 +173,20 @@ const FeeSplitDetail = () => {
                             Fee Split Details
                         </Typography>
                     </Box>
-                    
+
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                        <IconButton 
+                        <IconButton
                             onClick={handleEdit}
-                            sx={{ 
+                            sx={{
                                 color: '#7367F0',
                                 '&:hover': { bgcolor: 'rgba(115, 103, 240, 0.1)' }
                             }}
                         >
                             <Edit size={18} />
                         </IconButton>
-                        <IconButton 
+                        <IconButton
                             onClick={() => setDeleteDialogOpen(true)}
-                            sx={{ 
+                            sx={{
                                 color: '#dc2626',
                                 '&:hover': { bgcolor: 'rgba(220, 38, 38, 0.1)' }
                             }}
@@ -218,10 +197,10 @@ const FeeSplitDetail = () => {
                 </Box>
 
                 {/* Content */}
-                <Box sx={{ 
-                    px: 4, 
-                    py: 2, 
-                    maxHeight: '70vh', 
+                <Box sx={{
+                    px: 4,
+                    py: 2,
+                    maxHeight: '70vh',
                     overflowY: 'auto',
                     '&::-webkit-scrollbar': {
                         width: '8px',
@@ -239,44 +218,35 @@ const FeeSplitDetail = () => {
                     },
                 }}>
                     <Stack spacing={4}>
-                        {/* Basic Information */}
+                                                {/* Basic Information */}
                         <Box>
                             <Typography variant="h6" sx={{ mb: 3, color: '#374151', fontWeight: 600 }}>
-                                Case Information
+                                Fee Split Information
                             </Typography>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-4">
                                     <div>
                                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                            Case Name
+                                            Fee Split ID
                                         </Typography>
                                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                            {feeSplit.case_name || 'N/A'}
+                                            {feeSplit.id || 'N/A'}
                                         </Typography>
                                     </div>
                                     
                                     <div>
                                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                            Case Number
-                                        </Typography>
-                                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                            {feeSplit.case_number || 'N/A'}
-                                        </Typography>
-                                    </div>
-                                    
-                                    <div>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                            Status
+                                            Referral Status
                                         </Typography>
                                         <Chip
-                                            label={feeSplit.status || 'Active'}
+                                            label={getNameById(feeSplit.referral_status_id, 'referral_status') || 'Active'}
                                             size="small"
                                             sx={{
-                                                bgcolor: feeSplit.status === 'Settled' ? '#dcfce7' : 
-                                                         feeSplit.status === 'Pending' ? '#fef3c7' : '#dbeafe',
-                                                color: feeSplit.status === 'Settled' ? '#166534' : 
-                                                        feeSplit.status === 'Pending' ? '#92400e' : '#1e40af',
+                                                bgcolor: getNameById(feeSplit.referral_status_id, 'referral_status') === 'Settled' ? '#dcfce7' : 
+                                                         getNameById(feeSplit.referral_status_id, 'referral_status') === 'Pending' ? '#fef3c7' : '#dbeafe',
+                                                color: getNameById(feeSplit.referral_status_id, 'referral_status') === 'Settled' ? '#166534' : 
+                                                        getNameById(feeSplit.referral_status_id, 'referral_status') ? '#92400e' : '#1e40af',
                                                 fontWeight: 500
                                             }}
                                         />
@@ -286,106 +256,77 @@ const FeeSplitDetail = () => {
                                 <div className="space-y-4">
                                     <div>
                                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                            Split Type
+                                            Override Type
                                         </Typography>
                                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                            {feeSplit.split_type || 'N/A'}
+                                            {getNameById(feeSplit.override_type_id, 'override_type') || 'N/A'}
                                         </Typography>
                                     </div>
                                     
                                     <div>
                                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                            Settlement Date
+                                            Created By
                                         </Typography>
                                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                            {feeSplit.settlement_date ? new Date(feeSplit.settlement_date).toLocaleDateString() : 'N/A'}
-                                        </Typography>
-                                    </div>
-                                    
-                                    <div>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                            Payment Terms
-                                        </Typography>
-                                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                            {feeSplit.payment_terms || 'N/A'}
+                                            {feeSplit.created_by || 'N/A'}
                                         </Typography>
                                     </div>
                                 </div>
                             </div>
                         </Box>
 
-                        {/* Financial Breakdown */}
+                                                {/* Override Information */}
                         <Box>
                             <Typography variant="h6" sx={{ mb: 3, color: '#374151', fontWeight: 600 }}>
-                                Financial Breakdown
+                                Override Information
                             </Typography>
                             
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div className="bg-gray-50 rounded-lg p-4">
                                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                        Total Settlement
+                                        Override Type
                                     </Typography>
                                     <Typography variant="h6" sx={{ fontWeight: 600, color: '#059669' }}>
-                                        ${feeSplit.total_settlement || '0'}
+                                        {getNameById(feeSplit.override_type_id, 'override_type') || 'N/A'}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                        ID: {feeSplit.override_type_id || 'N/A'}
                                     </Typography>
                                 </div>
                                 
                                 <div className="bg-gray-50 rounded-lg p-4">
                                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                        Our Share ({feeSplit.our_percentage || '0'}%)
+                                        Override Value
                                     </Typography>
                                     <Typography variant="h6" sx={{ fontWeight: 600, color: '#2563eb' }}>
-                                        ${feeSplit.our_share || '0'}
+                                        {feeSplit.override || 'N/A'}
                                     </Typography>
                                 </div>
-                                
+
                                 <div className="bg-gray-50 rounded-lg p-4">
                                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                        Their Share ({feeSplit.their_percentage || '0'}%)
+                                        Referral Status
                                     </Typography>
                                     <Typography variant="h6" sx={{ fontWeight: 600, color: '#dc2626' }}>
-                                        ${feeSplit.their_share || '0'}
+                                        {getNameById(feeSplit.referral_status_id, 'referral_status') || 'N/A'}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                                        ID: {feeSplit.referral_status_id || 'N/A'}
                                     </Typography>
                                 </div>
                             </div>
                         </Box>
 
-                        {/* Firm Information */}
+                                                {/* Fee Split Details */}
                         <Box>
                             <Typography variant="h6" sx={{ mb: 3, color: '#374151', fontWeight: 600 }}>
-                                Firm Information
+                                Fee Split Details
                             </Typography>
-                            
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3">
                                         <Building className="w-5 h-5 text-gray-400" />
-                                        <div>
-                                            <Typography variant="body2" color="text.secondary">
-                                                Firm Name
-                                            </Typography>
-                                            <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                                {feeSplit.firm_name || 'N/A'}
-                                            </Typography>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="flex items-center gap-3">
-                                        <FileTextIcon className="w-5 h-5 text-gray-400" />
-                                        <div>
-                                            <Typography variant="body2" color="text.secondary">
-                                                Firm Agreement ID
-                                            </Typography>
-                                            <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                                {feeSplit.firm_agreement_id || 'N/A'}
-                                            </Typography>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-3">
-                                        <Calculator className="w-5 h-5 text-gray-400" />
                                         <div>
                                             <Typography variant="body2" color="text.secondary">
                                                 Subfirm ID
@@ -397,13 +338,39 @@ const FeeSplitDetail = () => {
                                     </div>
                                     
                                     <div className="flex items-center gap-3">
-                                        <TrendingUp className="w-5 h-5 text-gray-400" />
+                                        <FileTextIcon className="w-5 h-5 text-gray-400" />
+                                        <div>
+                                            <Typography variant="body2" color="text.secondary">
+                                                Firm Agreement
+                                            </Typography>
+                                            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                                {getNameById(feeSplit.firm_agreement_id, 'firm_agreement_in_place')}
+                                            </Typography>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-3">
+                                        <Calculator className="w-5 h-5 text-gray-400" />
                                         <div>
                                             <Typography variant="body2" color="text.secondary">
                                                 Override Type
                                             </Typography>
                                             <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                                {feeSplit.override_type_id || 'N/A'}
+                                                {getNameById(feeSplit.override_type_id, 'override_type')}
+                                            </Typography>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-3">
+                                        <TrendingUp className="w-5 h-5 text-gray-400" />
+                                        <div>
+                                            <Typography variant="body2" color="text.secondary">
+                                                Override Value
+                                            </Typography>
+                                            <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                                {feeSplit.override || 'N/A'}
                                             </Typography>
                                         </div>
                                     </div>
@@ -411,7 +378,7 @@ const FeeSplitDetail = () => {
                             </div>
                         </Box>
 
-                        {/* Additional Details */}
+                                                {/* Additional Details */}
                         <Box>
                             <Typography variant="h6" sx={{ mb: 3, color: '#374151', fontWeight: 600 }}>
                                 Additional Details
@@ -421,19 +388,19 @@ const FeeSplitDetail = () => {
                                 <div className="space-y-4">
                                     <div>
                                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                            Override Amount
+                                            Subfirm ID
                                         </Typography>
-                                        <Typography variant="body1" sx={{ fontWeight: 500, color: '#059669' }}>
-                                            ${feeSplit.override || '0'}
+                                        <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                            {feeSplit.subfirm_id || 'N/A'}
                                         </Typography>
                                     </div>
                                     
                                     <div>
                                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                            Referral Status
+                                            Override Type ID
                                         </Typography>
                                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                            {feeSplit.referral_status_id || 'N/A'}
+                                            {feeSplit.override_type_id || 'N/A'} ({getNameById(feeSplit.override_type_id, 'override_type')})
                                         </Typography>
                                     </div>
                                 </div>
@@ -441,45 +408,33 @@ const FeeSplitDetail = () => {
                                 <div className="space-y-4">
                                     <div>
                                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                            Category ID
+                                            Referral Status
                                         </Typography>
                                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                            {feeSplit.category_id || 'N/A'}
+                                            {getNameById(feeSplit.referral_status_id, 'referral_status')}
                                         </Typography>
                                     </div>
                                     
                                     <div>
                                         <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                            Folder ID
+                                            Firm Agreement ID
                                         </Typography>
                                         <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                            {feeSplit.folder_id || 'N/A'}
+                                            {feeSplit.firm_agreement_id || 'N/A'} ({getNameById(feeSplit.firm_agreement_id, 'firm_agreement_in_place')})
                                         </Typography>
                                     </div>
                                 </div>
                             </div>
                         </Box>
 
-                        {/* Notes */}
-                        {feeSplit.notes && (
-                            <Box>
-                                <Typography variant="h6" sx={{ mb: 3, color: '#374151', fontWeight: 600 }}>
-                                    Notes
-                                </Typography>
-                                <div className="bg-white rounded-lg p-4 border border-gray-200">
-                                    <Typography variant="body1" className="text-gray-900">
-                                        {feeSplit.notes}
-                                    </Typography>
-                                </div>
-                            </Box>
-                        )}
+
 
                         {/* Timestamps */}
                         <Box>
                             <Typography variant="h6" sx={{ mb: 3, color: '#374151', fontWeight: 600 }}>
                                 Timestamps
                             </Typography>
-                            
+
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-4">
                                     <div className="flex items-center gap-3">
@@ -493,26 +448,51 @@ const FeeSplitDetail = () => {
                                             </Typography>
                                         </div>
                                     </div>
-                                </div>
-                                
-                                <div className="space-y-4">
+
                                     <div className="flex items-center gap-3">
-                                        <Calendar className="w-5 h-5 text-gray-400" />
+                                        <FileTextIcon className="w-5 h-5 text-gray-400" />
                                         <div>
                                             <Typography variant="body2" color="text.secondary">
-                                                Updated
+                                                Created By
                                             </Typography>
                                             <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                                {feeSplit.updated_at ? new Date(feeSplit.updated_at).toLocaleDateString() : 'N/A'}
+                                                {feeSplit.created_by || 'N/A'}
                                             </Typography>
                                         </div>
                                     </div>
                                 </div>
+
+
                             </div>
                         </Box>
                     </Stack>
                 </Box>
             </Box>
+
+            {/* Edit Fee Split Dialog */}
+            <CreateFeeSplitDialog
+                open={editDialogOpen}
+                onClose={() => setEditDialogOpen(false)}
+                onSubmit={async (data) => {
+                    try {
+                        const result = await updateFeeSplit(id, data, slugId);
+                        if (result && result.Apistatus === true) {
+                            toast.success('Fee split updated successfully!');
+                            setEditDialogOpen(false);
+                            queryClient.invalidateQueries(['feeSplit', id]);
+                            queryClient.invalidateQueries(['feeSplits', slugId]);
+                        } else {
+                            toast.error(result?.message || 'Failed to update fee split');
+                        }
+                    } catch (error) {
+                        console.error('Update fee split error:', error);
+                        toast.error('Failed to update fee split. Please try again.');
+                    }
+                }}
+                isLoading={false}
+                editMode={true}
+                editingFeeSplit={feeSplit}
+            />
 
             {/* Delete Confirmation Dialog */}
             <Dialog

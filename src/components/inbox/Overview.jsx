@@ -26,6 +26,7 @@ import { useNavigate } from 'react-router-dom';
 import CreateContactDialog from './CreateContactDialog';
 import BreadCrumb from '@/components/BreadCrumb';
 import getContactMeta from '@/pages/matter/intake/helpers/getContactMeta';
+import { toast } from 'sonner';
 import {
   Edit,
   X,
@@ -54,7 +55,12 @@ export default function Overview() {
     mutationFn: updateMatter,
     onSuccess: () => {
       console.log('Matter updated successfully');
+      toast.success('Matter overview updated successfully!');
       queryClient.invalidateQueries({ queryKey: ['matters'] });
+    },
+    onError: (error) => {
+      console.error('Matter update failed:', error);
+      toast.error('Failed to update matter overview. Please try again.');
     },
   });
 
