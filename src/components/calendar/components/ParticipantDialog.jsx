@@ -12,23 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Dialog,
-  Divider,
-  IconButton,
-  Stack,
-  Switch,
-  Tooltip,
-  Chip,
-} from '@mui/material';
-import { Trash2, Plus, X, Edit, Loader2, Paperclip } from 'lucide-react';
-import { useEvents } from '@/components/calendar/hooks/useEvent';
-import { toast } from 'sonner';
-import UploadMediaDialog from '@/components/UploadMediaDialog';
-import SearchDialog from '@/components/dialogs/SearchDialog';
-import { searchTask } from '@/api/api_services/task';
-import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { Dialog, IconButton, Stack } from '@mui/material';
+import { X } from 'lucide-react';
 
 // Participant Dialog Component
 export const ParticipantDialog = ({
@@ -44,7 +29,8 @@ export const ParticipantDialog = ({
       "status_id": 34,
       "comment": "Main speaker"
    */
-  const { control, handleSubmit, reset } = useForm({
+  const [validationErrors, setValidationErrors] = useState({});
+  const { control, handleSubmit, reset, getValues } = useForm({
     defaultValues: {
       user_id: '',
       role_id: '',
@@ -52,6 +38,14 @@ export const ParticipantDialog = ({
       comment: '',
     },
   });
+
+  const validateForm = () => {
+    const errors = {};
+    if (!getValues('user_id')) {
+      errors.user_id = 'User is required';
+    }
+    return errors;
+  };
 
   useEffect(() => {
     if (editingParticipant) {
@@ -66,14 +60,26 @@ export const ParticipantDialog = ({
     }
   }, [editingParticipant, reset]);
 
-  const handleFormSubmit = (data) => {
+  const handleFormSubmit = () => {
+    const errors = validateForm();
+    console.log('errors >>>', errors);
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
+    const data = getValues();
+    console.log('data >>>', data);
+
     onSubmit(data);
     reset();
   };
 
+  console.log('validationErrors from participant >>>', validationErrors);
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <form onSubmit={handleSubmit(handleFormSubmit)}>
+      <form>
         <Stack className="bg-[#F5F5FA] rounded-lg p-6 space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-center">
@@ -122,6 +128,11 @@ export const ParticipantDialog = ({
                   </Select>
                 )}
               />
+              {validationErrors.user_id && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.user_id}
+                </p>
+              )}
             </div>
 
             <div className="w-full">
@@ -161,6 +172,11 @@ export const ParticipantDialog = ({
                   </Select>
                 )}
               />
+              {validationErrors.role_id && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.role_id}
+                </p>
+              )}
             </div>
 
             <div className="w-full">
@@ -200,6 +216,11 @@ export const ParticipantDialog = ({
                   </Select>
                 )}
               />
+              {validationErrors.status_id && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.status_id}
+                </p>
+              )}
             </div>
 
             <div className="w-full">
@@ -217,6 +238,11 @@ export const ParticipantDialog = ({
                   />
                 )}
               />
+              {validationErrors.comment && (
+                <p className="text-red-500 text-sm mt-1">
+                  {validationErrors.comment}
+                </p>
+              )}
             </div>
           </div>
 
@@ -229,7 +255,8 @@ export const ParticipantDialog = ({
               Cancel
             </Button>
             <Button
-              type="submit"
+              type="button"
+              onClick={handleFormSubmit}
               className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
             >
               {editingParticipant ? 'Update Participant' : 'Save Participant'}

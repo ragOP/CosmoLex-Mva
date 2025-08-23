@@ -138,19 +138,8 @@ export default function NewEventDialogRHF({
   // Auto-populate dates when selectedDateRange changes
   useEffect(() => {
     if (selectedDateRange && selectedDateRange.start && selectedDateRange.end) {
-      console.log('selectedDateRange >>>', selectedDateRange);
-
       setValue('start_time', formatDateForInput(selectedDateRange.start));
       setValue('end_time', formatDateForInput(selectedDateRange.end));
-
-      console.log(
-        'start_time >>>',
-        formatDateForInput(selectedDateRange.start)
-      );
-      console.log('end_time >>>', formatDateForInput(selectedDateRange.end));
-
-      console.log('start time', getValues('start_time'));
-      console.log('end time', getValues('end_time'));
     }
   }, [selectedDateRange, setValue]);
 
@@ -212,10 +201,6 @@ export default function NewEventDialogRHF({
   const validateForm = (data) => {
     const errors = {};
 
-    // if (!data.contacts_id) {
-    //   errors.contacts_id = 'Contact is required';
-    // }
-
     if (!data.title || data.title.trim() === '') {
       errors.title = 'Title is required';
     }
@@ -230,25 +215,6 @@ export default function NewEventDialogRHF({
 
     if (data.start_time && data.end_time && data.start_time >= data.end_time) {
       errors.end_time = 'End time must be after start time';
-    }
-
-    // const currentDate = new Date();
-    // currentDate.setHours(0, 0, 0, 0);
-
-    // if (data.start_time < currentDate) {
-    //   errors.start_time = 'Start time must be after current time';
-    // }
-
-    if (!data.category_id) {
-      errors.category_id = 'Category is required';
-    }
-
-    if (!data.priority_id) {
-      errors.priority_id = 'Priority is required';
-    }
-
-    if (!data.status_id) {
-      errors.status_id = 'Status is required';
     }
 
     // Atleast one reminder is needed
@@ -391,6 +357,7 @@ export default function NewEventDialogRHF({
 
   if (!open) return null;
 
+  console.log('reminder >>>', reminderFields);
   console.log('attachments >>>>', attachments);
 
   return (
@@ -444,115 +411,117 @@ export default function NewEventDialogRHF({
 
               {/* Form Fields */}
               <div className="flex flex-wrap gap-4">
-                {formFields.map(({ label, name, type, options, maxLength }) => (
-                  <div key={name} className="w-full md:w-[49%]">
-                    {type !== 'checkbox' && (
-                      <Label className="text-[#40444D] font-semibold mb-2">
-                        {label}
-                        <span className="text-red-500 ml-1">*</span>
-                      </Label>
-                    )}
-
-                    {type === 'select' ? (
-                      <Controller
-                        control={control}
-                        name={name}
-                        rules={getValidationRules(name)}
-                        render={({ field }) => (
-                          <Select
-                            onValueChange={(value) => {
-                              field.onChange(value);
-                              if (validationErrors[name]) {
-                                setValidationErrors((prev) => ({
-                                  ...prev,
-                                  [name]: undefined,
-                                }));
-                              }
-                            }}
-                            value={field.value?.toString()}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder={`Select ${label}`} />
-                            </SelectTrigger>
-                            <SelectContent
-                              position="popper"
-                              portal={false}
-                              className="z-[9999]"
-                            >
-                              <SelectGroup>
-                                {options?.map((option) => (
-                                  <SelectItem
-                                    key={option.id}
-                                    value={option.id.toString()}
-                                  >
-                                    {option.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectGroup>
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                    ) : type === 'checkbox' ? (
-                      <div className="flex items-center space-x-2">
-                        <Label className="text-[#40444D] font-semibold">
-                          {label}:
+                {formFields.map(
+                  ({ label, name, type, options, maxLength, required }) => (
+                    <div key={name} className="w-full md:w-[49%]">
+                      {type !== 'checkbox' && (
+                        <Label className="text-[#40444D] font-semibold mb-2">
+                          {label}{' '}
+                          {required && <span className="text-red-500">*</span>}
                         </Label>
+                      )}
+
+                      {type === 'select' ? (
+                        <Controller
+                          control={control}
+                          name={name}
+                          rules={getValidationRules(name)}
+                          render={({ field }) => (
+                            <Select
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                if (validationErrors[name]) {
+                                  setValidationErrors((prev) => ({
+                                    ...prev,
+                                    [name]: undefined,
+                                  }));
+                                }
+                              }}
+                              value={field.value?.toString()}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder={`Select ${label}`} />
+                              </SelectTrigger>
+                              <SelectContent
+                                position="popper"
+                                portal={false}
+                                className="z-[9999]"
+                              >
+                                <SelectGroup>
+                                  {options?.map((option) => (
+                                    <SelectItem
+                                      key={option.id}
+                                      value={option.id.toString()}
+                                    >
+                                      {option.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      ) : type === 'checkbox' ? (
+                        <div className="flex items-center space-x-2">
+                          <Label className="text-[#40444D] font-semibold">
+                            {label}:
+                          </Label>
+                          <Controller
+                            control={control}
+                            name={name}
+                            render={({ field }) => (
+                              <Switch
+                                checked={field.value}
+                                onChange={field.onChange}
+                              />
+                            )}
+                          />
+                        </div>
+                      ) : type === 'textarea' ? (
                         <Controller
                           control={control}
                           name={name}
                           render={({ field }) => (
-                            <Switch
-                              checked={field.value}
-                              onChange={field.onChange}
+                            <Textarea
+                              className="w-full bg-white"
+                              minRows={3}
+                              maxRows={5}
+                              {...field}
                             />
                           )}
                         />
-                      </div>
-                    ) : type === 'textarea' ? (
-                      <Controller
-                        control={control}
-                        name={name}
-                        render={({ field }) => (
-                          <Textarea
-                            className="w-full bg-white"
-                            minRows={3}
-                            maxRows={5}
-                            {...field}
-                          />
-                        )}
-                      />
-                    ) : (
-                      <Controller
-                        control={control}
-                        name={name}
-                        rules={getValidationRules(name)}
-                        render={({ field }) => (
-                          <Input
-                            type={type}
-                            {...field}
-                            maxLength={maxLength}
-                            onChange={(e) => {
-                              field.onChange(e);
-                              if (validationErrors[name]) {
-                                setValidationErrors((prev) => ({
-                                  ...prev,
-                                  [name]: undefined,
-                                }));
-                              }
-                            }}
-                          />
-                        )}
-                      />
-                    )}
+                      ) : (
+                        <Controller
+                          control={control}
+                          name={name}
+                          rules={getValidationRules(name)}
+                          render={({ field }) => (
+                            <Input
+                              type={type}
+                              {...field}
+                              maxLength={maxLength}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                if (validationErrors[name]) {
+                                  setValidationErrors((prev) => ({
+                                    ...prev,
+                                    [name]: undefined,
+                                  }));
+                                }
+                              }}
+                            />
+                          )}
+                        />
+                      )}
 
-                    {(validationErrors[name] || errors[name]) && (
-                      <p className="text-xs text-red-500">
-                        {validationErrors[name] || errors[name]?.message}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                      {(validationErrors[name] || errors[name]) && (
+                        <p className="text-xs text-red-500">
+                          {validationErrors[name] || errors[name]?.message}
+                        </p>
+                      )}
+                    </div>
+                  )
+                )}
               </div>
 
               {/* Reminders Section */}

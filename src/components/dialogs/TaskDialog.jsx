@@ -421,8 +421,6 @@ export default function TaskDialog({
         status_id: parseInt(data.status_id) || data.status_id,
       };
 
-      console.log('formattedData', formattedData);
-
       if (isUpdateMode) {
         await updateTask({ taskId: currentTask.id, taskData: formattedData });
         toast.success('Task updated successfully');
@@ -541,7 +539,6 @@ export default function TaskDialog({
     replaceAssignedTo,
   ]);
 
-  console.log('validationErrors', validationErrors);
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
@@ -565,20 +562,18 @@ export default function TaskDialog({
                     Contact <span className="text-red-500">*</span>
                   </Label>
                   {contact ? (
-                    <>
-                      <Chip
-                        label={contact?.contact_name}
-                        onDelete={() => {
-                          setContact(null);
-                          setValue('contact_id', '');
-                          setValue('slug', '');
-                          setSearchDialogOpen(true);
-                        }}
-                        deleteIcon={<X size={16} />}
-                        size="small"
-                        sx={{ bgcolor: '#e8f5e8', color: '#2e7d32', p: 1 }}
-                      />
-                    </>
+                    <Chip
+                      label={contact?.contact_name}
+                      onDelete={() => {
+                        setContact(null);
+                        setValue('contact_id', '');
+                        setValue('slug', '');
+                        setSearchDialogOpen(true);
+                      }}
+                      deleteIcon={<X size={16} />}
+                      size="small"
+                      sx={{ bgcolor: '#e8f5e8', color: '#2e7d32', p: 1 }}
+                    />
                   ) : (
                     <Button
                       type="button"
@@ -600,132 +595,133 @@ export default function TaskDialog({
                 </div>
 
                 {/* Don't show until contact is selected */}
-                {contact &&
-                  formFields.map(
-                    ({ label, name, type, required, metaField, maxLength }) => (
-                      <div key={name} className="w-full md:w-[49%]">
-                        {type !== 'checkbox' && (
-                          <Label className="text-[#40444D] font-semibold mb-2">
-                            {label}
-                            {required && (
-                              <span className="text-red-500 ml-1">*</span>
-                            )}
-                          </Label>
-                        )}
+                {formFields.map(
+                  ({ label, name, type, required, metaField, maxLength }) => (
+                    <div key={name} className="w-full md:w-[49%]">
+                      {type !== 'checkbox' && (
+                        <Label className="text-[#40444D] font-semibold mb-2">
+                          {label}
+                          {required && (
+                            <span className="text-red-500 ml-1">*</span>
+                          )}
+                        </Label>
+                      )}
 
-                        {type === 'select' ? (
-                          <Controller
-                            control={control}
-                            name={name}
-                            render={({ field }) => (
-                              <Select
-                                onValueChange={(value) => {
-                                  field.onChange(value);
-                                  // Clear validation error when user selects a value
-                                  if (validationErrors[name]) {
-                                    setValidationErrors((prev) => ({
-                                      ...prev,
-                                      [name]: undefined,
-                                    }));
-                                  }
-                                }}
-                                value={field.value?.toString()}
+                      {type === 'select' ? (
+                        <Controller
+                          control={control}
+                          name={name}
+                          render={({ field }) => (
+                            <Select
+                              disabled={!contact}
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                // Clear validation error when user selects a value
+                                if (validationErrors[name]) {
+                                  setValidationErrors((prev) => ({
+                                    ...prev,
+                                    [name]: undefined,
+                                  }));
+                                }
+                              }}
+                              value={field.value?.toString()}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder={`Select ${label}`} />
+                              </SelectTrigger>
+                              <SelectContent
+                                position="popper"
+                                portal={false}
+                                className="z-[9999]"
                               >
-                                <SelectTrigger className="w-full">
-                                  <SelectValue
-                                    placeholder={`Select ${label}`}
-                                  />
-                                </SelectTrigger>
-                                <SelectContent
-                                  position="popper"
-                                  portal={false}
-                                  className="z-[9999]"
-                                >
-                                  <SelectGroup>
-                                    {getMetaOptions(metaField).map((option) => (
-                                      <SelectItem
-                                        key={option.id}
-                                        value={option.id.toString()}
-                                      >
-                                        {option.name}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectGroup>
-                                </SelectContent>
-                              </Select>
+                                <SelectGroup>
+                                  {getMetaOptions(metaField).map((option) => (
+                                    <SelectItem
+                                      key={option.id}
+                                      value={option.id.toString()}
+                                    >
+                                      {option.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      ) : type === 'checkbox' ? (
+                        <div className="flex items-center space-x-2">
+                          <Label className="text-[#40444D] font-semibold">
+                            {label}:
+                          </Label>
+                          <Controller
+                            control={control}
+                            name={name}
+                            render={({ field }) => (
+                              <Switch
+                                disabled={!contact}
+                                checked={field.value}
+                                onChange={field.onChange}
+                              />
                             )}
                           />
-                        ) : type === 'checkbox' ? (
-                          <div className="flex items-center space-x-2">
-                            <Label className="text-[#40444D] font-semibold">
-                              {label}:
-                            </Label>
-                            <Controller
-                              control={control}
-                              name={name}
-                              render={({ field }) => (
-                                <Switch
-                                  checked={field.value}
-                                  onChange={field.onChange}
-                                />
-                              )}
+                        </div>
+                      ) : type === 'textarea' ? (
+                        <Controller
+                          control={control}
+                          name={name}
+                          render={({ field }) => (
+                            <Textarea
+                              disabled={!contact}
+                              className="w-full bg-white"
+                              minRows={3}
+                              maxRows={5}
+                              {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                // Clear validation error when user types
+                                if (validationErrors[name]) {
+                                  setValidationErrors((prev) => ({
+                                    ...prev,
+                                    [name]: undefined,
+                                  }));
+                                }
+                              }}
                             />
-                          </div>
-                        ) : type === 'textarea' ? (
-                          <Controller
-                            control={control}
-                            name={name}
-                            render={({ field }) => (
-                              <Textarea
-                                className="w-full bg-white"
-                                minRows={3}
-                                maxRows={5}
-                                {...field}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  // Clear validation error when user types
-                                  if (validationErrors[name]) {
-                                    setValidationErrors((prev) => ({
-                                      ...prev,
-                                      [name]: undefined,
-                                    }));
-                                  }
-                                }}
-                              />
-                            )}
-                          />
-                        ) : (
-                          <Controller
-                            control={control}
-                            name={name}
-                            render={({ field }) => (
-                              <Input
-                                type={type}
-                                {...field}
-                                maxLength={maxLength}
-                                onChange={(e) => {
-                                  field.onChange(e);
-                                  // Clear validation error when user types
-                                  if (validationErrors[name]) {
-                                    setValidationErrors((prev) => ({
-                                      ...prev,
-                                      [name]: undefined,
-                                    }));
-                                  }
-                                }}
-                              />
-                            )}
-                          />
-                        )}
+                          )}
+                        />
+                      ) : (
+                        <Controller
+                          control={control}
+                          name={name}
+                          render={({ field }) => (
+                            <Input
+                              disabled={!contact}
+                              type={type}
+                              {...field}
+                              maxLength={maxLength}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                // Clear validation error when user types
+                                if (validationErrors[name]) {
+                                  setValidationErrors((prev) => ({
+                                    ...prev,
+                                    [name]: undefined,
+                                  }));
+                                }
+                              }}
+                            />
+                          )}
+                        />
+                      )}
 
-                        {validationErrors[name] && (
-                          <p className="text-xs text-red-500">
-                            {validationErrors[name]}
-                          </p>
-                        )}
-                      </div>
-                    )
-                  )}
+                      {validationErrors[name] && (
+                        <p className="text-xs text-red-500">
+                          {validationErrors[name]}
+                        </p>
+                      )}
+                    </div>
+                  )
+                )}
               </div>
 
               <div className="flex flex-wrap gap-4 overflow-auto">

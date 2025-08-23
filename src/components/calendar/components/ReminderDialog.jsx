@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -12,23 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Dialog,
-  Divider,
-  IconButton,
-  Stack,
-  Switch,
-  Tooltip,
-  Chip,
-} from '@mui/material';
-import { Trash2, Plus, X, Edit, Loader2, Paperclip } from 'lucide-react';
-import { useEvents } from '@/components/calendar/hooks/useEvent';
-import { toast } from 'sonner';
-import UploadMediaDialog from '@/components/UploadMediaDialog';
-import SearchDialog from '@/components/dialogs/SearchDialog';
-import { searchTask } from '@/api/api_services/task';
-import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { Dialog, IconButton, Stack } from '@mui/material';
+import { X } from 'lucide-react';
 
 // Reminder Dialog Component
 export const ReminderDialog = ({
@@ -39,7 +23,7 @@ export const ReminderDialog = ({
   eventsMeta,
 }) => {
   const [validationErrors, setValidationErrors] = useState({});
-  const { control, handleSubmit, reset, setValue } = useForm({
+  const { control, handleSubmit, reset, setValue, getValues } = useForm({
     defaultValues: {
       type_id: '',
       timing_id: '',
@@ -50,16 +34,16 @@ export const ReminderDialog = ({
 
   const validateForm = () => {
     const errors = {};
-    if (!control.getValues('type_id')) {
+    if (!getValues('type_id')) {
       errors.type_id = 'Reminder type is required';
     }
-    if (!control.getValues('timing_id')) {
+    if (!getValues('timing_id')) {
       errors.timing_id = 'Timing is required';
     }
-    if (!control.getValues('relative_id')) {
+    if (!getValues('relative_id')) {
       errors.relative_id = 'Relative to is required';
     }
-    if (!control.getValues('value')) {
+    if (!getValues('value')) {
       errors.value = 'Value is required';
     }
     return errors;
@@ -78,22 +62,26 @@ export const ReminderDialog = ({
     }
   }, [editingReminder, reset]);
 
-  const handleFormSubmit = (data) => {
+  const handleFormSubmit = () => {
     const errors = validateForm();
     console.log('errors >>>', errors);
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       return;
     }
+
+    const data = getValues();
+    console.log('data >>>', data);
+
     onSubmit(data);
     reset();
   };
 
-  console.log('validationErrors >>>', validationErrors);
+  console.log('validationErrors from reminder >>>', validationErrors);
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <form onSubmit={handleSubmit(handleFormSubmit)}>
+      <form>
         <Stack className="bg-[#F5F5FA] rounded-lg p-6 space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-center">
@@ -266,7 +254,8 @@ export const ReminderDialog = ({
               Cancel
             </Button>
             <Button
-              type="submit"
+              type="button"
+              onClick={() => handleFormSubmit()}
               className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
             >
               {editingReminder ? 'Update Reminder' : 'Save Reminder'}
