@@ -41,6 +41,7 @@ export const useContact = () => {
     queryKey: ['contact', contactId],
     queryFn: () => getContactById(contactId),
     staleTime: 5 * 60 * 1000,
+    enabled: !!contactId,
   });
 
   // Search contacts

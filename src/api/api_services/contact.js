@@ -18,7 +18,7 @@ export const getContacts = async () => {
     method: 'GET',
   });
   if (response.error) throw new Error('Failed to fetch contacts');
-  return response.response?.contacts || [];
+  return response.response?.data || [];
 };
 
 // Get contact by id

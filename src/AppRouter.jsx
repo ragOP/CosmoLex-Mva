@@ -46,7 +46,7 @@ const FinancePage = lazy(() => import('./components/finance/Finance'));
 const Finance = () => <FinancePage />;
 const ActivityLogs = () => <ErrorPage pageName="Activity Logs" />;
 const UsersPage = lazy(() => import('./pages/users'));
-// const Users = () => <UsersPage />;
+const ContactPage = lazy(() => import('./pages/contact'));
 
 const AppRouter = () => (
   <Router>
@@ -79,6 +79,7 @@ const AppRouter = () => (
           <Route path="documentation" element={<Documentation />} />
           <Route path="communication" element={<Communication />} />
           <Route path="users" element={<UsersPage />} />
+          <Route path="contacts" element={<ContactPage />} />
           <Route
             path="inbox/*"
             element={

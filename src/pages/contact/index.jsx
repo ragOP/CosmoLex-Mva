@@ -7,7 +7,7 @@ import ContactTable from '@/components/contact/components/ContactTable';
 import { Loader2, Plus } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMatter } from '@/components/inbox/MatterContext';
-import { useContacts } from '@/components/contact/hooks/useContacts';
+import { useContact } from '@/components/contact/hooks/useContact';
 
 const ContactPage = () => {
   const [searchParams] = useSearchParams();
@@ -27,7 +27,7 @@ const ContactPage = () => {
     matter = useMatter();
   }
 
-  const { contacts, contactsLoading } = useContacts();
+  const { contacts, contactsLoading } = useContact();
 
   console.log('contacts >>>', contacts);
   console.log('contactsLoading >>>', contactsLoading);
@@ -67,7 +67,7 @@ const ContactPage = () => {
   //     }
   //   };
 
-  if (tasksLoading) {
+  if (contactsLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="w-12 h-12 animate-spin" />

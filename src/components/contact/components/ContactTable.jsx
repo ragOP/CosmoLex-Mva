@@ -12,22 +12,48 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Pencil, CircleOff, Trash2, Eye } from 'lucide-react';
-import { useTasks } from '@/components/tasks/hooks/useTasks';
+import { useContact } from '@/components/contact/hooks/useContact';
 import getMetaOptions from '@/utils/getMetaFields';
 
+/**
+ 
+contact_name
+: 
+"Doe John"
+contact_type
+: 
+"3rd Party"
+date_created
+: 
+"2025-08-14 10:59:05 AM"
+id
+: 
+3
+phone
+: 
+"123-456-7890"
+primary_address
+: 
+"Main St"
+primary_email
+: 
+"abhi.mishra07200@gmail.com"
+: 
+ */
+
 const ContactTable = ({
-  tasks = [],
-  handleUpdateTaskStatus,
+  contacts = [],
   onRowClick,
   handleEdit,
   handleDelete,
 }) => {
-  const [taskData, setTaskData] = useState([]);
-  const { tasksMeta } = useTasks();
+  const [contactData, setContactData] = useState([]);
+  const { contactsMeta } = useContact();
   const statusMeta = getMetaOptions({
-    metaField: 'taks_status',
-    metaObj: tasksMeta,
+    metaField: 'contact_type',
+    metaObj: contactsMeta,
   });
+
   const columns = [
     {
       field: 'id',
@@ -39,8 +65,8 @@ const ContactTable = ({
       align: 'center',
     },
     {
-      field: 'subject',
-      headerName: 'Subject',
+      field: 'contact_name',
+      headerName: 'Contact Name',
       flex: 1,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
@@ -48,8 +74,8 @@ const ContactTable = ({
       align: 'center',
     },
     {
-      field: 'priority',
-      headerName: 'Priority',
+      field: 'contact_type',
+      headerName: 'Contact Type',
       width: 100,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
@@ -71,8 +97,8 @@ const ContactTable = ({
       },
     },
     {
-      field: 'due_date',
-      headerName: 'Due Date',
+      field: 'date_created',
+      headerName: 'Date Created',
       width: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
@@ -85,8 +111,8 @@ const ContactTable = ({
       ),
     },
     {
-      field: 'contact_name',
-      headerName: 'Contact Name',
+      field: 'phone',
+      headerName: 'Phone',
       width: 100,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
@@ -99,8 +125,8 @@ const ContactTable = ({
       ),
     },
     {
-      field: 'assignees',
-      headerName: 'Assignees',
+      field: 'primary_email',
+      headerName: 'Email',
       width: 100,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
@@ -110,19 +136,15 @@ const ContactTable = ({
         <div className="w-full h-full flex items-center justify-start">
           <ScrollArea className="w-full">
             <div className="text-sm text-muted-foreground flex justify-center">
-              {params.row.assignees.map((a, index) => (
-                <Tooltip title={a?.name} key={index}>
-                  <Avatar src={a?.profile} alt={a?.name} />
-                </Tooltip>
-              ))}
+              {params.value}
             </div>
           </ScrollArea>
         </div>
       ),
     },
     {
-      field: 'assigned_by',
-      headerName: 'Assigned By',
+      field: 'primary_address',
+      headerName: 'Address',
       width: 100,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
@@ -132,93 +154,10 @@ const ContactTable = ({
         <div className="w-full h-full flex items-center justify-start">
           <ScrollArea className="w-full">
             <div className="text-sm text-muted-foreground flex justify-center">
-              {params.row.assigned_by && (
-                <Tooltip title={params.row.assigned_by?.name}>
-                  <Avatar
-                    src={params.row.assigned_by?.profile}
-                    alt={params.row.assigned_by?.name}
-                  />
-                </Tooltip>
-              )}
+              {params.value}
             </div>
           </ScrollArea>
         </div>
-      ),
-    },
-    {
-      field: 'status_id',
-      headerName: 'Status',
-      width: 120,
-      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
-      cellClassName: 'text-[#6366F1]',
-      headerAlign: 'center',
-      align: 'center',
-      renderCell: (params) => {
-        return (
-          <div className="w-full h-full flex items-center justify-start">
-            {/* Uncomment when backend send id rather string for status */}
-
-            <Select
-              value={statusMeta
-                .find((s) => s.id === params.value)
-                ?.id.toString()} // convert "Pending" → "1"
-              onValueChange={(value) => {
-                handleUpdateTaskStatus(params.id, parseInt(value));
-              }}
-            >
-              <SelectTrigger className="w-[120px] h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {statusMeta.map((status) => (
-                  <SelectItem key={status.id} value={status.id.toString()}>
-                    {status.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {/* <Select
-              disabled={params.value === 'Completed'}
-              value={params.value} // "Pending", "Completed"
-              onValueChange={(value) => {
-                handleUpdateTaskStatus(params.id, value); // pass name directly
-              }}
-            >
-              <SelectTrigger className="w-[120px] h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {statusMeta.map((status) => (
-                  <SelectItem key={status.id} value={status.name}>
-                    {status.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select> */}
-          </div>
-        );
-      },
-    },
-    {
-      field: 'view',
-      headerName: 'View',
-      width: 80,
-      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
-      cellClassName: 'text-[#6366F1]',
-      headerAlign: 'center',
-      align: 'center',
-      renderCell: (params) => (
-        <IconButton
-          onClick={(e) => {
-            e.stopPropagation();
-
-            console.log('params.row', params);
-            onRowClick(params);
-          }}
-          className="cursor-pointer"
-        >
-          <Eye className="h-4 w-4" />
-        </IconButton>
       ),
     },
     {
@@ -280,14 +219,14 @@ const ContactTable = ({
   ];
 
   useEffect(() => {
-    setTaskData(tasks);
-  }, [tasks]);
+    setContactData(contacts);
+  }, [contacts]);
 
   return (
     <>
       <Box sx={{ height: '100%', width: '100%' }}>
         <DataGrid
-          rows={taskData}
+          rows={contactData}
           columns={columns}
           pageSize={5}
           rowsPerPageOptions={[5, 10]}
