@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTitle, IconButton, Stack, Divider } from '@mui/material';
 import { X } from 'lucide-react';
 
-const SearchResults = ({ results, searchCriteria }) => {
+const SearchResults = ({ results }) => {
   const [selectedResult, setSelectedResult] = useState(null);
 
   const getStatusVariant = (status) => {
@@ -90,22 +90,6 @@ const SearchResults = ({ results, searchCriteria }) => {
 
   return (
     <div className="space-y-4 h">
-
-      {/* Search Criteria Summary */}
-      {Object.keys(searchCriteria).length > 0 && (
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h4 className="text-sm font-semibold text-blue-800 mb-3">
-            Search Criteria Applied:
-          </h4>
-          <div className="flex flex-wrap gap-2">
-            {Object.entries(searchCriteria).map(([key, value]) => (
-              <Badge key={key} variant="secondary" className="text-xs">
-                {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}: {value}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Results Table - Scrollable */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">

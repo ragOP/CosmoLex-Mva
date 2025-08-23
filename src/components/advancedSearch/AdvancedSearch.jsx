@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RotateCcw, Filter, X } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { getAdvancedSearchMeta, performAdvancedSearch } from '@/api/api_services/advancedSearch';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -8,9 +9,28 @@ import SearchForm from './SearchForm';
 import SearchResults from './SearchResults';
 
 const AdvancedSearch = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchFormData, setSearchFormData] = useState({});
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState(null);
+
+  // Load search criteria from URL params on component mount
+  useEffect(() => {
+    const urlCriteria = {};
+    searchParams.forEach((value, key) => {
+      if (key !== 'results' && value && value.trim() !== '') {
+        urlCriteria[key] = value.trim();
+      }
+    });
+    
+    if (Object.keys(urlCriteria).length > 0) {
+      setSearchFormData(urlCriteria);
+      // Auto-execute search if criteria exists
+      handleSearch(urlCriteria);
+    }
+  }, []);
+
+
 
   // Fetch search metadata
   const { data: metaData, isLoading: isLoadingMeta } = useQuery({
@@ -36,6 +56,17 @@ const AdvancedSearch = () => {
   const handleSearch = (formData) => {
     setIsSearching(true);
     setSearchFormData(formData);
+    
+    // Save search criteria to URL - only include fields with actual values
+    const newSearchParams = new URLSearchParams();
+    Object.entries(formData).forEach(([key, value]) => {
+      // Only include fields that have meaningful values
+      if (value && value.toString().trim() !== '' && value !== 'undefined' && value !== 'null') {
+        newSearchParams.set(key, value.toString().trim());
+      }
+    });
+    setSearchParams(newSearchParams);
+    
     searchMutation.mutate(formData);
   };
 
@@ -46,7 +77,12 @@ const AdvancedSearch = () => {
 
   const handleClearResults = () => {
     setSearchResults(null);
+    setSearchFormData({});
+    // Clear search parameters from URL
+    setSearchParams(new URLSearchParams());
   };
+
+
 
   return (
     <div className="px-4 pb-2 flex flex-col gap-2 h-full overflow-auto">
@@ -60,16 +96,6 @@ const AdvancedSearch = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* <Button
-            onClick={handleReset}
-            variant="outline"
-            disabled={isLoadingMeta}
-            className="flex items-center gap-2"
-          >
-            <RotateCcw size={16} />
-            Reset
-          </Button> */}
-
           {searchResults && (
             <Button
               onClick={handleClearResults}

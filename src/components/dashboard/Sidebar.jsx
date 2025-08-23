@@ -40,6 +40,7 @@ const typeToIcon = {
   communication: MessageSquare,
   finance: DollarSign,
   'activity-logs': Activity,
+  agenda: ClipboardList,
 };
 
 const sidebarItems = [
@@ -129,7 +130,7 @@ const sidebarItems = [
     id: '/dashboard/agenda',
     label: 'Agenda',
     type: 'link',
-    iconType: 'calendar',
+    iconType: 'agenda',
   },
   {
     id: '/dashboard/advanced-search',
