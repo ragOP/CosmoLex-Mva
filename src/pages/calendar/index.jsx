@@ -5,15 +5,15 @@ import NewEventDialog from '@/components/calendar/NewEventDialog';
 import createEvent from './helpers/createEvent';
 import getEvent from './helpers/getEvent';
 import { useMatter } from '@/components/inbox/MatterContext';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useEvents } from '@/components/calendar/hooks/useEvent';
 import moment from 'moment';
 
 const CalendarPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Dialog states
-  const [isOpen, setIsOpen] = useState(false);
   const [open, setOpen] = useState(false);
 
   // Event states
@@ -22,10 +22,21 @@ const CalendarPage = () => {
   const [selectedDateRange, setSelectedDateRange] = useState(null);
 
   // use matter
-  const { matter, matterSlug } = useMatter();
+  // Get matter slug from URL params (assuming notes are matter-specific)
+  const matterSlug = searchParams.get('slugId');
+
+  let matter = null;
+  if (matterSlug) {
+    matter = useMatter();
+  }
 
   // Use events
-  const { events: allEvents, eventsLoading } = useEvents();
+  const {
+    events: allEvents,
+    event: singleEvent,
+    eventLoading,
+    eventsLoading,
+  } = useEvents();
 
   useEffect(() => {
     if (!eventsLoading) {
@@ -38,71 +49,47 @@ const CalendarPage = () => {
       }));
       setEvents(mappedEvents);
     }
-  }, [allEvents, eventsLoading]);
+
+    if (!eventLoading && singleEvent) {
+      setEvent(singleEvent);
+      setOpen(true);
+    }
+  }, [allEvents, eventsLoading, singleEvent, eventLoading]);
 
   const handleShowEvent = async (event) => {
-    const res = await getEvent(event.id);
-    setIsOpen(true);
-    setEvent(res);
+    handleNavigate(event.id);
   };
 
-  const handleNavigate = (taskId) => {
+  const handleNavigate = (eventId) => {
     if (matterSlug) {
-      if (taskId) {
+      if (eventId) {
         navigate(
-          `/dashboard/inbox/tasks?slugId=${matterSlug}&taskId=${taskId}`,
+          `/dashboard/inbox/event?slugId=${matterSlug}&eventId=${eventId}`,
           {
             replace: false,
           }
         );
       } else {
-        navigate(`/dashboard/inbox/tasks?slugId=${matterSlug}`, {
+        navigate(`/dashboard/inbox/event?slugId=${matterSlug}`, {
           replace: false,
         });
       }
     } else {
-      if (taskId) {
-        navigate(`/dashboard/tasks?taskId=${taskId}`, {
+      if (eventId) {
+        navigate(`/dashboard/event?eventId=${eventId}`, {
           replace: false,
         });
       } else {
-        navigate(`/dashboard/tasks`, {
+        navigate(`/dashboard/event`, {
           replace: false,
         });
       }
-    }
-  };
-
-  const handleCreateEvent = async (data) => {
-    try {
-      const res = await createEvent(data);
-      console.log(res);
-    } catch (err) {
-      console.error(err?.message || 'Failed to create event');
     }
   };
 
   const handleDateRangeSelect = (dateRange) => {
     setSelectedDateRange(dateRange);
   };
-
-  // const {
-  // events,
-  //   eventsLoading,
-  //   createEvent,
-  //   updateEvent,
-  //   deleteEvent,
-  //   deleteReminder,
-  //   getEvent,
-  //   getEvents,
-  //   getEventsUserList,
-  //   getUsersEvents,
-  //   searchEvent,
-  //   uploadEventFile,
-  //   deleteEventFile,
-  // } = useEvents();
-
-  console.log('events >>>', events);
 
   return (
     <div className="h-full w-full">
@@ -116,16 +103,26 @@ const CalendarPage = () => {
         onDateRangeSelect={handleDateRangeSelect}
       />
 
-      <EventPreviewDialog
+      {/* <EventPreviewDialog
         event={event}
         open={isOpen}
         onClose={() => setIsOpen(false)}
-      />
+      /> */}
 
       <NewEventDialog
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={
+          event
+            ? () => {
+                setOpen(false);
+                setEvent(null);
+                handleNavigate(null);
+              }
+            : () => setOpen(false)
+        }
         selectedDateRange={selectedDateRange}
+        event={event ? event : null}
+        mode={event ? 'update' : 'create'}
       />
     </div>
   );

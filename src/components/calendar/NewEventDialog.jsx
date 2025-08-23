@@ -31,15 +31,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { ParticipantDialog } from './components/ParticipantDialog';
 import { ReminderDialog } from './components/ReminderDialog';
-
-const formatDateForInput = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-};
+import { formatDateForInput } from '@/utils/formatDateForInput';
+import isArrayWithValues from '@/utils/isArrayWithValues';
 
 export default function NewEventDialogRHF({
   open = false,
@@ -82,6 +75,10 @@ export default function NewEventDialogRHF({
     isCreating,
     isUpdating,
     isUploadingFile,
+    handleDeleteEvent,
+    isDeleting,
+    handleDeleteFile,
+    isDeletingFile,
   } = useEvents();
 
   // Determine if we're in update mode
@@ -254,6 +251,16 @@ export default function NewEventDialogRHF({
       errors.status_id = 'Status is required';
     }
 
+    // Atleast one reminder is needed
+    if (reminderFields.length === 0) {
+      errors.reminders = 'At least one reminder is required';
+    }
+
+    // Atleast one participant is needed
+    if (participantFields.length === 0) {
+      errors.participants = 'At least one participant is required';
+    }
+
     return errors;
   };
 
@@ -338,7 +345,7 @@ export default function NewEventDialogRHF({
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
         console.log('validation errors >>>', errors);
-        toast.error('Please fix the validation errors');
+        // toast.error('Please fix the validation errors');
         return;
       }
 
@@ -550,7 +557,9 @@ export default function NewEventDialogRHF({
 
               {/* Reminders Section */}
               <div className="w-full">
-                <h3 className="text-lg font-semibold mb-1">Reminders</h3>
+                <h3 className="text-lg font-semibold mb-1">
+                  Reminders <span className="text-red-500">*</span>{' '}
+                </h3>
                 {reminderFields.map((reminder, idx) => (
                   <div
                     key={reminder.id || idx}
@@ -603,64 +612,77 @@ export default function NewEventDialogRHF({
                   <Plus className="mr-2 h-4 w-4" />
                   Add Reminder
                 </Button>
+
+                {(validationErrors.reminders || errors.reminders) && (
+                  <p className="text-xs text-red-500">
+                    {validationErrors.reminders || errors.reminders?.message}
+                  </p>
+                )}
               </div>
 
               {/* Participants Section */}
               <div className="w-full">
-                <h3 className="text-lg font-semibold mb-1">Participants</h3>
-                {participantFields.map((participant, idx) => (
-                  <div
-                    key={participant.id || idx}
-                    className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
-                  >
-                    <div className="text-sm flex flex-col gap-1">
-                      <span>
-                        Email:{' '}
-                        {eventsMeta?.participants_email?.find(
-                          (email) => email.id === parseInt(participant.email_id)
-                        )?.email || 'Unknown Email'}
-                      </span>
-                      <span>
-                        Role:{' '}
-                        {eventsMeta?.participants_roles?.find(
-                          (role) => role.id === parseInt(participant.role_id)
-                        )?.name || 'Unknown Role'}
-                      </span>
-                      <span>
-                        Status:{' '}
-                        {eventsMeta?.event_participants_status?.find(
-                          (status) =>
-                            status.id === parseInt(participant.status_id)
-                        )?.name || 'Unknown Status'}
-                      </span>
-                      {participant.comment && (
-                        <span>Comment: {participant.comment}</span>
-                      )}
+                <h3 className="text-lg font-semibold mb-1">
+                  Participants <span className="text-red-500">*</span>{' '}
+                </h3>
+                {isArrayWithValues(participantFields) &&
+                  participantFields.map((participant, idx) => (
+                    <div
+                      key={participant.id || idx}
+                      className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
+                    >
+                      <div className="text-sm flex flex-col gap-1">
+                        <span>
+                          Email:{' '}
+                          {eventsMeta?.participants_email?.find(
+                            (email) =>
+                              email.id ===
+                              parseInt(
+                                participant.user_id || participant.email_id
+                              )
+                          )?.email || 'Unknown Email'}
+                        </span>
+                        <span>
+                          Role:{' '}
+                          {eventsMeta?.participants_roles?.find(
+                            (role) => role.id === parseInt(participant.role_id)
+                          )?.name || 'Unknown Role'}
+                        </span>
+                        <span>
+                          Status:{' '}
+                          {eventsMeta?.event_participants_status?.find(
+                            (status) =>
+                              status.id === parseInt(participant.status_id)
+                          )?.name || 'Unknown Status'}
+                        </span>
+                        {participant.comment && (
+                          <span>Comment: {participant.comment}</span>
+                        )}
+                      </div>
+                      <div className="flex gap-1">
+                        <Tooltip arrow title="Edit Participant">
+                          <IconButton
+                            type="button"
+                            onClick={() =>
+                              handleEditParticipant(participant, idx)
+                            }
+                            size="small"
+                          >
+                            <Edit className="h-4 w-4 text-blue-500" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip arrow title="Remove Participant">
+                          <IconButton
+                            type="button"
+                            onClick={() => removeParticipant(idx)}
+                            size="small"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </IconButton>
+                        </Tooltip>
+                      </div>
                     </div>
-                    <div className="flex gap-1">
-                      <Tooltip arrow title="Edit Participant">
-                        <IconButton
-                          type="button"
-                          onClick={() =>
-                            handleEditParticipant(participant, idx)
-                          }
-                          size="small"
-                        >
-                          <Edit className="h-4 w-4 text-blue-500" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip arrow title="Remove Participant">
-                        <IconButton
-                          type="button"
-                          onClick={() => removeParticipant(idx)}
-                          size="small"
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </IconButton>
-                      </Tooltip>
-                    </div>
-                  </div>
-                ))}
+                  ))}
 
                 <Button
                   type="button"
@@ -671,6 +693,13 @@ export default function NewEventDialogRHF({
                   <Plus className="mr-2 h-4 w-4" />
                   Add Participant
                 </Button>
+
+                {(validationErrors.participants || errors.participants) && (
+                  <p className="text-xs text-red-500">
+                    {validationErrors.participants ||
+                      errors.participants?.message}
+                  </p>
+                )}
               </div>
 
               {/* Attachments Section */}
@@ -703,15 +732,22 @@ export default function NewEventDialogRHF({
                       )}
                     </div>
                     <div className="flex gap-1">
-                      <Tooltip arrow title="Remove Attachment">
+                      <Tooltip arrow title="Delete Attachment">
                         <IconButton
                           type="button"
-                          onClick={() =>
-                            handleRemoveAttachment(attachment.attachment_id)
-                          }
+                          onClick={() => {
+                            console.log('attachment >>>', attachment);
+                            handleDeleteFile(
+                              attachment.attachment_id || attachment.id
+                            );
+                          }}
                           size="small"
                         >
-                          <Trash2 className="h-4 w-4 text-red-500" />
+                          {isDeletingFile ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin text-red-500" />
+                          ) : (
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          )}
                         </IconButton>
                       </Tooltip>
                     </div>
@@ -732,26 +768,39 @@ export default function NewEventDialogRHF({
 
             <Divider />
 
-            <div className="flex items-center justify-between p-4 gap-2">
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <label htmlFor="attachment-input">
-                  <IconButton
-                    onClick={() => setShowUploadMediaDialog(true)}
-                    component="span"
-                    size="small"
-                    sx={{
-                      p: 1.5,
-                      borderRadius: 1,
-                      '&:hover': {
-                        bgcolor: '#e3f2fd',
-                      },
-                    }}
-                  >
-                    <Paperclip size={18} color="#666" />
-                  </IconButton>
-                </label>
-              </Stack>
-              <div className="flex gap-2">
+            <Stack
+              direction="row"
+              className={`flex items-center p-4 gap-2 ${
+                event ? 'justify-between' : 'justify-end'
+              }`}
+            >
+              {event && (
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <label htmlFor="attachment-input">
+                    <Tooltip arrow title="Delete Event">
+                      <IconButton
+                        onClick={() => {
+                          console.log('event >>>', event);
+                          handleDeleteEvent(event?.id);
+                          onClose();
+                        }}
+                        component="span"
+                        size="small"
+                        sx={{
+                          p: 1.5,
+                        }}
+                      >
+                        {isDeleting ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin text-red-500" />
+                        ) : (
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        )}
+                      </IconButton>
+                    </Tooltip>
+                  </label>
+                </Stack>
+              )}
+              <div className="flex justify-end gap-2">
                 <Button
                   type="button"
                   onClick={onClose}
@@ -764,16 +813,16 @@ export default function NewEventDialogRHF({
                   disabled={isLoading}
                   className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
                 >
-                  {isLoading
-                    ? isUpdateMode
-                      ? 'Updating...'
-                      : 'Creating...'
-                    : isUpdateMode
-                    ? 'Update Event'
-                    : 'Create Event'}
+                  {isLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : isUpdateMode ? (
+                    'Update Event'
+                  ) : (
+                    'Create Event'
+                  )}
                 </Button>
               </div>
-            </div>
+            </Stack>
           </Stack>
         </form>
       </Dialog>

@@ -49,7 +49,10 @@ const CalendarWrapper = ({
 
   // Handle event click
   const handleEventClick = (clickInfo) => {
-    const event = events.find((e) => e.id === clickInfo.event.id);
+    console.log('clickInfo >>>', clickInfo?.event?.id);
+    console.log('events >>>', events);
+    const event = events.find((e) => e.id === parseInt(clickInfo?.event?.id));
+    console.log('event >>>', event);
     if (event) {
       handleShowEvent(event);
     }

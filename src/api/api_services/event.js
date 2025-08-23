@@ -28,7 +28,7 @@ export const getEventById = async (id) => {
     method: 'GET',
   });
   if (response.error) throw new Error('Failed to fetch event');
-  return response.response?.data || {};
+  return response?.response?.event || {};
 };
 
 // Search event
@@ -103,5 +103,5 @@ export const deleteEventFile = async (fileId) => {
     method: 'DELETE',
   });
   if (response.error) throw new Error('Failed to delete event file');
-  return response.response?.data;
+  return response.response;
 };

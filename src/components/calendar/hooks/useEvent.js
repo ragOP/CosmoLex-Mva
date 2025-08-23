@@ -30,7 +30,6 @@ export const useEvents = () => {
     queryFn: getEventMeta,
     staleTime: 5 * 60 * 1000,
   });
-  console.log('eventsMeta >>>', eventsMeta);
 
   // All events
   const { data: events = [], isLoading: eventsLoading } = useQuery({
@@ -38,7 +37,6 @@ export const useEvents = () => {
     queryFn: () => getEvents(),
     staleTime: 5 * 60 * 1000,
   });
-  console.log('events from hook >>>', events);
 
   // single event
   const { data: event = null, isLoading: eventLoading } = useQuery({
@@ -111,6 +109,7 @@ export const useEvents = () => {
     mutationFn: (fileId) => deleteEventFile(fileId),
     onSuccess: () => {
       toast.success('File deleted successfully!');
+      queryClient.invalidateQueries(['event', eventId]);
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to delete file!');
