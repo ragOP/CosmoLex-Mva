@@ -39,10 +39,10 @@ const AdvancedSearch = () => {
     searchMutation.mutate(formData);
   };
 
-  const handleReset = () => {
-    setSearchFormData({});
-    setSearchResults(null);
-  };
+  // const handleReset = () => {
+  //   setSearchFormData({});
+  //   setSearchResults(null);
+  // };
 
   const handleClearResults = () => {
     setSearchResults(null);
