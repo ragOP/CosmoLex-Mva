@@ -108,7 +108,7 @@ const CreateFeeSplitDialog = ({
     const onFormSubmit = async (data) => {
         try {
             const result = await onSubmit(data, setApiErrors);
-            
+
             // Check if the submission was successful
             if (result && result.Apistatus === true) {
                 // Success - show success toast and close dialog
@@ -194,7 +194,7 @@ const CreateFeeSplitDialog = ({
                                                     />
                                                 </div>
                                             </div>
-                                            
+
                                             {/* Firm List */}
                                             {filteredFirms.length === 0 ? (
                                                 <div className="p-2 text-sm text-gray-500 text-center">
@@ -251,7 +251,7 @@ const CreateFeeSplitDialog = ({
                                                         />
                                                     </div>
                                                 </div>
-                                                
+
                                                 {/* Override Type List */}
                                                 {filteredOverrideTypes.length === 0 ? (
                                                     <div className="p-2 text-sm text-gray-500 text-center">
@@ -334,7 +334,7 @@ const CreateFeeSplitDialog = ({
                                                         />
                                                     </div>
                                                 </div>
-                                                
+
                                                 {/* Firm Agreement List */}
                                                 {filteredFirmAgreements.length === 0 ? (
                                                     <div className="p-2 text-sm text-gray-500 text-center">
@@ -389,7 +389,7 @@ const CreateFeeSplitDialog = ({
                                                         />
                                                     </div>
                                                 </div>
-                                                
+
                                                 {/* Referral Status List */}
                                                 {filteredReferralStatuses.length === 0 ? (
                                                     <div className="p-2 text-sm text-gray-500 text-center">
