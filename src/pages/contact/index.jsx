@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Button from '@/components/Button';
-// import ContactDialog from '@/components/contact/components/ContactDialog';
+import ContactDialog from '@/components/contact/components/ContactDialog';
 // import ShowContactDialog from '@/components/contact/components/ShowContactDialog';
 // import DeleteContactDialog from '@/components/contact/components/DeleteContactDialog';
 import ContactTable from '@/components/contact/components/ContactTable';
@@ -13,8 +13,8 @@ const ContactPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState(null);
-  const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const [selectedContact, setSelectedContact] = useState(null);
+  const [selectedContactId, setSelectedContactId] = useState(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
@@ -32,40 +32,32 @@ const ContactPage = () => {
   console.log('contacts >>>', contacts);
   console.log('contactsLoading >>>', contactsLoading);
 
-  // Handlers
-  //   const handleDelete = (id) => {
-  //     deleteTask(id).then(() => setShowDeleteConfirm(false));
-  //   };
-
-  //   const handleUpdateTaskStatus = (id, status) =>
-  //     updateStatus({ taskId: id, status_id: parseInt(status) });
-
-  //   const handleNavigate = (taskId) => {
-  //     if (matterSlug) {
-  //       if (taskId) {
-  //         navigate(
-  //           `/dashboard/inbox/tasks?slugId=${matterSlug}&taskId=${taskId}`,
-  //           {
-  //             replace: false,
-  //           }
-  //         );
-  //       } else {
-  //         navigate(`/dashboard/inbox/tasks?slugId=${matterSlug}`, {
-  //           replace: false,
-  //         });
-  //       }
-  //     } else {
-  //       if (taskId) {
-  //         navigate(`/dashboard/tasks?taskId=${taskId}`, {
-  //           replace: false,
-  //         });
-  //       } else {
-  //         navigate(`/dashboard/tasks`, {
-  //           replace: false,
-  //         });
-  //       }
-  //     }
-  //   };
+  const handleNavigate = (contactId) => {
+    if (matterSlug) {
+      if (contactId) {
+        navigate(
+          `/dashboard/inbox/contacts?slugId=${matterSlug}&contactId=${contactId}`,
+          {
+            replace: false,
+          }
+        );
+      } else {
+        navigate(`/dashboard/inbox/contacts?slugId=${matterSlug}`, {
+          replace: false,
+        });
+      }
+    } else {
+      if (contactId) {
+        navigate(`/dashboard/contacts?contactId=${contactId}`, {
+          replace: false,
+        });
+      } else {
+        navigate(`/dashboard/contacts`, {
+          replace: false,
+        });
+      }
+    }
+  };
 
   if (contactsLoading) {
     return (
@@ -94,18 +86,18 @@ const ContactPage = () => {
         onRowClick={(params) => {
           // append taskId to url params
           handleNavigate(params.row.id);
-          setSelectedTaskId(params.row.id);
-          setSelectedTask(params.row);
+          setSelectedContactId(params.row.id);
+          setSelectedContact(params.row);
           setShowViewDialog(true);
         }}
-        handleEdit={(task) => {
-          handleNavigate(task.id);
-          setSelectedTaskId(task.id);
-          setSelectedTask(task);
+        handleEdit={(contact) => {
+          handleNavigate(contact.id);
+          setSelectedContactId(contact.id);
+          setSelectedContact(contact);
           setShowUpdateDialog(true);
         }}
-        handleDelete={(task) => {
-          setSelectedTask(task);
+        handleDelete={(contact) => {
+          setSelectedContact(contact);
           setShowDeleteConfirm(true);
         }}
       />
@@ -120,17 +112,21 @@ const ContactPage = () => {
         }}
       />
 
-      <TaskDialog open={open} onClose={() => setOpen(false)} mode="create" />
+      <TaskDialog open={open} onClose={() => setOpen(false)} mode="create" /> */}
 
-      <TaskDialog
+      <ContactDialog
+        open={open}
+        setOpen={setOpen}
+        contact={selectedContact}
+        mode="create"
+      />
+
+      <ContactDialog
         open={showUpdateDialog}
-        onClose={() => {
-          setShowUpdateDialog(false);
-          handleNavigate(null);
-        }}
-        task={selectedTask}
+        setOpen={setShowUpdateDialog}
+        contact={selectedContact}
         mode="update"
-      /> */}
+      />
 
       {/* Delete */}
       {/* <DeleteTaskDialog

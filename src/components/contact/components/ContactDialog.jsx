@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import {
   SelectGroup,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2, X } from 'lucide-react';
+import { Plus, Trash2, X, Loader2 } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import createContact from '@/pages/matter/intake/helpers/createContact';
 import getContactMeta from '@/pages/matter/intake/helpers/getContactMeta';
@@ -30,16 +30,50 @@ import {
 } from '@mui/material';
 import { useContact } from '../hooks/useContact';
 
-export default function ContactDialog({ open, setOpen }) {
+const defaultFields = {
+  nature: '',
+  contact_type_id: null,
+  prefix_id: null,
+  first_name: '',
+  middle_name: '',
+  last_name: '',
+  suffix: '',
+  gender_id: null,
+  alias: '',
+  marital_status_id: null,
+  company_name: '',
+  job_title: '',
+  ssn: '',
+  federal_tax_id: '',
+  work_phone: '',
+  home_phone: '',
+  primary_phone: '',
+  fax: '',
+  primary_email: '',
+  secondary_email: '',
+  when_to_contact: '',
+  contact_preference: '',
+  language: '',
+  drivers_license: '',
+  date_of_birth: '',
+  date_of_death: '',
+  date_of_bankruptcy: '',
+  notes: '',
+  addresses: [],
+};
+
+export default function ContactDialog({ open, setOpen, mode }) {
   // const { data: contactMeta } = useQuery({
   //   queryKey: ['contactMeta'],
   //   queryFn: getContactMeta,
   // });
 
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
 
   const {
     contactsMeta: contactMeta,
+    contact,
     createContactMutation,
     handleCreateContact,
     handleUpdateContact,
@@ -55,37 +89,7 @@ export default function ContactDialog({ open, setOpen }) {
     setValue,
     watch,
   } = useForm({
-    defaultValues: {
-      nature: '',
-      contact_type_id: null,
-      prefix_id: null,
-      first_name: '',
-      middle_name: '',
-      last_name: '',
-      suffix: '',
-      gender_id: null,
-      alias: '',
-      marital_status_id: null,
-      company_name: '',
-      job_title: '',
-      ssn: '',
-      federal_tax_id: '',
-      work_phone: '',
-      home_phone: '',
-      primary_phone: '',
-      fax: '',
-      primary_email: '',
-      secondary_email: '',
-      when_to_contact: '',
-      contact_preference: '',
-      language: '',
-      drivers_license: '',
-      date_of_birth: '',
-      date_of_death: '',
-      date_of_bankruptcy: '',
-      notes: '',
-      addresses: [],
-    },
+    defaultValues: defaultFields,
   });
 
   const nature = watch('nature');
@@ -271,10 +275,50 @@ export default function ContactDialog({ open, setOpen }) {
   //   },
   // });
 
+  // Reset form when dialog opens/closes or event changes
+  useEffect(() => {
+    console.log('contact >>>', contact);
+    console.log('mode >>>', mode);
+    if (open) {
+      console.log('contact >>>', contact);
+      if (mode === 'update' && contact) {
+        console.log('contact >>>', contact);
+        // Populate form with existing event data
+        const formData = {
+          ...contact,
+        };
+
+        reset(formData);
+      } else {
+        reset(defaultFields);
+      }
+      setValidationErrors({});
+    } else {
+      // Reset states when dialog closes
+      setValidationErrors({});
+    }
+  }, [open, contact, mode, reset]);
+
   const onSubmit = (data) => {
     console.log('[DEBUG] Submitting contact data:', data);
     // createContactMutation.mutate({ data });
-    mode === 'create' ? handleCreateContact(data) : handleUpdateContact(data);
+
+    setValidationErrors({});
+
+    const errors = getValidationRules(data);
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      console.log('validation errors >>>', errors);
+      // toast.error('Please fix the validation errors');
+      return;
+    }
+
+    mode === 'create'
+      ? handleCreateContact(data)
+      : handleUpdateContact({
+          contactId: contact.id,
+          contactData: data,
+        });
     setOpen(false);
     reset();
   };
@@ -528,11 +572,13 @@ export default function ContactDialog({ open, setOpen }) {
             <Button
               onClick={handleSubmit(onSubmit)}
               className="bg-[#6366F1] text-white"
-              disabled={createContactMutation.isPending}
+              disabled={isLoading}
             >
-              {createContactMutation.isPending
-                ? 'Creating...'
-                : 'Create Contact'}
+              {isLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                'Create Contact'
+              )}
             </Button>
           </div>
         </Stack>

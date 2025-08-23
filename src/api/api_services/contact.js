@@ -7,7 +7,8 @@ export const getContactMeta = async () => {
     endpoint: endpoints.getContactMeta,
     method: 'GET',
   });
-  if (response.error) throw new Error('Failed to fetch contact meta');
+  if (response.response?.Apistatus === false)
+    throw new Error(response.response.message);
   return response.response || [];
 };
 
@@ -17,19 +18,20 @@ export const getContacts = async () => {
     endpoint: endpoints.getContacts,
     method: 'GET',
   });
-  if (response.error) throw new Error('Failed to fetch contacts');
+  if (response.response?.Apistatus === false)
+    throw new Error(response.response.message);
   return response.response?.data || [];
 };
 
 // Get contact by id
 export const getContactById = async (id) => {
-  console.log('id', id);
   const response = await apiService({
     endpoint: `${endpoints.getContact}/${id}`,
     method: 'GET',
   });
-  if (response.error) throw new Error('Failed to fetch contact');
-  return response.response?.contact || {};
+  if (response.response?.Apistatus === false)
+    throw new Error(response.response.message);
+  return response.response?.data || {};
 };
 
 // Search contact
@@ -39,7 +41,8 @@ export const searchContact = async (searchData) => {
     method: 'POST',
     data: searchData,
   });
-  if (response.error) throw new Error('Failed to search contact');
+  if (response.response?.Apistatus === false)
+    throw new Error(response.response.message);
   return response.response?.data || [];
 };
 
@@ -49,7 +52,8 @@ export const filterContact = async (queryParams) => {
     endpoint: `${endpoints.filterContact}?${queryParams}`,
     method: 'GET',
   });
-  if (response.error) throw new Error('Failed to filter contact');
+  if (response.response?.Apistatus === false)
+    throw new Error(response.response.message);
   return response.response?.data || [];
 };
 
@@ -60,7 +64,8 @@ export const createContact = async (contactData) => {
     method: 'POST',
     data: contactData,
   });
-  if (response.error) throw new Error('Failed to create contact');
+  if (response.response?.Apistatus === false)
+    throw new Error(response.response.message);
   return response.response?.data;
 };
 
@@ -71,7 +76,8 @@ export const updateContact = async (contactId, contactData) => {
     method: 'PUT',
     data: contactData,
   });
-  if (response.error) throw new Error('Failed to update contact');
+  if (response.response?.Apistatus === false)
+    throw new Error(response.response.message);
   return response.response?.data;
 };
 
@@ -81,6 +87,7 @@ export const deleteContact = async (contactId) => {
     endpoint: `${endpoints.deleteContact}/${contactId}`,
     method: 'DELETE',
   });
-  if (response.error) throw new Error('Failed to delete contact');
+  if (response.response?.Apistatus === false)
+    throw new Error(response.response.message);
   return response.response?.data;
 };

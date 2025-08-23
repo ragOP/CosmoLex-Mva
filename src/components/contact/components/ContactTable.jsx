@@ -170,21 +170,15 @@ const ContactTable = ({
       align: 'center',
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-center">
-          {params?.row?.is_editable ? (
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEdit(params.row);
-              }}
-              className="cursor-pointer"
-            >
-              <Pencil className="h-4 w-4 text-[#6366F1]" />
-            </IconButton>
-          ) : (
-            <IconButton className="cursor-pointer">
-              <CircleOff className="h-4 w-4 text-[#6366F1]" />
-            </IconButton>
-          )}
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit(params.row);
+            }}
+            className="cursor-pointer"
+          >
+            <Pencil className="h-4 w-4 text-[#6366F1]" />
+          </IconButton>
         </div>
       ),
     },
@@ -198,21 +192,15 @@ const ContactTable = ({
       align: 'center',
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-center">
-          {params?.row?.is_deletable ? (
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete(params.row);
-              }}
-              className="cursor-pointer"
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </IconButton>
-          ) : (
-            <IconButton className="cursor-pointer">
-              <CircleOff className="h-4 w-4" />
-            </IconButton>
-          )}
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(params.row);
+            }}
+            className="cursor-pointer"
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </IconButton>
         </div>
       ),
     },

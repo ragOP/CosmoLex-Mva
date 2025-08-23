@@ -63,7 +63,7 @@ export const useContact = () => {
     },
     onError: (error) => {
       console.error('Error creating contact:', error);
-      toast.error('Failed to create contact');
+      toast.error(error.message || 'Failed to create contact');
     },
   });
 
@@ -77,7 +77,8 @@ export const useContact = () => {
     },
     onError: (error) => {
       console.error('Error updating contact:', error);
-      toast.error('Failed to update contact');
+      console.log('error', error);
+      toast.error(error.message || 'Failed to update contact');
     },
   });
 
@@ -90,7 +91,7 @@ export const useContact = () => {
     },
     onError: (error) => {
       console.error('Error deleting contact:', error);
-      toast.error('Failed to delete contact');
+      toast.error(error.message || 'Failed to delete contact');
     },
   });
 
