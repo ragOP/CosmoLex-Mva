@@ -274,6 +274,7 @@ export default function CreateIntake() {
       type: 'textarea',
       required: false,
       maxLength: 1000,
+      widthFull: true,
     },
   ];
 
@@ -289,8 +290,21 @@ export default function CreateIntake() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {formFields.map(
-                  ({ label, name, type, required, options, maxLength }) => (
-                    <div key={name} className="w-full">
+                  ({
+                    label,
+                    name,
+                    type,
+                    required,
+                    options,
+                    maxLength,
+                    widthFull,
+                  }) => (
+                    <div
+                      key={name}
+                      className={`w-full ${
+                        widthFull ? 'col-span-1 md:col-span-4' : ''
+                      }`}
+                    >
                       {type !== 'checkbox' && (
                         <Label className="text-[#40444D] font-semibold mb-2">
                           {label}
@@ -345,7 +359,7 @@ export default function CreateIntake() {
                             <div className="space-y-1">
                               <Textarea
                                 {...field}
-                                className={`w-full min-h-[100px] px-3 py-2 border rounded-md resize-vertical ${
+                                className={`w-full min-h-[100px] px-3 py-2 border rounded-md resize-vertical  ${
                                   formErrors[name]
                                     ? 'border-red-500'
                                     : 'border-gray-300'
@@ -427,7 +441,6 @@ export default function CreateIntake() {
                   <div className="w-[24vw] space-y-2">
                     <Label className="text-[#40444D] w-full font-semibold block">
                       Contact Type
-                      <span className="text-red-500 ml-1">*</span>
                     </Label>
                     <Select
                       onValueChange={(value) => {

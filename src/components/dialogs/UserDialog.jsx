@@ -25,13 +25,6 @@ import { toast } from 'sonner';
 
 const formFields = [
   {
-    label: 'Role',
-    name: 'role_id',
-    type: 'select',
-    required: true,
-    metaField: 'roles',
-  },
-  {
     label: 'First Name',
     name: 'first_name',
     type: 'text',
@@ -44,6 +37,13 @@ const formFields = [
     type: 'text',
     required: true,
     maxLength: 255,
+  },
+  {
+    label: 'Role',
+    name: 'role_id',
+    type: 'select',
+    required: true,
+    metaField: 'roles',
   },
   {
     label: 'Email',
@@ -294,7 +294,7 @@ export default function UserDialog({
                             }}
                           >
                             <SelectTrigger
-                              className={`${
+                              className={`w-full ${
                                 errors[field.name] ||
                                 validationErrors[field.name]
                                   ? 'border-red-500'
@@ -303,6 +303,7 @@ export default function UserDialog({
                             >
                               <SelectValue
                                 placeholder={`Select ${field.label.toLowerCase()}`}
+                                className="w-full"
                               />
                             </SelectTrigger>
                             <SelectContent>

@@ -35,6 +35,7 @@ import {
   Plus,
   Loader2,
 } from 'lucide-react';
+import isArrayWithValues from '@/utils/isArrayWithValues';
 
 export default function Overview() {
   const navigate = useNavigate();
@@ -548,22 +549,41 @@ export default function Overview() {
                       </tr>
                     </thead>
                     <tbody className="bg-white">
-                      <tr>
-                        <td
-                          colSpan={4}
-                          className="px-4 py-8 text-center text-gray-500"
-                        >
-                          <div className="flex flex-col items-center">
-                            <div className="text-4xl mb-2">📅</div>
-                            <p className="text-sm font-medium">
-                              No upcoming events
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              Events will appear here when scheduled
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
+                      {isArrayWithValues(matter?.upcoming_event) ? (
+                        matter?.upcoming_event.map((event) => (
+                          <tr key={event.id}>
+                            <td className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                              {event.title}
+                            </td>
+                            <td className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                              {formatDate(event.start_time)}
+                            </td>
+                            <td className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                              {formatDate(event.end_time)}
+                            </td>
+                            <td className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                              {event.priority}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan={4}
+                            className="px-4 py-8 text-center text-gray-500"
+                          >
+                            <div className="flex flex-col items-center">
+                              <div className="text-4xl mb-2">📅</div>
+                              <p className="text-sm font-medium">
+                                No upcoming events
+                              </p>
+                              <p className="text-xs text-gray-400">
+                                Events will appear here when scheduled
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

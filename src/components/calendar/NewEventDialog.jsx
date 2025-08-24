@@ -686,7 +686,7 @@ export default function NewEventDialogRHF({
                       </span>
                       <span>
                         Type:{' '}
-                        {attachment?.file_name.split('.').pop() ||
+                        {attachment?.file_name?.split('.').pop() ||
                           attachment?.file_type}
                       </span>
                       {attachment?.file_path && (
