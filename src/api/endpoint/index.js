@@ -85,7 +85,7 @@ export const endpoints = {
   getNotesMeta: 'v2/matter/notes/meta',
   uploadNoteAttachment: 'v2/matter/notes/uploadAttachment',
   deleteNoteAttachment: 'v2/matter/notes/deleteAttachment',
-  
+
   // Users endpoints
   getUsersMeta: 'v2/setup/users/meta',
   getUsers: 'v2/setup/users/list',
@@ -94,4 +94,5 @@ export const endpoints = {
   updateUser: 'v2/setup/users/update',
   deleteUser: 'v2/setup/users/delete',
   searchUser: 'v2/setup/users/search',
+  updateUserStatus: 'v2/setup/users/status',
 };

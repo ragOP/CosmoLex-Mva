@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { Avatar, Box, Tooltip, IconButton } from '@mui/material';
+import { Avatar, Box, Tooltip, IconButton, Switch } from '@mui/material';
 import formatDate from '@/utils/formatDate';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -11,6 +11,7 @@ const UsersTable = ({
   onRowClick,
   handleEdit,
   handleDelete,
+  handleStatusChange,
 }) => {
   const [userData, setUserData] = useState([]);
 
@@ -37,10 +38,14 @@ const UsersTable = ({
           <div className="w-full h-full flex items-center justify-center">
             <Avatar
               src={params.value}
-              alt={`${params.row.first_name || ''} ${params.row.last_name || ''}`}
+              alt={`${params.row.first_name || ''} ${
+                params.row.last_name || ''
+              }`}
               sx={{ width: 28, height: 28 }}
             >
-              {`${params.row.first_name?.[0] || ''}${params.row.last_name?.[0] || ''}`}
+              {`${params.row.first_name?.[0] || ''}${
+                params.row.last_name?.[0] || ''
+              }`}
             </Avatar>
           </div>
         );
@@ -100,11 +105,12 @@ const UsersTable = ({
         if (!params) return null;
         return (
           <div className="w-full h-full flex items-center justify-start">
-            <Badge 
-              variant={params.value ? 'default' : 'destructive'}
-            >
-              {params.value ? 'Active' : 'Inactive'}
-            </Badge>
+            <Switch
+              checked={params.value}
+              onChange={(e) =>
+                handleStatusChange(params.row.id, e.target.checked)
+              }
+            />
           </div>
         );
       },
@@ -120,9 +126,7 @@ const UsersTable = ({
         if (!params) return null;
         return (
           <div className="w-full h-full flex items-center justify-start">
-            <Badge 
-              variant={params.value ? 'default' : 'secondary'}
-            >
+            <Badge variant={params.value ? 'default' : 'secondary'}>
               {params.value ? 'Yes' : 'No'}
             </Badge>
           </div>
@@ -141,7 +145,7 @@ const UsersTable = ({
         if (!params) return null;
         return (
           <div className="w-full h-full flex items-center justify-center">
-{params.value ? formatDate(params.value) : 'Never'}
+            {params.value ? formatDate(params.value) : 'Never'}
           </div>
         );
       },
@@ -239,13 +243,15 @@ const UsersTable = ({
 
   return (
     <>
-      <Box sx={{ 
-        height: '100%', 
-        width: '100%',
-        '& .MuiDataGrid-root': {
+      <Box
+        sx={{
+          height: '100%',
           width: '100%',
-        },
-      }}>
+          '& .MuiDataGrid-root': {
+            width: '100%',
+          },
+        }}
+      >
         <DataGrid
           rows={userData}
           columns={columns}
@@ -340,12 +346,12 @@ const UsersTable = ({
             '& .MuiDataGrid-scrollbar--horizontal': {
               display: 'block !important',
             },
-            
+
             // VIRTUAL SCROLLER
             '& .MuiDataGrid-virtualScroller': {
               overflow: 'visible !important',
             },
-            
+
             // MAIN CONTAINER
             '& .MuiDataGrid-main': {
               overflow: 'visible !important',

@@ -9,6 +9,7 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  updateUserStatus,
 } from '@/api/api_services/user';
 import { toast } from 'sonner';
 
@@ -95,6 +96,18 @@ export const useUsers = () => {
     },
   });
 
+  // Update user status
+  const updateUserStatusMutation = useMutation({
+    mutationFn: ({ userId, is_active }) => updateUserStatus(userId, is_active),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['users']);
+      toast.success('User status updated successfully');
+    },
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to update user status');
+    },
+  });
+
   // Navigation helpers
   const navigateToUser = useCallback((userObj) => {
     setSelectedUser(userObj);
@@ -126,6 +139,7 @@ export const useUsers = () => {
     createUser: createUserMutation.mutateAsync,
     updateUser: updateUserMutation.mutateAsync,
     deleteUser: deleteUserMutation.mutateAsync,
+    updateUserStatus: updateUserStatusMutation.mutateAsync,
 
     // Mutation states
     isFetchingUser: fetchUserMutation.isPending,
@@ -133,5 +147,6 @@ export const useUsers = () => {
     isUpdating: updateUserMutation.isPending,
     isDeleting: deleteUserMutation.isPending,
     isSearching: searchUsersMutation.isPending,
+    isUpdatingStatus: updateUserStatusMutation.isPending,
   };
 };

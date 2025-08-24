@@ -16,12 +16,20 @@ const UsersPage = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
-  const { users, usersLoading, deleteUser, isDeleting, fetchUser, isFetchingUser } = useUsers();
+  const {
+    users,
+    usersLoading,
+    deleteUser,
+    isDeleting,
+    fetchUser,
+    isFetchingUser,
+    updateUserStatus,
+  } = useUsers();
 
   // Handlers
   const handleDelete = async () => {
     if (!selectedUser) return;
-    
+
     try {
       await deleteUser(selectedUser.id);
       setShowDeleteConfirm(false);
@@ -43,6 +51,14 @@ const UsersPage = () => {
     }
   };
 
+  const handleStatusChange = async (userId, status) => {
+    try {
+      await updateUserStatus({ userId, is_active: status ? 1 : 0 });
+    } catch (error) {
+      console.error('Error updating user status:', error);
+    }
+  };
+
   if (usersLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -54,9 +70,7 @@ const UsersPage = () => {
   return (
     <div className="flex flex-col gap-4 h-full w-full p-4">
       <div className="flex justify-between w-full items-center">
-        <p className="text-2xl font-bold">
-          Users ({users?.length || 0})
-        </p>
+        <p className="text-2xl font-bold">Users ({users?.length || 0})</p>
         <Button
           onClick={() => setOpen(true)}
           className="cursor-pointer max-w-48"
@@ -95,6 +109,7 @@ const UsersPage = () => {
           setSelectedUser(user);
           setShowDeleteConfirm(true);
         }}
+        handleStatusChange={handleStatusChange}
       />
 
       {/* View */}
