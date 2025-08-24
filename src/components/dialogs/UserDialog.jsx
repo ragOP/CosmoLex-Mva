@@ -52,22 +52,6 @@ const formFields = [
     required: true,
   },
   {
-    label: 'Password',
-    name: 'password',
-    type: 'password',
-    required: true,
-    updateRequired: false, // Not required for updates
-    updateOnly: true, // Only show in update mode
-  },
-  {
-    label: 'Confirm Password',
-    name: 'password_confirmation',
-    type: 'password',
-    required: true,
-    updateRequired: false, // Not required for updates
-    updateOnly: true, // Only show in update mode
-  },
-  {
     label: 'Phone Number',
     name: 'phone_number',
     type: 'text',
@@ -115,14 +99,6 @@ const formFields = [
     type: 'text',
     required: false,
   },
-  {
-    label: 'Profile Picture',
-    name: 'profile_picture',
-    type: 'file',
-    required: false,
-    accept: 'image/*',
-    updateOnly: true, // Only show in update mode
-  },
 ];
 
 export default function UserDialog({
@@ -133,13 +109,8 @@ export default function UserDialog({
 }) {
   const [validationErrors, setValidationErrors] = useState({});
 
-  const {
-    usersMeta,
-    createUser,
-    updateUser,
-    isCreating,
-    isUpdating,
-  } = useUsers();
+  const { usersMeta, createUser, updateUser, isCreating, isUpdating } =
+    useUsers();
 
   const isUpdateMode = mode === 'update';
   const currentUser = isUpdateMode ? user : null;
@@ -160,16 +131,6 @@ export default function UserDialog({
       country: '',
     };
 
-    // Only add password and profile fields in update mode
-    if (isUpdateMode) {
-      return {
-        ...baseValues,
-        password: '',
-        password_confirmation: '',
-        profile_picture: null,
-      };
-    }
-
     return baseValues;
   };
 
@@ -189,34 +150,12 @@ export default function UserDialog({
     try {
       setValidationErrors({});
 
-      // For update mode, only validate password if provided
-      if (isUpdateMode) {
-        if (data.password && data.password !== data.password_confirmation) {
-          setValidationErrors({ password_confirmation: ['Passwords do not match'] });
-          return;
-        }
-        // Remove empty password fields for update
-        if (!data.password) {
-          delete data.password;
-          delete data.password_confirmation;
-        }
-      }
-      // Note: Password validation for create mode is removed since password fields are now only shown in update mode
-
       // Prepare FormData for file upload
       const formData = new FormData();
-      
+
       // Append all form fields to FormData
-      Object.keys(data).forEach(key => {
-        if (data[key] !== null && data[key] !== undefined && data[key] !== '') {
-          if (key === 'profile_picture' && data[key] instanceof File) {
-            // Handle file upload
-            formData.append(key, data[key]);
-          } else if (key !== 'profile_picture') {
-            // Handle regular form fields
-            formData.append(key, data[key]);
-          }
-        }
+      Object.keys(data).forEach((key) => {
+        formData.append(key, data[key]);
       });
 
       if (isUpdateMode && currentUser) {
@@ -232,7 +171,7 @@ export default function UserDialog({
       onClose();
     } catch (error) {
       console.error('Form submission error:', error);
-      
+
       // Handle validation errors
       if (error.response?.data?.errors) {
         setValidationErrors(error.response.data.errors);
@@ -247,7 +186,7 @@ export default function UserDialog({
     // Clear both form errors and API validation errors
     clearErrors(fieldName);
     if (validationErrors[fieldName]) {
-      setValidationErrors(prev => {
+      setValidationErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[fieldName];
         return newErrors;
@@ -261,7 +200,7 @@ export default function UserDialog({
       // Clear all errors when dialog opens
       setValidationErrors({});
       clearErrors();
-      
+
       if (isUpdateMode && currentUser) {
         const formData = {
           role_id: currentUser.role_id ? currentUser.role_id.toString() : '',
@@ -276,9 +215,6 @@ export default function UserDialog({
           province: currentUser.province || '',
           postal_code: currentUser.postal_code || '',
           country: currentUser.country || '',
-          password: '', // Don't pre-fill password for security
-          password_confirmation: '', // Don't pre-fill password confirmation
-          profile_picture: null, // File inputs should be null, not string
         };
 
         // Use setTimeout to ensure the form is properly reset
@@ -312,67 +248,111 @@ export default function UserDialog({
           <div className="space-y-4 flex-1 overflow-auto p-4 no-scrollbar">
             {/* Basic Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {formFields.filter((field) => {
-                // Show all fields in update mode, but hide updateOnly fields in create mode
-                if (!isUpdateMode && field.updateOnly) {
-                  return false;
-                }
-                return true;
-              }).map((field) => (
-                <div key={field.name} className="space-y-2">
-                  <Label htmlFor={field.name}>
-                    {field.label}
-                    {/* Show required asterisk based on mode */}
-                    {(isUpdateMode ? field.updateRequired : field.required) && (
-                      <span className="text-red-500 ml-1">*</span>
-                    )}
-                  </Label>
-                  
-                  <Controller
-                    name={field.name}
-                    control={control}
-                    rules={{
-                      required: (isUpdateMode ? field.updateRequired : field.required) 
-                        ? `${field.label} is required` 
-                        : false,
-                      maxLength: field.maxLength ? {
-                        value: field.maxLength,
-                        message: `${field.label} must be less than ${field.maxLength} characters`
-                      } : undefined,
-                    }}
-                    render={({ field: controllerField }) => (
-                      field.type === 'select' ? (
-                        <Select
-                          value={controllerField.value}
-                          onValueChange={(value) => {
-                            controllerField.onChange(value);
-                            clearFieldError(field.name);
-                          }}
-                        >
-                          <SelectTrigger className={`${
-                            errors[field.name] || validationErrors[field.name]
-                              ? 'border-red-500'
-                              : ''
-                          }`}>
-                            <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(usersMeta[field.metaField] || []).map((option) => (
-                              <SelectItem key={option.id} value={option.id.toString()}>
-                                {option.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : field.type === 'file' ? (
-                        <div className="space-y-2">
+              {formFields
+                .filter((field) => {
+                  // Show all fields in update mode, but hide updateOnly fields in create mode
+                  if (!isUpdateMode && field.updateOnly) {
+                    return false;
+                  }
+                  return true;
+                })
+                .map((field) => (
+                  <div key={field.name} className="space-y-2">
+                    <Label htmlFor={field.name}>
+                      {field.label}
+                      {/* Show required asterisk based on mode */}
+                      {(isUpdateMode
+                        ? field.updateRequired
+                        : field.required) && (
+                        <span className="text-red-500 ml-1">*</span>
+                      )}
+                    </Label>
+
+                    <Controller
+                      name={field.name}
+                      control={control}
+                      rules={{
+                        required: (
+                          isUpdateMode ? field.updateRequired : field.required
+                        )
+                          ? `${field.label} is required`
+                          : false,
+                        maxLength: field.maxLength
+                          ? {
+                              value: field.maxLength,
+                              message: `${field.label} must be less than ${field.maxLength} characters`,
+                            }
+                          : undefined,
+                      }}
+                      render={({ field: controllerField }) =>
+                        field.type === 'select' ? (
+                          <Select
+                            value={controllerField.value}
+                            onValueChange={(value) => {
+                              controllerField.onChange(value);
+                              clearFieldError(field.name);
+                            }}
+                          >
+                            <SelectTrigger
+                              className={`${
+                                errors[field.name] ||
+                                validationErrors[field.name]
+                                  ? 'border-red-500'
+                                  : ''
+                              }`}
+                            >
+                              <SelectValue
+                                placeholder={`Select ${field.label.toLowerCase()}`}
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(usersMeta[field.metaField] || []).map(
+                                (option) => (
+                                  <SelectItem
+                                    key={option.id}
+                                    value={option.id.toString()}
+                                  >
+                                    {option.name}
+                                  </SelectItem>
+                                )
+                              )}
+                            </SelectContent>
+                          </Select>
+                        ) : field.type === 'file' ? (
+                          <div className="space-y-2">
+                            <Input
+                              id={field.name}
+                              type="file"
+                              accept={field.accept}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                controllerField.onChange(file || null);
+                                clearFieldError(field.name);
+                              }}
+                              onBlur={controllerField.onBlur}
+                              className={`${
+                                errors[field.name] ||
+                                validationErrors[field.name]
+                                  ? 'border-red-500'
+                                  : ''
+                              }`}
+                              onFocus={() => clearFieldError(field.name)}
+                            />
+                            {controllerField.value && (
+                              <div className="text-sm text-gray-600">
+                                Selected:{' '}
+                                {controllerField.value.name ||
+                                  'Current profile picture'}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
                           <Input
                             id={field.name}
-                            type="file"
-                            accept={field.accept}
+                            type={field.type}
+                            value={controllerField.value}
                             onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              controllerField.onChange(file || null);
+                              controllerField.onChange(e.target.value);
                               clearFieldError(field.name);
                             }}
                             onBlur={controllerField.onBlur}
@@ -381,65 +361,42 @@ export default function UserDialog({
                                 ? 'border-red-500'
                                 : ''
                             }`}
+                            placeholder={`Enter ${field.label.toLowerCase()}`}
                             onFocus={() => clearFieldError(field.name)}
                           />
-                          {controllerField.value && (
-                            <div className="text-sm text-gray-600">
-                              Selected: {controllerField.value.name || 'Current profile picture'}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <Input
-                          id={field.name}
-                          type={field.type}
-                          value={controllerField.value}
-                          onChange={(e) => {
-                            controllerField.onChange(e.target.value);
-                            clearFieldError(field.name);
-                          }}
-                          onBlur={controllerField.onBlur}
-                          className={`${
-                            errors[field.name] || validationErrors[field.name]
-                              ? 'border-red-500'
-                              : ''
-                          }`}
-                          placeholder={`Enter ${field.label.toLowerCase()}`}
-                          onFocus={() => clearFieldError(field.name)}
-                        />
-                      )
+                        )
+                      }
+                    />
+
+                    {errors[field.name] && (
+                      <p className="text-red-500 text-sm">
+                        {errors[field.name].message}
+                      </p>
                     )}
-                  />
-                  
-                  {errors[field.name] && (
-                    <p className="text-red-500 text-sm">{errors[field.name].message}</p>
-                  )}
-                  {!errors[field.name] && validationErrors[field.name] && (
-                    <p className="text-red-500 text-sm">
-                      {Array.isArray(validationErrors[field.name])
-                        ? validationErrors[field.name][0]
-                        : validationErrors[field.name]}
-                    </p>
-                  )}
-                </div>
-              ))}
+                    {!errors[field.name] && validationErrors[field.name] && (
+                      <p className="text-red-500 text-sm">
+                        {Array.isArray(validationErrors[field.name])
+                          ? validationErrors[field.name][0]
+                          : validationErrors[field.name]}
+                      </p>
+                    )}
+                  </div>
+                ))}
             </div>
-
-
           </div>
 
           <Divider />
 
           <div className="flex justify-end gap-3 p-4">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={onClose}
               disabled={isCreating || isUpdating}
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               type="submit"
               disabled={isCreating || isUpdating}
               className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
