@@ -143,6 +143,12 @@ export default function ContactDialog({ open, setOpen, mode }) {
           message: 'Company name must be 255 characters or less',
         };
         break;
+      case 'primary_phone':
+        rules.required = 'Primary phone is required';
+        break;
+      case 'primary_email':
+        rules.required = 'Primary email is required';
+        break;
       case 'addresses':
         rules.validate = (value) => {
           if (!value || value.length === 0) {
@@ -247,9 +253,19 @@ export default function ContactDialog({ open, setOpen, mode }) {
     { label: 'Federal Tax ID', name: 'federal_tax_id', type: 'text' },
     { label: 'Work Phone', name: 'work_phone', type: 'text' },
     { label: 'Home Phone', name: 'home_phone', type: 'text' },
-    { label: 'Primary Phone', name: 'primary_phone', type: 'text' },
+    {
+      label: 'Primary Phone',
+      name: 'primary_phone',
+      type: 'text',
+      required: true,
+    },
     { label: 'Fax', name: 'fax', type: 'text' },
-    { label: 'Primary Email', name: 'primary_email', type: 'text' },
+    {
+      label: 'Primary Email',
+      name: 'primary_email',
+      type: 'text',
+      required: true,
+    },
     { label: 'Secondary Email', name: 'secondary_email', type: 'text' },
     { label: 'When to Contact', name: 'when_to_contact', type: 'text' },
     { label: 'Contact Preference', name: 'contact_preference', type: 'text' },
@@ -277,12 +293,8 @@ export default function ContactDialog({ open, setOpen, mode }) {
 
   // Reset form when dialog opens/closes or event changes
   useEffect(() => {
-    console.log('contact >>>', contact);
-    console.log('mode >>>', mode);
     if (open) {
-      console.log('contact >>>', contact);
       if (mode === 'update' && contact) {
-        console.log('contact >>>', contact);
         // Populate form with existing event data
         const formData = {
           ...contact,
@@ -300,7 +312,6 @@ export default function ContactDialog({ open, setOpen, mode }) {
   }, [open, mode, reset, contact?.id]);
 
   const onSubmit = (data) => {
-    console.log('[DEBUG] Submitting contact data:', data);
     // createContactMutation.mutate({ data });
 
     setValidationErrors({});

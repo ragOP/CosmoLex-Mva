@@ -162,12 +162,13 @@ const sidebarItems = [
     type: 'link',
     iconType: 'communication',
   },
-  // {
-  //   id: '/dashboard/users',
-  //   label: 'Users',
-  //   type: 'link',
-  //   iconType: 'users',
-  // },
+  {
+    id: '/dashboard/contacts',
+    label: 'Contacts',
+    type: 'link',
+    iconType: 'link',
+  },
+
   {
     id: '/dashboard/setup',
     label: 'Setup',
@@ -182,7 +183,6 @@ const sidebarItems = [
       },
     ],
   },
-
   // {
   //   id: '/dashboard/matter-intake',
   //   label: 'Intake',
@@ -193,12 +193,6 @@ const sidebarItems = [
   //   // { id: '5.2', label: 'Intake Status', fileType: 'file' },
   //   // { id: '5.3', label: 'Intake History', fileType: 'file' },
   // ],
-  // },
-  // {
-  //   id: '/dashboard/contacts',
-  //   label: 'Contacts',
-  //   type: 'link',
-  //   iconType: 'link',
   // },
   // {
   //     id: 'crm',

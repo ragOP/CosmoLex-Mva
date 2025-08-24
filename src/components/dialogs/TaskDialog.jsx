@@ -423,10 +423,8 @@ export default function TaskDialog({
 
       if (isUpdateMode) {
         await updateTask({ taskId: currentTask.id, taskData: formattedData });
-        toast.success('Task updated successfully');
       } else {
         await createTask(formattedData);
-        toast.success('Task created successfully');
       }
 
       onClose();
