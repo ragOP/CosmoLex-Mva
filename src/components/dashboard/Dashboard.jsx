@@ -277,10 +277,10 @@ const Dashboard = () => {
               border: 'none',
               cursor: 'pointer',
             }}
-            onClick={() => navigate('/dashboard/dashboard-form')}
+            onClick={() => navigate('/dashboard/inbox')}
           >
             <PlusIcon />
-            <span>Add Product</span>
+            <span>Go to Inbox</span>
           </button>
           <ChartLine
             color="#6366F1"

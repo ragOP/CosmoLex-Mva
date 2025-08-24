@@ -17,6 +17,7 @@ import {
   StickyNote,
   User,
   Contact,
+  Settings2,
 } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -45,6 +46,7 @@ const typeToIcon = {
   contact: Contact,
   'activity-logs': Activity,
   agenda: ClipboardList,
+  setup: Settings2,
 };
 
 const sidebarItems = [
@@ -160,17 +162,25 @@ const sidebarItems = [
     type: 'link',
     iconType: 'communication',
   },
+  // {
+  //   id: '/dashboard/users',
+  //   label: 'Users',
+  //   type: 'link',
+  //   iconType: 'users',
+  // },
   {
-    id: '/dashboard/users',
-    label: 'Users',
-    type: 'link',
-    iconType: 'users',
-  },
-  {
-    id: '/dashboard/contacts',
-    label: 'Contacts',
-    type: 'link',
-    iconType: 'contact',
+    id: '/dashboard/setup',
+    label: 'Setup',
+    type: 'tree',
+    iconType: 'setup',
+    treeData: [
+      {
+        id: '/dashboard/setup/users',
+        label: 'Users',
+        type: 'link',
+        iconType: 'users',
+      },
+    ],
   },
 
   // {
@@ -318,6 +328,7 @@ const Sidebar = ({ isDrawer }) => {
 
   const handleItemClick = (item) => {
     if (item.type === 'tree') {
+      console.log(item);
       setOpenTree((prev) => ({
         ...prev,
         [item.id]: !prev[item.id],
@@ -326,6 +337,7 @@ const Sidebar = ({ isDrawer }) => {
       if (slug) {
         navigate(item.id + `?slugId=${slug}`);
       } else {
+        console.log(item);
         navigate(item.id);
       }
     }
@@ -379,7 +391,10 @@ const Sidebar = ({ isDrawer }) => {
             </button>
             {item.type === 'tree' && openTree[item.id] && (
               <Box sx={{ minWidth: 180, pl: 2 }}>
-                <CustomRickTreeView items={item.treeData || []} />
+                <CustomRickTreeView
+                  onItemClick={(item) => handleItemClick(item)}
+                  items={item.treeData || []}
+                />
               </Box>
             )}
           </React.Fragment>

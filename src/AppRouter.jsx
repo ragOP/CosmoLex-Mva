@@ -84,7 +84,7 @@ const AppRouter = () => (
           <Route path="notes/:noteId" element={<NoteDetailPage />} />
           <Route path="documentation" element={<Documentation />} />
           <Route path="communication" element={<Communication />} />
-          <Route path="users" element={<UsersPage />} />
+          <Route path="setup/users" element={<UsersPage />} />
           <Route path="contacts" element={<ContactPage />} />
           <Route path="agenda" element={<Agenda />} />
           <Route path="advanced-search" element={<AdvancedSearch />} />

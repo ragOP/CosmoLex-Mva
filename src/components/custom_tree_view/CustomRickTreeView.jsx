@@ -17,6 +17,7 @@ import { TreeItemProvider } from '@mui/x-tree-view/TreeItemProvider';
 import { TreeItemDragAndDropOverlay } from '@mui/x-tree-view/TreeItemDragAndDropOverlay';
 import { useTreeItemModel } from '@mui/x-tree-view/hooks';
 import { File, FolderArchive, FolderClosed } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 function DotIcon() {
   return (
@@ -208,9 +209,11 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(props, ref) {
   );
 });
 
-export default function CustomRickTreeView({ items }) {
+export default function CustomRickTreeView({ items, onItemClick }) {
+  const navigate = useNavigate();
   return (
     <RichTreeView
+      onItemClick={(_event, itemId) => navigate(itemId)}
       items={items}
       defaultExpandedItems={[]}
       defaultSelectedItems=""

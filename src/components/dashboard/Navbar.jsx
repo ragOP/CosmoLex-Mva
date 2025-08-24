@@ -88,33 +88,6 @@ export default function Navbar() {
 
       {/* Right Side - Actions & Profile */}
       <div className="flex items-center gap-3">
-        {/* Action Buttons */}
-        <div className="hidden md:flex items-center gap-2">
-          <button
-            className="p-2.5 rounded-xl hover:bg-white/80 transition-all duration-200 shadow-lg hover:shadow-xl border border-white/30"
-            style={{
-              backdropFilter: 'blur(20px)',
-              background: 'rgba(255, 255, 255, 0.1)',
-              WebkitBackdropFilter: 'blur(20px)',
-            }}
-            title="Home"
-          >
-            <Home className="h-5 w-5 text-gray-600" />
-          </button>
-
-          <button
-            className="p-2.5 rounded-xl hover:bg-white/80 transition-all duration-200 shadow-lg hover:shadow-xl border border-white/30"
-            style={{
-              backdropFilter: 'blur(20px)',
-              background: 'rgba(255, 255, 255, 0.1)',
-              WebkitBackdropFilter: 'blur(20px)',
-            }}
-            title="Settings"
-          >
-            <SlidersHorizontal className="h-5 w-5 text-gray-600" />
-          </button>
-        </div>
-
         {/* Profile Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
