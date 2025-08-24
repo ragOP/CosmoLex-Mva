@@ -88,9 +88,9 @@ const EmailTab = () => {
                 </Stack>
 
                 {/* Email List */}
-                <div className="min-h-[600px] flex w-full h-full">
+                <div className="min-h-[600px] flex  w-full h-full">
                     {isLoading ? (
-                        <div className="flex flex-col flex-1items-center justify-center">
+                        <div className="flex flex-col flex-1 items-center justify-center">
                             <div className="w-16 h-16 border-4 border-gray-200 border-t-[#7367F0] rounded-full animate-spin mx-auto mb-4"></div>
                             <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
                                 Loading emails...

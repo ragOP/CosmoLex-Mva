@@ -33,6 +33,21 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
   const [selectOpen, setSelectOpen] = useState(false);
   const searchInputRef = useRef(null);
 
+  // Allowed file types
+  const allowedFileTypes = [
+    'image/jpeg',
+    'image/jpg', 
+    'image/png',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain'
+  ];
+
+  const allowedFileExtensions = ['.jpg', '.jpeg', '.png', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'];
+
   // Set first category as default when categories change or component mounts
   useEffect(() => {
     if (categories.length > 0) {
@@ -76,17 +91,48 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
     }
   }, []);
 
-  const handleFiles = (fileList) => {
-    const newFiles = Array.from(fileList).map(file => ({
-      file,
-      id: Math.random().toString(36).substr(2, 9),
-      name: file.name,
-      size: file.size,
-      type: file.type
-    }));
+  const validateFile = (file) => {
+    // Check file type
+    if (!allowedFileTypes.includes(file.type)) {
+      // Also check file extension as fallback
+      const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+      if (!allowedFileExtensions.includes(fileExtension)) {
+        return `File "${file.name}" is not allowed. Only JPG, PNG, PDF, DOC, DOCX, XLS, XLSX, TXT files are allowed.`;
+      }
+    }
+    return null;
+  };
 
-    setFiles(prev => [...prev, ...newFiles]);
-    setError('');
+  const handleFiles = (fileList) => {
+    const newFiles = Array.from(fileList);
+    let validFiles = [];
+    let validationErrors = [];
+
+    newFiles.forEach(file => {
+      const validationError = validateFile(file);
+      if (validationError) {
+        validationErrors.push(validationError);
+      } else {
+        const fileWithId = {
+          file,
+          id: Math.random().toString(36).substr(2, 9),
+          name: file.name,
+          size: file.size,
+          type: file.type
+        };
+        validFiles.push(fileWithId);
+      }
+    });
+
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join(' '));
+    } else {
+      setError('');
+    }
+
+    if (validFiles.length > 0) {
+      setFiles(prev => [...prev, ...validFiles]);
+    }
   };
 
   const removeFile = (fileId) => {
@@ -108,14 +154,17 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
       for (const fileItem of files) {
         await onSubmit(fileItem.file, selectedCategory);
       }
+      // Only close dialog and reset on successful upload
       setFiles([]);
       // Reset to first category
       setSelectedCategory(categories.length > 0 ? categories[0].id?.toString() || '' : '');
+      setError('');
       onClose();
     } catch (error) {
       // Show specific error message from API if available
       const errorMessage = error?.message || 'Error uploading files. Please try again.';
       setError(errorMessage);
+      // Don't close dialog on error - let user see the error and decide what to do
     }
   };
 
@@ -183,12 +232,16 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
             <p className="text-sm text-gray-600">
               Support for multiple files
             </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Allowed file types: JPG, PNG, PDF, DOC, DOCX, XLS, XLSX, TXT
+            </p>
           </div>
 
           <input
             id="file-input"
             type="file"
             multiple
+            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt"
             style={{ display: 'none' }}
             onChange={(e) => handleFiles(e.target.files)}
           />

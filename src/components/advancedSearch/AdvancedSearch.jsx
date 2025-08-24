@@ -17,20 +17,24 @@ const AdvancedSearch = () => {
   // Load search criteria from URL params on component mount
   useEffect(() => {
     const urlCriteria = {};
+    const hasResults = searchParams.get('page') === 'results';
+
     searchParams.forEach((value, key) => {
-      if (key !== 'results' && value && value.trim() !== '') {
+      if (key !== 'results' && key !== 'page' && value && value.trim() !== '') {
         urlCriteria[key] = value.trim();
       }
     });
-    
+
+    handleSearch(urlCriteria || {});
+
     if (Object.keys(urlCriteria).length > 0) {
       setSearchFormData(urlCriteria);
       // Auto-execute search if criteria exists
-      handleSearch(urlCriteria);
+    } else if (hasResults) {
+      // If page=results but no search criteria, show empty results state
+      setSearchResults({ data: [] });
     }
   }, []);
-
-
 
   // Fetch search metadata
   const { data: metaData, isLoading: isLoadingMeta } = useQuery({
@@ -50,13 +54,17 @@ const AdvancedSearch = () => {
       setIsSearching(false);
       toast.error('Search failed. Please try again.');
       console.error('Search error:', error);
+      // Remove page=results parameter on error since no results are displayed
+      const currentParams = new URLSearchParams(searchParams);
+      currentParams.delete('page');
+      setSearchParams(currentParams);
     }
   });
 
   const handleSearch = (formData) => {
     setIsSearching(true);
     setSearchFormData(formData);
-    
+
     // Save search criteria to URL - only include fields with actual values
     const newSearchParams = new URLSearchParams();
     Object.entries(formData).forEach(([key, value]) => {
@@ -65,8 +73,12 @@ const AdvancedSearch = () => {
         newSearchParams.set(key, value.toString().trim());
       }
     });
+
+    // Add page=results parameter to indicate search results are being displayed
+    newSearchParams.set('page', 'results');
+
     setSearchParams(newSearchParams);
-    
+
     searchMutation.mutate(formData);
   };
 
@@ -78,7 +90,7 @@ const AdvancedSearch = () => {
   const handleClearResults = () => {
     setSearchResults(null);
     setSearchFormData({});
-    // Clear search parameters from URL
+    // Clear search parameters from URL including page=results
     setSearchParams(new URLSearchParams());
   };
 

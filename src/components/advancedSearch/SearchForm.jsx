@@ -38,7 +38,8 @@ const SearchForm = ({ onSearch, isSearching }) => {
     e.preventDefault();
     const filteredData = Object.entries(formData).filter(([, value]) => value !== '');
     const searchData = Object.fromEntries(filteredData);
-    onSearch(searchData);
+    // Ensure payload is at least an empty object if no parameters present
+    onSearch(searchData || {});
   };
 
   const handleReset = () => {

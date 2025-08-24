@@ -27,6 +27,21 @@ const UploadMediaDialog = ({ open, onClose, onSubmit, isLoading }) => {
   const [errors, setErrors] = useState({});
   const fileInputRef = useRef(null);
 
+  // Allowed file types
+  const allowedFileTypes = [
+    'image/jpeg',
+    'image/jpg', 
+    'image/png',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain'
+  ];
+
+  const allowedFileExtensions = ['.jpg', '.jpeg', '.png', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'];
+
   const { documentsMeta, folders } = useDocuments();
 
   const handleDrag = useCallback((e) => {
@@ -49,17 +64,48 @@ const UploadMediaDialog = ({ open, onClose, onSubmit, isLoading }) => {
     }
   }, []);
 
-  const handleFiles = (fileList) => {
-    const newFiles = Array.from(fileList).map((file) => ({
-      file,
-      id: Math.random().toString(36).substr(2, 9),
-      name: file.name,
-      size: file.size,
-      type: file.type,
-    }));
+  const validateFile = (file) => {
+    // Check file type
+    if (!allowedFileTypes.includes(file.type)) {
+      // Also check file extension as fallback
+      const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+      if (!allowedFileExtensions.includes(fileExtension)) {
+        return `File "${file.name}" is not allowed. Only JPG, PNG, PDF, DOC, DOCX, XLS, XLSX, TXT files are allowed.`;
+      }
+    }
+    return null;
+  };
 
-    setPayload((prev) => ({ ...prev, files: [...prev.files, ...newFiles] }));
-    setErrors((prev) => ({ ...prev, files: null }));
+  const handleFiles = (fileList) => {
+    const newFiles = Array.from(fileList);
+    let validFiles = [];
+    let validationErrors = [];
+
+    newFiles.forEach(file => {
+      const validationError = validateFile(file);
+      if (validationError) {
+        validationErrors.push(validationError);
+      } else {
+        const fileWithId = {
+          file,
+          id: Math.random().toString(36).substr(2, 9),
+          name: file.name,
+          size: file.size,
+          type: file.type,
+        };
+        validFiles.push(fileWithId);
+      }
+    });
+
+    if (validationErrors.length > 0) {
+      setErrors((prev) => ({ ...prev, files: validationErrors.join(' ') }));
+    } else {
+      setErrors((prev) => ({ ...prev, files: null }));
+    }
+
+    if (validFiles.length > 0) {
+      setPayload((prev) => ({ ...prev, files: [...prev.files, ...validFiles] }));
+    }
   };
 
   const removeFile = (fileId) => {
@@ -85,14 +131,9 @@ const UploadMediaDialog = ({ open, onClose, onSubmit, isLoading }) => {
     }
 
     try {
-      for (const fileItem of payload.files) {
-        // await onSubmit(fileItem.file, {
-        //   category_id: payload.category_id,
-        //   folder_id: payload.folder_id,
-        //   description: payload.description,
-        // });
-        await onSubmit(payload);
-      }
+      // Upload the payload directly since onSubmit expects the full payload
+      await onSubmit(payload);
+      // Only close dialog and reset on successful upload
       setPayload({
         category_id: '',
         folder_id: '',
@@ -101,8 +142,11 @@ const UploadMediaDialog = ({ open, onClose, onSubmit, isLoading }) => {
       });
       setErrors({});
       onClose();
-    } catch {
-      setErrors({ global: 'Error uploading files. Please try again.' });
+    } catch (error) {
+      // Show specific error message from API if available
+      const errorMessage = error?.message || 'Error uploading files. Please try again.';
+      setErrors({ global: errorMessage });
+      // Don't close dialog on error - let user see the error and decide what to do
     }
   };
 
@@ -207,15 +251,19 @@ const UploadMediaDialog = ({ open, onClose, onSubmit, isLoading }) => {
               <h3 className="text-lg font-semibold text-[#40444D] mb-2">
                 Drop files here or click to browse
               </h3>
-              <p className="text-sm text-gray-600">
-                Support for multiple files
-              </p>
+                          <p className="text-sm text-gray-600">
+              Support for multiple files
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              Allowed file types: JPG, PNG, PDF, DOC, DOCX, XLS, XLSX, TXT
+            </p>
             </div>
 
             <input
               ref={fileInputRef}
               type="file"
               multiple
+              accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt"
               style={{ display: 'none' }}
               onChange={(e) => handleFiles(e.target.files)}
             />
