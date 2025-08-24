@@ -4,7 +4,8 @@ import { apiService } from './index';
 export const getCommunicationMeta = async (matterId = 1, type = 1) => {
   try {
     const response = await apiService({
-      endpoint: `v2/communications/meta/${type}/${matterId}`,
+      // endpoint: `v2/communications/meta/${type}/${matterId}`,
+      endpoint: `v2/communications/meta/${type}`,
       method: 'GET'
     });
     
