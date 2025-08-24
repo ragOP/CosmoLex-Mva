@@ -150,6 +150,7 @@ export const useContact = () => {
     // Loading
     contactsMetaLoading,
     contactsLoading,
+    contactLoading,
 
     // Actions
     navigateToContact,

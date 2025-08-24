@@ -297,7 +297,7 @@ export default function ContactDialog({ open, setOpen, mode }) {
       // Reset states when dialog closes
       setValidationErrors({});
     }
-  }, [open, contact, mode, reset]);
+  }, [open, mode, reset]);
 
   const onSubmit = (data) => {
     console.log('[DEBUG] Submitting contact data:', data);
@@ -412,7 +412,7 @@ export default function ContactDialog({ open, setOpen, mode }) {
         <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000] ">
           <div className="flex items-center justify-between p-4">
             <h1 className="text-xl text-[#40444D] text-center font-bold font-sans ">
-              Create New Contact
+              {mode === 'create' ? 'Create New Contact' : 'Update Contact'}
             </h1>
             <IconButton onClick={() => setOpen(false)}>
               <X className="text-black" />
@@ -576,8 +576,10 @@ export default function ContactDialog({ open, setOpen, mode }) {
             >
               {isLoading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
+              ) : mode === 'create' ? (
                 'Create Contact'
+              ) : (
+                'Update Contact'
               )}
             </Button>
           </div>

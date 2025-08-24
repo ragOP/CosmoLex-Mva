@@ -11,35 +11,9 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Pencil, CircleOff, Trash2, Eye } from 'lucide-react';
+import { Pencil, CircleOff, Trash2 } from 'lucide-react';
 import { useContact } from '@/components/contact/hooks/useContact';
 import getMetaOptions from '@/utils/getMetaFields';
-
-/**
- 
-contact_name
-: 
-"Doe John"
-contact_type
-: 
-"3rd Party"
-date_created
-: 
-"2025-08-14 10:59:05 AM"
-id
-: 
-3
-phone
-: 
-"123-456-7890"
-primary_address
-: 
-"Main St"
-primary_email
-: 
-"abhi.mishra07200@gmail.com"
-: 
- */
 
 const ContactTable = ({
   contacts = [],
@@ -48,11 +22,6 @@ const ContactTable = ({
   handleDelete,
 }) => {
   const [contactData, setContactData] = useState([]);
-  const { contactsMeta } = useContact();
-  const statusMeta = getMetaOptions({
-    metaField: 'contact_type',
-    metaObj: contactsMeta,
-  });
 
   const columns = [
     {

@@ -26,8 +26,14 @@ const ContactPage = () => {
     matter = useMatter();
   }
 
-  const { contacts, contactsLoading, handleDeleteContact, isDeleting } =
-    useContact();
+  const {
+    contacts,
+    contact,
+    contactLoading,
+    contactsLoading,
+    handleDeleteContact,
+    isDeleting,
+  } = useContact();
 
   const handleNavigate = (contactId) => {
     if (matterSlug) {
@@ -100,17 +106,14 @@ const ContactPage = () => {
       />
 
       <ContactDialog
-        open={open}
-        setOpen={setOpen}
-        contact={selectedContact}
-        mode="create"
-      />
-
-      <ContactDialog
-        open={showUpdateDialog}
-        setOpen={setShowUpdateDialog}
-        contact={selectedContact}
-        mode="update"
+        open={open || showUpdateDialog}
+        setOpen={(val) => {
+          setOpen(val);
+          setShowUpdateDialog(val && mode === 'update' ? true : false);
+          handleNavigate(null);
+        }}
+        contact={!contactLoading && setSelectedContactId ? contact : null}
+        mode={showUpdateDialog ? 'update' : 'create'}
       />
 
       {/* Delete */}
