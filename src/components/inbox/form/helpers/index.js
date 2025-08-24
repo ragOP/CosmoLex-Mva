@@ -191,9 +191,16 @@ export const getFormDataForSubmission = (
   const fields = getFormFields(caseType);
 
   // Process each field for submission
+  // Only process fields that are actually defined in the form configuration
   Object.keys(submissionData).forEach((key) => {
     const value = submissionData[key];
     const field = fields.find((f) => f.name === key);
+
+    // Skip fields that are not defined in the current form configuration
+    if (!field) {
+      delete submissionData[key];
+      return;
+    }
 
     // Handle date field formatting for API
     if (field && field.type === 'date' && value) {

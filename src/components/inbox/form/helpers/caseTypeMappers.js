@@ -650,14 +650,14 @@ const CASE_TYPE_FIELD_MAPPERS = {
       section: 'Case Information',
     },
     'Is there a scheduled hearing or trial date?': {
-      key: 'hearing_details',
+      key: 'has_hearing_date',
       type: 'dropdown',
       answerOptions: ANSWER_OPTIONS.YES_NO,
       gridSize: GRID_CONFIG.HALF_WIDTH,
       section: 'Case Information',
     },
     'If yes, hearing or trial date information': {
-      key: 'hearing_trial_date_info',
+      key: 'hearing_details',
       type: 'text',
       maxLength: 255,
       gridSize: GRID_CONFIG.HALF_WIDTH,
@@ -1109,7 +1109,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       section: 'Personal History',
     },
     'Have you ever filed for bankruptcy?': {
-      key: 'ever_filed_bankruptcy',
+      key: 'filed_bankruptcy',
       type: 'dropdown',
       answerOptions: ANSWER_OPTIONS.YES_NO,
       gridSize: GRID_CONFIG.HALF_WIDTH,
@@ -2089,7 +2089,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       section: 'Employment Information',
     },
     'Have you ever filed for bankruptcy?': {
-      key: 'ever_filed_bankruptcy',
+      key: 'filed_bankruptcy',
       type: 'dropdown',
       answerOptions: ANSWER_OPTIONS.YES_NO,
       gridSize: GRID_CONFIG.HALF_WIDTH,

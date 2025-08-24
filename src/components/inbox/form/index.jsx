@@ -37,6 +37,7 @@ const Form = () => {
   // Form state
   const [formData, setFormData] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
 
   // Fetch form data using TanStack Query
   const {
@@ -62,10 +63,19 @@ const Form = () => {
 
   const formatDateForForm = (dateValue) => {
     if (!dateValue) return '';
-    // Convert YYYY-MM-DD string to Date object for form display
+    // Convert date string to YYYY-MM-DD format for HTML date input
     const date = new Date(dateValue);
     if (isNaN(date.getTime())) return '';
-    return date;
+    return date.toISOString().split('T')[0];
+  };
+
+  const formatTimeForForm = (timeValue) => {
+    if (!timeValue) return '';
+    // Convert time string (HH:MM:SS) to HH:MM format for HTML time input
+    if (typeof timeValue === 'string' && timeValue.includes(':')) {
+      return timeValue.substring(0, 5); // Extract HH:MM part
+    }
+    return timeValue;
   };
 
   // Handle mode determination and form data initialization together
@@ -96,16 +106,23 @@ const Form = () => {
       const apiFormData = formResponse.data;
 
       // Convert date fields from API format to form format
+      // ONLY include fields that are actually present in the current form configuration
       const processedData = {};
       Object.keys(apiFormData).forEach((key) => {
         const value = apiFormData[key];
         const field = formFields.find((f) => f.name === key);
 
-        if (field && field.type === 'date' && value) {
-          processedData[key] = formatDateForForm(value);
-        } else {
-          processedData[key] = value;
+        // Only process fields that exist in the current form configuration
+        if (field) {
+          if (field.type === 'date' && value) {
+            processedData[key] = formatDateForForm(value);
+          } else if (field.type === 'time' && value) {
+            processedData[key] = formatTimeForForm(value);
+          } else {
+            processedData[key] = value;
+          }
         }
+        // If field is not found in formFields, it gets ignored (not added to processedData)
       });
 
       initialData = processedData;
@@ -117,6 +134,8 @@ const Form = () => {
 
     setMode(newMode);
     setFormData(initialData);
+    // Clear any previous validation errors when switching modes or loading new data
+    setValidationErrors({});
   }, [formResponse, caseType]);
 
   console.log('formData', formData);
@@ -132,10 +151,30 @@ const Form = () => {
         // Convert Date object to string for storage
         processedValue = formatDateForAPI(value);
       } else if (typeof value === 'string') {
-        // Convert string to Date object for form display
+        // For HTML date input, the value is already in YYYY-MM-DD format
+        // Just validate it's a valid date
         const date = new Date(value);
         if (!isNaN(date.getTime())) {
-          processedValue = formatDateForAPI(date);
+          processedValue = value; // Keep the YYYY-MM-DD string format
+        }
+      }
+    }
+
+    // Handle time field conversion
+    if (field && field.type === 'time') {
+      if (value instanceof Date) {
+        // Convert Date object to HH:MM:SS format for storage
+        const hours = value.getHours().toString().padStart(2, '0');
+        const minutes = value.getMinutes().toString().padStart(2, '0');
+        const seconds = value.getSeconds().toString().padStart(2, '0');
+        processedValue = `${hours}:${minutes}:${seconds}`;
+      } else if (typeof value === 'string') {
+        // For HTML time input, the value is already in HH:MM format
+        // Convert to HH:MM:SS format for storage
+        if (value.includes(':') && value.split(':').length === 2) {
+          processedValue = `${value}:00`; // Add seconds
+        } else {
+          processedValue = value; // Keep as is if already in HH:MM:SS format
         }
       }
     }
@@ -159,7 +198,18 @@ const Form = () => {
       ...prev,
       [fieldName]: processedValue,
     }));
+
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[fieldName]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    }
   };
+
+  console.log("formData", formData)
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -175,15 +225,23 @@ const Form = () => {
           : await updateForm({ slug: slugId, formData: submissionData });
 
       if (apiResponse?.Apistatus) {
+        // Clear any previous validation errors on success
+        setValidationErrors({});
         toast.success(
           mode === 'edit'
             ? 'Form updated successfully!'
             : 'Form submitted successfully!'
         );
       } else {
-        const errorMessage =
-          apiResponse?.data?.message || 'Form submission failed!';
-        toast.error(errorMessage);
+        // Handle validation errors
+        if (apiResponse?.errors) {
+          setValidationErrors(apiResponse.errors);
+          toast.error('Please fix the validation errors below.');
+        } else {
+          const errorMessage =
+            apiResponse?.message || 'Form submission failed!';
+          toast.error(errorMessage);
+        }
       }
     } catch (error) {
       console.error('Form submission error:', error);
@@ -309,79 +367,101 @@ const Form = () => {
                 </Typography>
               </Stack>
             ) : (
-              Object.entries(sections).map(([sectionName, sectionFields]) => (
-                <Stack key={sectionName} spacing={2} sx={{ mb: 3 }}>
-                  {/* Section Heading */}
-                  {sectionName !== 'Other' && (
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontWeight: 600,
-                        color: '#1f2937',
-                        fontSize: '1.125rem',
-                      }}
-                    >
-                      {sectionName}
-                    </Typography>
-                  )}
+              <>
+                {/* Validation Errors Summary */}
+                {Object.keys(validationErrors).length > 0 && (
+                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <h4 className="text-sm font-semibold text-red-800 mb-3">
+                      Please fix the following validation errors:
+                    </h4>
+                    <ul className="space-y-1">
+                      {Object.entries(validationErrors).map(([fieldName, errors]) => (
+                        <li key={fieldName} className="text-sm text-red-700">
+                          <span className="font-medium">
+                            {fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
+                          </span>{' '}
+                          {errors[0]}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {Object.entries(sections).map(([sectionName, sectionFields]) => (
+                  <Stack key={sectionName} spacing={2} sx={{ mb: 3 }}>
+                    {/* Section Heading */}
+                    {sectionName !== 'Other' && (
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 600,
+                          color: '#1f2937',
+                          fontSize: '1.125rem',
+                        }}
+                      >
+                        {sectionName}
+                      </Typography>
+                    )}
 
-                  {/* Section Fields */}
-                  <Grid container spacing={1}>
-                    {sectionFields.map((field, index) => {
-                      if (field.type === 'section') {
-                        return null;
-                      }
+                    {/* Section Fields */}
+                    <Grid container spacing={1}>
+                      {sectionFields.map((field, index) => {
+                        if (field.type === 'section') {
+                          return null;
+                        }
 
-                      const isTextarea = field.type === 'textarea';
-                      const gridProps = isTextarea
-                        ? { size: { xs: 12 } }
-                        : field.gridSize || { size: { xs: 12 } };
+                        const isTextarea = field.type === 'textarea';
+                        const gridProps = isTextarea
+                          ? { size: { xs: 12 } }
+                          : field.gridSize || { size: { xs: 12 } };
 
-                      return (
-                        <Grid
-                          key={index}
-                          {...gridProps}
-                          sx={{
-                            ...(isTextarea
-                              ? {
-                                pageBreakBefore: 'always',
-                                breakBefore: 'always',
-                                clear: 'both',
-                                display: 'block',
-                                width: '100%',
-                              }
-                              : {}),
-                            '&.MuiGrid-item': {
-                              flexBasis: 'auto',
-                            },
-                          }}
-                        >
-                          <Stack
+                        return (
+                          <Grid
+                            key={index}
+                            {...gridProps}
                             sx={{
-                              height: '100%',
-                              // minHeight: isTextarea ? '100px' : '60px',
-                              mt: isTextarea ? 0.5 : 0,
-                              mb: isTextarea ? 0.5 : 0,
+                              ...(isTextarea
+                                ? {
+                                  pageBreakBefore: 'always',
+                                  breakBefore: 'always',
+                                  clear: 'both',
+                                  display: 'block',
+                                  width: '100%',
+                                }
+                                : {}),
+                              '&.MuiGrid-item': {
+                                flexBasis: 'auto',
+                              },
                             }}
                           >
-                            <FormFields
-                              label={field.label}
-                              type={field.type}
-                              options={field.options}
-                              maxLength={field.maxLength}
-                              required={field.required}
-                              value={formData[field.name] !== null && formData[field.name] !== undefined ? formData[field.name] : ''}
-                              onChange={(value) =>
-                                handleFieldChange(field.name, value)
-                              }
-                            />
-                          </Stack>
-                        </Grid>
-                      );
-                    })}
-                  </Grid>
-                </Stack>
-              ))
+                            <Stack
+                              sx={{
+                                height: '100%',
+                                // minHeight: isTextarea ? '100px' : '60px',
+                                mt: isTextarea ? 0.5 : 0,
+                                mb: isTextarea ? 0.5 : 0,
+                              }}
+                            >
+                              <FormFields
+                                label={field.label}
+                                type={field.type}
+                                options={field.options}
+                                maxLength={field.maxLength}
+                                required={field.required}
+                                value={formData[field.name] !== null && formData[field.name] !== undefined ? formData[field.name] : ''}
+                                onChange={(value) =>
+                                  handleFieldChange(field.name, value)
+                                }
+                                error={validationErrors[field.name] ? true : false}
+                                helperText={validationErrors[field.name] ? validationErrors[field.name][0] : ''}
+                              />
+                            </Stack>
+                          </Grid>
+                        );
+                      })}
+                    </Grid>
+                  </Stack>
+                ))}
+              </>
             )}
             <div className="flex items-end justify-end gap-2 p-2 ">
               <Button
