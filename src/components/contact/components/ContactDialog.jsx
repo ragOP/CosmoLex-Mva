@@ -297,7 +297,7 @@ export default function ContactDialog({ open, setOpen, mode }) {
       // Reset states when dialog closes
       setValidationErrors({});
     }
-  }, [open, mode, reset]);
+  }, [open, mode, reset, contact?.id]);
 
   const onSubmit = (data) => {
     console.log('[DEBUG] Submitting contact data:', data);
