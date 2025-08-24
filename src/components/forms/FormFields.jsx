@@ -150,17 +150,7 @@ const FormFields = ({
             value={value}
             onChange={(e) => onChange(e.target.value)}
             className="mt-1"
-            size="small"
-            sx={{ mt: 1 }}
-            fullWidth
-            InputProps={{
-              style: {
-                height: '2.375rem',
-                backgroundColor: mainBackgroundColor,
-                borderRadius: '0.625rem',
-              },
-            }}
-            error={error}
+            error={!!helperText}
             {...textFieldProps}
           />
         )}
@@ -334,41 +324,19 @@ const FormFields = ({
                     ? 'datetime-local'
                     : 'text'
             }
+            error={!!helperText}
             {...textFieldProps}
           />
         )}
         {type === 'time' && (
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DesktopTimePicker
-              value={value ? dayjs(value) : null}
-              onChange={(newValue) => {
-                const dayjsObject = dayjs(newValue);
-                const unixTimestamp = dayjsObject.unix();
-                onChange(new Date(unixTimestamp * 1000));
-              }}
-              slotProps={{
-                textField: {
-                  sx: {
-                    width: '100%',
-                    borderRadius: '0.625rem',
-                    marginTop: '0.5rem',
-                    fieldset: { borderRadius: '0.625rem' },
-                  },
-                  InputProps: {
-                    style: {
-                      height: '2.375rem',
-                      backgroundColor: mainBackgroundColor,
-                      borderRadius: '0.625rem',
-                    },
-                  },
-                },
-                inputAdornment: {
-                  position: 'start',
-                },
-              }}
-              {...textFieldProps}
-            />
-          </LocalizationProvider>
+          <Input
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            className="mt-1"
+            type="time"
+            error={!!helperText}
+            {...textFieldProps}
+          />
         )}
         {type === 'datetime' && (
           <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -650,12 +618,14 @@ const FormFields = ({
         )}
         {helperText && (
           <Typography
-            variant="lRegular"
+            variant="caption"
             sx={{
               color: error
-                ? theme.colors.negative
-                : theme.colors.light_text_color,
-              mt: '0.25rem',
+                ? theme.palette.error.main
+                : theme.palette.text.secondary,
+              mt: '0.125rem',
+              fontSize: '0.8rem',
+              lineHeight: '1rem',
             }}
             {...helperTextProps}
           >
