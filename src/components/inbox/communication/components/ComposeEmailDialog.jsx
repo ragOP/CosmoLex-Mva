@@ -686,16 +686,16 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
           sx={{ p: 2, justifyContent: 'space-between', bgcolor: '#f8f9fa' }}
         >
           <Stack direction="row" alignItems="center" spacing={1}>
-            {/* <input
-            type="file"
-            multiple
-            onChange={handleFileAttachment}
-            style={{ display: 'none' }}
-            id="attachment-input"
-          /> */}
+            <input
+              type="file"
+              multiple
+              onChange={handleFileAttachment}
+              style={{ display: 'none' }}
+              id="attachment-input"
+            />
             <label htmlFor="attachment-input">
               <IconButton
-                onClick={() => setShowUploadMediaDialog(true)}
+                // onClick={() => setShowUploadMediaDialog(true)}
                 component="span"
                 size="small"
                 sx={{
