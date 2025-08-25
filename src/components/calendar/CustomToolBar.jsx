@@ -2,11 +2,12 @@ import { ChevronDown } from 'lucide-react';
 import { Select, MenuItem, Box, Typography } from '@mui/material';
 import { Button } from '../ui/button';
 import { useState } from 'react';
-import { handleNavigate } from '@/utils/handleNavigate';
+// import { handleNavigate } from '@/utils/handleNavigate';
 import { useNavigate } from 'react-router-dom';
+import { setQueryParam } from '@/utils/setQueryParam';
+import { useSearchParams } from 'react-router-dom';
 
 const CustomToolBar = ({
-  slug = null,
   onNavigate,
   onView,
   label,
@@ -16,6 +17,7 @@ const CustomToolBar = ({
 }) => {
   const navigate = useNavigate();
   const [selectedUser, setSelectedUser] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
 
   return (
     <Box
@@ -43,7 +45,12 @@ const CustomToolBar = ({
           onChange={(e) => {
             console.log('e.target.value >>>', e.target.value);
             setSelectedUser(e.target.value);
-            // handleNavigate('event', 'slug', e.target.value, slug, navigate);
+            setQueryParam(
+              'userId',
+              e.target.value,
+              setSearchParams,
+              searchParams
+            );
           }}
           displayEmpty
           size="small"

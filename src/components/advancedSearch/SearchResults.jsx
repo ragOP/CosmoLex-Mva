@@ -5,9 +5,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogTitle, IconButton, Stack, Divider } from '@mui/material';
 import { X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const SearchResults = ({ results }) => {
   const [selectedResult, setSelectedResult] = useState(null);
+  const navigate = useNavigate();
+
+  const goToInbox = (slug) => {
+    navigate(`/dashboard/inbox/overview?slugId=${slug}`);
+  };
 
   const getStatusVariant = (status) => {
     switch (status?.toLowerCase()) {
@@ -132,14 +138,26 @@ const SearchResults = ({ results }) => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedResult(result)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Eye size={16} className="text-gray-600" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedResult(result)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Eye size={16} className="text-gray-600" />
+                      </Button>
+                      {result.slug && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => goToInbox(result.slug)}
+                          className="h-8 px-2 text-xs"
+                        >
+                          Inbox
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

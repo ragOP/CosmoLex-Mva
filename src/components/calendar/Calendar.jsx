@@ -15,6 +15,8 @@ const CalendarWrapper = ({
   handleShowEvent,
   setOpen,
   onDateRangeSelect,
+  handleEventDragStart,
+  handleEventDrop,
 }) => {
   const calendarRef = useRef(null);
   const [currentView, setCurrentView] = React.useState('dayGridMonth');
@@ -61,19 +63,19 @@ const CalendarWrapper = ({
   };
 
   // Handle event drop (drag and drop events)
-  const handleEventDrop = (dropInfo) => {
-    const { event } = dropInfo;
-    const updatedEvent = {
-      ...event,
-      start: event.start,
-      end: event.end,
-    };
+  // const handleEventDrop = (dropInfo) => {
+  //   const { event } = dropInfo;
+  //   const updatedEvent = {
+  //     ...event,
+  //     start: event.start,
+  //     end: event.end,
+  //   };
 
-    // Update the event in the events array
-    setEvents((prevEvents) =>
-      prevEvents.map((e) => (e.id === event.id ? updatedEvent : e))
-    );
-  };
+  //   // Update the event in the events array
+  //   setEvents((prevEvents) =>
+  //     prevEvents.map((e) => (e.id === event.id ? updatedEvent : e))
+  //   );
+  // };
 
   // Handle event resize
   const handleEventResize = (resizeInfo) => {
@@ -188,10 +190,11 @@ const CalendarWrapper = ({
             dayMaxEvents={true}
             weekends={true}
             events={fullCalendarEvents}
+            eventDragStart={handleEventDragStart}
+            eventDrop={handleEventDrop}
             datesSet={handleDatesSet}
             select={handleDateSelect}
             eventClick={handleEventClick}
-            eventDrop={handleEventDrop}
             eventResize={handleEventResize}
             height="100%"
             selectConstraint={{

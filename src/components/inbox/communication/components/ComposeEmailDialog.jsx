@@ -86,7 +86,7 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
   const { data: metaData } = useQuery({
     queryKey: ['email-communicationMeta', matterId],
     queryFn: () => getCommunicationMeta(matterId, 1), // Type 1 for emails
-    enabled: open && !!matterId,
+    enabled: open
   });
 
   // Search for From email addresses (independent search)
@@ -686,16 +686,16 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
           sx={{ p: 2, justifyContent: 'space-between', bgcolor: '#f8f9fa' }}
         >
           <Stack direction="row" alignItems="center" spacing={1}>
-            {/* <input
-            type="file"
-            multiple
-            onChange={handleFileAttachment}
-            style={{ display: 'none' }}
-            id="attachment-input"
-          /> */}
+            <input
+              type="file"
+              multiple
+              onChange={handleFileAttachment}
+              style={{ display: 'none' }}
+              id="attachment-input"
+            />
             <label htmlFor="attachment-input">
               <IconButton
-                onClick={() => setShowUploadMediaDialog(true)}
+                // onClick={() => setShowUploadMediaDialog(true)}
                 component="span"
                 size="small"
                 sx={{

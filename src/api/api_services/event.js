@@ -22,9 +22,15 @@ export const getEvents = async () => {
 };
 
 // Get events by slugId
-export const getEventsByslugId = async (slugId = null) => {
+export const getEventsByslugId = async (slugId = null, userId = null) => {
   const response = await apiService({
-    endpoint: slugId ? `${endpoints.getEvents}/${slugId}` : endpoints.getEvents,
+    endpoint: userId
+      ? slugId
+        ? `${endpoints.getEvents}/${userId}/${slugId}`
+        : `${endpoints.getEvents}/${userId}`
+      : slugId
+      ? `${endpoints.getEvents}/${slugId}`
+      : endpoints.getEvents,
     method: 'GET',
   });
   if (response.error) throw new Error('Failed to fetch events');

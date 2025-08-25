@@ -11,24 +11,19 @@ import {
   SelectItem,
   SelectGroup,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2, X, Loader2 } from 'lucide-react';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import createContact from '@/pages/matter/intake/helpers/createContact';
-import getContactMeta from '@/pages/matter/intake/helpers/getContactMeta';
-import { toast } from 'sonner';
 import {
   Dialog,
-  DialogTitle,
-  DialogContent,
   DialogActions,
   Stack,
   Divider,
   IconButton,
   Tooltip,
   Switch,
+  Chip,
 } from '@mui/material';
 import { useContact } from '../hooks/useContact';
+import { toast } from 'sonner';
 
 const defaultFields = {
   nature: '',
@@ -70,6 +65,7 @@ export default function ContactDialog({ open, setOpen, mode }) {
 
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+  const [isPrimaryAddress, setIsPrimaryAddress] = useState(false);
 
   const {
     contactsMeta: contactMeta,
@@ -518,9 +514,18 @@ export default function ContactDialog({ open, setOpen, mode }) {
                     key={addr.id}
                     className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
                   >
-                    <p className="text-sm">
-                      {addr.address_1}, {addr.city}, {addr.state}
-                    </p>
+                    <Stack direction="row" spacing={1}>
+                      <p className="text-sm">
+                        {addr.address_1}, {addr.city}, {addr.state}
+                      </p>
+                      <Chip
+                        label={addr.is_primary ? 'Primary' : 'Secondary'}
+                        color={addr.is_primary ? 'primary' : 'secondary'}
+                        size="small"
+                        variant="outlined"
+                        className="text-xs"
+                      />
+                    </Stack>
                     <Tooltip title="Remove Address">
                       <IconButton
                         onClick={() => {
@@ -674,9 +679,18 @@ export default function ContactDialog({ open, setOpen, mode }) {
               <Label>Is Primary:</Label>
               <Switch
                 checked={newAddress.is_primary}
-                onChange={(e) =>
-                  setNewAddress({ ...newAddress, is_primary: e.target.checked })
-                }
+                onChange={(e) => {
+                  if (!isPrimaryAddress) {
+                    setIsPrimaryAddress(e.target.checked);
+                  } else {
+                    toast.error('Only one address can be primary');
+                    return;
+                  }
+                  setNewAddress({
+                    ...newAddress,
+                    is_primary: e.target.checked,
+                  });
+                }}
               />
             </div>
           </div>

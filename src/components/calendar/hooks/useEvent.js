@@ -25,6 +25,7 @@ export const useEvents = () => {
   // Extract eventId from URL
   const eventId = searchParams.get('eventId');
   const slugId = searchParams.get('slugId');
+  const userId = searchParams.get('userId');
 
   // Event meta
   const { data: eventsMeta = [], isLoading: eventsMetaLoading } = useQuery({
@@ -35,8 +36,8 @@ export const useEvents = () => {
 
   // All events
   const { data: events = [], isLoading: eventsLoading } = useQuery({
-    queryKey: ['events', slugId],
-    queryFn: () => getEventsByslugId(slugId),
+    queryKey: ['events', slugId, userId],
+    queryFn: () => getEventsByslugId(slugId, userId),
     staleTime: 5 * 60 * 1000,
   });
 
