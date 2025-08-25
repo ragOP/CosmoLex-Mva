@@ -120,19 +120,18 @@ export default function Overview() {
     setValue,
   } = useForm({
     defaultValues: {
-      case_role_id: '',
-      case_type_id: '',
-      case_status_id: '',
-      marketing_source_id: '',
-      assignee_id: '',
-      owner_id: '',
-      ad_campaign_id: '',
+      case_role_id: null,
+      case_type_id: null,
+      case_status_id: null,
+      marketing_source_id: null,
+      assignee_id: null,
+      owner_id: null,
+      ad_campaign_id: null,
       case_description: '',
       description: '',
-      rating_id: '',
-      call_outcome_id: '',
-      office_location_id: '',
-      contact_id: '',
+      rating_id: null,
+      call_outcome_id: null,
+      office_location_id: null
     },
     resolver: zodResolver(createMatterSchema),
   });
@@ -147,18 +146,19 @@ export default function Overview() {
     setLoading(true);
 
     const formData = {
-      case_role_id: matter.case_role_id || '',
-      case_type_id: matter.case_type_id || '',
-      case_status_id: matter.case_status_id || '',
-      marketing_source_id: matter.marketing_source_id || '',
-      assignee_id: matter.assignee_id || '',
-      owner_id: matter.owner_id || '',
-      ad_campaign_id: matter.ad_campaign_id || '',
+      case_role_id: matter.case_role_id || null,
+      case_type_id: matter.case_type_id || null,
+      case_status_id: matter.case_status_id || null,
+      marketing_source_id: matter.marketing_source_id || null,
+      assignee_id: matter.assignee_id || null,
+      owner_id: matter.owner_id || null,
+      ad_campaign_id: matter.ad_campaign_id || null,
       case_description: matter.case_description || '',
       description: matter.description || '',
-      rating_id: matter.rating_id || '',
-      call_outcome_id: matter.call_outcome_id || '',
-      office_location_id: matter.office_location_id || '',
+      rating_id: matter.rating_id || null,
+      call_outcome_id: matter.call_outcome_id || null,
+      office_location_id: matter.office_location_id || null,
+      contact_id: matter.contact_id || null,
     };
 
     reset(formData);
@@ -182,26 +182,26 @@ export default function Overview() {
       label: 'Case Role',
       name: 'case_role_id',
       type: 'select',
-      required: true,
       options: matterMeta?.case_role || [],
     },
     {
       label: 'Case Type',
       name: 'case_type_id',
       type: 'select',
+      required: true,
       options: matterMeta?.case_type || [],
     },
     {
       label: 'Case Status',
       name: 'case_status_id',
       type: 'select',
-      required: true,
       options: matterMeta?.case_status || [],
     },
     {
       label: 'Marketing Source',
       name: 'marketing_source_id',
       type: 'select',
+      required: true,
       options: matterMeta?.marketing_source || [],
     },
     {
@@ -285,11 +285,11 @@ export default function Overview() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {formFields
                   .filter(({ name }) => name !== 'description')
-                  .map(({ label, name, type, options }) => (
+                  .map(({ label, name, type, options, required }) => (
                     <div key={name} className="w-full">
                       {type !== 'checkbox' && (
                         <Label className="text-[#40444D] font-semibold mb-2">
-                          {label}
+                          {label} {required && <span className="text-red-500">*</span>}
                         </Label>
                       )}
                       {type === 'select' ? (
