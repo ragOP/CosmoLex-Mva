@@ -38,7 +38,9 @@ const CalendarPage = () => {
     event: singleEvent,
     eventLoading,
     eventsLoading,
+    handleUpdateEvent,
     handleDeleteEvent,
+    isUpdating,
     isDeleting,
   } = useEvents();
 
@@ -95,6 +97,30 @@ const CalendarPage = () => {
     setSelectedDateRange(dateRange);
   };
 
+  // eventId, update start, enddate
+
+  const handleEventDragStart = (event) => {
+    console.log('Event drag start:', event);
+  };
+
+  const handleEventDrop = (dropInfo) => {
+    console.log('Event drop:', dropInfo);
+    const { event } = dropInfo;
+    console.log('Event drop:', event);
+    const updatedEvent = {
+      ...event,
+      start: event.start,
+      end: event.end,
+    };
+
+    const payloadToUpdate = {};
+
+    // Update the event in the events array
+    setAllEvents((prevEvents) =>
+      prevEvents.map((e) => (e.id === event.id ? updatedEvent : e))
+    );
+  };
+
   return (
     <div className="h-full w-full">
       <CalendarWrapper
@@ -107,6 +133,8 @@ const CalendarPage = () => {
         open={open}
         setOpen={setOpen}
         onDateRangeSelect={handleDateRangeSelect}
+        handleEventDragStart={handleEventDragStart}
+        handleEventDrop={handleEventDrop}
       />
 
       <NewEventDialog
