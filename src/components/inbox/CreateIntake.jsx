@@ -12,6 +12,7 @@ import {
   SelectGroup,
   SelectItem,
 } from '@/components/ui/select';
+import SearchableSelect from '@/components/ui/SearchableSelect';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import getMatterMeta from '@/pages/matter/intake/helpers/getMatterMeta';
@@ -51,28 +52,6 @@ export default function CreateIntake() {
 
   const { contact, contactsMeta, contactLoading, contactsMetaLoading } =
     useContact();
-
-  useEffect(() => {
-    if (
-      isObjectWithValues(contact) &&
-      !contactLoading &&
-      !contactsMetaLoading
-    ) {
-      setValue('contact_id', contact.id);
-      setSelectedContact({
-        contact_name: contact.first_name + ' ' + contact.last_name,
-        contact_type: contactsMeta?.contact_type?.find(
-          (item) => item.id === contact.contact_type_id
-        )?.name,
-        primary_email: contact.primary_email,
-        phone: contact.primary_phone,
-        primary_address: contact?.addresses?.find(
-          (item) => item.is_primary === 1
-        )?.address_1,
-        date_created: contact.date_created,
-      });
-    }
-  }, [contact, contactLoading, contactsMeta]);
 
   const createMatterMutation = useMutation({
     mutationFn: createMatter,
@@ -187,7 +166,6 @@ export default function CreateIntake() {
     setValue,
     setError,
     clearErrors,
-    trigger,
   } = useForm({
     defaultValues: {
       case_role_id: '',
@@ -202,6 +180,29 @@ export default function CreateIntake() {
     },
     mode: 'onChange',
   });
+
+  // UseEffect hook to set contact data after form is initialized
+  useEffect(() => {
+    if (
+      isObjectWithValues(contact) &&
+      !contactLoading &&
+      !contactsMetaLoading
+    ) {
+      setValue('contact_id', contact.id);
+      setSelectedContact({
+        contact_name: contact.first_name + ' ' + contact.last_name,
+        contact_type: contactsMeta?.contact_type?.find(
+          (item) => item.id === contact.contact_type_id
+        )?.name,
+        primary_email: contact.primary_email,
+        phone: contact.primary_phone,
+        primary_address: contact?.addresses?.find(
+          (item) => item.is_primary === 1
+        )?.address_1,
+        date_created: contact.date_created,
+      });
+    }
+  }, [contact, contactLoading, contactsMeta, contactsMetaLoading, setValue]);
 
   const handleCreateIntake = (data) => {
     // Clear previous errors
@@ -358,7 +359,9 @@ export default function CreateIntake() {
                           control={control}
                           name={name}
                           render={({ field }) => (
-                            <Select
+                            <SearchableSelect
+                              options={options || []}
+                              value={field.value}
                               onValueChange={(val) =>
                                 handleFieldChange(
                                   name,
@@ -366,28 +369,14 @@ export default function CreateIntake() {
                                   field.onChange
                                 )
                               }
-                              value={field.value?.toString() ?? ''}
-                            >
-                              <SelectTrigger
-                                className={`w-full ${
-                                  formErrors[name] ? 'border-red-500' : ''
-                                }`}
-                              >
-                                <SelectValue placeholder={`Select ${label}`} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectGroup>
-                                  {options?.map((option) => (
-                                    <SelectItem
-                                      key={option.id}
-                                      value={option.id.toString()}
-                                    >
-                                      {option.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectGroup>
-                              </SelectContent>
-                            </Select>
+                              placeholder={`Select ${label}`}
+                              searchPlaceholder={`Search ${label.toLowerCase()}...`}
+                              className="w-full"
+                              error={!!formErrors[name]}
+                              displayKey="name"
+                              valueKey="id"
+                              emptyMessage={`No ${label.toLowerCase()} found`}
+                            />
                           )}
                         />
                       ) : type === 'textarea' ? (
@@ -481,7 +470,9 @@ export default function CreateIntake() {
                     <Label className="text-[#40444D] w-full font-semibold block">
                       Contact Type
                     </Label>
-                    <Select
+                    <SearchableSelect
+                      options={contactType}
+                      value={selectedContactType}
                       onValueChange={(value) => {
                         setSelectedContactType(value);
                         // Clear contact search when type changes
@@ -490,18 +481,13 @@ export default function CreateIntake() {
                         setValue('contact_id', '');
                         setShowContactTable(false);
                       }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select Contact Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {contactType.map((c) => (
-                          <SelectItem key={c.id} value={c.name}>
-                            {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      placeholder="Select Contact Type"
+                      searchPlaceholder="Search contact types..."
+                      className="w-full"
+                      displayKey="name"
+                      valueKey="name"
+                      emptyMessage="No contact types found"
+                    />
                   </div>
 
                   {/* Search Contact */}

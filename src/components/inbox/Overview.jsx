@@ -12,6 +12,7 @@ import {
   SelectGroup,
   SelectItem,
 } from '@/components/ui/select';
+import SearchableSelect from '@/components/ui/SearchableSelect';
 import { Checkbox } from '@/components/ui/checkbox';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createMatterSchema } from '@/pages/matter/intake/schema/createMatterSchema';
@@ -38,7 +39,7 @@ import {
 import isArrayWithValues from '@/utils/isArrayWithValues';
 
 export default function Overview() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   // fetch query params
   const searchParams = new URLSearchParams(window.location.search);
   const slugId = searchParams.get('slugId');
@@ -108,7 +109,7 @@ export default function Overview() {
   useEffect(() => {
     debouncedSearch(searchContactQuery, selectedContactType);
     return () => debouncedSearch.cancel();
-  }, [searchContactQuery, selectedContactType]);
+  }, [searchContactQuery, selectedContactType, debouncedSearch]);
 
   const {
     control,
@@ -245,26 +246,15 @@ export default function Overview() {
                         control={control}
                         name={name}
                         render={({ field }) => (
-                          <Select
+                          <SearchableSelect
+                            options={options}
+                            value={field.value}
                             onValueChange={(val) => field.onChange(Number(val))}
-                            value={field.value?.toString() ?? ''}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder={`Select ${label}`} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectGroup>
-                                {options.map((option) => (
-                                  <SelectItem
-                                    key={option.id}
-                                    value={option.id.toString()}
-                                  >
-                                    {option.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectGroup>
-                            </SelectContent>
-                          </Select>
+                            placeholder={`Select ${label}`}
+                            searchPlaceholder={`Search ${label}...`}
+                            className="w-full"
+                            error={!!errors[name]}
+                          />
                         )}
                       />
                     ) : type === 'checkbox' ? (
@@ -309,23 +299,16 @@ export default function Overview() {
                   <Label className="text-[#40444D] w-full font-semibold block">
                     Contact Type
                   </Label>
-                  <Select
+                  <SearchableSelect
+                    options={contactType}
+                    value={selectedContactType}
                     onValueChange={(value) =>
                       setSelectedContactType(Number(value))
                     }
-                    value={selectedContactType?.toString() || ''}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Contact Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {contactType.map((c) => (
-                        <SelectItem key={c.id} value={c.id.toString()}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="Select Contact Type"
+                    searchPlaceholder="Search contact types..."
+                    className="w-full"
+                  />
                 </div>
 
                 {/* Search Contact */}
