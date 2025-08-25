@@ -27,6 +27,7 @@ import {
   IconButton,
   Tooltip,
   Switch,
+  Chip,
 } from '@mui/material';
 
 export default function CreateContactDialog({ open, setOpen, setValueFn }) {
@@ -36,6 +37,7 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
   });
 
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
+  const [isPrimaryAddress, setIsPrimaryAddress] = useState(false);
 
   const {
     control,
@@ -126,6 +128,12 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
           value: 255,
           message: 'Company name must be 255 characters or less',
         };
+        break;
+      case 'primary_phone':
+        rules.required = 'Primary phone is required';
+        break;
+      case 'primary_email':
+        rules.required = 'Primary email is required';
         break;
       case 'addresses':
         rules.validate = (value) => {
@@ -231,9 +239,19 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
     { label: 'Federal Tax ID', name: 'federal_tax_id', type: 'text' },
     { label: 'Work Phone', name: 'work_phone', type: 'text' },
     { label: 'Home Phone', name: 'home_phone', type: 'text' },
-    { label: 'Primary Phone', name: 'primary_phone', type: 'text' },
+    {
+      label: 'Primary Phone',
+      name: 'primary_phone',
+      type: 'text',
+      required: true,
+    },
     { label: 'Fax', name: 'fax', type: 'text' },
-    { label: 'Primary Email', name: 'primary_email', type: 'text' },
+    {
+      label: 'Primary Email',
+      name: 'primary_email',
+      type: 'text',
+      required: true,
+    },
     { label: 'Secondary Email', name: 'secondary_email', type: 'text' },
     { label: 'When to Contact', name: 'when_to_contact', type: 'text' },
     { label: 'Contact Preference', name: 'contact_preference', type: 'text' },
@@ -449,9 +467,18 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
                     key={addr.id}
                     className="border p-4 mb-2 rounded-lg w-full bg-white flex justify-between items-center"
                   >
-                    <p className="text-sm">
-                      {addr.address_1}, {addr.city}, {addr.state}
-                    </p>
+                    <Stack direction="row" spacing={1}>
+                      <p className="text-sm">
+                        {addr.address_1}, {addr.city}, {addr.state}
+                      </p>
+                      <Chip
+                        label={addr.is_primary ? 'Primary' : 'Secondary'}
+                        color={addr.is_primary ? 'primary' : 'secondary'}
+                        size="small"
+                        variant="outlined"
+                        className="text-xs"
+                      />
+                    </Stack>
                     <Tooltip title="Remove Address">
                       <IconButton
                         onClick={() => {
@@ -601,9 +628,18 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
               <Label>Is Primary:</Label>
               <Switch
                 checked={newAddress.is_primary}
-                onChange={(e) =>
-                  setNewAddress({ ...newAddress, is_primary: e.target.checked })
-                }
+                onChange={(e) => {
+                  if (!isPrimaryAddress) {
+                    setIsPrimaryAddress(e.target.checked);
+                  } else {
+                    toast.error('Only one address can be primary');
+                    return;
+                  }
+                  setNewAddress({
+                    ...newAddress,
+                    is_primary: e.target.checked,
+                  });
+                }}
               />
             </div>
           </div>
