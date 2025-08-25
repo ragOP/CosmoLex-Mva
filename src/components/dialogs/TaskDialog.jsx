@@ -333,10 +333,14 @@ export default function TaskDialog({
   const handleAddReminderSubmit = (data) => {
     if (editingReminder !== null) {
       // Update existing reminder
-      updateReminder(editingReminder.index, data);
+      updateReminder(editingReminder.index, {
+        ...data,
+        // Preserve the dbId if it exists
+        dbId: editingReminder.dbId,
+      });
       setEditingReminder(null);
     } else {
-      // Add new reminder
+      // Add new reminder (no dbId for new reminders)
       appendReminder(data);
     }
     setReminderDialogOpen(false);
@@ -365,7 +369,12 @@ export default function TaskDialog({
   };
 
   const handleEditReminder = (reminder, index) => {
-    setEditingReminder({ ...reminder, index });
+    setEditingReminder({
+      ...reminder,
+      index,
+      // Make sure to pass the dbId for editing
+      dbId: reminder.dbId,
+    });
     setReminderDialogOpen(true);
   };
 
@@ -398,6 +407,8 @@ export default function TaskDialog({
         return;
       }
 
+      console.log('reminderFields while submti', reminderFields);
+
       // Format the data for API
       const formattedData = {
         ...data,
@@ -405,10 +416,10 @@ export default function TaskDialog({
         slug: data.slug,
         type_id: parseInt(data.type_id) || data.type_id,
         reminders: reminderFields.map((reminder, index) => ({
-          id: isUpdateMode ? reminder.id : undefined, // Only send ID for update
+          // FIXED: Use dbId for existing reminders, undefined for new ones
+          id: isUpdateMode ? reminder.dbId : undefined,
           type_id: parseInt(reminder.type_id),
           scheduled_at: reminder.scheduled_at,
-          tempKey: !isUpdateMode ? index : undefined, // Local key for frontend only
         })),
         assigned_to: assignedToFields.map((assignee) => ({
           user_id: parseInt(assignee.user_id),
@@ -500,7 +511,17 @@ export default function TaskDialog({
         }
 
         // Set field arrays
-        replaceReminders(currentTask.reminders || []);
+        replaceReminders(
+          (currentTask.reminders || []).map((r) => {
+            console.log('r single hai', r);
+            return {
+              // Keep the original database ID as dbId
+              dbId: r.id, // <-- IMPORTANT: Store original DB ID separately
+              type_id: r.type_id,
+              scheduled_at: r.scheduled_at,
+            };
+          })
+        );
         replaceAssignedTo(formData.assigned_to);
       } else {
         // Reset to default values for create mode
@@ -536,6 +557,9 @@ export default function TaskDialog({
     replaceReminders,
     replaceAssignedTo,
   ]);
+
+  // check reminder value
+  console.log('reminderFields', reminderFields);
 
   return (
     <>
@@ -762,9 +786,10 @@ export default function TaskDialog({
                               <IconButton
                                 type="button"
                                 onClick={() => {
-                                  if (reminder.id) {
+                                  if (reminder.dbId) {
+                                    // <-- FIXED: Use dbId instead of id
                                     // Existing reminder → hit backend
-                                    handleDeleteReminder(reminder.id);
+                                    handleDeleteReminder(reminder.dbId);
                                   }
                                   // Always remove from UI
                                   removeReminder(idx);
