@@ -86,7 +86,7 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
   const { data: metaData } = useQuery({
     queryKey: ['email-communicationMeta', matterId],
     queryFn: () => getCommunicationMeta(matterId, 1), // Type 1 for emails
-    enabled: open && !!matterId,
+    enabled: open
   });
 
   // Search for From email addresses (independent search)
