@@ -159,7 +159,6 @@ export default function Overview() {
       rating_id: matter.rating_id || '',
       call_outcome_id: matter.call_outcome_id || '',
       office_location_id: matter.office_location_id || '',
-      contact_id: matter.contact_id || '',
     };
 
     reset(formData);
@@ -178,6 +177,7 @@ export default function Overview() {
   }, [matter, contacts, contactMeta, matterMeta, reset]);
 
   const formFields = [
+    { label: 'Description', name: 'description', type: 'textarea' },
     {
       label: 'Case Role',
       name: 'case_role_id',
@@ -223,7 +223,7 @@ export default function Overview() {
       options: matterMeta?.ad_campaign_id || [],
     },
     { label: 'Case Description', name: 'case_description', type: 'text' },
-    { label: 'Contact ID', name: 'contact_id', type: 'text' },
+    // { label: 'Contact ID', name: 'contact_id', type: 'text' },
     {
       label: 'Rating',
       name: 'rating_id',
@@ -242,7 +242,6 @@ export default function Overview() {
       type: 'select',
       options: matterMeta?.office_location || [],
     },
-    { label: 'Description', name: 'description', type: 'textarea' },
   ];
 
   return (
@@ -261,6 +260,28 @@ export default function Overview() {
             className="space-y-4 w-full flex flex-col justify-between overflow-hidden p-2"
           >
             <div className="space-y-4">
+              {/* Description field - full width */}
+              <div className="w-full">
+                <Label className="text-[#40444D] font-semibold mb-2">
+                  Description
+                </Label>
+                <Controller
+                  control={control}
+                  name="description"
+                  render={({ field }) => (
+                    <textarea
+                      {...field}
+                      className="w-full min-h-[100px] p-3 border border-gray-300 rounded-md resize-vertical focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                      placeholder="Enter description..."
+                    />
+                  )}
+                />
+                {errors.description && (
+                  <p className="text-xs text-red-500">
+                    {errors.description.message}
+                  </p>
+                )}
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {formFields
                   .filter(({ name }) => name !== 'description')
@@ -279,7 +300,9 @@ export default function Overview() {
                             <SearchableSelect
                               options={options}
                               value={field.value}
-                              onValueChange={(val) => field.onChange(Number(val))}
+                              onValueChange={(val) =>
+                                field.onChange(Number(val))
+                              }
                               placeholder={`Select ${label}`}
                               searchPlaceholder={`Search ${label}...`}
                               className="w-full"
@@ -305,7 +328,9 @@ export default function Overview() {
                         <Controller
                           control={control}
                           name={name}
-                          render={({ field }) => <Input type={type} {...field} />}
+                          render={({ field }) => (
+                            <Input type={type} {...field} />
+                          )}
                         />
                       )}
                       {errors[name] && (
@@ -315,29 +340,6 @@ export default function Overview() {
                       )}
                     </div>
                   ))}
-              </div>
-
-              {/* Description field - full width */}
-              <div className="w-full">
-                <Label className="text-[#40444D] font-semibold mb-2">
-                  Description
-                </Label>
-                <Controller
-                  control={control}
-                  name="description"
-                  render={({ field }) => (
-                    <textarea
-                      {...field}
-                      className="w-full min-h-[100px] p-3 border border-gray-300 rounded-md resize-vertical focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-                      placeholder="Enter description..."
-                    />
-                  )}
-                />
-                {errors.description && (
-                  <p className="text-xs text-red-500">
-                    {errors.description.message}
-                  </p>
-                )}
               </div>
 
               {/* Contact Type Select */}

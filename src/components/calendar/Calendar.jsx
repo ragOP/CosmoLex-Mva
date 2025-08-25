@@ -6,6 +6,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
 import '../../styles/calendar.css';
 import CustomToolBar from './CustomToolBar';
+import { addDays } from 'date-fns';
 
 const CalendarWrapper = ({
   slug = null,
@@ -39,9 +40,11 @@ const CalendarWrapper = ({
   const handleDateSelect = (selectInfo) => {
     const { start, end } = selectInfo;
 
+    const result = addDays(new Date(end), -1);
+
     // If onDateRangeSelect callback exists, use it
     if (onDateRangeSelect) {
-      onDateRangeSelect({ start, end });
+      onDateRangeSelect({ start, end: result });
     }
 
     // Open the new event dialog
@@ -53,10 +56,7 @@ const CalendarWrapper = ({
 
   // Handle event click
   const handleEventClick = (clickInfo) => {
-    console.log('clickInfo >>>', clickInfo?.event?.id);
-    console.log('events >>>', events);
     const event = events.find((e) => e.id === parseInt(clickInfo?.event?.id));
-    console.log('event >>>', event);
     if (event) {
       handleShowEvent(event);
     }
