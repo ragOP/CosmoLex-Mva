@@ -6,6 +6,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEvents } from '@/components/calendar/hooks/useEvent';
 import moment from 'moment';
 import isArrayWithValues from '@/utils/isArrayWithValues';
+import DeleteEventDialog from '@/components/calendar/components/deleteEventDialog';
 
 const CalendarPage = () => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const CalendarPage = () => {
 
   // Dialog states
   const [open, setOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Event states
   const [event, setEvent] = useState(null);
@@ -36,6 +38,8 @@ const CalendarPage = () => {
     event: singleEvent,
     eventLoading,
     eventsLoading,
+    handleDeleteEvent,
+    isDeleting,
   } = useEvents();
 
   useEffect(() => {
@@ -119,6 +123,21 @@ const CalendarPage = () => {
         selectedDateRange={selectedDateRange}
         event={event ? event : null}
         mode={event ? 'update' : 'create'}
+        onDelete={() => setShowDeleteConfirm(true)}
+        showDeleteConfirm={showDeleteConfirm}
+      />
+
+      <DeleteEventDialog
+        event={event ? event : null}
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => {
+          handleDeleteEvent(event.id);
+          setShowDeleteConfirm(false);
+          setOpen(false);
+          handleNavigate(null);
+        }}
+        isDeleting={isDeleting}
       />
     </div>
   );

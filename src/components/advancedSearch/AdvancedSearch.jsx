@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { RotateCcw, Filter, X } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
-import { getAdvancedSearchMeta, performAdvancedSearch } from '@/api/api_services/advancedSearch';
+import {
+  getAdvancedSearchMeta,
+  performAdvancedSearch,
+} from '@/api/api_services/advancedSearch';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import SearchForm from './SearchForm';
@@ -25,13 +28,17 @@ const AdvancedSearch = () => {
       }
     });
 
-    handleSearch(urlCriteria || {});
-
     if (Object.keys(urlCriteria).length > 0) {
       setSearchFormData(urlCriteria);
-      // Auto-execute search if criteria exists
+
+      // Only trigger search if we *didn't already* add page=results
+      if (!hasResults) {
+        handleSearch(urlCriteria);
+      } else {
+        // If page=results and criteria exist, just show results
+        searchMutation.mutate(urlCriteria);
+      }
     } else if (hasResults) {
-      // If page=results but no search criteria, show empty results state
       setSearchResults({ data: [] });
     }
   }, []);
@@ -58,7 +65,7 @@ const AdvancedSearch = () => {
       const currentParams = new URLSearchParams(searchParams);
       currentParams.delete('page');
       setSearchParams(currentParams);
-    }
+    },
   });
 
   const handleSearch = (formData) => {
@@ -69,7 +76,12 @@ const AdvancedSearch = () => {
     const newSearchParams = new URLSearchParams();
     Object.entries(formData).forEach(([key, value]) => {
       // Only include fields that have meaningful values
-      if (value && value.toString().trim() !== '' && value !== 'undefined' && value !== 'null') {
+      if (
+        value &&
+        value.toString().trim() !== '' &&
+        value !== 'undefined' &&
+        value !== 'null'
+      ) {
         newSearchParams.set(key, value.toString().trim());
       }
     });
@@ -94,13 +106,11 @@ const AdvancedSearch = () => {
     setSearchParams(new URLSearchParams());
   };
 
-
-
   return (
     <div className="px-4 pb-2 flex flex-col gap-2 h-full overflow-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className='pl-2'>
+        <div className="pl-2">
           <h1 className="text-xl font-bold text-gray-900">Advanced Search</h1>
           <p className="text-base text-gray-600 ">
             Search through contacts and cases with advanced filters
@@ -124,22 +134,21 @@ const AdvancedSearch = () => {
       {/* Search Form */}
       <div className="bg-white/50 backdrop-blur-md border border-gray-200/80 shadow-lg gap-4 p-4 rounded-lg flex flex-col h-full overflow-auto ">
         <div className="flex items-center gap-3">
-
-          {searchResults ?
+          {searchResults ? (
             <>
               <Filter className="w-5 h-5 text-blue-600" />
               <h2 className="text-base font-semibold text-gray-800">
                 Search Results ({searchResults?.data?.length || 0})
               </h2>
-            </> :
+            </>
+          ) : (
             <>
               <Filter className="w-5 h-5 text-blue-600" />
               <h2 className="text-base font-semibold text-gray-800">
                 Search Criteria
               </h2>
             </>
-          }
-
+          )}
         </div>
 
         {isLoadingMeta ? (
@@ -169,9 +178,8 @@ const AdvancedSearch = () => {
           />
         )}
       </div>
-
     </div>
   );
 };
 
-export default AdvancedSearch; 
+export default AdvancedSearch;

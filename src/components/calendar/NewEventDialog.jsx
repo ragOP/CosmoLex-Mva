@@ -40,6 +40,8 @@ export default function NewEventDialogRHF({
   selectedDateRange = null,
   mode = 'create',
   event = null,
+  onDelete = () => {},
+  showDeleteConfirm = false,
 }) {
   const [searchParams] = useSearchParams();
 
@@ -364,7 +366,12 @@ export default function NewEventDialogRHF({
     <>
       <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
         <form onSubmit={handleSubmit(onFormSubmit)}>
-          <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000]">
+          {showDeleteConfirm && (
+            <div className="absolute inset-0 bg-black/40 z-[60] rounded-lg"></div>
+          )}
+          <Stack
+            className={` bg-[#F5F5FA]  rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000]`}
+          >
             <div className="flex items-center justify-between p-4">
               <h1 className="text-xl text-[#40444D] text-center font-bold font-sans">
                 {isUpdateMode ? 'Update Event' : 'Create New Event'}
@@ -750,8 +757,7 @@ export default function NewEventDialogRHF({
                       <IconButton
                         onClick={() => {
                           console.log('event >>>', event);
-                          handleDeleteEvent(event?.id);
-                          onClose();
+                          onDelete();
                         }}
                         component="span"
                         size="small"
