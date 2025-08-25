@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import {
   getEventMeta,
   getEvents,
+  getEventsByslugId,
   getEventById,
   searchEvent,
   filterEvent,
@@ -23,6 +24,7 @@ export const useEvents = () => {
 
   // Extract eventId from URL
   const eventId = searchParams.get('eventId');
+  const slugId = searchParams.get('slugId');
 
   // Event meta
   const { data: eventsMeta = [], isLoading: eventsMetaLoading } = useQuery({
@@ -33,10 +35,20 @@ export const useEvents = () => {
 
   // All events
   const { data: events = [], isLoading: eventsLoading } = useQuery({
-    queryKey: ['events'],
-    queryFn: () => getEvents(),
+    queryKey: ['events', slugId],
+    queryFn: () => getEventsByslugId(slugId),
     staleTime: 5 * 60 * 1000,
   });
+
+  console.log('events >>>', events);
+
+  // All events by slugId
+  // const { data: eventsByslugId = [], isLoading: eventsByslugIdLoading } =
+  //   useQuery({
+  //     queryKey: ['eventsByslugId', slugId],
+  //     queryFn: () => getEventsByslugId(slugId),
+  //     staleTime: 5 * 60 * 1000,
+  //   });
 
   // single event
   const { data: event = null, isLoading: eventLoading } = useQuery({

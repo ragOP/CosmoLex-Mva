@@ -29,7 +29,7 @@ import {
   Switch,
 } from '@mui/material';
 
-export default function CreateContactDialog({ open, setOpen }) {
+export default function CreateContactDialog({ open, setOpen, setValueFn }) {
   const { data: contactMeta } = useQuery({
     queryKey: ['contactMeta'],
     queryFn: getContactMeta,
@@ -250,6 +250,7 @@ export default function CreateContactDialog({ open, setOpen }) {
     onSuccess: (res) => {
       console.log('[DEBUG] Contact created successfully:', res);
       toast.success('Contact created successfully');
+      setValueFn(res.contact_id);
       setOpen(false);
       reset();
     },

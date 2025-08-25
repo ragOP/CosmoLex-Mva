@@ -8,6 +8,8 @@ import '../../styles/calendar.css';
 import CustomToolBar from './CustomToolBar';
 
 const CalendarWrapper = ({
+  slug = null,
+  eventsMeta = {},
   events,
   setEvents,
   handleShowEvent,
@@ -144,6 +146,8 @@ const CalendarWrapper = ({
         {/* Custom Toolbar */}
         <div className="relative px-6 pt-4 pb-2 border-b border-white/20 bg-gradient-to-r from-white/40 to-transparent backdrop-blur-sm">
           <CustomToolBar
+            slug={slug}
+            users={eventsMeta?.calendar_list || []}
             onNavigate={handleNavigate}
             onView={handleViewChange}
             label={label}

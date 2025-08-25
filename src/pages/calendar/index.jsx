@@ -1,13 +1,11 @@
-import EventPreviewDialog from '@/components/calendar/EventPreviewDialog';
 import { useState, useEffect } from 'react';
 import CalendarWrapper from '@/components/calendar/Calendar';
 import NewEventDialog from '@/components/calendar/NewEventDialog';
-import createEvent from './helpers/createEvent';
-import getEvent from './helpers/getEvent';
 import { useMatter } from '@/components/inbox/MatterContext';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEvents } from '@/components/calendar/hooks/useEvent';
 import moment from 'moment';
+import isArrayWithValues from '@/utils/isArrayWithValues';
 
 const CalendarPage = () => {
   const navigate = useNavigate();
@@ -18,7 +16,8 @@ const CalendarPage = () => {
 
   // Event states
   const [event, setEvent] = useState(null);
-  const [events, setEvents] = useState([]);
+  // const [events, setEvents] = useState([]);
+  const [allEvents, setAllEvents] = useState([]);
   const [selectedDateRange, setSelectedDateRange] = useState(null);
 
   // use matter
@@ -32,29 +31,30 @@ const CalendarPage = () => {
 
   // Use events
   const {
-    events: allEvents,
+    eventsMeta,
+    events,
     event: singleEvent,
     eventLoading,
     eventsLoading,
   } = useEvents();
 
   useEffect(() => {
-    if (!eventsLoading) {
-      const mappedEvents = allEvents.map((event) => ({
+    if (!eventsLoading && isArrayWithValues(events)) {
+      const mappedEvents = events.map((event) => ({
         id: event.id,
         title: event.title,
         start: moment(event.start_time).toDate(),
         end: moment(event.end_time).toDate(),
         priority: event.priority,
       }));
-      setEvents(mappedEvents);
+      setAllEvents(mappedEvents);
     }
 
     if (!eventLoading && singleEvent) {
       setEvent(singleEvent);
       setOpen(true);
     }
-  }, [allEvents, eventsLoading, singleEvent, eventLoading]);
+  }, [events, eventsLoading, singleEvent, eventLoading]);
 
   const handleShowEvent = async (event) => {
     handleNavigate(event.id);
@@ -94,20 +94,16 @@ const CalendarPage = () => {
   return (
     <div className="h-full w-full">
       <CalendarWrapper
-        events={events}
-        setEvents={setEvents}
+        slug={matterSlug}
+        eventsMeta={eventsMeta}
+        events={allEvents}
+        setEvents={setAllEvents}
         handleShowEvent={handleShowEvent}
         NewEventDialog={NewEventDialog}
         open={open}
         setOpen={setOpen}
         onDateRangeSelect={handleDateRangeSelect}
       />
-
-      {/* <EventPreviewDialog
-        event={event}
-        open={isOpen}
-        onClose={() => setIsOpen(false)}
-      /> */}
 
       <NewEventDialog
         open={open}
