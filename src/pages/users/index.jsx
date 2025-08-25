@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Button from '@/components/Button';
 import UserDialog from '@/components/dialogs/UserDialog';
 import ShowUserDialog from '@/components/users/ShowUserDialog';
 import DeleteUserDialog from '@/components/users/DeleteUserDialog';
 import UsersTable from '@/components/users/UsersTable';
 import { Loader2, Plus } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import { useUsers } from '@/components/users/hooks/useUsers';
 
 const UsersPage = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+
 
   const {
     users,
@@ -25,6 +26,21 @@ const UsersPage = () => {
     isFetchingUser,
     updateUserStatus,
   } = useUsers();
+
+
+
+  // Stable handlers to prevent re-renders
+  const handleCloseView = useCallback(() => {
+    setShowViewDialog(false);
+    // Skip navigation for now to prevent state conflicts
+    // handleNavigate(null);
+  }, []);
+
+  const handleCloseEdit = useCallback(() => {
+    setShowUpdateDialog(false);
+    // Skip navigation for now to prevent state conflicts
+    // handleNavigate(null);
+  }, []);
 
   // Handlers
   const handleDelete = async () => {
@@ -39,17 +55,18 @@ const UsersPage = () => {
     }
   };
 
-  const handleNavigate = (userId) => {
-    if (userId) {
-      navigate(`/dashboard/users?userId=${userId}`, {
-        replace: false,
-      });
-    } else {
-      navigate(`/dashboard/users`, {
-        replace: false,
-      });
-    }
-  };
+  // Temporarily disabled to prevent modal flashing issues
+  // const handleNavigate = (userId) => {
+  //   if (userId) {
+  //     navigate(`/dashboard/users?userId=${userId}`, {
+  //       replace: false,
+  //     });
+  //   } else {
+  //     navigate(`/dashboard/users`, {
+  //       replace: false,
+  //     });
+  //   }
+  // };
 
   const handleStatusChange = async (userId, status) => {
     try {
@@ -85,25 +102,57 @@ const UsersPage = () => {
         users={users || []}
         onRowClick={async (params) => {
           try {
+            // Ensure params and params.row exist with valid id
+            if (!params || !params.row || !params.row.id) {
+              return;
+            }
+
             // Fetch user details from API
             const response = await fetchUser(params.row.id);
-            // Set the detailed user data from API response
-            setSelectedUser(response.data);
-            setShowViewDialog(true);
-            // append userId to url params
-            handleNavigate(params.row.id);
-          } catch (error) {
-            console.error('Error fetching user details:', error);
+            
+            // Check different possible response structures
+            const userData = response?.data || response;
+            
+            if (userData && (userData.id || Object.keys(userData).length > 0)) {
+              setSelectedUser(userData);
+              setShowViewDialog(true);
+            } else {
+              throw new Error('Invalid response from API');
+            }
+          } catch {
             // Fallback to using the table row data if API fails
-            setSelectedUser(params.row);
-            setShowViewDialog(true);
-            handleNavigate(params.row.id);
+            if (params && params.row && params.row.id) {
+              setSelectedUser(params.row);
+              setShowViewDialog(true);
+            }
           }
         }}
-        handleEdit={(user) => {
-          handleNavigate(user.id);
-          setSelectedUser(user);
-          setShowUpdateDialog(true);
+        handleEdit={async (user) => {
+          try {
+            // Ensure user has valid id before proceeding
+            if (!user || !user.id) {
+              return;
+            }
+            
+            // Fetch complete user details from API for editing
+            const response = await fetchUser(user.id);
+            
+            // Check different possible response structures
+            const userData = response?.data || response;
+            
+            if (userData && (userData.id || Object.keys(userData).length > 0)) {
+              setSelectedUser(userData);
+              setShowUpdateDialog(true);
+            } else {
+              throw new Error('Invalid response from API');
+            }
+          } catch {
+            // Fallback to using the table row data if API fails
+            if (user && user.id) {
+              setSelectedUser(user);
+              setShowUpdateDialog(true);
+            }
+          }
         }}
         handleDelete={(user) => {
           setSelectedUser(user);
@@ -115,11 +164,7 @@ const UsersPage = () => {
       {/* View */}
       <ShowUserDialog
         open={showViewDialog}
-        onClose={() => {
-          // remove userId from url params
-          handleNavigate(null);
-          setShowViewDialog(false);
-        }}
+        onClose={handleCloseView}
         user={selectedUser}
         isLoading={isFetchingUser}
       />
@@ -128,10 +173,7 @@ const UsersPage = () => {
 
       <UserDialog
         open={showUpdateDialog}
-        onClose={() => {
-          setShowUpdateDialog(false);
-          handleNavigate(null);
-        }}
+        onClose={handleCloseEdit}
         user={selectedUser}
         mode="update"
       />

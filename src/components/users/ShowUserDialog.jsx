@@ -29,7 +29,9 @@ const ShowUserDialog = ({ open = false, onClose = () => {}, user = null, isLoadi
   }
 
   // If user is empty or not found, return null
-  if (!user || !Object?.keys(user)?.length > 0) return null;
+  if (!user || typeof user !== 'object' || !Object?.keys(user)?.length > 0) {
+    return null;
+  }
 
   const {
     role_id,

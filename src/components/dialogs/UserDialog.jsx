@@ -159,6 +159,11 @@ export default function UserDialog({
       });
 
       if (isUpdateMode && currentUser) {
+        // Ensure currentUser has a valid id
+        if (!currentUser.id) {
+          throw new Error('Invalid user data: missing user ID');
+        }
+        
         await updateUser({
           userId: currentUser.id,
           userData: formData,
@@ -201,7 +206,7 @@ export default function UserDialog({
       setValidationErrors({});
       clearErrors();
 
-      if (isUpdateMode && currentUser) {
+      if (isUpdateMode && currentUser && typeof currentUser === 'object') {
         const formData = {
           role_id: currentUser.role_id ? currentUser.role_id.toString() : '',
           first_name: currentUser.first_name || '',
