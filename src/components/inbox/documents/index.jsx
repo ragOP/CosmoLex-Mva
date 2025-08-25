@@ -51,6 +51,7 @@ const DocumentationPage = () => {
     navigateToFolder,
     navigateBack,
     navigateToRoot,
+    navigateToPathLevel,
     handleCreateFolder,
     handleUploadFile,
     handleRenameItem,
@@ -207,9 +208,9 @@ const DocumentationPage = () => {
 
     // Handle file actions
   const handleFileAction = (data) => {
-    console.log('Main action handler:', data, data.id, data.payload, data.state);
-    
-    if (data.id === ChonkyActions.OpenFiles.id) {
+    if (data.id === ChonkyActions.OpenParentFolder.id) {
+      navigateBack();
+    } else if (data.id === ChonkyActions.OpenFiles.id) {
       // Try to get file from different possible sources
       let fileToOpen = null;
       
@@ -221,35 +222,24 @@ const DocumentationPage = () => {
         fileToOpen = data.state.selectedFiles[0];
       }
 
-      console.log('File to open:', fileToOpen);
-
       if (fileToOpen && fileToOpen.isDir) {
         // Navigate to folder
         const folder = {
           id: fileToOpen.id,
           name: fileToOpen.name,
-          slug: fileToOpen.slug || fileToOpen.id, // Fallback to id if slug is not available
+          slug: fileToOpen.slug || fileToOpen.id,
         };
-        console.log('Navigating to folder:', folder);
-        console.log('Current selectedFolder before navigation:', selectedFolder);
-        console.log('Current currentPath before navigation:', currentPath);
         navigateToFolder(folder);
-      } else if (fileToOpen) {
+      } else if (fileToOpen && fileToOpen.downloadUrl) {
         // Handle file opening/download
-        console.log('File clicked:', fileToOpen);
-        if (fileToOpen.downloadUrl) {
-          // Open file in new tab or download
-          window.open(fileToOpen.downloadUrl, '_blank');
-        }
+        window.open(fileToOpen.downloadUrl, '_blank');
       }
     } else if (data.id === 'go_back') {
       navigateBack();
     } else if (data.id === 'go_up') {
       if (currentPath.length > 1) {
-        // Go to parent folder
         navigateBack();
       } else {
-        // Go to root
         navigateToRoot();
       }
     } else if (data.id === 'create_folder') {
@@ -268,7 +258,6 @@ const DocumentationPage = () => {
       setUploadFileOpen(true);
     } else if (data.id === 'rename_item') {
       const files = data.state?.selectedFiles || [];
-      console.log('Rename action in main handler', files);
       if (files.length === 1) {
         const file = files[0];
         // Check if item is editable
@@ -280,7 +269,6 @@ const DocumentationPage = () => {
         setRenameFolderOpen(true);
       }
     } else if (data.id === 'delete_item') {
-      console.log('Delete action in main handler');
       const files = data.state?.selectedFiles || [];
       if (files.length > 0) {
         // Check if any selected item is not deletable
@@ -300,8 +288,8 @@ const DocumentationPage = () => {
     try {
       await handleCreateFolder(folderName);
       setCreateFolderOpen(false);
-    } catch (error) {
-      console.error('Error creating folder:', error);
+    } catch {
+      // Error handling is done in the mutation
     }
   };
 
@@ -309,8 +297,8 @@ const DocumentationPage = () => {
     try {
       await handleUploadFile(file, '', categoryId);
       setUploadFileOpen(false);
-    } catch (error) {
-      console.error('Error uploading file:', error);
+    } catch {
+      // Error handling is done in the mutation
     }
   };
 
@@ -320,9 +308,8 @@ const DocumentationPage = () => {
       await handleRenameItem(itemId, newName, itemType);
       setRenameFolderOpen(false);
       setFolderToRename(null);
-    } catch (error) {
-      console.error('Error renaming item:', error);
-      // Error toast is now handled in the mutation
+    } catch {
+      // Error handling is done in the mutation
     }
   };
 
@@ -331,9 +318,8 @@ const DocumentationPage = () => {
       await handleDeleteItem(itemId, itemType);
       setDeleteDialogOpen(false);
       setItemToDelete(null);
-    } catch (error) {
-      console.error('Error deleting item:', error);
-      // Error toast is now handled in the mutation
+    } catch {
+      // Error handling is done in the mutation
     }
   };
 
@@ -350,21 +336,15 @@ const DocumentationPage = () => {
 
   return (
     <div className="px-4">
-
-
       <BreadCrumb label={isFromInbox ? "Documents" : "Documentation"} />
 
       <Box sx={{ mt: 2, height: 'calc(100vh - 200px)' }}>
         <FileBrowser
           files={chonkyFiles}
-          folderChain={[
-            { id: 'root', name: isFromInbox ? 'Documents' : 'Documentation' },
-            ...currentPath.map((p) => ({ id: p.id, name: p.name }))
-          ]}
           onFileAction={handleFileAction}
           fileActions={[
-            ...dynamicActions,
             ChonkyActions.OpenFiles,
+            ChonkyActions.OpenParentFolder,
             ChonkyActions.SelectAllFiles,
             ChonkyActions.ClearSelection,
             ChonkyActions.EnableListView,
@@ -372,11 +352,42 @@ const DocumentationPage = () => {
             ChonkyActions.SortFilesByName,
             ChonkyActions.SortFilesBySize,
             ChonkyActions.SortFilesByDate,
+            ...dynamicActions,
           ]}
           defaultFileViewActionId={ChonkyActions.EnableListView.id}
-          disableDefaultFileActions={false}
+          disableDefaultFileActions={true}
         >
-          <FileNavbar />
+          <div className="flex items-center justify-between p-3 bg-white border-b border-gray-200">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={navigateToRoot}
+                className="text-gray-700 hover:text-blue-600 text-sm font-medium hover:underline flex items-center gap-1"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
+                </svg>
+                {isFromInbox ? 'Documents' : 'Documentation'}
+              </button>
+              
+              {currentPath.map((folder, index) => (
+                <div key={folder.id} className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  <button
+                    onClick={() => navigateToPathLevel(index)}
+                    className="text-gray-700 hover:text-blue-600 text-sm font-medium hover:underline flex items-center gap-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                    </svg>
+                    {folder.name}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
           <FileToolbar className="border-b border-gray-200 bg-white" />
           <FileList />
           <FileContextMenu />

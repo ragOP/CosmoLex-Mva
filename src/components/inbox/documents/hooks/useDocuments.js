@@ -139,26 +139,39 @@ export const useDocuments = () => {
       if (newPath.length > 0) {
         const lastFolder = newPath[newPath.length - 1];
         setSelectedFolder(lastFolder);
+        queryClient.invalidateQueries(['folderContents', lastFolder.id, slugId]);
       } else {
         setSelectedFolder(null);
+        queryClient.invalidateQueries(['folders', slugId]);
       }
     }
-  }, [currentPath]);
+  }, [currentPath, queryClient, slugId]);
 
   // Navigate to root
   const navigateToRoot = useCallback(() => {
     setCurrentPath([]);
     setSelectedFolder(null);
-  }, []);
+    queryClient.invalidateQueries(['folders', slugId]);
+  }, [queryClient, slugId]);
 
   // Navigate to specific path level
   const navigateToPathLevel = useCallback((targetIndex) => {
-    if (targetIndex < 0 || targetIndex >= currentPath.length) return;
+    if (targetIndex < 0 || targetIndex >= currentPath.length) {
+      return;
+    }
     
     const targetPath = currentPath.slice(0, targetIndex + 1);
     setCurrentPath(targetPath);
-    setSelectedFolder(targetPath[targetPath.length - 1]);
-  }, [currentPath]);
+    
+    const targetFolder = targetPath[targetPath.length - 1];
+    setSelectedFolder(targetFolder);
+    
+    if (targetFolder) {
+      queryClient.invalidateQueries(['folderContents', targetFolder.id, slugId]);
+    } else {
+      queryClient.invalidateQueries(['folders', slugId]);
+    }
+  }, [currentPath, queryClient, slugId]);
 
   // Create new folder
   const handleCreateFolder = useCallback(
