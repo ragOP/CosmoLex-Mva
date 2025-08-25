@@ -21,6 +21,9 @@ const getMatterMeta = async () => {
         ad_campaign_id,
         assignees,
         owners,
+        rating,
+        call_outcome,
+        office_location,
       } = result.response;
       return {
         case_role,
@@ -30,6 +33,9 @@ const getMatterMeta = async () => {
         ad_campaign_id,
         assignees,
         owners,
+        rating,
+        call_outcome,
+        office_location,
       };
     } else {
       console.error(

@@ -128,6 +128,10 @@ export default function Overview() {
       owner_id: '',
       ad_campaign_id: '',
       case_description: '',
+      description: '',
+      rating_id: '',
+      call_outcome_id: '',
+      office_location_id: '',
       contact_id: '',
     },
     resolver: zodResolver(createMatterSchema),
@@ -151,6 +155,10 @@ export default function Overview() {
       owner_id: matter.owner_id || '',
       ad_campaign_id: matter.ad_campaign_id || '',
       case_description: matter.case_description || '',
+      description: matter.description || '',
+      rating_id: matter.rating_id || '',
+      call_outcome_id: matter.call_outcome_id || '',
+      office_location_id: matter.office_location_id || '',
       contact_id: matter.contact_id || '',
     };
 
@@ -215,6 +223,26 @@ export default function Overview() {
       options: matterMeta?.ad_campaign_id || [],
     },
     { label: 'Case Description', name: 'case_description', type: 'text' },
+    { label: 'Contact ID', name: 'contact_id', type: 'text' },
+    {
+      label: 'Rating',
+      name: 'rating_id',
+      type: 'select',
+      options: matterMeta?.rating || [],
+    },
+    {
+      label: 'Call Outcome',
+      name: 'call_outcome_id',
+      type: 'select',
+      options: matterMeta?.call_outcome || [],
+    },
+    {
+      label: 'Office Location',
+      name: 'office_location_id',
+      type: 'select',
+      options: matterMeta?.office_location || [],
+    },
+    { label: 'Description', name: 'description', type: 'textarea' },
   ];
 
   return (
@@ -234,57 +262,82 @@ export default function Overview() {
           >
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {formFields.map(({ label, name, type, options }) => (
-                  <div key={name} className="w-full">
-                    {type !== 'checkbox' && (
-                      <Label className="text-[#40444D] font-semibold mb-2">
-                        {label}
-                      </Label>
-                    )}
-                    {type === 'select' ? (
-                      <Controller
-                        control={control}
-                        name={name}
-                        render={({ field }) => (
-                          <SearchableSelect
-                            options={options}
-                            value={field.value}
-                            onValueChange={(val) => field.onChange(Number(val))}
-                            placeholder={`Select ${label}`}
-                            searchPlaceholder={`Search ${label}...`}
-                            className="w-full"
-                            error={!!errors[name]}
-                          />
-                        )}
-                      />
-                    ) : type === 'checkbox' ? (
-                      <Controller
-                        control={control}
-                        name={name}
-                        render={({ field }) => (
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                            className={`border ${
-                              errors[name] ? 'border-red-500' : ''
-                            }`}
-                          />
-                        )}
-                      />
-                    ) : (
-                      <Controller
-                        control={control}
-                        name={name}
-                        render={({ field }) => <Input type={type} {...field} />}
-                      />
-                    )}
-                    {errors[name] && (
-                      <p className="text-xs text-red-500">
-                        {errors[name].message}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                {formFields
+                  .filter(({ name }) => name !== 'description')
+                  .map(({ label, name, type, options }) => (
+                    <div key={name} className="w-full">
+                      {type !== 'checkbox' && (
+                        <Label className="text-[#40444D] font-semibold mb-2">
+                          {label}
+                        </Label>
+                      )}
+                      {type === 'select' ? (
+                        <Controller
+                          control={control}
+                          name={name}
+                          render={({ field }) => (
+                            <SearchableSelect
+                              options={options}
+                              value={field.value}
+                              onValueChange={(val) => field.onChange(Number(val))}
+                              placeholder={`Select ${label}`}
+                              searchPlaceholder={`Search ${label}...`}
+                              className="w-full"
+                              error={!!errors[name]}
+                            />
+                          )}
+                        />
+                      ) : type === 'checkbox' ? (
+                        <Controller
+                          control={control}
+                          name={name}
+                          render={({ field }) => (
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                              className={`border ${
+                                errors[name] ? 'border-red-500' : ''
+                              }`}
+                            />
+                          )}
+                        />
+                      ) : (
+                        <Controller
+                          control={control}
+                          name={name}
+                          render={({ field }) => <Input type={type} {...field} />}
+                        />
+                      )}
+                      {errors[name] && (
+                        <p className="text-xs text-red-500">
+                          {errors[name].message}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+              </div>
+
+              {/* Description field - full width */}
+              <div className="w-full">
+                <Label className="text-[#40444D] font-semibold mb-2">
+                  Description
+                </Label>
+                <Controller
+                  control={control}
+                  name="description"
+                  render={({ field }) => (
+                    <textarea
+                      {...field}
+                      className="w-full min-h-[100px] p-3 border border-gray-300 rounded-md resize-vertical focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                      placeholder="Enter description..."
+                    />
+                  )}
+                />
+                {errors.description && (
+                  <p className="text-xs text-red-500">
+                    {errors.description.message}
+                  </p>
+                )}
               </div>
 
               {/* Contact Type Select */}
