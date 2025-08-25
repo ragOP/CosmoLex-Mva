@@ -45,15 +45,19 @@ const CalendarPage = () => {
   } = useEvents();
 
   useEffect(() => {
-    if (!eventsLoading && isArrayWithValues(events)) {
-      const mappedEvents = events.map((event) => ({
-        id: event.id,
-        title: event.title,
-        start: moment(event.start_time).toDate(),
-        end: moment(event.end_time).toDate(),
-        priority: event.priority,
-      }));
-      setAllEvents(mappedEvents);
+    if (!eventsLoading) {
+      if (isArrayWithValues(events)) {
+        const mappedEvents = events.map((event) => ({
+          id: event.id,
+          title: event.title,
+          start: moment(event.start_time).toDate(),
+          end: moment(event.end_time).toDate(),
+          priority: event.priority,
+        }));
+        setAllEvents(mappedEvents);
+      } else {
+        setAllEvents([]);
+      }
     }
 
     if (!eventLoading && singleEvent) {
