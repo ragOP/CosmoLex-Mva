@@ -58,6 +58,7 @@ const ReminderDialog = ({
   }, [editingReminder, isEditMode, reset]);
 
   const handleAddReminderSubmit = (data) => {
+    console.log('data >>>', data);
     onSubmit(data);
     reset({ type_id: '', scheduled_at: '' });
     setReminderDialogOpen(false);

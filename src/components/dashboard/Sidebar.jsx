@@ -295,7 +295,7 @@ function getIconForType(type) {
 const Sidebar = ({ isDrawer }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [openTree, setOpenTree] = React.useState({});
+  const [openTree, setOpenTree] = React.useState(null);
   const [hovered, setHovered] = React.useState(null);
   const [sidebarMode, setSidebarMode] = React.useState('default');
 
@@ -322,16 +322,14 @@ const Sidebar = ({ isDrawer }) => {
 
   const handleItemClick = (item) => {
     if (item.type === 'tree') {
-      console.log(item);
-      setOpenTree((prev) => ({
-        ...prev,
-        [item.id]: !prev[item.id],
-      }));
+      setOpenTree((prev) => (prev === item.id ? null : item.id)); // toggle tree
     } else {
+      // close any open tree when navigating
+      setOpenTree(null);
+
       if (slug) {
         navigate(item.id + `?slugId=${slug}`);
       } else {
-        console.log(item);
         navigate(item.id);
       }
     }
@@ -383,7 +381,7 @@ const Sidebar = ({ isDrawer }) => {
                 })}
               {item.label}
             </button>
-            {item.type === 'tree' && openTree[item.id] && (
+            {item.type === 'tree' && openTree === item.id && (
               <Box sx={{ minWidth: 180, pl: 2 }}>
                 <CustomRickTreeView
                   onItemClick={(item) => handleItemClick(item)}

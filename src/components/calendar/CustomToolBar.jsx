@@ -1,8 +1,22 @@
-import { ChevronDown, Plus } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { Select, MenuItem, Box, Typography } from '@mui/material';
 import { Button } from '../ui/button';
+import { useState } from 'react';
+import { handleNavigate } from '@/utils/handleNavigate';
+import { useNavigate } from 'react-router-dom';
 
-const CustomToolBar = ({ onNavigate, onView, label, view, setOpen }) => {
+const CustomToolBar = ({
+  slug = null,
+  onNavigate,
+  onView,
+  label,
+  view,
+  setOpen,
+  users = [],
+}) => {
+  const navigate = useNavigate();
+  const [selectedUser, setSelectedUser] = useState('');
+
   return (
     <Box
       className="rbc-toolbar"
@@ -24,9 +38,13 @@ const CustomToolBar = ({ onNavigate, onView, label, view, setOpen }) => {
           <span>New Event</span>
         </Button>
 
-        {/* <Select
+        <Select
           value={selectedUser}
-          onChange={(e) => setSelectedUser(e.target.value)}
+          onChange={(e) => {
+            console.log('e.target.value >>>', e.target.value);
+            setSelectedUser(e.target.value);
+            // handleNavigate('event', 'slug', e.target.value, slug, navigate);
+          }}
           displayEmpty
           size="small"
           IconComponent={ChevronDown}
@@ -40,7 +58,7 @@ const CustomToolBar = ({ onNavigate, onView, label, view, setOpen }) => {
               {user.name}
             </MenuItem>
           ))}
-        </Select> */}
+        </Select>
       </Box>
 
       {/* Center Group */}

@@ -32,9 +32,14 @@ import BreadCrumb from '@/components/BreadCrumb';
 import { toast } from 'sonner';
 import { Textarea } from '../ui/textarea';
 import { IconButton, Stack } from '@mui/material';
+import { setQueryParam } from '@/utils/setQueryParam';
+import { useContact } from '@/components/contact/hooks/useContact';
+import { isObjectWithValues } from '@/utils/isObjectWithValues';
+import { useSearchParams } from 'react-router-dom';
 
 export default function CreateIntake() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [selectedContactType, setSelectedContactType] = useState(null);
@@ -43,6 +48,31 @@ export default function CreateIntake() {
   const [hoveredContact, setHoveredContact] = useState(null);
   const [selectedContact, setSelectedContact] = useState(null);
   const [isEventsCollapsed, setIsEventsCollapsed] = useState(false);
+
+  const { contact, contactsMeta, contactLoading, contactsMetaLoading } =
+    useContact();
+
+  useEffect(() => {
+    if (
+      isObjectWithValues(contact) &&
+      !contactLoading &&
+      !contactsMetaLoading
+    ) {
+      setValue('contact_id', contact.id);
+      setSelectedContact({
+        contact_name: contact.first_name + ' ' + contact.last_name,
+        contact_type: contactsMeta?.contact_type?.find(
+          (item) => item.id === contact.contact_type_id
+        )?.name,
+        primary_email: contact.primary_email,
+        phone: contact.primary_phone,
+        primary_address: contact?.addresses?.find(
+          (item) => item.is_primary === 1
+        )?.address_1,
+        date_created: contact.date_created,
+      });
+    }
+  }, [contact, contactLoading, contactsMeta]);
 
   const createMatterMutation = useMutation({
     mutationFn: createMatter,
@@ -86,7 +116,7 @@ export default function CreateIntake() {
     });
 
   const debouncedSearch = debounce((query, type) => {
-    if (query && type) {
+    if (query || type) {
       refetchSearchContact();
     }
   }, 500);
@@ -97,24 +127,27 @@ export default function CreateIntake() {
   }, [searchContactQuery, selectedContactType, debouncedSearch]);
 
   // Manual validation function
-  const validateForm = (data) => {
+  const validateForm = () => {
     const errors = {};
 
     // Required field validation
-    if (!data.contact_id) {
+    if (!getValues('contact_id')) {
       errors.contact_id = 'Contact selection is required';
     }
 
-    if (!data.case_type_id) {
+    if (!getValues('case_type_id')) {
       errors.case_type_id = 'Case type is required';
     }
 
-    if (!data.marketing_source_id) {
+    if (!getValues('marketing_source_id')) {
       errors.marketing_source_id = 'Marketing source is required';
     }
 
     // Optional field validation with constraints
-    if (data.case_description && data.case_description.length > 1000) {
+    if (
+      getValues('case_description') &&
+      getValues('case_description').length > 1000
+    ) {
       errors.case_description =
         'Case description must be 1000 characters or less';
     }
@@ -132,7 +165,10 @@ export default function CreateIntake() {
     ];
 
     numericFields.forEach((field) => {
-      if (data[field] && (isNaN(data[field]) || data[field] <= 0)) {
+      if (
+        getValues(field) &&
+        (isNaN(getValues(field)) || getValues(field) <= 0)
+      ) {
         errors[field] = `${field.replace('_', ' ')} must be a valid selection`;
       }
     });
@@ -172,7 +208,7 @@ export default function CreateIntake() {
     Object.keys(formErrors).forEach((key) => clearErrors(key));
 
     // Manual validation
-    const validation = validateForm(data);
+    const validation = validateForm();
 
     if (!validation.isValid) {
       // Set errors for invalid fields
@@ -278,6 +314,9 @@ export default function CreateIntake() {
     },
   ];
 
+  console.log('[DEBUG] Selected contact type:', selectedContactType);
+  console.log('[DEBUG] Selected contact:', selectedContact);
+  console.log('[DEBUG] contact_id:', getValues('contact_id'));
   return (
     <div className="flex p-4 w-full h-full">
       <div className="flex flex-col items-center p-4 bg-white/30 w-full rounded-2xl">
@@ -491,7 +530,6 @@ export default function CreateIntake() {
                             className={`w-1/2 bg-white ${
                               formErrors.contact_id ? 'border-red-500' : ''
                             }`}
-                            disabled={!selectedContactType}
                           />
                         </>
                       )}
@@ -649,27 +687,27 @@ export default function CreateIntake() {
                       <div className="space-y-1 text-sm">
                         <p>
                           <span className="font-semibold">Name:</span>{' '}
-                          {selectedContact.contact_name}
+                          {selectedContact.contact_name || 'No Value found'}
                         </p>
                         <p>
                           <span className="font-semibold">Case Type:</span>{' '}
-                          {selectedContact.contact_type}
+                          {selectedContact.contact_type || 'No Value found'}
                         </p>
                         <p>
                           <span className="font-semibold">Email:</span>{' '}
-                          {selectedContact.primary_email}
+                          {selectedContact.primary_email || 'No Value found'}
                         </p>
                         <p>
                           <span className="font-semibold">Phone:</span>{' '}
-                          {selectedContact.phone}
+                          {selectedContact.phone || 'No Value found'}
                         </p>
                         <p>
                           <span className="font-semibold">Address:</span>{' '}
-                          {selectedContact.primary_address}
+                          {selectedContact.primary_address || 'No Value found'}
                         </p>
                         <p>
                           <span className="font-semibold">Created:</span>{' '}
-                          {selectedContact.date_created}
+                          {selectedContact.date_created || 'No Value found'}
                         </p>
                       </div>
                     </div>
@@ -762,7 +800,22 @@ export default function CreateIntake() {
           </form>
         </div>
 
-        {open && <CreateContactDialog open={open} setOpen={setOpen} />}
+        {open && (
+          <CreateContactDialog
+            open={open}
+            setOpen={setOpen}
+            setValueFn={(contactId) => {
+              console.log('contactId >>>', contactId);
+              setValue('contact_id', contactId);
+              setQueryParam(
+                'contactId',
+                contactId,
+                setSearchParams,
+                searchParams
+              );
+            }}
+          />
+        )}
       </div>
     </div>
   );
