@@ -13,6 +13,7 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import SearchableSelect from '@/components/ui/SearchableSelect';
+import StarRating from '@/components/ui/StarRating';
 import { Checkbox } from '@/components/ui/checkbox';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createMatterSchema } from '@/pages/matter/intake/schema/createMatterSchema';
@@ -297,17 +298,31 @@ export default function Overview() {
                           control={control}
                           name={name}
                           render={({ field }) => (
-                            <SearchableSelect
-                              options={options}
-                              value={field.value}
-                              onValueChange={(val) =>
-                                field.onChange(Number(val))
-                              }
-                              placeholder={`Select ${label}`}
-                              searchPlaceholder={`Search ${label}...`}
-                              className="w-full"
-                              error={!!errors[name]}
-                            />
+                            name === 'rating_id' ? (
+                              <StarRating
+                                options={options}
+                                value={field.value}
+                                onValueChange={(val) =>
+                                  field.onChange(Number(val))
+                                }
+                                placeholder={`Select ${label}`}
+                                searchPlaceholder={`Search ${label}...`}
+                                className="w-full"
+                                error={!!errors[name]}
+                              />
+                            ) : (
+                              <SearchableSelect
+                                options={options}
+                                value={field.value}
+                                onValueChange={(val) =>
+                                  field.onChange(Number(val))
+                                }
+                                placeholder={`Select ${label}`}
+                                searchPlaceholder={`Search ${label}...`}
+                                className="w-full"
+                                error={!!errors[name]}
+                              />
+                            )
                           )}
                         />
                       ) : type === 'checkbox' ? (
