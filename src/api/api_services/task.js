@@ -7,7 +7,7 @@ export const getTaskMeta = async () => {
     endpoint: endpoints.getTaskMeta,
     method: 'GET',
   });
-  if (response.error) throw new Error('Failed to fetch task meta');
+  if (response.errors) throw new Error('Failed to fetch task meta');
   return response.response || [];
 };
 
@@ -17,7 +17,7 @@ export const getTasks = async () => {
     endpoint: endpoints.getTasks,
     method: 'GET',
   });
-  if (response.error) throw new Error('Failed to fetch tasks');
+  if (response.errors) throw new Error('Failed to fetch tasks');
   return response.response?.tasks || [];
 };
 
@@ -28,7 +28,7 @@ export const getTaskById = async (id) => {
     endpoint: `${endpoints.getTask}/${id}`,
     method: 'GET',
   });
-  if (response.error) throw new Error('Failed to fetch task');
+  if (response.errors) throw new Error('Failed to fetch task');
   return response.response?.task || {};
 };
 
@@ -39,7 +39,7 @@ export const searchTask = async (searchData) => {
     method: 'POST',
     data: searchData,
   });
-  if (response.error) throw new Error('Failed to search task');
+  if (response.errors) throw new Error('Failed to search task');
   return response.response?.data || [];
 };
 
@@ -49,7 +49,7 @@ export const filterTask = async (queryParams) => {
     endpoint: `${endpoints.filterTask}?${queryParams}`,
     method: 'GET',
   });
-  if (response.error) throw new Error('Failed to filter task');
+  if (response.errors) throw new Error('Failed to filter task');
   return response.response?.data || [];
 };
 
@@ -60,7 +60,11 @@ export const createTask = async (taskData) => {
     method: 'POST',
     data: taskData,
   });
-  if (response.error) throw new Error('Failed to create task');
+
+  console.log('response', response);
+  if (response && response?.response?.Apistatus === false) {
+    throw new Error(response?.response?.message || 'Failed to create task');
+  }
   return response.response?.data;
 };
 
@@ -71,7 +75,7 @@ export const updateTask = async (taskId, taskData) => {
     method: 'PUT',
     data: taskData,
   });
-  if (response.error) throw new Error('Failed to update task');
+  if (response.errors) throw new Error('Failed to update task');
   return response.response?.data;
 };
 
@@ -82,7 +86,7 @@ export const updateTaskStatus = async (taskId, status_id) => {
     method: 'POST',
     data: { status_id },
   });
-  if (response.error) throw new Error('Failed to update task status');
+  if (response.errors) throw new Error('Failed to update task status');
   return response.response?.data;
 };
 
@@ -92,7 +96,7 @@ export const deleteTask = async (taskId) => {
     endpoint: `${endpoints.deleteTask}/${taskId}`,
     method: 'DELETE',
   });
-  if (response.error) throw new Error('Failed to delete task');
+  if (response.errors) throw new Error('Failed to delete task');
   return response.response?.data;
 };
 
@@ -104,7 +108,7 @@ export const uploadTaskFile = async (fileData) => {
     data: fileData,
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  if (response.error) throw new Error('Failed to upload file');
+  if (response.errors) throw new Error('Failed to upload file');
   return response.response?.data;
 };
 
@@ -114,7 +118,7 @@ export const deleteTaskFile = async (fileId) => {
     endpoint: `${endpoints.deleteTaskFile}/${fileId}`,
     method: 'DELETE',
   });
-  if (response.error) throw new Error('Failed to delete task file');
+  if (response.errors) throw new Error('Failed to delete task file');
   return response.response?.data;
 };
 
@@ -124,7 +128,7 @@ export const deleteReminder = async (reminderId) => {
     endpoint: `${endpoints.deleteTaskReminder}/${reminderId}`,
     method: 'DELETE',
   });
-  if (response.error) throw new Error('Failed to delete reminder');
+  if (response.errors) throw new Error('Failed to delete reminder');
   return response.response?.data;
 };
 
@@ -134,7 +138,7 @@ export const getCommentMeta = async () => {
     endpoint: endpoints.getCommentMeta,
     method: 'GET',
   });
-  if (response.error) throw new Error('Failed to get comment meta');
+  if (response.errors) throw new Error('Failed to get comment meta');
   return response.response?.data;
 };
 
@@ -144,7 +148,7 @@ export const getAllComments = async (taskId) => {
     endpoint: `${endpoints.getAllComments}/${taskId}`,
     method: 'GET',
   });
-  if (response.error) throw new Error('Failed to get all comments');
+  if (response.errors) throw new Error('Failed to get all comments');
   return response.response?.data;
 };
 
@@ -157,7 +161,7 @@ export const createComment = async ({ commentData, task_id }) => {
       comment: commentData,
     },
   });
-  if (response.error) throw new Error('Failed to create comment');
+  if (response.errors) throw new Error('Failed to create comment');
   return response.response?.data;
 };
 
@@ -169,6 +173,6 @@ export const uploadCommentAttachment = async (fileData) => {
     data: fileData,
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-  if (response.error) throw new Error('Failed to upload comment attachment');
+  if (response.errors) throw new Error('Failed to upload comment attachment');
   return response.response?.data;
 };

@@ -277,6 +277,14 @@ export default function TaskDialog({
       errors.due_date = 'Due date is required';
     }
 
+    if (data.due_date) {
+      const dueDate = new Date(data.due_date);
+      const today = new Date();
+      if (dueDate <= today) {
+        errors.due_date = 'Due date must be in the future';
+      }
+    }
+
     if (!data.status_id) {
       errors.status_id = 'Status is required';
     }
@@ -444,7 +452,6 @@ export default function TaskDialog({
         `Error ${isUpdateMode ? 'updating' : 'creating'} task:`,
         error
       );
-      toast.error(`Error ${isUpdateMode ? 'updating' : 'creating'} task`);
     }
   };
 

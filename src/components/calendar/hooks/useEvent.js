@@ -41,16 +41,6 @@ export const useEvents = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  console.log('events >>>', events);
-
-  // All events by slugId
-  // const { data: eventsByslugId = [], isLoading: eventsByslugIdLoading } =
-  //   useQuery({
-  //     queryKey: ['eventsByslugId', slugId],
-  //     queryFn: () => getEventsByslugId(slugId),
-  //     staleTime: 5 * 60 * 1000,
-  //   });
-
   // single event
   const { data: event = null, isLoading: eventLoading } = useQuery({
     queryKey: ['event', eventId],
