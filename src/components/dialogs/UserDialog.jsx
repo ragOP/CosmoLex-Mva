@@ -180,9 +180,7 @@ export default function UserDialog({
       // Handle validation errors
       if (error.response?.data?.errors) {
         setValidationErrors(error.response.data.errors);
-      } else {
-        toast.error(error.message || 'An error occurred');
-      }
+      } 
     }
   };
 

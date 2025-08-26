@@ -29,6 +29,7 @@ import {
   Switch,
   Chip,
 } from '@mui/material';
+import PrimaryAddressConfirmDialog from '@/components/contact/components/PrimaryAddressConfirmDialog';
 
 export default function CreateContactDialog({ open, setOpen, setValueFn }) {
   const { data: contactMeta } = useQuery({
@@ -37,7 +38,8 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
   });
 
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
-  const [isPrimaryAddress, setIsPrimaryAddress] = useState(false);
+  const [confirmPrimaryDialog, setConfirmPrimaryDialog] = useState(false);
+  const [pendingPrimaryAddress, setPendingPrimaryAddress] = useState(null);
 
   const {
     control,
@@ -342,22 +344,70 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
     setAddressErrors(errors);
 
     if (Object.keys(errors).length === 0) {
-      console.log('[DEBUG] Adding new address:', newAddress);
+      const currentAddresses = watch('addresses') || [];
+      const existingPrimaryAddress = currentAddresses.find(addr => addr.is_primary);
+      
+      // If this is the first address, automatically make it primary
+      if (currentAddresses.length === 0) {
+        const addressToAdd = { ...newAddress, is_primary: true };
+        append(addressToAdd);
+        resetAddressForm();
+        return;
+      }
+      
+      // If setting as primary and a primary already exists, show confirmation
+      if (newAddress.is_primary && existingPrimaryAddress) {
+        setPendingPrimaryAddress(newAddress);
+        setConfirmPrimaryDialog(true);
+        return;
+      }
+      
+      // Add address normally
       append(newAddress);
-      setNewAddress({
-        address_1: '',
-        address_2: '',
-        city: '',
-        county: '',
-        state: '',
-        zip: '',
-        country: '',
-        is_primary: false,
-        address_type_id: null,
-      });
-      setAddressDialogOpen(false);
-      setAddressErrors({});
+      resetAddressForm();
     }
+  };
+
+  const resetAddressForm = () => {
+    setNewAddress({
+      address_1: '',
+      address_2: '',
+      city: '',
+      county: '',
+      state: '',
+      zip: '',
+      country: '',
+      is_primary: false,
+      address_type_id: null,
+    });
+    setAddressDialogOpen(false);
+    setAddressErrors({});
+  };
+
+  const handleConfirmPrimaryChange = () => {
+    const currentAddresses = watch('addresses') || [];
+    
+    // Update existing addresses to set is_primary to false
+    const updatedAddresses = currentAddresses.map(addr => ({
+      ...addr,
+      is_primary: false
+    }));
+    
+    // Replace the addresses array with updated ones
+    setValue('addresses', updatedAddresses);
+    
+    // Add the new primary address
+    append(pendingPrimaryAddress);
+    
+    // Reset states
+    setConfirmPrimaryDialog(false);
+    setPendingPrimaryAddress(null);
+    resetAddressForm();
+  };
+
+  const getCurrentPrimaryAddress = () => {
+    const addresses = watch('addresses') || [];
+    return addresses.find(addr => addr.is_primary);
   };
 
   return (
@@ -629,17 +679,13 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
               <Switch
                 checked={newAddress.is_primary}
                 onChange={(e) => {
-                  if (!isPrimaryAddress) {
-                    setIsPrimaryAddress(e.target.checked);
-                  } else {
-                    toast.error('Only one address can be primary');
-                    return;
-                  }
-                  setNewAddress({
-                    ...newAddress,
-                    is_primary: e.target.checked,
-                  });
+                  const isPrimary = e.target.checked;
+                  setNewAddress((prev) => ({
+                    ...prev,
+                    is_primary: isPrimary,
+                  }));
                 }}
+                color="primary"
               />
             </div>
           </div>
@@ -665,6 +711,16 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
           </DialogActions>
         </Stack>
       </Dialog>
+      
+      <PrimaryAddressConfirmDialog
+        open={confirmPrimaryDialog}
+        onClose={() => {
+          setConfirmPrimaryDialog(false);
+          setPendingPrimaryAddress(null);
+        }}
+        onConfirm={handleConfirmPrimaryChange}
+        currentPrimaryAddress={getCurrentPrimaryAddress()}
+      />
     </>
   );
 }

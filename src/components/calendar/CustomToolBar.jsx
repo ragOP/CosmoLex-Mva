@@ -22,6 +22,13 @@ const CustomToolBar = ({
 
   const slugId = searchParams.get('slugId');
 
+useEffect(() => {
+  if (slugId && users.length > 0) {
+    setSelectedUser(users[0].id);
+  }
+}, [slugId, users]);
+
+
   return (
     <Box
       className="rbc-toolbar"
@@ -44,9 +51,8 @@ const CustomToolBar = ({
         </Button>
 
         <Select
-          value={slugId  ? users[0]?.id : selectedUser}
+          value={selectedUser}
           onChange={(e) => {
-            console.log('e.target.value >>>', e.target.value);
             setSelectedUser(e.target.value);
             setQueryParam(
               'userId',
