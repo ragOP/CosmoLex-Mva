@@ -33,6 +33,8 @@ import { ParticipantDialog } from './components/ParticipantDialog';
 import { ReminderDialog } from './components/ReminderDialog';
 import { formatDateForInput } from '@/utils/formatDateForInput';
 import isArrayWithValues from '@/utils/isArrayWithValues';
+import getContacts from '@/pages/matter/intake/helpers/getContacts';
+import { useMatter } from '@/components/inbox/MatterContext';
 
 export default function NewEventDialogRHF({
   open = false,
@@ -44,6 +46,18 @@ export default function NewEventDialogRHF({
   showDeleteConfirm = false,
 }) {
   const [searchParams] = useSearchParams();
+  const slugId = searchParams.get('slugId');
+  
+  // Get matter data if we're in a matter context
+  let matterData = null;
+  try {
+    if (slugId) {
+      matterData = useMatter();
+    }
+  } catch (error) {
+    // useMatter hook not available in this context
+    matterData = null;
+  }
 
   // Dialog states
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
@@ -94,6 +108,12 @@ export default function NewEventDialogRHF({
     }, 300);
     return () => clearTimeout(timer);
   }, [searchTerm]);
+
+  const { data: contacts, } = useQuery({
+    queryKey: ['contacts', slugId],
+    queryFn: getContacts,
+    enabled: !!slugId
+  })
 
   // Contact search query
   const { data: contactSearchResults, isLoading: contactLoading } = useQuery({
@@ -149,7 +169,6 @@ export default function NewEventDialogRHF({
   useEffect(() => {
     if (open) {
       if (isUpdateMode && event) {
-        console.log('event >>>', event);
         // Populate form with existing event data
         const formData = {
           ...event,
@@ -182,7 +201,17 @@ export default function NewEventDialogRHF({
         };
 
         reset(defaultFormData);
-        setContact(null);
+      
+        // Auto-select contact from matter if in matter context
+        if (slugId && matterData?.matter?.contact_id) {
+          const matterContact = contacts.find((contact) => contact.id === matterData?.matter?.contact_id);
+          setContact(matterContact);
+          setValue('contacts_id', matterContact.id);
+          setValue('slug', slugId);
+        } else {
+          setContact(null);
+        }
+        
         replaceReminders([]);
         replaceParticipants([]);
         setAttachments([]);
@@ -197,7 +226,7 @@ export default function NewEventDialogRHF({
       setAttachments([]);
       setValidationErrors({});
     }
-  }, [open, event, isUpdateMode, reset, replaceReminders, replaceParticipants]);
+  }, [open, event, isUpdateMode, reset, replaceReminders, replaceParticipants, slugId, matterData]);
 
   // Manual validation function
   const validateForm = (data) => {
@@ -259,7 +288,6 @@ export default function NewEventDialogRHF({
       updateParticipant(editingParticipant.index, data);
       setEditingParticipant(null);
     } else {
-      console.log('participant data >>>', data);
       appendParticipant(data);
     }
     setParticipantDialogOpen(false);
@@ -290,10 +318,7 @@ export default function NewEventDialogRHF({
         formData.append('attachment', fileItem.file);
       });
 
-      console.log('newPayload >>>>', formData);
-
       const uploadedFile = await uploadEventFile(formData);
-      console.log('uploadedFile >>>>', uploadedFile);
       setAttachments((prev) => [...prev, uploadedFile]);
     } catch (error) {
       console.log('error uploading attachment >>>', error);
@@ -312,8 +337,6 @@ export default function NewEventDialogRHF({
       const errors = validateForm(data);
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
-        console.log('validation errors >>>', errors);
-        // toast.error('Please fix the validation errors');
         return;
       }
 
@@ -359,9 +382,6 @@ export default function NewEventDialogRHF({
 
   if (!open) return null;
 
-  console.log('reminder >>>', reminderFields);
-  console.log('attachments >>>>', attachments);
-
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
@@ -390,14 +410,19 @@ export default function NewEventDialogRHF({
                 {contact ? (
                   <Chip
                     label={contact?.contact_name}
-                    onDelete={() => {
+                    onDelete={slugId && matterData?.matter?.contact_id ? undefined : () => {
                       setContact(null);
                       setValue('contacts_id', '');
                       setValue('slug', '');
                     }}
                     deleteIcon={<X size={16} />}
                     size="small"
-                    sx={{ bgcolor: '#e8f5e8', color: '#2e7d32', p: 1 }}
+                    sx={{ 
+                      bgcolor: '#e8f5e8', 
+                      color: '#2e7d32', 
+                      p: 1,
+                      opacity: slugId && matterData?.matter?.contact_id ? 0.75 : 1
+                    }}
                   />
                 ) : (
                   <Button
@@ -405,6 +430,7 @@ export default function NewEventDialogRHF({
                     variant="outline"
                     onClick={() => setSearchDialogOpen(true)}
                     className="w-fit"
+                    disabled={slugId && matterData?.matter?.contact_id}
                   >
                     Select Contact
                   </Button>
@@ -712,7 +738,6 @@ export default function NewEventDialogRHF({
                         <IconButton
                           type="button"
                           onClick={() => {
-                            console.log('attachment >>>', attachment);
                             handleDeleteFile(
                               attachment.attachment_id || attachment.id
                             );
@@ -756,7 +781,6 @@ export default function NewEventDialogRHF({
                     <Tooltip arrow title="Delete Event">
                       <IconButton
                         onClick={() => {
-                          console.log('event >>>', event);
                           onDelete();
                         }}
                         component="span"
@@ -822,7 +846,7 @@ export default function NewEventDialogRHF({
 
       {/* Contact Search Dialog */}
       <SearchDialog
-        open={searchDialogOpen}
+        open={searchDialogOpen && !(slugId && matterData?.matter?.contact_id)}
         onClose={() => setSearchDialogOpen(false)}
         title="Select Contact"
         searchPlaceholder="Search contacts..."
@@ -832,17 +856,20 @@ export default function NewEventDialogRHF({
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onItemSelect={(item) => {
-          setContact(item);
-          setSearchDialogOpen(false);
-          setValue('contacts_id', item.id);
-          setValue('slug', item.slug);
-          if (validationErrors.contacts_id) {
-            setValidationErrors((prev) => ({
-              ...prev,
-              contacts_id: undefined,
-              slug: undefined,
-            }));
+          // Only allow selection if not in matter context
+          if (!(slugId && matterData?.matter?.contact_id)) {
+            setContact(item);
+            setValue('contacts_id', item.id);
+            setValue('slug', item.slug);
+            if (validationErrors.contacts_id) {
+              setValidationErrors((prev) => ({
+                ...prev,
+                contacts_id: undefined,
+                slug: undefined,
+              }));
+            }
           }
+          setSearchDialogOpen(false);
         }}
         onItemDeselect={() => {
           setContact(null);
@@ -862,17 +889,20 @@ export default function NewEventDialogRHF({
         }
         onCancel={() => setSearchDialogOpen(false)}
         onConfirm={(selectedItems) => {
-          setContact(selectedItems);
-          setSearchDialogOpen(false);
-          setValue('contacts_id', selectedItems.id);
-          setValue('slug', selectedItems.slug);
-          if (validationErrors.contacts_id) {
-            setValidationErrors((prev) => ({
-              ...prev,
-              contacts_id: undefined,
-              slug: undefined,
-            }));
+          // Only allow selection if not in matter context
+          if (!(slugId && matterData?.matter?.contact_id)) {
+            setContact(selectedItems);
+            setValue('contacts_id', selectedItems.id);
+            setValue('slug', selectedItems.slug);
+            if (validationErrors.contacts_id) {
+              setValidationErrors((prev) => ({
+                ...prev,
+                contacts_id: undefined,
+                slug: undefined,
+              }));
+            }
           }
+          setSearchDialogOpen(false);
         }}
       />
 
