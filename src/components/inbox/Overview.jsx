@@ -160,6 +160,7 @@ export default function Overview() {
       call_outcome_id: matter.call_outcome_id || null,
       office_location_id: matter.office_location_id || null,
       contact_id: matter.contact_id || null,
+      estimated_case_value: matter.estimated_case_value || '',
     };
 
     reset(formData);
@@ -242,6 +243,12 @@ export default function Overview() {
       name: 'office_location_id',
       type: 'select',
       options: matterMeta?.office_location || [],
+    },
+    {
+      label: 'Estimated Case Value',
+      name: 'estimated_case_value',
+      type: 'text',
+      readOnly: true,
     },
   ];
 
@@ -344,7 +351,13 @@ export default function Overview() {
                           control={control}
                           name={name}
                           render={({ field }) => (
-                            <Input type={type} {...field} />
+                            <Input 
+                              type={type} 
+                              {...field} 
+                              
+                              readOnly={formFields.find(f => f.name === name)?.readOnly || false}
+                              className={formFields.find(f => f.name === name)?.readOnly ? 'bg-gray-100 cursor-not-allowed' : ''}
+                            />
                           )}
                         />
                       )}
