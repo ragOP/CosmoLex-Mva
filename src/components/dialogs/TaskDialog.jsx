@@ -34,6 +34,7 @@ import UploadMediaDialog from '@/components/UploadMediaDialog';
 import { useMatter } from '@/components/inbox/MatterContext';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { getContacts } from '@/api/api_services/contact';
 
 const formFields = [
   {
@@ -123,11 +124,16 @@ export default function TaskDialog({
   task = null, // Task object for update mode
 }) {
   const [searchParams] = useSearchParams();
-  const matterSlug = searchParams.get('slugId');
+  const slugId = searchParams.get('slugId');
 
-  let matter = null;
-  if (matterSlug) {
-    matter = useMatter();
+  // Get matter data if slugId is present
+  let matterData = null;
+  try {
+    if (slugId) {
+      matterData = useMatter();
+    }
+  } catch (error) {
+    console.warn('useMatter hook not available:', error);
   }
 
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
@@ -151,6 +157,12 @@ export default function TaskDialog({
   // Debounced search terms
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [debouncedFromSearchTerm, setDebouncedFromSearchTerm] = useState('');
+
+    const { data: contacts, } = useQuery({
+    queryKey: ['contacts', slugId],
+    queryFn: getContacts,
+    enabled: !!slugId
+  })
 
   // Debounce effect for recipient search term
   useEffect(() => {
@@ -415,8 +427,6 @@ export default function TaskDialog({
         return;
       }
 
-      console.log('reminderFields while submti', reminderFields);
-
       // Format the data for API
       const formattedData = {
         ...data,
@@ -471,9 +481,7 @@ export default function TaskDialog({
   // Reset form when task changes or dialog opens
   useEffect(() => {
     if (open) {
-      console.log('currentTask', currentTask);
       if (isUpdateMode && currentTask) {
-        console.log('currentTask', currentTask);
         // Populate form with existing task data
         const formData = {
           ...currentTask,
@@ -520,7 +528,6 @@ export default function TaskDialog({
         // Set field arrays
         replaceReminders(
           (currentTask.reminders || []).map((r) => {
-            console.log('r single hai', r);
             return {
               // Keep the original database ID as dbId
               dbId: r.id, // <-- IMPORTANT: Store original DB ID separately
@@ -565,8 +572,22 @@ export default function TaskDialog({
     replaceAssignedTo,
   ]);
 
-  // check reminder value
-  console.log('reminderFields', reminderFields);
+  // Auto-select contact from matter data when in matter context
+  useEffect(() => {
+    if (open && slugId && matterData?.matter?.contact_id && !isUpdateMode) {
+          const matterContact = contacts.find((contact) => contact.id === matterData?.matter?.contact_id);
+          setContact(matterContact);
+          setValue('contact_id', matterContact.id);
+          setValue('slug', slugId);
+      
+      // Clear any validation errors for contact
+      setValidationErrors((prev) => ({
+        ...prev,
+        contact_id: undefined,
+        slug: undefined,
+      }));
+    }
+  }, [open, slugId, matterData, setValue, isUpdateMode]);
 
   return (
     <>
@@ -591,27 +612,38 @@ export default function TaskDialog({
                     Contact <span className="text-red-500">*</span>
                   </Label>
                   {contact ? (
-                    <Chip
-                      label={contact?.contact_name}
-                      onDelete={() => {
-                        setContact(null);
-                        setValue('contact_id', '');
-                        setValue('slug', '');
-                        setSearchDialogOpen(true);
-                      }}
-                      deleteIcon={<X size={16} />}
-                      size="small"
-                      sx={{ bgcolor: '#e8f5e8', color: '#2e7d32', p: 1 }}
-                    />
+                    <div className="flex items-center gap-2">
+                      <Chip
+                        label={contact?.contact_name}
+                        onDelete={slugId && matterData?.matter?.contact_id ? undefined : () => {
+                          setContact(null);
+                          setValue('contact_id', '');
+                          setValue('slug', '');
+                          setSearchDialogOpen(true);
+                        }}
+                        deleteIcon={<X size={16} />}
+                        size="small"
+                        sx={{ 
+                          bgcolor: '#e8f5e8', 
+                          color: '#2e7d32', 
+                          p: 1,
+                          opacity: slugId && matterData?.matter?.contact_id ? 0.7 : 1
+                        }}
+                      />
+                    </div>
                   ) : (
                     <Button
                       type="button"
                       variant="outline"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setSearchDialogOpen(true);
+                        // Prevent opening search dialog if contact is auto-selected from matter
+                        if (!(slugId && matterData?.matter?.contact_id)) {
+                          setSearchDialogOpen(true);
+                        }
                       }}
                       className="w-fit"
+                      disabled={slugId && matterData?.matter?.contact_id}
                     >
                       Select Contact
                     </Button>
@@ -977,7 +1009,6 @@ export default function TaskDialog({
         searchTerm={searchTerm}
         onSearchChange={(searchTerm) => setSearchTerm(searchTerm)}
         onItemSelect={(item) => {
-          console.log(item);
           setContact(item);
           setSearchDialogOpen(false);
           setValue('contact_id', item.id);
@@ -1011,7 +1042,6 @@ export default function TaskDialog({
         }
         onCancel={() => setSearchDialogOpen(false)}
         onConfirm={(selectedItems) => {
-          console.log(selectedItems);
           setSearchDialogOpen(false);
           setContact(selectedItems);
           setValue('contact_id', selectedItems.id);
