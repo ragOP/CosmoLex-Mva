@@ -1,11 +1,12 @@
 import { ChevronDown } from 'lucide-react';
 import { Select, MenuItem, Box, Typography } from '@mui/material';
 import { Button } from '../ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 // import { handleNavigate } from '@/utils/handleNavigate';
 import { useNavigate } from 'react-router-dom';
 import { setQueryParam } from '@/utils/setQueryParam';
 import { useSearchParams } from 'react-router-dom';
+import { useMatter } from '@/components/inbox/MatterContext';
 
 const CustomToolBar = ({
   onNavigate,
@@ -18,6 +19,8 @@ const CustomToolBar = ({
   const navigate = useNavigate();
   const [selectedUser, setSelectedUser] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const slugId = searchParams.get('slugId');
 
   return (
     <Box
@@ -41,7 +44,7 @@ const CustomToolBar = ({
         </Button>
 
         <Select
-          value={selectedUser}
+          value={slugId  ? users[0]?.id : selectedUser}
           onChange={(e) => {
             console.log('e.target.value >>>', e.target.value);
             setSelectedUser(e.target.value);
@@ -55,10 +58,13 @@ const CustomToolBar = ({
           displayEmpty
           size="small"
           IconComponent={ChevronDown}
-          sx={{ minWidth: 200 }}
+          sx={{ 
+            minWidth: 200,
+            opacity: slugId ? 0.7 : 1
+          }}
         >
           <MenuItem value="" disabled>
-            Select User
+           Select User
           </MenuItem>
           {users.map((user) => (
             <MenuItem key={user.id} value={user.id}>

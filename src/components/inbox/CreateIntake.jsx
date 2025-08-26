@@ -111,7 +111,7 @@ export default function CreateIntake() {
 
     // Required field validation
     if (!getValues('contact_id')) {
-      errors.contact_id = 'Contact selection is required';
+      errors.contact_id = 'Contact is required';
     }
 
     if (!getValues('case_type_id')) {
@@ -520,11 +520,12 @@ export default function CreateIntake() {
                         </>
                       )}
                     />
-                    {!selectedContactType && (
-                      <p className="text-xs text-gray-500">
-                        Please select a contact type first
-                      </p>
-                    )}
+                    {/* Contact Error Display */}
+                {formErrors.contact_id && (
+                  <p className="text-xs text-red-500">
+                    {formErrors.contact_id.message}
+                  </p>
+                )}
                     <p className="text-[0.7rem] text-[#40444D] text-start w-1/2">
                       Don't have a contact?{' '}
                       <span
@@ -700,12 +701,7 @@ export default function CreateIntake() {
                   </div>
                 )}
 
-                {/* Contact Error Display */}
-                {formErrors.contact_id && (
-                  <p className="text-xs text-red-500">
-                    {formErrors.contact_id.message}
-                  </p>
-                )}
+                
               </div>
             </div>
 
