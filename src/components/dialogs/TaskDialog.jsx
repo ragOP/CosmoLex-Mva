@@ -558,7 +558,7 @@ export default function TaskDialog({
     }
   }, [
     open,
-    currentTask,
+    currentTask.id,
     isUpdateMode,
     reset,
     replaceReminders,

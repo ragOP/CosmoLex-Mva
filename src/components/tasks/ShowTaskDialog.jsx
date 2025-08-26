@@ -67,7 +67,7 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
   );
 
   // Reminders
-  const formattedReminders = reminders.map((r) => {
+  const formattedReminders = reminders?.map((r) => {
     const typeName = mapMetaValue(tasksMeta?.taks_reminders_type, r.type_id);
     return {
       type: typeName,
@@ -130,10 +130,10 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
               <h3 className="text-lg font-semibold text-[#40444D] mb-2">
                 Participants
               </h3>
-              {assigneeDetails.length === 0 && (
+              {assigneeDetails?.length === 0 && (
                 <p className="text-muted-foreground">No participants added.</p>
               )}
-              {assigneeDetails.map((p, index) => (
+              {assigneeDetails?.map((p, index) => (
                 <div key={index} className="flex items-center gap-3 py-2">
                   <Avatar className="w-8 h-8">
                     <AvatarFallback className="bg-[#6366F1] text-white">
