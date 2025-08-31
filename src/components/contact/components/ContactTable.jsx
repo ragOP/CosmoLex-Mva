@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Pencil, CircleOff, Trash2 } from 'lucide-react';
 import { useContact } from '@/components/contact/hooks/useContact';
 import getMetaOptions from '@/utils/getMetaFields';
+import { noFilterColumns } from '@/utils/noFilterColumns';
 
 const ContactTable = ({
   contacts = [],
@@ -175,6 +176,8 @@ const ContactTable = ({
     },
   ];
 
+  const filteredColumns = noFilterColumns(columns);
+
   useEffect(() => {
     setContactData(contacts);
   }, [contacts]);
@@ -184,7 +187,7 @@ const ContactTable = ({
       <Box sx={{ height: '100%', width: '100%' }}>
         <DataGrid
           rows={contactData}
-          columns={columns}
+          columns={filteredColumns}
           pageSize={5}
           rowsPerPageOptions={[5, 10]}
           slots={{ toolbar: GridToolbar }}

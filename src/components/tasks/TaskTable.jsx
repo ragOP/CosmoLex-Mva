@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { Avatar, Box, Tooltip, IconButton } from '@mui/material';
+import { Avatar, Box, Tooltip, IconButton, useMediaQuery } from '@mui/material';
 import formatDate from '@/utils/formatDate';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,6 +14,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Pencil, CircleOff, Trash2, Eye } from 'lucide-react';
 import { useTasks } from '@/components/tasks/hooks/useTasks';
 import getMetaOptions from '@/utils/getMetaFields';
+import { truncateStr } from '@/utils/truncateStr';
+import { noFilterColumns } from '@/utils/noFilterColumns';
 
 const TaskTable = ({
   tasks = [],
@@ -28,6 +30,8 @@ const TaskTable = ({
     metaField: 'taks_status',
     metaObj: tasksMeta,
   });
+  const isMobile = useMediaQuery('(max-width:600px)');
+
   const columns = [
     {
       field: 'id',
@@ -41,11 +45,12 @@ const TaskTable = ({
     {
       field: 'subject',
       headerName: 'Subject',
-      flex: 1,
+      width: 150,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
       align: 'center',
+      renderCell: (params) => truncateStr(params.value, 15),
     },
     {
       field: 'priority',
@@ -79,9 +84,11 @@ const TaskTable = ({
       headerAlign: 'center',
       align: 'center',
       renderCell: (params) => (
-        <span className="text-sm text-muted-foreground">
-          {formatDate(params.value)}
-        </span>
+        <Tooltip arrow title={formatDate(params.value)}>
+          <span className="text-sm text-muted-foreground">
+            {formatDate(params.value)}
+          </span>
+        </Tooltip>
       ),
     },
     {
@@ -94,7 +101,7 @@ const TaskTable = ({
       align: 'center',
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-center">
-          {params.value}
+          {truncateStr(params.value, 15)}
         </div>
       ),
     },
@@ -279,19 +286,28 @@ const TaskTable = ({
     },
   ];
 
+  const filteredColumns = noFilterColumns(columns);
+
   useEffect(() => {
     setTaskData(tasks);
   }, [tasks]);
 
   return (
     <>
-      <Box sx={{ height: '100%', width: '100%' }}>
+      <Box
+        sx={{
+          height: '100%',
+          width: isMobile ? '100vw' : '100%',
+          overflow: 'auto',
+          p: 2,
+        }}
+      >
         <DataGrid
           rows={taskData}
-          columns={columns}
+          columns={filteredColumns}
           pageSize={5}
           rowsPerPageOptions={[5, 10]}
-          slots={{ toolbar: GridToolbar }}
+          // slots={{ toolbar: GridToolbar }}
           getRowId={(row) => row.id}
           sx={{
             padding: 2,
@@ -300,7 +316,7 @@ const TaskTable = ({
             backdropFilter: 'blur(20px)',
             boxShadow: '0px 0.75rem 0.75rem rgba(0, 0, 0, 0.1)',
             zIndex: 10,
-            overflow: 'hidden',
+            overflow: 'auto',
             backgroundColor: 'rgba(255, 255, 255, 0.3)',
 
             // HEADER CONTAINER
@@ -322,7 +338,6 @@ const TaskTable = ({
             '& .MuiDataGrid-columnHeader:focus': {
               outline: 'none',
             },
-
             '& .MuiDataGrid-columnHeader:focus-within': {
               outline: 'none',
               border: 'none',
@@ -332,12 +347,10 @@ const TaskTable = ({
             '& .MuiDataGrid-cell': {
               border: 'none',
               backgroundColor: 'transparent',
-              // cursor: 'pointer',
             },
             '& .MuiDataGrid-cell:focus': {
               outline: 'none',
             },
-
             '& .MuiDataGrid-cell:focus-within': {
               outline: 'none',
               border: 'none',
@@ -350,13 +363,6 @@ const TaskTable = ({
               marginBottom: '0.5rem',
               overflow: 'hidden',
             },
-            // '& .MuiDataGrid-row:hover': {
-            //   backgroundColor: 'rgba(255, 255, 255, 0.3)',
-            //   // background:
-            //   //   'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
-            //   color: 'white',
-            //   transition: 'all 0.3s ease-in-out',
-            // },
 
             // FOOTER
             '& .MuiDataGrid-footerContainer': {

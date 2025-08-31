@@ -5,6 +5,7 @@ import formatDate from '@/utils/formatDate';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Pencil, CircleOff, Trash2, Eye } from 'lucide-react';
+import { noFilterColumns } from '@/utils/noFilterColumns';
 
 const UsersTable = ({
   users = [],
@@ -237,6 +238,8 @@ const UsersTable = ({
     },
   ];
 
+  const filteredColumns = noFilterColumns(columns);
+
   useEffect(() => {
     setUserData(users);
   }, [users]);
@@ -254,7 +257,7 @@ const UsersTable = ({
       >
         <DataGrid
           rows={userData}
-          columns={columns}
+          columns={filteredColumns}
           pageSize={5}
           rowsPerPageOptions={[5, 10]}
           slots={{ toolbar: GridToolbar }}

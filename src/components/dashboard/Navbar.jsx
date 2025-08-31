@@ -55,39 +55,35 @@ export default function Navbar() {
       }}
     >
       <Breadcrumb items={items} />
-      {/* Sidebar Icon (mobile only) */}
-      <button
-        className="md:hidden p-2 rounded bg-white shadow mr-2"
-        aria-label="Open sidebar"
-        onClick={() => setDrawerOpen(true)}
-      >
-        <MenuSquare className="h-6 w-6 text-gray-700" />
-      </button>
-
-      <MuiDrawer
-        anchor="left"
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        ModalProps={{ keepMounted: true }}
-        sx={{
-          display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': {
-            width: 'fit-content',
-            boxSizing: 'border-box',
-            p: 0,
-          },
-        }}
-      >
-        <Sidebar isDrawer={true} />
-      </MuiDrawer>
-
-      {/* Center - Search Bar */}
-      <div className="flex-1 flex items-center justify-center max-w-md mx-4">
-        {/* Search removed for now */}
-      </div>
 
       {/* Right Side - Actions & Profile */}
-      <div className="flex items-center gap-3">
+      <div className="flex justify-between items-center gap-3 ">
+        {/* Sidebar Icon (mobile only) */}
+        <button
+          className="md:hidden p-2 rounded bg-white shadow"
+          aria-label="Open sidebar"
+          onClick={() => setDrawerOpen(true)}
+        >
+          <MenuSquare className="h-6 w-6 text-gray-700" />
+        </button>
+
+        <MuiDrawer
+          anchor="left"
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            display: { xs: 'block', md: 'none' },
+            '& .MuiDrawer-paper': {
+              width: 'fit-content',
+              boxSizing: 'border-box',
+              p: 0,
+            },
+          }}
+        >
+          <Sidebar isDrawer={true} />
+        </MuiDrawer>
+
         {/* Profile Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

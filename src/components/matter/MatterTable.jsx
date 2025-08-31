@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { Box } from '@mui/material';
+import { noFilterColumns } from '@/utils/noFilterColumns';
 
 const MatterTable = ({ matters = [], onRowClick }) => {
   const [matterData, setMatterData] = useState([]);
@@ -89,6 +90,8 @@ const MatterTable = ({ matters = [], onRowClick }) => {
     },
   ];
 
+  const filteredColumns = noFilterColumns(columns);
+
   useEffect(() => {
     setMatterData(matters);
   }, [matters]);
@@ -98,7 +101,7 @@ const MatterTable = ({ matters = [], onRowClick }) => {
       <Box sx={{ height: '100%', width: '100%', overflow: 'auto' }}>
         <DataGrid
           rows={matterData}
-          columns={columns}
+          columns={filteredColumns}
           pageSize={5}
           rowsPerPageOptions={[5, 10]}
           slots={{ toolbar: GridToolbar }}
