@@ -16,7 +16,6 @@ const UsersPage = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
 
-
   const {
     users,
     usersLoading,
@@ -26,8 +25,6 @@ const UsersPage = () => {
     isFetchingUser,
     updateUserStatus,
   } = useUsers();
-
-
 
   // Stable handlers to prevent re-renders
   const handleCloseView = useCallback(() => {
@@ -85,8 +82,8 @@ const UsersPage = () => {
   }
 
   return (
-    <div className="flex flex-col gap-4 h-full w-full p-4">
-      <div className="flex justify-between w-full items-center">
+    <div className="flex flex-col gap-4 h-full w-full overflow-auto">
+      <div className="flex justify-between w-full items-center px-4 pt-4">
         <p className="text-2xl font-bold">Users ({users?.length || 0})</p>
         <Button
           onClick={() => setOpen(true)}
@@ -109,10 +106,10 @@ const UsersPage = () => {
 
             // Fetch user details from API
             const response = await fetchUser(params.row.id);
-            
+
             // Check different possible response structures
             const userData = response?.data || response;
-            
+
             if (userData && (userData.id || Object.keys(userData).length > 0)) {
               setSelectedUser(userData);
               setShowViewDialog(true);
@@ -133,13 +130,13 @@ const UsersPage = () => {
             if (!user || !user.id) {
               return;
             }
-            
+
             // Fetch complete user details from API for editing
             const response = await fetchUser(user.id);
-            
+
             // Check different possible response structures
             const userData = response?.data || response;
-            
+
             if (userData && (userData.id || Object.keys(userData).length > 0)) {
               setSelectedUser(userData);
               setShowUpdateDialog(true);

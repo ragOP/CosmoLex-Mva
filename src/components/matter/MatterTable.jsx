@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { Box } from '@mui/material';
 import { noFilterColumns } from '@/utils/noFilterColumns';
+import { useMediaQuery } from '@mui/material';
+import { getTableWidth } from '@/utils/isMobile';
 
 const MatterTable = ({ matters = [], onRowClick }) => {
   const [matterData, setMatterData] = useState([]);
+  const isMobile = useMediaQuery('(max-width:1024px)');
 
   const columns = [
     {
@@ -98,7 +101,14 @@ const MatterTable = ({ matters = [], onRowClick }) => {
 
   return (
     <>
-      <Box sx={{ height: '100%', width: '100%', overflow: 'auto' }}>
+      <Box
+        sx={{
+          height: '100%',
+          width: getTableWidth(),
+          overflow: 'auto',
+          p: 2,
+        }}
+      >
         <DataGrid
           rows={matterData}
           columns={filteredColumns}
@@ -113,8 +123,9 @@ const MatterTable = ({ matters = [], onRowClick }) => {
             backdropFilter: 'blur(20px)',
             boxShadow: '0px 0.75rem 0.75rem rgba(0, 0, 0, 0.1)',
             zIndex: 10,
-            overflow: 'hidden',
+            overflow: 'auto',
             backgroundColor: 'rgba(255, 255, 255, 0.3)',
+            // width: '100%',
 
             // HEADER CONTAINER
             '& .MuiDataGrid-columnHeaders': {
@@ -135,7 +146,6 @@ const MatterTable = ({ matters = [], onRowClick }) => {
             '& .MuiDataGrid-columnHeader:focus': {
               outline: 'none',
             },
-
             '& .MuiDataGrid-columnHeader:focus-within': {
               outline: 'none',
               border: 'none',
@@ -145,12 +155,10 @@ const MatterTable = ({ matters = [], onRowClick }) => {
             '& .MuiDataGrid-cell': {
               border: 'none',
               backgroundColor: 'transparent',
-              cursor: 'pointer',
             },
             '& .MuiDataGrid-cell:focus': {
               outline: 'none',
             },
-
             '& .MuiDataGrid-cell:focus-within': {
               outline: 'none',
               border: 'none',
@@ -162,13 +170,6 @@ const MatterTable = ({ matters = [], onRowClick }) => {
               backgroundColor: 'white',
               marginBottom: '0.5rem',
               overflow: 'hidden',
-            },
-            '& .MuiDataGrid-row:hover': {
-              backgroundColor: 'rgba(255, 255, 255, 0.3)',
-              // background:
-              //   'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
-              color: 'white',
-              transition: 'all 0.3s ease-in-out',
             },
 
             // FOOTER

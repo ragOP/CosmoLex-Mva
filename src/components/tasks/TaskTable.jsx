@@ -16,6 +16,7 @@ import { useTasks } from '@/components/tasks/hooks/useTasks';
 import getMetaOptions from '@/utils/getMetaFields';
 import { truncateStr } from '@/utils/truncateStr';
 import { noFilterColumns } from '@/utils/noFilterColumns';
+import { getTableWidth } from '@/utils/isMobile';
 
 const TaskTable = ({
   tasks = [],
@@ -30,7 +31,6 @@ const TaskTable = ({
     metaField: 'taks_status',
     metaObj: tasksMeta,
   });
-  const isMobile = useMediaQuery('(max-width:600px)');
 
   const columns = [
     {
@@ -297,7 +297,7 @@ const TaskTable = ({
       <Box
         sx={{
           height: '100%',
-          width: isMobile ? '100vw' : '100%',
+          width: getTableWidth(),
           overflow: 'auto',
           p: 2,
         }}

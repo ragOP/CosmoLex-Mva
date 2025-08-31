@@ -15,6 +15,8 @@ import { Pencil, CircleOff, Trash2 } from 'lucide-react';
 import { useContact } from '@/components/contact/hooks/useContact';
 import getMetaOptions from '@/utils/getMetaFields';
 import { noFilterColumns } from '@/utils/noFilterColumns';
+import { getTableWidth } from '@/utils/isMobile';
+import { truncateStr } from '@/utils/truncateStr';
 
 const ContactTable = ({
   contacts = [],
@@ -37,16 +39,17 @@ const ContactTable = ({
     {
       field: 'contact_name',
       headerName: 'Contact Name',
-      flex: 1,
+      width: 200,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
       align: 'center',
+      renderCell: (params) => truncateStr(params.value, 15),
     },
     {
       field: 'contact_type',
       headerName: 'Contact Type',
-      width: 100,
+      width: 150,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -58,9 +61,9 @@ const ContactTable = ({
           Low: 'secondary',
         };
         return (
-          <div className="w-full h-full flex items-center justify-start">
+          <div className="w-full h-full flex items-center justify-center">
             <Badge variant={colorMap[params.value] || 'outline'}>
-              {params.value}
+              {truncateStr(params.value, 15)}
             </Badge>
           </div>
         );
@@ -83,21 +86,21 @@ const ContactTable = ({
     {
       field: 'phone',
       headerName: 'Phone',
-      width: 100,
+      width: 120,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
       align: 'center',
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-center">
-          {params.value}
+          {truncateStr(params.value, 10)}
         </div>
       ),
     },
     {
       field: 'primary_email',
       headerName: 'Email',
-      width: 100,
+      width: 150,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -106,7 +109,7 @@ const ContactTable = ({
         <div className="w-full h-full flex items-center justify-start">
           <ScrollArea className="w-full">
             <div className="text-sm text-muted-foreground flex justify-center">
-              {params.value}
+              {truncateStr(params.value, 15)}
             </div>
           </ScrollArea>
         </div>
@@ -115,7 +118,7 @@ const ContactTable = ({
     {
       field: 'primary_address',
       headerName: 'Address',
-      width: 100,
+      width: 150,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -184,7 +187,14 @@ const ContactTable = ({
 
   return (
     <>
-      <Box sx={{ height: '100%', width: '100%' }}>
+      <Box
+        sx={{
+          height: '100%',
+          width: getTableWidth(),
+          overflow: 'auto',
+          p: 2,
+        }}
+      >
         <DataGrid
           rows={contactData}
           columns={filteredColumns}
@@ -199,7 +209,7 @@ const ContactTable = ({
             backdropFilter: 'blur(20px)',
             boxShadow: '0px 0.75rem 0.75rem rgba(0, 0, 0, 0.1)',
             zIndex: 10,
-            overflow: 'hidden',
+            overflow: 'auto',
             backgroundColor: 'rgba(255, 255, 255, 0.3)',
 
             // HEADER CONTAINER
@@ -221,7 +231,6 @@ const ContactTable = ({
             '& .MuiDataGrid-columnHeader:focus': {
               outline: 'none',
             },
-
             '& .MuiDataGrid-columnHeader:focus-within': {
               outline: 'none',
               border: 'none',
@@ -231,12 +240,10 @@ const ContactTable = ({
             '& .MuiDataGrid-cell': {
               border: 'none',
               backgroundColor: 'transparent',
-              // cursor: 'pointer',
             },
             '& .MuiDataGrid-cell:focus': {
               outline: 'none',
             },
-
             '& .MuiDataGrid-cell:focus-within': {
               outline: 'none',
               border: 'none',
@@ -249,13 +256,6 @@ const ContactTable = ({
               marginBottom: '0.5rem',
               overflow: 'hidden',
             },
-            // '& .MuiDataGrid-row:hover': {
-            //   backgroundColor: 'rgba(255, 255, 255, 0.3)',
-            //   // background:
-            //   //   'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
-            //   color: 'white',
-            //   transition: 'all 0.3s ease-in-out',
-            // },
 
             // FOOTER
             '& .MuiDataGrid-footerContainer': {

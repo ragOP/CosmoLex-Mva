@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { Avatar, Box, Tooltip, IconButton, Switch } from '@mui/material';
+import {
+  Avatar,
+  Box,
+  Tooltip,
+  IconButton,
+  Switch,
+  useMediaQuery,
+} from '@mui/material';
 import formatDate from '@/utils/formatDate';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Pencil, CircleOff, Trash2, Eye } from 'lucide-react';
 import { noFilterColumns } from '@/utils/noFilterColumns';
+import { truncateStr } from '@/utils/truncateStr';
+import { getTableWidth } from '@/utils/isMobile';
 
 const UsersTable = ({
   users = [],
@@ -15,6 +24,7 @@ const UsersTable = ({
   handleStatusChange,
 }) => {
   const [userData, setUserData] = useState([]);
+  const isMobile = useMediaQuery('(max-width:600px)');
 
   const columns = [
     {
@@ -65,6 +75,14 @@ const UsersTable = ({
         if (!row) return '';
         return `${row.first_name || ''} ${row.last_name || ''}`.trim();
       },
+      renderCell: (params) => {
+        if (!params) return null;
+        return (
+          <div className="w-full h-full flex items-center justify-center">
+            {truncateStr(params.value, 20)}
+          </div>
+        );
+      },
     },
     {
       field: 'email',
@@ -75,6 +93,14 @@ const UsersTable = ({
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
       align: 'center',
+      renderCell: (params) => {
+        if (!params) return null;
+        return (
+          <div className="w-full h-full flex items-center justify-center">
+            {truncateStr(params.value, 20)}
+          </div>
+        );
+      },
     },
     {
       field: 'role_id',
@@ -249,10 +275,9 @@ const UsersTable = ({
       <Box
         sx={{
           height: '100%',
-          width: '100%',
-          '& .MuiDataGrid-root': {
-            width: '100%',
-          },
+          width: getTableWidth(),
+          overflow: 'auto',
+          p: 2,
         }}
       >
         <DataGrid
@@ -263,9 +288,6 @@ const UsersTable = ({
           slots={{ toolbar: GridToolbar }}
           getRowId={(row) => row.id}
           autoHeight={false}
-          columnBuffer={2}
-          columnThreshold={75}
-          disableVirtualization={false}
           sx={{
             padding: 2,
             border: 'none',
@@ -273,9 +295,9 @@ const UsersTable = ({
             backdropFilter: 'blur(20px)',
             boxShadow: '0px 0.75rem 0.75rem rgba(0, 0, 0, 0.1)',
             zIndex: 10,
-            overflow: 'visible',
+            overflow: 'auto',
             backgroundColor: 'rgba(255, 255, 255, 0.3)',
-            width: '100%',
+            // width: '100%',
 
             // HEADER CONTAINER
             '& .MuiDataGrid-columnHeaders': {
@@ -296,7 +318,6 @@ const UsersTable = ({
             '& .MuiDataGrid-columnHeader:focus': {
               outline: 'none',
             },
-
             '& .MuiDataGrid-columnHeader:focus-within': {
               outline: 'none',
               border: 'none',
@@ -306,12 +327,10 @@ const UsersTable = ({
             '& .MuiDataGrid-cell': {
               border: 'none',
               backgroundColor: 'transparent',
-              // cursor: 'pointer',
             },
             '& .MuiDataGrid-cell:focus': {
               outline: 'none',
             },
-
             '& .MuiDataGrid-cell:focus-within': {
               outline: 'none',
               border: 'none',
@@ -324,13 +343,6 @@ const UsersTable = ({
               marginBottom: '0.5rem',
               overflow: 'hidden',
             },
-            // '& .MuiDataGrid-row:hover': {
-            //   backgroundColor: 'rgba(255, 255, 255, 0.3)',
-            //   // background:
-            //   //   'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
-            //   color: 'white',
-            //   transition: 'all 0.3s ease-in-out',
-            // },
 
             // FOOTER
             '& .MuiDataGrid-footerContainer': {
@@ -344,25 +356,11 @@ const UsersTable = ({
               padding: '0.5rem 1rem',
             },
             '& .MuiDataGrid-scrollbar': {
-              display: 'block !important',
-            },
-            '& .MuiDataGrid-scrollbar--horizontal': {
-              display: 'block !important',
-            },
-
-            // VIRTUAL SCROLLER
-            '& .MuiDataGrid-virtualScroller': {
-              overflow: 'visible !important',
-            },
-
-            // MAIN CONTAINER
-            '& .MuiDataGrid-main': {
-              overflow: 'visible !important',
+              display: 'none',
             },
           }}
           disableRowSelectionOnClick
           disableSelectionOnClick
-          disableColumnMenu={false}
         />
       </Box>
     </>

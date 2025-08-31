@@ -71,8 +71,8 @@ const ContactPage = () => {
   }
 
   return (
-    <div className="flex flex-col gap-4 h-full w-full p-4">
-      <div className="flex justify-between w-full items-center">
+    <div className="flex flex-col gap-4 h-full w-full overflow-auto">
+      <div className="flex justify-between w-full items-center px-4 pt-4">
         <p className="text-2xl font-bold">Contacts ({contacts?.length || 0})</p>
         <Button
           onClick={() => setOpen(true)}
