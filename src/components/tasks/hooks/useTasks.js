@@ -14,6 +14,8 @@ import {
   uploadTaskFile,
   deleteTaskFile,
   deleteReminder,
+
+  // comments
   getCommentMeta,
   getAllComments,
   createComment,
@@ -61,7 +63,7 @@ export const useTasks = () => {
     mutationFn: (queryParams) => filterTask(queryParams),
   });
 
-  // Create
+  // Create Task
   const createTaskMutation = useMutation({
     mutationFn: (taskData) => createTask(taskData),
     onSuccess: () => {
@@ -73,7 +75,7 @@ export const useTasks = () => {
     },
   });
 
-  // Update
+  // Update Task
   const updateTaskMutation = useMutation({
     mutationFn: ({ taskId, taskData }) => updateTask(taskId, taskData),
     onSuccess: () => {
@@ -97,7 +99,7 @@ export const useTasks = () => {
     },
   });
 
-  // Delete
+  // Delete Task
   const deleteTaskMutation = useMutation({
     mutationFn: (taskId) => deleteTask(taskId),
     onSuccess: () => {
@@ -145,6 +147,8 @@ export const useTasks = () => {
       toast.error(error?.message || 'Failed to delete reminder'),
   });
 
+  // ---------------------Comments--------------------- //
+
   // Get comment meta
   const { data: commentMeta = [], isLoading: commentMetaLoading } = useQuery({
     queryKey: ['commentMeta'],
@@ -184,6 +188,8 @@ export const useTasks = () => {
     onError: (error) =>
       toast.error(error?.message || 'Failed to upload attachment'),
   });
+
+  // ---------------------Actions--------------------- //
 
   const handleCreateComment = useCallback(
     (commentData) => {
@@ -248,6 +254,8 @@ export const useTasks = () => {
     task,
     selectedTask,
     currentPath,
+
+    // -- comments -- //
     comments,
     commentMeta,
 
@@ -255,6 +263,8 @@ export const useTasks = () => {
     tasksMetaLoading,
     tasksLoading,
     taskLoading,
+
+    // -- comments -- //
     commentMetaLoading,
     commentsLoading,
 
@@ -264,6 +274,8 @@ export const useTasks = () => {
     navigateToRoot,
     handleSearchTask,
     handleDeleteReminder,
+
+    // -- comments -- //
     handleCreateComment,
     handleUploadCommentAttachment,
 
@@ -285,6 +297,8 @@ export const useTasks = () => {
     isUploadingFile: uploadFileMutation.isPending,
     isDeletingFile: deleteFileMutation.isPending,
     isDeletingReminder: deleteReminderMutation.isPending,
+
+    // -- comments -- //
     isCreatingComment: createCommentMutation.isPending,
     isUploadingCommentAttachment: uploadCommentAttachmentMutation.isPending,
   };
