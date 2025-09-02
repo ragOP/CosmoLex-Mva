@@ -12,6 +12,10 @@ export const useMatter = () => {
   return context;
 };
 
+export const useSafeMatter = () => {
+  return useContext(MatterContext) ?? null;
+};
+
 export const MatterProvider = ({
   children,
   matter,

@@ -166,16 +166,20 @@ export const useTasks = () => {
   // Create comment
   const createCommentMutation = useMutation({
     mutationFn: (commentData) => {
-      console.log('commentData', commentData);
-      console.log('taskId', taskId);
-      createComment({ commentData, task_id: taskId });
+      const res = createComment({ commentData, task_id: taskId });
+      return res;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['comments']);
-      toast.success('Comment created successfully');
+    onSuccess: (res) => {
+      if (res?.Apistatus === true) {
+        queryClient.invalidateQueries(['comments']);
+        toast.success('Comment created successfully');
+      } else {
+        toast.error(res?.message || 'Failed to create comment');
+      }
     },
-    onError: (error) =>
-      toast.error(error?.message || 'Failed to create comment'),
+    onError: (error) => {
+      toast.error(error?.message || 'Failed to create comment');
+    },
   });
 
   // Upload comment attachment

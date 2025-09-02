@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, Stack, Divider, IconButton, Card } from '@mui/material';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,22 +16,66 @@ import formatDate from '@/utils/formatDate';
 import { useTasks } from '@/components/tasks/hooks/useTasks';
 import isArrayWithValues from '@/utils/isArrayWithValues';
 import UploadMediaDialog from '@/components/UploadMediaDialog';
+import { useSearchParams } from 'react-router-dom';
+import { useMatter } from '@/components/inbox/MatterContext';
+import { uploadCommentAttachment } from '@/api/api_services/task';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
+  const queryClient = useQueryClient();
   const {
     task,
     tasksMeta,
     comments,
     commentMeta,
     handleCreateComment,
-    handleUploadCommentAttachment,
-    isUploadingCommentAttachment,
     isCreatingComment,
   } = useTasks();
-  const [commentOpen, setCommentOpen] = React.useState(false);
-  const [comment, setComment] = React.useState('');
-  const [showUploadMediaDialog, setShowUploadMediaDialog] =
-    React.useState(false);
+  const [commentOpen, setCommentOpen] = useState(false);
+  const [comment, setComment] = useState('');
+  const [attachment, setAttachment] = useState([]);
+  const [showUploadMediaDialog, setShowUploadMediaDialog] = useState(false);
+
+  const uploadCommentAttachmentMutation = useMutation({
+    mutationFn: (attachmentData) => uploadCommentAttachment(attachmentData),
+    onSuccess: (res) => {
+      if (isArrayWithValues(res?.attachments)) {
+        res?.attachments?.forEach((attachment) => {
+          setAttachment((prev) => [
+            ...prev,
+            {
+              id: attachment?.attachment_id,
+              file_path: attachment?.file_path,
+              name: attachment?.file_name,
+            },
+          ]);
+        });
+      } else {
+        setAttachment((prev) => [
+          ...prev,
+          {
+            id: res?.attachment_id,
+            file_path: res?.file_path,
+            name: res?.file_name,
+          },
+        ]);
+      }
+      queryClient.invalidateQueries(['comments']);
+      toast.success(res?.message || 'Attachment uploaded successfully');
+    },
+    onError: (error) =>
+      toast.error(error?.message || 'Failed to upload attachment'),
+  });
+
+  const [searchParams] = useSearchParams();
+  const slugId = searchParams.get('slugId');
+  let contactId = null;
+
+  if (slugId) {
+    const matterData = useMatter();
+    contactId = matterData?.matter?.contact_id;
+  }
 
   // If task is empty or not found, return null
   if (!task || !Object?.keys(task)?.length > 0) return null;
@@ -74,6 +118,42 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
       value: r?.scheduled_at,
     };
   });
+
+  const handleCommentAttachment = (payload) => {
+    const formData = new FormData();
+    formData.append('category_id', payload.category_id);
+    formData.append('folder_id', payload.folder_id);
+    formData.append('description', payload.description);
+    // formData.append('attachment', payload.files);
+
+    payload.files.forEach((fileItem) => {
+      formData.append('attachment', fileItem.file);
+    });
+
+    if (slugId && contactId) {
+      formData.append('slug', slugId);
+      formData.append('contact_id', contactId);
+    }
+
+    uploadCommentAttachmentMutation.mutateAsync(formData);
+  };
+
+  const createComment = () => {
+    if (!comment) return;
+    try {
+      handleCreateComment({
+        comment,
+        attachment_ids: isArrayWithValues(attachment)
+          ? attachment?.map((a) => a.id)
+          : [],
+      });
+      setComment('');
+      setAttachment([]);
+      setCommentOpen(false);
+    } catch (error) {
+      console.error('Error creating comment:', error);
+    }
+  };
 
   return (
     <>
@@ -206,29 +286,71 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
             <Divider />
 
             {/* Comments */}
-            {/* <Stack className="overflow-auto no-scrollbar">
+            {/* Comments */}
+            <Stack className="overflow-auto no-scrollbar">
               <h3 className="text-lg font-semibold text-[#40444D] mb-2">
                 Comments
               </h3>
+
               {comments.length === 0 && (
                 <p className="text-muted-foreground">No comments added.</p>
               )}
-              <div className="grid grid-cols-2 gap-3">
+
+              <div className="w-full flex flex-col gap-4">
                 {isArrayWithValues(comments) &&
-                  comments.map((comment) => (
+                  comments.map((c) => (
                     <Card
-                      key={comment.id}
-                      className="p-2 flex items-center gap-2 shadow-sm"
+                      key={c.id}
+                      className="p-4 flex flex-col gap-3 shadow-sm bg-white"
                     >
-                      <Paperclip className="w-4 h-4 text-gray-500" />
-                      <a
-                        href={comment.file_path}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:underline truncate"
-                      >
-                        {comment.file_name}
-                      </a>
+                      {/* User Info */}
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-8 h-8">
+                          <img
+                            src={c.user?.profile}
+                            alt={c.user?.name}
+                            className="w-full h-full object-cover rounded-full"
+                          />
+                          <AvatarFallback className="bg-[#6366F1] text-white">
+                            {c.user?.name?.[0]?.toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm text-gray-800">
+                            {c.user?.name}
+                          </span>
+                          {c.user?.author && (
+                            <span className="text-xs text-[#6366F1]">
+                              Author
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Comment text */}
+                      <p className="text-sm text-gray-700">{c.comment || ''}</p>
+
+                      {/* Attachments */}
+                      {isArrayWithValues(c.attachments) && (
+                        <div className="flex flex-col gap-2">
+                          {c.attachments.map((file) => (
+                            <Card
+                              key={file.id}
+                              className="p-2 flex items-center gap-2 shadow-sm border border-gray-200"
+                            >
+                              <Paperclip className="w-4 h-4 text-gray-500" />
+                              <a
+                                href={file.file_path}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm text-blue-600 hover:underline truncate"
+                              >
+                                {file.file_name}
+                              </a>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
                     </Card>
                   ))}
               </div>
@@ -242,7 +364,7 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
                 <Plus className="mr-2 h-4 w-4" />
                 Add Comment
               </Button>
-            </Stack> */}
+            </Stack>
           </div>
 
           {/* Footer */}
@@ -283,6 +405,28 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
             />
+
+            {/* Show uploaded attachments */}
+            {isArrayWithValues(attachment) && (
+              <Stack className="mt-4">
+                {attachment.map((file, index) => (
+                  <Card
+                    key={index}
+                    className="p-2 flex items-center gap-2 shadow-sm"
+                  >
+                    <Paperclip className="w-4 h-4 text-gray-500" />
+                    <a
+                      href={file.file_path}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline truncate"
+                    >
+                      {file.name}
+                    </a>
+                  </Card>
+                ))}
+              </Stack>
+            )}
           </Stack>
 
           <Divider />
@@ -311,8 +455,7 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
               disabled={isCreatingComment}
               className="bg-[#6366F1] text-white hover:bg-[#4f51d8]"
               onClick={() => {
-                handleCreateComment(comment);
-                setCommentOpen(false);
+                createComment();
               }}
             >
               {isCreatingComment ? (
@@ -329,8 +472,8 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
       <UploadMediaDialog
         open={showUploadMediaDialog}
         onClose={() => setShowUploadMediaDialog(false)}
-        onSubmit={(paylod) => {
-          console.log(paylod);
+        onSubmit={(payload) => {
+          handleCommentAttachment(payload);
         }}
         isLoading={false}
       />

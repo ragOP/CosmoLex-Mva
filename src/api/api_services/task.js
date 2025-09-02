@@ -190,17 +190,17 @@ export const getAllComments = async (taskId) => {
 
 // Upload comment
 export const createComment = async ({ commentData, task_id }) => {
-  const response = await apiService({
-    endpoint: `${endpoints.createComment}/${task_id}`,
-    method: 'POST',
-    data: {
-      comment: commentData,
-    },
-  });
-  if (response && response?.response?.Apistatus === false) {
-    throw new Error(response?.response?.message || 'Failed to create comment');
+  try {
+    const response = await apiService({
+      endpoint: `${endpoints.createComment}/${task_id}`,
+      method: 'POST',
+      data: commentData,
+    });
+
+    return response?.response || {};
+  } catch (error) {
+    throw error;
   }
-  return response.response?.data;
 };
 
 // Upload comment attachment
@@ -216,5 +216,5 @@ export const uploadCommentAttachment = async (fileData) => {
       response?.response?.message || 'Failed to upload comment attachment'
     );
   }
-  return response.response?.data;
+  return response.response || [];
 };
