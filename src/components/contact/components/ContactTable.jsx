@@ -30,7 +30,8 @@ const ContactTable = ({
     {
       field: 'id',
       headerName: 'ID',
-      width: 70,
+      flex: 0.5,
+      minWidth: 70,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -39,7 +40,8 @@ const ContactTable = ({
     {
       field: 'contact_name',
       headerName: 'Contact Name',
-      width: 200,
+      flex: 1.5,
+      minWidth: 200,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -49,7 +51,8 @@ const ContactTable = ({
     {
       field: 'contact_type',
       headerName: 'Contact Type',
-      width: 150,
+      flex: 1,
+      minWidth: 150,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -72,7 +75,8 @@ const ContactTable = ({
     {
       field: 'date_created',
       headerName: 'Date Created',
-      width: 130,
+      flex: 1,
+      minWidth: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -86,7 +90,8 @@ const ContactTable = ({
     {
       field: 'phone',
       headerName: 'Phone',
-      width: 120,
+      flex: 1,
+      minWidth: 120,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -100,7 +105,8 @@ const ContactTable = ({
     {
       field: 'primary_email',
       headerName: 'Email',
-      width: 150,
+      flex: 1.2,
+      minWidth: 150,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -118,7 +124,8 @@ const ContactTable = ({
     {
       field: 'primary_address',
       headerName: 'Address',
-      width: 150,
+      flex: 1.2,
+      minWidth: 150,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -136,7 +143,8 @@ const ContactTable = ({
     {
       field: 'edit',
       headerName: 'Edit',
-      width: 80,
+      flex: 0.5,
+      minWidth: 80,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -158,7 +166,8 @@ const ContactTable = ({
     {
       field: 'delete',
       headerName: 'Delete',
-      width: 80,
+      flex: 0.5,
+      minWidth: 80,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',

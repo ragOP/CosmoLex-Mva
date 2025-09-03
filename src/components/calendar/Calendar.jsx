@@ -187,7 +187,6 @@ const CalendarWrapper = ({
             editable={true}
             selectable={true}
             selectMirror={true}
-            dayMaxEvents={true}
             weekends={true}
             events={fullCalendarEvents}
             eventDragStart={handleEventDragStart}
