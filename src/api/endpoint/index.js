@@ -27,6 +27,7 @@ export const endpoints = {
   searchEvent: 'v2/event/search',
   uploadEventFile: 'v2/event/uploadAttachment',
   deleteEventFile: 'v2/event/deleteAttachment',
+  updateEventTime: 'v2/event/time',
 
   // Task endpoint
   getTaskMeta: 'v2/task/meta',

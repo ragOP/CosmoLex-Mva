@@ -13,6 +13,7 @@ import {
   deleteEvent,
   uploadEventFile,
   deleteEventFile,
+  updateEventTime,
 } from '@/api/api_services/event';
 import { toast } from 'sonner';
 
@@ -119,6 +120,19 @@ export const useEvents = () => {
     },
   });
 
+  // Update event time (for drag & drop and resize)
+  const updateEventTimeMutation = useMutation({
+    mutationFn: ({ eventId, timeData }) => updateEventTime(eventId, timeData),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['events']);
+      queryClient.invalidateQueries(['event', eventId]);
+      toast.success('Event time updated successfully!');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update event time!');
+    },
+  });
+
   const handleCreateEvent = useCallback((eventData) => {
     createEventMutation.mutateAsync(eventData);
   }, []);
@@ -145,6 +159,10 @@ export const useEvents = () => {
 
   const handleDeleteFile = useCallback((fileId) => {
     deleteFileMutation.mutateAsync(fileId);
+  }, []);
+
+  const handleUpdateEventTime = useCallback(({ eventId, timeData }) => {
+    updateEventTimeMutation.mutateAsync({ eventId, timeData });
   }, []);
 
   // Navigation helpers (optional)
@@ -277,6 +295,7 @@ export const useEvents = () => {
     handleDeleteEvent,
     handleUploadFile,
     handleDeleteFile,
+    handleUpdateEventTime,
 
     // Mutations
     searchEvents: searchEventsMutation.mutateAsync,
@@ -286,6 +305,7 @@ export const useEvents = () => {
     deleteEvent: deleteEventMutation.mutateAsync,
     uploadEventFile: uploadFileMutation.mutateAsync,
     deleteEventFile: deleteFileMutation.mutateAsync,
+    updateEventTime: updateEventTimeMutation.mutateAsync,
 
     // States
     isCreating: createEventMutation.isPending,
@@ -293,5 +313,6 @@ export const useEvents = () => {
     isDeleting: deleteEventMutation.isPending,
     isUploadingFile: uploadFileMutation.isPending,
     isDeletingFile: deleteFileMutation.isPending,
+    isUpdatingEventTime: updateEventTimeMutation.isPending,
   };
 };

@@ -40,6 +40,7 @@ const CalendarPage = () => {
     eventsLoading,
     handleUpdateEvent,
     handleDeleteEvent,
+    handleUpdateEventTime,
     isUpdating,
     isDeleting,
   } = useEvents();
@@ -139,6 +140,7 @@ const CalendarPage = () => {
         onDateRangeSelect={handleDateRangeSelect}
         handleEventDragStart={handleEventDragStart}
         handleEventDrop={handleEventDrop}
+        handleUpdateEventTime={handleUpdateEventTime}
       />
 
       <NewEventDialog
