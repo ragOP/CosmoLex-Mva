@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import {
-  Avatar,
-  Box,
-  Tooltip,
-  IconButton,
-  Switch,
-  useMediaQuery,
-} from '@mui/material';
+import { Avatar, Box, Tooltip, IconButton, Switch } from '@mui/material';
 import formatDate from '@/utils/formatDate';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -24,13 +17,13 @@ const UsersTable = ({
   handleStatusChange,
 }) => {
   const [userData, setUserData] = useState([]);
-  const isMobile = useMediaQuery('(max-width:600px)');
 
   const columns = [
     {
       field: 'id',
       headerName: 'ID',
-      width: 60,
+      flex: 0.3,
+      minWidth: 60,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -39,7 +32,8 @@ const UsersTable = ({
     {
       field: 'profile_picture',
       headerName: 'Avatar',
-      width: 70,
+      flex: 0.4,
+      minWidth: 70,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       headerAlign: 'center',
       align: 'center',
@@ -105,7 +99,8 @@ const UsersTable = ({
     {
       field: 'role_id',
       headerName: 'Role',
-      width: 80,
+      flex: 0.5,
+      minWidth: 80,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -124,7 +119,8 @@ const UsersTable = ({
     {
       field: 'is_active',
       headerName: 'Status',
-      width: 80,
+      flex: 0.5,
+      minWidth: 80,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       headerAlign: 'center',
       align: 'center',
@@ -145,7 +141,8 @@ const UsersTable = ({
     {
       field: 'email_verified_at',
       headerName: 'Verified',
-      width: 80,
+      flex: 0.5,
+      minWidth: 80,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       headerAlign: 'center',
       align: 'center',
@@ -163,7 +160,8 @@ const UsersTable = ({
     {
       field: 'last_login_at',
       headerName: 'Last Login',
-      width: 120,
+      flex: 0.8,
+      minWidth: 120,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -180,7 +178,8 @@ const UsersTable = ({
     {
       field: 'view',
       headerName: 'View',
-      width: 70,
+      flex: 0.4,
+      minWidth: 70,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -203,7 +202,8 @@ const UsersTable = ({
     {
       field: 'edit',
       headerName: 'Edit',
-      width: 70,
+      flex: 0.4,
+      minWidth: 70,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -234,7 +234,8 @@ const UsersTable = ({
     {
       field: 'delete',
       headerName: 'Delete',
-      width: 70,
+      flex: 0.4,
+      minWidth: 70,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',

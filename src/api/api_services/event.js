@@ -121,3 +121,14 @@ export const deleteEventFile = async (fileId) => {
   if (response.error) throw new Error('Failed to delete event file');
   return response.response;
 };
+
+// Update event time (for drag & drop and resize)
+export const updateEventTime = async (eventId, timeData) => {
+  const response = await apiService({
+    endpoint: `${endpoints.updateEventTime}/${eventId}`,
+    method: 'PATCH',
+    data: timeData,
+  });
+  if (response.error) throw new Error('Failed to update event time');
+  return response.response?.data;
+};

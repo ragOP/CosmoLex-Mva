@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { Avatar, Box, Tooltip, IconButton, useMediaQuery } from '@mui/material';
+import { Avatar, Box, Tooltip, IconButton } from '@mui/material';
 import formatDate from '@/utils/formatDate';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -36,7 +36,8 @@ const TaskTable = ({
     {
       field: 'id',
       headerName: 'ID',
-      width: 70,
+      flex: 0.5,
+      minWidth: 70,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -45,7 +46,8 @@ const TaskTable = ({
     {
       field: 'subject',
       headerName: 'Subject',
-      width: 150,
+      flex: 1.5,
+      minWidth: 150,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -55,7 +57,8 @@ const TaskTable = ({
     {
       field: 'priority',
       headerName: 'Priority',
-      width: 100,
+      flex: 0.8,
+      minWidth: 100,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -78,7 +81,8 @@ const TaskTable = ({
     {
       field: 'due_date',
       headerName: 'Due Date',
-      width: 130,
+      flex: 1,
+      minWidth: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -94,7 +98,8 @@ const TaskTable = ({
     {
       field: 'contact_name',
       headerName: 'Contact Name',
-      width: 100,
+      flex: 1,
+      minWidth: 100,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -108,7 +113,8 @@ const TaskTable = ({
     {
       field: 'assignees',
       headerName: 'Assignees',
-      width: 100,
+      flex: 1,
+      minWidth: 100,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -130,7 +136,8 @@ const TaskTable = ({
     {
       field: 'assigned_by',
       headerName: 'Assigned By',
-      width: 100,
+      flex: 1,
+      minWidth: 100,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -155,7 +162,8 @@ const TaskTable = ({
     {
       field: 'status_id',
       headerName: 'Status',
-      width: 120,
+      flex: 1,
+      minWidth: 120,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -209,7 +217,8 @@ const TaskTable = ({
     {
       field: 'view',
       headerName: 'View',
-      width: 80,
+      flex: 0.5,
+      minWidth: 80,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -231,7 +240,8 @@ const TaskTable = ({
     {
       field: 'edit',
       headerName: 'Edit',
-      width: 80,
+      flex: 0.5,
+      minWidth: 80,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -259,7 +269,8 @@ const TaskTable = ({
     {
       field: 'delete',
       headerName: 'Delete',
-      width: 80,
+      flex: 0.5,
+      minWidth: 80,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',

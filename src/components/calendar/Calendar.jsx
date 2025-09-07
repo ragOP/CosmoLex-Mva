@@ -17,7 +17,7 @@ const CalendarWrapper = ({
   setOpen,
   onDateRangeSelect,
   handleEventDragStart,
-  handleEventDrop,
+  handleUpdateEventTime,
 }) => {
   const calendarRef = useRef(null);
   const [currentView, setCurrentView] = React.useState('dayGridMonth');
@@ -63,33 +63,69 @@ const CalendarWrapper = ({
   };
 
   // Handle event drop (drag and drop events)
-  // const handleEventDrop = (dropInfo) => {
-  //   const { event } = dropInfo;
-  //   const updatedEvent = {
-  //     ...event,
-  //     start: event.start,
-  //     end: event.end,
-  //   };
-
-  //   // Update the event in the events array
-  //   setEvents((prevEvents) =>
-  //     prevEvents.map((e) => (e.id === event.id ? updatedEvent : e))
-  //   );
-  // };
+  const handleEventDropInternal = async (dropInfo) => {
+    const { event } = dropInfo;
+    
+    try {
+      // Format dates for API
+      const timeData = {
+        start_time: event.start.toISOString().slice(0, 19).replace('T', ' '),
+        end_time: event.end ? event.end.toISOString().slice(0, 19).replace('T', ' ') : event.start.toISOString().slice(0, 19).replace('T', ' '),
+      };
+      
+      // Call the API to update event time
+      if (handleUpdateEventTime) {
+        await handleUpdateEventTime({ eventId: parseInt(event.id), timeData });
+      }
+      
+      // Update local state
+      const updatedEvent = {
+        ...event,
+        start: event.start,
+        end: event.end,
+      };
+      
+      setEvents((prevEvents) =>
+        prevEvents.map((e) => (e.id === parseInt(event.id) ? updatedEvent : e))
+      );
+    } catch (error) {
+      console.error('Failed to update event time:', error);
+      // Revert the event position on error
+      dropInfo.revert();
+    }
+  };
 
   // Handle event resize
-  const handleEventResize = (resizeInfo) => {
+  const handleEventResize = async (resizeInfo) => {
     const { event } = resizeInfo;
-    const updatedEvent = {
-      ...event,
-      start: event.start,
-      end: event.end,
-    };
-
-    // Update the event in the events array
-    setEvents((prevEvents) =>
-      prevEvents.map((e) => (e.id === event.id ? updatedEvent : e))
-    );
+    
+    try {
+      // Format dates for API
+      const timeData = {
+        start_time: event.start.toISOString().slice(0, 19).replace('T', ' '),
+        end_time: event.end ? event.end.toISOString().slice(0, 19).replace('T', ' ') : event.start.toISOString().slice(0, 19).replace('T', ' '),
+      };
+      
+      // Call the API to update event time
+      if (handleUpdateEventTime) {
+        await handleUpdateEventTime({ eventId: parseInt(event.id), timeData });
+      }
+      
+      // Update local state
+      const updatedEvent = {
+        ...event,
+        start: event.start,
+        end: event.end,
+      };
+      
+      setEvents((prevEvents) =>
+        prevEvents.map((e) => (e.id === parseInt(event.id) ? updatedEvent : e))
+      );
+    } catch (error) {
+      console.error('Failed to resize event:', error);
+      // Revert the event size on error
+      resizeInfo.revert();
+    }
   };
 
   const handleDatesSet = (arg) => {
@@ -186,12 +222,11 @@ const CalendarWrapper = ({
             }}
             editable={true}
             selectable={true}
-            selectMirror={true}
-            dayMaxEvents={true}
+            selectMirror={true}w
             weekends={true}
             events={fullCalendarEvents}
             eventDragStart={handleEventDragStart}
-            eventDrop={handleEventDrop}
+            eventDrop={handleEventDropInternal}
             datesSet={handleDatesSet}
             select={handleDateSelect}
             eventClick={handleEventClick}
