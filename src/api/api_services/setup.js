@@ -223,3 +223,35 @@ export const updateTaskPriorityStatus = (id, data) => {
 export const deleteTaskPriority = (id) => {
   return getSetupDelete(`${endpoints.deleteTaskPriority}/${id}`);
 };
+
+// Task UTBMS Code-specific API functions using the reusable pattern
+
+// Get all task UTBMS codes
+export const getTaskUTBMSCodes = () => {
+  return getSetup(endpoints.getTaskUTBMSCodes);
+};
+
+// Get single task UTBMS code by ID
+export const getTaskUTBMSCode = (id) => {
+  return getSetupShow(`${endpoints.showTaskUTBMSCode}/${id}`);
+};
+
+// Create new task UTBMS code
+export const createTaskUTBMSCode = (data) => {
+  return getSetupStore(endpoints.storeTaskUTBMSCode, data);
+};
+
+// Update task UTBMS code
+export const updateTaskUTBMSCode = (id, data) => {
+  return getSetupUpdate(`${endpoints.updateTaskUTBMSCode}/${id}`, data);
+};
+
+// Update task UTBMS code status (is_active)
+export const updateTaskUTBMSCodeStatus = (id, data) => {
+  return getSetupUpdateStatus(`${endpoints.updateTaskUTBMSCodeStatus}/${id}`, data);
+};
+
+// Delete task UTBMS code
+export const deleteTaskUTBMSCode = (id) => {
+  return getSetupDelete(`${endpoints.deleteTaskUTBMSCode}/${id}`);
+};

@@ -207,6 +207,12 @@ const sidebarItems = [
         type: 'link',
         iconType: 'tasks',
       },
+      {
+        id: '/dashboard/setup/task-utbms-code',
+        label: 'Task UTBMS Code',
+        type: 'link',
+        iconType: 'tasks',
+      },
     ],
   },
   // {

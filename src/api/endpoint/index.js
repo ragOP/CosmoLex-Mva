@@ -129,4 +129,12 @@ export const endpoints = {
   storeTaskPriority: 'v2/setup/master/store/task-priority',
   updateTaskPriority: 'v2/setup/master/update',
   updateTaskPriorityStatus: 'v2/setup/master/updateStatus',
+
+  // Task UTBMS Code
+  getTaskUTBMSCodes: 'v2/setup/master/list/task-utbms-code',
+  showTaskUTBMSCode: 'v2/setup/master/show',
+  deleteTaskUTBMSCode: 'v2/setup/master/delete',
+  storeTaskUTBMSCode: 'v2/setup/master/store/task-utbms-code',
+  updateTaskUTBMSCode: 'v2/setup/master/update',
+  updateTaskUTBMSCodeStatus: 'v2/setup/master/updateStatus',
 };

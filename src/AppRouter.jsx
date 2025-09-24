@@ -59,6 +59,7 @@ const RolePage = lazy(() => import('./pages/setup/roles'));
 const TaskTypePage = lazy(() => import('./pages/setup/task-types'));
 const TaskStatusPage = lazy(() => import('./pages/setup/task-status'));
 const TaskPriorityPage = lazy(() => import('./pages/setup/task-priority'));
+const TaskUTBMSCodePage = lazy(() => import('./pages/setup/task-utbms-code'));
 
 const AppRouter = () => (
   <Router>
@@ -128,6 +129,7 @@ const AppRouter = () => (
           <Route path="setup/task-types" element={<TaskTypePage />} />
           <Route path="setup/task-status" element={<TaskStatusPage />} />
           <Route path="setup/task-priority" element={<TaskPriorityPage />} />
+          <Route path="setup/task-utbms-code" element={<TaskUTBMSCodePage />} />
         </Route>
         <Route path="/2fa" element={<TwoFactorPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
