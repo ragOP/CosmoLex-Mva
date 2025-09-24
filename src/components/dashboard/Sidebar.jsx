@@ -18,6 +18,7 @@ import {
   User,
   Contact,
   Settings2,
+  Users,
 } from 'lucide-react';
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -47,6 +48,7 @@ const typeToIcon = {
   'activity-logs': Activity,
   agenda: ClipboardList,
   setup: Settings2,
+  roles: Users,
 };
 
 const sidebarItems = [
@@ -180,6 +182,12 @@ const sidebarItems = [
         label: 'Users',
         type: 'link',
         iconType: 'users',
+      },
+      {
+        id: '/dashboard/setup/roles',
+        label: 'Roles',
+        type: 'link',
+        iconType: 'roles',
       },
     ],
   },

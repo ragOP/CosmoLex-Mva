@@ -54,6 +54,9 @@ const ActivityLogs = () => <ErrorPage pageName="Activity Logs" />;
 const UsersPage = lazy(() => import('./pages/users'));
 const ContactPage = lazy(() => import('./pages/contact'));
 
+// Setup Pages
+const RolePage = lazy(() => import('./pages/setup/roles'));
+
 const AppRouter = () => (
   <Router>
     <Suspense fallback={<PageLoading />}>
@@ -116,6 +119,9 @@ const AppRouter = () => (
           </Route>
           {/* <Route path="matter-intake" element={<MatterIntakePage />} />
           <Route path="contacts" element={<ContactPage />} /> */}
+
+          {/* Setup Pages */}
+          <Route path="setup/roles" element={<RolePage />} />
         </Route>
         <Route path="/2fa" element={<TwoFactorPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />

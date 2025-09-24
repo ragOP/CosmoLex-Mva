@@ -1,0 +1,129 @@
+import { apiService } from './index';
+import { endpoints } from '../endpoint';
+
+// List - GET (Pattern based api calling, need to be usable)
+export const getSetup = (endpoint) => {
+  try {
+    const response = apiService({
+      endpoint: endpoint,
+      method: 'GET',
+    });
+    return response;
+  } catch (error) {
+    console.error('Error fetching setup:', error);
+    throw error;
+  }
+};
+// Show - GET
+export const getSetupShow = (endpoint) => {
+  try {
+    const response = apiService({
+      endpoint: endpoint,
+      method: 'GET',
+    });
+    return response;
+  } catch (error) {
+    console.error('Error fetching setup:', error);
+    throw error;
+  }
+};
+// Delete - DELETE
+export const getSetupDelete = (endpoint) => {
+  try {
+    const response = apiService({
+      endpoint: endpoint,
+      method: 'DELETE',
+    });
+    return response;
+  } catch (error) {
+    console.error('Error fetching setup:', error);
+    throw error;
+  }
+};
+// Store - POST
+export const getSetupStore = (endpoint, data) => {
+  try {
+    const response = apiService({
+      endpoint: endpoint,
+      method: 'POST',
+      data: data,
+    });
+    return response;
+  } catch (error) {
+    console.error('Error fetching setup:', error);
+    throw error;
+  }
+};
+// Update - PUT
+export const getSetupUpdate = (endpoint, data) => {
+  try {
+    const response = apiService({
+      endpoint: endpoint,
+      method: 'PUT',
+      data: data,
+    });
+    return response;
+  } catch (error) {
+    console.error('Error fetching setup:', error);
+    throw error;
+  }
+};
+// Update Status - PATCH
+export const getSetupUpdateStatus = (endpoint, data) => {
+  try {
+    const response = apiService({
+      endpoint: endpoint,
+      method: 'PATCH',
+      data: data,
+    });
+    return response;
+  } catch (error) {
+    console.error('Error fetching setup:', error);
+    throw error;
+  }
+};
+// Permission - GET
+export const getSetupPermission = (endpoint) => {
+  try {
+    const response = apiService({
+      endpoint: endpoint,
+      method: 'GET',
+    });
+    return response;
+  } catch (error) {
+    console.error('Error fetching setup:', error);
+    throw error;
+  }
+};
+
+// Role-specific API functions using the reusable pattern
+
+// Get all roles
+export const getRoles = () => {
+  return getSetup(endpoints.getRoles);
+};
+
+// Get single role by ID
+export const getRole = (id) => {
+  return getSetupShow(`${endpoints.showRole}/${id}`);
+};
+
+// Create new role
+export const createRole = (data) => {
+  return getSetupStore(endpoints.storeRole, data);
+};
+
+// Update role
+export const updateRole = (id, data) => {
+  return getSetupUpdate(`${endpoints.updateRole}/${id}`, data);
+};
+
+// Delete role
+export const deleteRole = (id) => {
+  return getSetupDelete(`${endpoints.deleteRole}/${id}`);
+};
+
+// Get permissions for role creation/editing
+export const getPermissions = () => {
+  return getSetupPermission(endpoints.getPermissions);
+};

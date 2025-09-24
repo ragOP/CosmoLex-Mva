@@ -1,8 +1,37 @@
 import React, { useState } from 'react';
-import { Stack, IconButton, Typography, Chip, Box, Menu, MenuItem, ListItemIcon, Dialog } from '@mui/material';
-import { Search, RotateCcw, Plus, Building, Mail, Phone, MapPin, MoreVertical, Grid3X3, List, Edit, Trash2, Eye } from 'lucide-react';
+import {
+  Stack,
+  IconButton,
+  Typography,
+  Chip,
+  Box,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  Dialog,
+} from '@mui/material';
+import {
+  Search,
+  RotateCcw,
+  Plus,
+  Building,
+  Mail,
+  Phone,
+  MapPin,
+  MoreVertical,
+  Grid3X3,
+  List,
+  Edit,
+  Trash2,
+  Eye,
+} from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getFirms, createFirm, updateFirm, deleteFirm } from '@/api/api_services/finance';
+import {
+  getFirms,
+  createFirm,
+  updateFirm,
+  deleteFirm,
+} from '@/api/api_services/finance';
 import { Input } from '@/components/ui/input';
 import CreateFirmDialog from './components/CreateFirmDialog';
 import { toast } from 'sonner';
@@ -24,7 +53,11 @@ const FirmsTab = ({ slugId }) => {
   const currentSlugId = searchParams.get('slugId') || slugId;
 
   // Fetch firms
-  const { data: firmsResponse, isLoading, refetch } = useQuery({
+  const {
+    data: firmsResponse,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['firms'],
     queryFn: getFirms,
     staleTime: 2 * 60 * 1000, // 2 minutes
@@ -47,7 +80,7 @@ const FirmsTab = ({ slugId }) => {
     onError: (error) => {
       toast.error('Failed to create firm. Please try again.');
       console.error('Create firm error:', error);
-    }
+    },
   });
 
   // Update firm mutation
@@ -62,7 +95,7 @@ const FirmsTab = ({ slugId }) => {
     onError: (error) => {
       toast.error('Failed to update firm. Please try again.');
       console.error('Update firm error:', error);
-    }
+    },
   });
 
   // Delete firm mutation
@@ -77,7 +110,7 @@ const FirmsTab = ({ slugId }) => {
     onError: (error) => {
       toast.error('Failed to delete firm. Please try again.');
       console.error('Delete firm error:', error);
-    }
+    },
   });
 
   const handleCreateFirm = (firmData) => {
@@ -105,14 +138,20 @@ const FirmsTab = ({ slugId }) => {
   };
 
   const handleFirmClick = (firm) => {
-    navigate(`/dashboard/inbox/finance/${firm.id}?slugId=${currentSlugId}&tab=firms`);
+    navigate(
+      `/dashboard/inbox/finance/${firm.id}?slugId=${currentSlugId}&tab=firms`
+    );
   };
 
-  const filteredFirms = Array.isArray(firms) ? firms.filter(firm => 
-    firm.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (firm.firm_type_id && firm.firm_type_id.toString().includes(searchTerm.toLowerCase())) ||
-    firm.contact_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) : [];
+  const filteredFirms = Array.isArray(firms)
+    ? firms.filter(
+        (firm) =>
+          firm.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (firm.firm_type_id &&
+            firm.firm_type_id.toString().includes(searchTerm.toLowerCase())) ||
+          firm.contact_name?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -132,9 +171,15 @@ const FirmsTab = ({ slugId }) => {
     <div className="p-4">
       <Stack spacing={3}>
         {/* Header */}
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <h2 className="text-xl font-semibold text-gray-900">Firms Management</h2>
-          
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <h2 className="text-xl font-semibold text-gray-900">
+            Firms Management
+          </h2>
+
           <Stack direction="row" spacing={2} alignItems="center">
             <IconButton onClick={handleRefresh} size="small">
               <RotateCcw size={18} />
@@ -155,8 +200,8 @@ const FirmsTab = ({ slugId }) => {
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'grid' 
-                    ? 'bg-white text-blue-600 shadow-sm' 
+                  viewMode === 'grid'
+                    ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
@@ -165,16 +210,16 @@ const FirmsTab = ({ slugId }) => {
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'list' 
-                    ? 'bg-white text-blue-600 shadow-sm' 
+                  viewMode === 'list'
+                    ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
                 <List size={16} />
               </button>
             </div>
-            
-            <button 
+
+            <button
               onClick={() => setCreateDialogOpen(true)}
               className="px-4 py-2 bg-gradient-to-b from-[#7367F0] to-[#453E90] text-white text-sm font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2"
             >
@@ -183,7 +228,7 @@ const FirmsTab = ({ slugId }) => {
             </button>
           </Stack>
         </Stack>
-        
+
         {/* Firms List */}
         <div className="flex items-center justify-center">
           {isLoading ? (
@@ -201,23 +246,29 @@ const FirmsTab = ({ slugId }) => {
               <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Building className="w-12 h-12 text-blue-500" />
               </div>
-              <Typography variant="h5" sx={{ fontWeight: 600, color: '#374151', mb: 2 }}>
+              <Typography
+                variant="h5"
+                sx={{ fontWeight: 600, color: '#374151', mb: 2 }}
+              >
                 No firms yet
               </Typography>
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 4, lineHeight: 1.6 }}>
-                {searchTerm ? 
-                  `No firms found matching "${searchTerm}". Try adjusting your search terms.` :
-                  "Start managing your firm relationships by adding your first firm partner or vendor."
-                }
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{ mb: 4, lineHeight: 1.6 }}
+              >
+                {searchTerm
+                  ? `No firms found matching "${searchTerm}". Try adjusting your search terms.`
+                  : 'Start managing your firm relationships by adding your first firm partner or vendor.'}
               </Typography>
               {!searchTerm && (
-                                 <button 
-                   onClick={() => setCreateDialogOpen(true)}
-                   className="px-6 py-3 bg-gradient-to-r from-[#7367F0] to-[#453E90] text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
-                 >
-                   <Plus size={18} className="mr-2 inline" />
-                   Add First Firm
-                 </button>
+                <button
+                  onClick={() => setCreateDialogOpen(true)}
+                  className="px-6 py-3 bg-gradient-to-r from-[#7367F0] to-[#453E90] text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+                >
+                  <Plus size={18} className="mr-2 inline" />
+                  Add First Firm
+                </button>
               )}
             </div>
           ) : (
@@ -225,155 +276,58 @@ const FirmsTab = ({ slugId }) => {
               {/* Grid View */}
               {viewMode === 'grid' && (
                 <div className="w-full grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {Array.isArray(filteredFirms) && filteredFirms.map((firm) => (
-                <div
-                  key={firm.id}
-                  className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-gray-300 cursor-pointer"
-                  onClick={() => handleFirmClick(firm)}
-                >
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center">
-                        <Building className="w-6 h-6 text-blue-600" />
-                      </div>
-                                             <div>
-                         <h3 className="font-semibold text-gray-900 text-sm mb-1">
-                           {firm.name}
-                         </h3>
-                         <p className="text-xs text-gray-500">
-                           Firm Type ID: {firm.firm_type_id}
-                         </p>
-                       </div>
-                     </div>
-                     <div className="flex items-center gap-2">
-                       <Chip
-                         label={firm.is_active ? 'Active' : 'Inactive'}
-                         size="small"
-                         sx={{
-                           ...getStatusColor(firm.is_active ? 'Active' : 'Inactive'),
-                           fontSize: '0.75rem',
-                           fontWeight: 500
-                         }}
-                       />
-                       
-                       {/* Three-dot menu */}
-                       <IconButton
-                         size="small"
-                         onClick={(e) => {
-                           e.stopPropagation();
-                           setAnchorEl(e.currentTarget);
-                           setSelectedFirm(firm);
-                         }}
-                         className="text-gray-400 hover:text-gray-600"
-                       >
-                         <MoreVertical size={16} />
-                       </IconButton>
-                     </div>
-                  </div>
-
-                                     {/* Contact Info */}
-                   <div className="space-y-2 mb-4">
-                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                       <Mail className="w-4 h-4 text-gray-400" />
-                       <span className="truncate">{firm.email}</span>
-                     </div>
-                     <div className="flex items-center gap-2 text-sm text-gray-600">
-                       <Phone className="w-4 h-4 text-gray-400" />
-                       <span>{firm.phone}</span>
-                     </div>
-                     <div className="flex items-start gap-2 text-sm text-gray-600">
-                       <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                       <span className="text-xs leading-relaxed">
-                         {[firm.address1, firm.address2, firm.city, firm.state, firm.zip_code]
-                           .filter(Boolean)
-                           .join(', ')}
-                       </span>
-                     </div>
-                   </div>
-
-                   {/* Additional Info */}
-                   <div className="space-y-2 mb-4 p-3 bg-gray-50 rounded-lg">
-                     <div className="flex items-center justify-between text-xs">
-                       <span className="text-gray-500">EIN:</span>
-                       <span className="font-medium">{firm.ein}</span>
-                     </div>
-                     <div className="flex items-center justify-between text-xs">
-                       <span className="text-gray-500">Firm %:</span>
-                       <span className="font-medium text-green-600">{firm.firm_percent}</span>
-                     </div>
-                     <div className="flex items-center justify-between text-xs">
-                       <span className="text-gray-500">Flat Fee:</span>
-                       <span className="font-medium text-blue-600">${firm.firm_flat_fee}</span>
-                     </div>
-                   </div>
-
-                   {/* Footer */}
-                   <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                     <div className="text-xs text-gray-500">
-                       Contact: {firm.contact_name}
-                     </div>
-                     <div className="text-xs text-gray-400">
-                       Added {new Date(firm.created_at).toLocaleDateString()}
-                     </div>
-                   </div>
-                </div>
-              ))}
-            </div>
-              )}
-
-              {/* List View */}
-              {viewMode === 'list' && (
-                <div className="w-full space-y-4">
-                  {Array.isArray(filteredFirms) && filteredFirms.map((firm) => (
-                    <div
-                      key={firm.id}
-                      className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-gray-300 cursor-pointer"
-                      onClick={() => handleFirmClick(firm)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center">
-                            <Building className="w-6 h-6 text-blue-600" />
+                  {Array.isArray(filteredFirms) &&
+                    filteredFirms.map((firm) => (
+                      <div
+                        key={firm.id}
+                        className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-gray-300 cursor-pointer"
+                        onClick={() => handleFirmClick(firm)}
+                      >
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center">
+                              <Building className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900 text-sm mb-1">
+                                {firm.name}
+                              </h3>
+                              <p className="text-xs text-gray-500">
+                                Firm Type ID: {firm.firm_type_id}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900 text-lg mb-1">
-                              {firm.name}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                              Firm Type ID: {firm.firm_type_id}
-                            </p>
+                          <div className="flex items-center gap-2">
+                            <Chip
+                              label={firm.is_active ? 'Active' : 'Inactive'}
+                              size="small"
+                              sx={{
+                                ...getStatusColor(
+                                  firm.is_active ? 'Active' : 'Inactive'
+                                ),
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                              }}
+                            />
+
+                            {/* Three-dot menu */}
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAnchorEl(e.currentTarget);
+                                setSelectedFirm(firm);
+                              }}
+                              className="text-gray-400 hover:text-gray-600"
+                            >
+                              <MoreVertical size={16} />
+                            </IconButton>
                           </div>
                         </div>
-                        
-                        <div className="flex items-center gap-4">
-                          <Chip
-                            label={firm.is_active ? 'Active' : 'Inactive'}
-                            size="small"
-                            sx={{
-                              ...getStatusColor(firm.is_active ? 'Active' : 'Inactive'),
-                              fontSize: '0.75rem',
-                              fontWeight: 500
-                            }}
-                          />
-                          
-                          {/* Three-dot menu */}
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setAnchorEl(e.currentTarget);
-                              setSelectedFirm(firm);
-                            }}
-                            className="text-gray-400 hover:text-gray-600"
-                          >
-                            <MoreVertical size={16} />
-                          </IconButton>
-                        </div>
-                      </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                        <div className="space-y-2">
+                        {/* Contact Info */}
+                        <div className="space-y-2 mb-4">
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Mail className="w-4 h-4 text-gray-400" />
                             <span className="truncate">{firm.email}</span>
@@ -382,32 +336,152 @@ const FirmsTab = ({ slugId }) => {
                             <Phone className="w-4 h-4 text-gray-400" />
                             <span>{firm.phone}</span>
                           </div>
+                          <div className="flex items-start gap-2 text-sm text-gray-600">
+                            <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                            <span className="text-xs leading-relaxed">
+                              {[
+                                firm.address1,
+                                firm.address2,
+                                firm.city,
+                                firm.state,
+                                firm.zip_code,
+                              ]
+                                .filter(Boolean)
+                                .join(', ')}
+                            </span>
+                          </div>
                         </div>
-                        
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm">
+
+                        {/* Additional Info */}
+                        <div className="space-y-2 mb-4 p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center justify-between text-xs">
                             <span className="text-gray-500">EIN:</span>
                             <span className="font-medium">{firm.ein}</span>
                           </div>
-                          <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center justify-between text-xs">
                             <span className="text-gray-500">Firm %:</span>
-                            <span className="font-medium text-green-600">{firm.firm_percent}</span>
+                            <span className="font-medium text-green-600">
+                              {firm.firm_percent}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500">Flat Fee:</span>
+                            <span className="font-medium text-blue-600">
+                              ${firm.firm_flat_fee}
+                            </span>
                           </div>
                         </div>
-                        
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-500">Flat Fee:</span>
-                            <span className="font-medium text-blue-600">${firm.firm_flat_fee}</span>
+
+                        {/* Footer */}
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                          <div className="text-xs text-gray-500">
+                            Contact: {firm.contact_name}
                           </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-gray-500">Contact:</span>
-                            <span className="font-medium">{firm.contact_name}</span>
+                          <div className="text-xs text-gray-400">
+                            Added{' '}
+                            {new Date(firm.created_at).toLocaleDateString()}
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                </div>
+              )}
+
+              {/* List View */}
+              {viewMode === 'list' && (
+                <div className="w-full space-y-4">
+                  {Array.isArray(filteredFirms) &&
+                    filteredFirms.map((firm) => (
+                      <div
+                        key={firm.id}
+                        className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 hover:border-gray-300 cursor-pointer"
+                        onClick={() => handleFirmClick(firm)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center">
+                              <Building className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900 text-lg mb-1">
+                                {firm.name}
+                              </h3>
+                              <p className="text-sm text-gray-500">
+                                Firm Type ID: {firm.firm_type_id}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-4">
+                            <Chip
+                              label={firm.is_active ? 'Active' : 'Inactive'}
+                              size="small"
+                              sx={{
+                                ...getStatusColor(
+                                  firm.is_active ? 'Active' : 'Inactive'
+                                ),
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                              }}
+                            />
+
+                            {/* Three-dot menu */}
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAnchorEl(e.currentTarget);
+                                setSelectedFirm(firm);
+                              }}
+                              className="text-gray-400 hover:text-gray-600"
+                            >
+                              <MoreVertical size={16} />
+                            </IconButton>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Mail className="w-4 h-4 text-gray-400" />
+                              <span className="truncate">{firm.email}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Phone className="w-4 h-4 text-gray-400" />
+                              <span>{firm.phone}</span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-500">EIN:</span>
+                              <span className="font-medium">{firm.ein}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-500">Firm %:</span>
+                              <span className="font-medium text-green-600">
+                                {firm.firm_percent}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-500">Flat Fee:</span>
+                              <span className="font-medium text-blue-600">
+                                ${firm.firm_flat_fee}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-500">Contact:</span>
+                              <span className="font-medium">
+                                {firm.contact_name}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                 </div>
               )}
             </>
@@ -503,8 +577,8 @@ const FirmsTab = ({ slugId }) => {
           PaperProps={{
             sx: {
               borderRadius: '16px',
-              overflow: 'hidden'
-            }
+              overflow: 'hidden',
+            },
           }}
         >
           <div className="bg-white rounded-lg p-6">
@@ -521,14 +595,15 @@ const FirmsTab = ({ slugId }) => {
                 </p>
               </div>
             </div>
-            
+
             <div className="mb-6">
               <p className="text-gray-700">
-                Are you sure you want to delete <strong>"{firmToDelete?.name}"</strong>? 
-                This will permanently remove the firm and all associated data.
+                Are you sure you want to delete{' '}
+                <strong>"{firmToDelete?.name}"</strong>? This will permanently
+                remove the firm and all associated data.
               </p>
             </div>
-            
+
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={() => setDeleteConfirmOpen(false)}
@@ -550,4 +625,4 @@ const FirmsTab = ({ slugId }) => {
   );
 };
 
-export default FirmsTab; 
+export default FirmsTab;
