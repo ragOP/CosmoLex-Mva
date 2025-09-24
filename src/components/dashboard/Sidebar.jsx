@@ -189,6 +189,12 @@ const sidebarItems = [
         type: 'link',
         iconType: 'roles',
       },
+      {
+        id: '/dashboard/setup/task-types',
+        label: 'Task Type',
+        type: 'link',
+        iconType: 'tasks',
+      },
     ],
   },
   // {

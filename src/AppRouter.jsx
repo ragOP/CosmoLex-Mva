@@ -56,6 +56,7 @@ const ContactPage = lazy(() => import('./pages/contact'));
 
 // Setup Pages
 const RolePage = lazy(() => import('./pages/setup/roles'));
+const TaskTypePage = lazy(() => import('./pages/setup/task-types'));
 
 const AppRouter = () => (
   <Router>
@@ -122,6 +123,7 @@ const AppRouter = () => (
 
           {/* Setup Pages */}
           <Route path="setup/roles" element={<RolePage />} />
+          <Route path="setup/task-types" element={<TaskTypePage />} />
         </Route>
         <Route path="/2fa" element={<TwoFactorPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />

@@ -127,3 +127,35 @@ export const deleteRole = (id) => {
 export const getPermissions = () => {
   return getSetupPermission(endpoints.getPermissions);
 };
+
+// Task Type-specific API functions using the reusable pattern
+
+// Get all task types
+export const getTaskTypes = () => {
+  return getSetup(endpoints.getTaskTypes);
+};
+
+// Get single task type by ID
+export const getTaskType = (id) => {
+  return getSetupShow(`${endpoints.showTaskType}/${id}`);
+};
+
+// Create new task type
+export const createTaskType = (data) => {
+  return getSetupStore(endpoints.storeTaskType, data);
+};
+
+// Update task type
+export const updateTaskType = (id, data) => {
+  return getSetupUpdate(`${endpoints.updateTaskType}/${id}`, data);
+};
+
+// Update task type status
+export const updateTaskTypeStatus = (id, data) => {
+  return getSetupUpdateStatus(`${endpoints.updateTaskTypeStatus}/${id}`, data);
+};
+
+// Delete task type
+export const deleteTaskType = (id) => {
+  return getSetupDelete(`${endpoints.deleteTaskType}/${id}`);
+};

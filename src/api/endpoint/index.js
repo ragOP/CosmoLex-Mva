@@ -105,4 +105,12 @@ export const endpoints = {
   getPermissions: 'v2/setup/roles/permissions',
   storeRole: 'v2/setup/roles/store',
   updateRole: 'v2/setup/roles/update',
+
+  // Task Type
+  getTaskTypes: 'v2/setup/master/list/task-type',
+  showTaskType: 'v2/setup/master/show',
+  deleteTaskType: 'v2/setup/master/delete',
+  storeTaskType: 'v2/setup/master/store/task-type',
+  updateTaskType: 'v2/setup/master/update',
+  updateTaskTypeStatus: 'v2/setup/master/updateStatus',
 };
