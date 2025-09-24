@@ -195,6 +195,12 @@ const sidebarItems = [
         type: 'link',
         iconType: 'tasks',
       },
+      {
+        id: '/dashboard/setup/task-status',
+        label: 'Task Status',
+        type: 'link',
+        iconType: 'tasks',
+      },
     ],
   },
   // {

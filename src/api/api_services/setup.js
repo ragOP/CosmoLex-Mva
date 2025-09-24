@@ -159,3 +159,35 @@ export const updateTaskTypeStatus = (id, data) => {
 export const deleteTaskType = (id) => {
   return getSetupDelete(`${endpoints.deleteTaskType}/${id}`);
 };
+
+// Task Status-specific API functions using the reusable pattern
+
+// Get all task statuses
+export const getTaskStatuses = () => {
+  return getSetup(endpoints.getTaskStatus);
+};
+
+// Get single task status by ID
+export const getTaskStatus = (id) => {
+  return getSetupShow(`${endpoints.showTaskStatus}/${id}`);
+};
+
+// Create new task status
+export const createTaskStatus = (data) => {
+  return getSetupStore(endpoints.storeTaskStatus, data);
+};
+
+// Update task status
+export const updateTaskStatus = (id, data) => {
+  return getSetupUpdate(`${endpoints.updateTaskStatus}/${id}`, data);
+};
+
+// Update task status status (is_active)
+export const updateTaskStatusStatus = (id, data) => {
+  return getSetupUpdateStatus(`${endpoints.updateTaskStatusStatus}/${id}`, data);
+};
+
+// Delete task status
+export const deleteTaskStatus = (id) => {
+  return getSetupDelete(`${endpoints.deleteTaskStatus}/${id}`);
+};

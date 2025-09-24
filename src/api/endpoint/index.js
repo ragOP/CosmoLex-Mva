@@ -113,4 +113,12 @@ export const endpoints = {
   storeTaskType: 'v2/setup/master/store/task-type',
   updateTaskType: 'v2/setup/master/update',
   updateTaskTypeStatus: 'v2/setup/master/updateStatus',
+
+  // Task Status
+  getTaskStatus: 'v2/setup/master/list/task-status',
+  showTaskStatus: 'v2/setup/master/show',
+  deleteTaskStatus: 'v2/setup/master/delete',
+  storeTaskStatus: 'v2/setup/master/store/task-status',
+  updateTaskStatus: 'v2/setup/master/update',
+  updateTaskStatusStatus: 'v2/setup/master/updateStatus',
 };

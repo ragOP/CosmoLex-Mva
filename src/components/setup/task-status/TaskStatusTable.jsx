@@ -5,13 +5,13 @@ import { Pencil, CircleOff, Trash2, Eye } from 'lucide-react';
 import { noFilterColumns } from '@/utils/noFilterColumns';
 import { truncateStr } from '@/utils/truncateStr';
 
-const TaskTypeTable = ({
-  taskTypes = [],
+const TaskStatusTable = ({
+  taskStatuses = [],
   handleEdit,
   handleDelete,
   handleStatusChange,
 }) => {
-  const [taskTypeData, setTaskTypeData] = useState([]);
+  const [taskStatusData, setTaskStatusData] = useState([]);
 
   const columns = [
     {
@@ -156,10 +156,10 @@ const TaskTypeTable = ({
   const filteredColumns = noFilterColumns(columns);
 
   useEffect(() => {
-    if (taskTypes && Array.isArray(taskTypes)) {
-      setTaskTypeData(taskTypes);
+    if (taskStatuses && Array.isArray(taskStatuses)) {
+      setTaskStatusData(taskStatuses);
     }
-  }, [taskTypes]);
+  }, [taskStatuses]);
 
   return (
     <>
@@ -179,7 +179,7 @@ const TaskTypeTable = ({
         }}
       >
         <DataGrid
-          rows={taskTypeData}
+          rows={taskStatusData}
           columns={filteredColumns}
           pageSize={10}
           rowsPerPageOptions={[5, 10, 25]}
@@ -267,4 +267,4 @@ const TaskTypeTable = ({
   );
 };
 
-export default TaskTypeTable;
+export default TaskStatusTable;
