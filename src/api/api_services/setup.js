@@ -179,7 +179,7 @@ export const createTaskStatus = (data) => {
 
 // Update task status
 export const updateTaskStatus = (id, data) => {
-  return getSetupUpdate(`${endpoints.updateTaskStatus}/${id}`, data);
+  return getSetupUpdate(`${endpoints.updateSetupTaskStatus}/${id}`, data);
 };
 
 // Update task status status (is_active)
@@ -190,4 +190,36 @@ export const updateTaskStatusStatus = (id, data) => {
 // Delete task status
 export const deleteTaskStatus = (id) => {
   return getSetupDelete(`${endpoints.deleteTaskStatus}/${id}`);
+};
+
+// Task Priority-specific API functions using the reusable pattern
+
+// Get all task priorities
+export const getTaskPriorities = () => {
+  return getSetup(endpoints.getTaskPriorities);
+};
+
+// Get single task priority by ID
+export const getTaskPriority = (id) => {
+  return getSetupShow(`${endpoints.showTaskPriority}/${id}`);
+};
+
+// Create new task priority
+export const createTaskPriority = (data) => {
+  return getSetupStore(endpoints.storeTaskPriority, data);
+};
+
+// Update task priority
+export const updateTaskPriority = (id, data) => {
+  return getSetupUpdate(`${endpoints.updateTaskPriority}/${id}`, data);
+};
+
+// Update task priority status (is_active)
+export const updateTaskPriorityStatus = (id, data) => {
+  return getSetupUpdateStatus(`${endpoints.updateTaskPriorityStatus}/${id}`, data);
+};
+
+// Delete task priority
+export const deleteTaskPriority = (id) => {
+  return getSetupDelete(`${endpoints.deleteTaskPriority}/${id}`);
 };

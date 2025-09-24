@@ -201,6 +201,12 @@ const sidebarItems = [
         type: 'link',
         iconType: 'tasks',
       },
+      {
+        id: '/dashboard/setup/task-priority',
+        label: 'Task Priority',
+        type: 'link',
+        iconType: 'tasks',
+      },
     ],
   },
   // {

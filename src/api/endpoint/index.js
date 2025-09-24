@@ -119,6 +119,14 @@ export const endpoints = {
   showTaskStatus: 'v2/setup/master/show',
   deleteTaskStatus: 'v2/setup/master/delete',
   storeTaskStatus: 'v2/setup/master/store/task-status',
-  updateTaskStatus: 'v2/setup/master/update',
+  updateSetupTaskStatus: 'v2/setup/master/update',
   updateTaskStatusStatus: 'v2/setup/master/updateStatus',
+
+  // Task Priority
+  getTaskPriorities: 'v2/setup/master/list/task-priority',
+  showTaskPriority: 'v2/setup/master/show',
+  deleteTaskPriority: 'v2/setup/master/delete',
+  storeTaskPriority: 'v2/setup/master/store/task-priority',
+  updateTaskPriority: 'v2/setup/master/update',
+  updateTaskPriorityStatus: 'v2/setup/master/updateStatus',
 };
