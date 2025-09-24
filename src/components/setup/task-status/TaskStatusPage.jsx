@@ -16,8 +16,10 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import TaskStatusTable from './TaskStatusTable';
 import CreateTaskStatusDialog from './CreateTaskStatusDialog';
+import TaskDetailDialog from '../shared/TaskDetailDialog';
 import {
   getTaskStatuses,
+  getTaskStatus,
   createTaskStatus,
   updateTaskStatus,
   deleteTaskStatus,
@@ -31,6 +33,8 @@ const TaskStatusPage = () => {
   const [editingTaskStatus, setEditingTaskStatus] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [taskStatusToDelete, setTaskStatusToDelete] = useState(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedTaskStatusId, setSelectedTaskStatusId] = useState(null);
   const queryClient = useQueryClient();
 
   // Fetch task statuses
@@ -147,6 +151,11 @@ const TaskStatusPage = () => {
     updateTaskStatusStatusMutation.mutate({ taskStatusId, is_active });
   };
 
+  const handleView = (taskStatusId) => {
+    setSelectedTaskStatusId(taskStatusId);
+    setDetailDialogOpen(true);
+  };
+
   const filteredTaskStatuses = Array.isArray(taskStatuses)
     ? taskStatuses.filter(
         (taskStatus) =>
@@ -207,6 +216,7 @@ const TaskStatusPage = () => {
             handleEdit={handleEditTaskStatus}
             handleDelete={handleDeleteTaskStatus}
             handleStatusChange={handleStatusChange}
+            handleView={handleView}
             onRowClick={(params) => {
               // Handle view functionality if needed
               console.log('View task status:', params.row);
@@ -263,6 +273,25 @@ const TaskStatusPage = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Task Status Detail Dialog */}
+        <TaskDetailDialog
+          open={detailDialogOpen}
+          onClose={() => setDetailDialogOpen(false)}
+          itemId={selectedTaskStatusId}
+          fetchItem={getTaskStatus}
+          itemType="Task Status"
+          onEdit={(taskStatus) => {
+            setEditingTaskStatus(taskStatus);
+            setEditDialogOpen(true);
+            setDetailDialogOpen(false);
+          }}
+          onDelete={(taskStatus) => {
+            setTaskStatusToDelete(taskStatus);
+            setDeleteConfirmOpen(true);
+            setDetailDialogOpen(false);
+          }}
+        />
       </Stack>
     </div>
   );

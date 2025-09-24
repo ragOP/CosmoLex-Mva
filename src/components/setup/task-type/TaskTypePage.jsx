@@ -16,8 +16,10 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import TaskTypeTable from './TaskTypeTable';
 import CreateTaskTypeDialog from './CreateTaskTypeDialog';
+import TaskDetailDialog from '../shared/TaskDetailDialog';
 import {
   getTaskTypes,
+  getTaskType,
   createTaskType,
   updateTaskType,
   deleteTaskType,
@@ -31,6 +33,8 @@ const TaskTypePage = () => {
   const [editingTaskType, setEditingTaskType] = useState(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [taskTypeToDelete, setTaskTypeToDelete] = useState(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedTaskTypeId, setSelectedTaskTypeId] = useState(null);
   const queryClient = useQueryClient();
 
   // Fetch task types
@@ -147,6 +151,11 @@ const TaskTypePage = () => {
     updateTaskTypeStatusMutation.mutate({ taskTypeId, is_active });
   };
 
+  const handleView = (taskTypeId) => {
+    setSelectedTaskTypeId(taskTypeId);
+    setDetailDialogOpen(true);
+  };
+
   const filteredTaskTypes = Array.isArray(taskTypes)
     ? taskTypes.filter(
         (taskType) =>
@@ -207,6 +216,7 @@ const TaskTypePage = () => {
             handleEdit={handleEditTaskType}
             handleDelete={handleDeleteTaskType}
             handleStatusChange={handleStatusChange}
+            handleView={handleView}
             onRowClick={(params) => {
               // Handle view functionality if needed
               console.log('View task type:', params.row);
@@ -263,6 +273,31 @@ const TaskTypePage = () => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Task Type Detail Dialog */}
+        <TaskDetailDialog
+          open={detailDialogOpen}
+          onClose={() => {
+            setDetailDialogOpen(false);
+            setSelectedTaskTypeId(null);
+          }}
+          itemId={selectedTaskTypeId}
+          itemType="task-type"
+          fetchItem={getTaskType}
+          onEdit={(item) => {
+            setDetailDialogOpen(false);
+            setEditingTaskType(item);
+            setEditDialogOpen(true);
+          }}
+          onDelete={(item) => {
+            setDetailDialogOpen(false);
+            setTaskTypeToDelete(item);
+            setDeleteConfirmOpen(true);
+          }}
+          CreateDialog={CreateTaskTypeDialog}
+          updateMutation={updateTaskTypeMutation}
+          deleteMutation={deleteTaskTypeMutation}
+        />
       </Stack>
     </div>
   );

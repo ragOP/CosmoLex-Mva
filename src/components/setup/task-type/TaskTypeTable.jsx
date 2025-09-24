@@ -10,6 +10,7 @@ const TaskTypeTable = ({
   handleEdit,
   handleDelete,
   handleStatusChange,
+  handleView,
 }) => {
   const [taskTypeData, setTaskTypeData] = useState([]);
 
@@ -83,6 +84,32 @@ const TaskTypeTable = ({
               }
               size="small"
             />
+          </div>
+        );
+      },
+    },
+    {
+      field: 'view',
+      headerName: 'View',
+      flex: 0.4,
+      minWidth: 70,
+      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
+      renderCell: (params) => {
+        if (!params || !params.row) return null;
+        return (
+          <div className="w-full h-full flex items-center justify-center">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                handleView(params.row.id);
+              }}
+              className="cursor-pointer"
+            >
+              <Eye className="h-4 w-4 text-[#6366F1]" />
+            </IconButton>
           </div>
         );
       },
