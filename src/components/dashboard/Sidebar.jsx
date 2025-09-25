@@ -213,6 +213,12 @@ const sidebarItems = [
         type: 'link',
         iconType: 'tasks',
       },
+      {
+        id: '/dashboard/setup/event-category',
+        label: 'Event Category',
+        type: 'link',
+        iconType: 'calendar',
+      },
     ],
   },
   // {

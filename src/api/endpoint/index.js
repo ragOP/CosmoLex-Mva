@@ -137,4 +137,12 @@ export const endpoints = {
   storeTaskUTBMSCode: 'v2/setup/master/store/task-utbms-code',
   updateTaskUTBMSCode: 'v2/setup/master/update',
   updateTaskUTBMSCodeStatus: 'v2/setup/master/updateStatus',
+
+  // Event Category
+  getEventCategories: 'v2/setup/master/list/event-category-id',
+  showEventCategory: 'v2/setup/master/show',
+  deleteEventCategory: 'v2/setup/master/delete',
+  storeEventCategory: 'v2/setup/master/store/event-category-id',
+  updateEventCategory: 'v2/setup/master/update',
+  updateEventCategoryStatus: 'v2/setup/master/updateStatus',
 };

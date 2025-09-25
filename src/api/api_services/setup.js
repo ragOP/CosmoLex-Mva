@@ -255,3 +255,35 @@ export const updateTaskUTBMSCodeStatus = (id, data) => {
 export const deleteTaskUTBMSCode = (id) => {
   return getSetupDelete(`${endpoints.deleteTaskUTBMSCode}/${id}`);
 };
+
+// Event Category-specific API functions using the reusable pattern
+
+// Get all event categories
+export const getEventCategories = () => {
+  return getSetup(endpoints.getEventCategories);
+};
+
+// Get single event category by ID
+export const getEventCategory = (id) => {
+  return getSetupShow(`${endpoints.showEventCategory}/${id}`);
+};
+
+// Create new event category
+export const createEventCategory = (data) => {
+  return getSetupStore(endpoints.storeEventCategory, data);
+};
+
+// Update event category
+export const updateEventCategory = (id, data) => {
+  return getSetupUpdate(`${endpoints.updateEventCategory}/${id}`, data);
+};
+
+// Update event category status (is_active)
+export const updateEventCategoryStatus = (id, data) => {
+  return getSetupUpdateStatus(`${endpoints.updateEventCategoryStatus}/${id}`, data);
+};
+
+// Delete event category
+export const deleteEventCategory = (id) => {
+  return getSetupDelete(`${endpoints.deleteEventCategory}/${id}`);
+};
