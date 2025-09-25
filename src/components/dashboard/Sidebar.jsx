@@ -420,7 +420,9 @@ const Sidebar = ({ isDrawer }) => {
               {item.label}
             </button>
             {item.type === 'tree' && openTree === item.id && (
-              <Box sx={{ minWidth: 180, pl: 2 }}>
+              <Box
+                sx={{ minWidth: 180, pl: 2, height: 'auto', overflow: 'auto' }}
+              >
                 <CustomRickTreeView
                   onItemClick={(item) => handleItemClick(item)}
                   items={item.treeData || []}

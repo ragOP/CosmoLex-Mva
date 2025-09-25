@@ -209,7 +209,7 @@ const CustomTreeItem = React.forwardRef(function CustomTreeItem(props, ref) {
   );
 });
 
-export default function CustomRickTreeView({ items, onItemClick }) {
+export default function CustomRickTreeView({ items }) {
   const navigate = useNavigate();
   return (
     <RichTreeView
@@ -218,10 +218,22 @@ export default function CustomRickTreeView({ items, onItemClick }) {
       defaultExpandedItems={[]}
       defaultSelectedItems=""
       sx={{
-        height: 'fit-content',
+        height: '200px',
         flexGrow: 1,
         maxWidth: 400,
         overflowY: 'auto',
+
+        // Simply scrollbar bar
+        '&::-webkit-scrollbar': {
+          width: '8px',
+        },
+        '&::-webkit-scrollbar-track': {
+          backgroundColor: 'transparent',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          borderRadius: '4px',
+        },
       }}
       slots={{ item: CustomTreeItem }}
       itemChildrenIndentation={24}
