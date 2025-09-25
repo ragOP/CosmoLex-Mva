@@ -23,7 +23,6 @@ import {
   FileText,
   CheckCircle,
   XCircle,
-  Hash,
 } from 'lucide-react';
 import { 
   getTaskType, 
@@ -254,36 +253,6 @@ const TaskDetailDialog = ({
                           mb: 2,
                         }}
                       >
-                        <Hash size={20} color="#7367F0" />
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                          ID
-                        </Typography>
-                      </Box>
-                      <Typography
-                        variant="h6"
-                        sx={{ fontWeight: 500, color: '#374151' }}
-                      >
-                        {item.id}
-                      </Typography>
-                    </Paper>
-                  </Grid>
-
-                  <Grid item xs={12} md={6}>
-                    <Paper
-                      sx={{
-                        p: 3,
-                        bgcolor: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 2,
-                          mb: 2,
-                        }}
-                      >
                         <FileText size={20} color="#7367F0" />
                         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                           Name
@@ -340,7 +309,7 @@ const TaskDetailDialog = ({
                 </Typography>
 
                 <Grid container spacing={3}>
-                  <Grid item xs={12} md={4}>
+                  <Grid item xs={12} md={6}>
                     <Paper
                       sx={{
                         p: 3,
@@ -368,64 +337,6 @@ const TaskDetailDialog = ({
                       <Chip
                         label={item.is_active ? 'Active' : 'Inactive'}
                         color={item.is_active ? 'success' : 'error'}
-                        sx={{ fontWeight: 500 }}
-                      />
-                    </Paper>
-                  </Grid>
-
-                  <Grid item xs={12} md={4}>
-                    <Paper
-                      sx={{
-                        p: 3,
-                        bgcolor: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 2,
-                          mb: 2,
-                        }}
-                      >
-                        <Edit size={20} color="#7367F0" />
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                          Editable
-                        </Typography>
-                      </Box>
-                      <Chip
-                        label={item.is_editable ? 'Yes' : 'No'}
-                        color={item.is_editable ? 'success' : 'default'}
-                        sx={{ fontWeight: 500 }}
-                      />
-                    </Paper>
-                  </Grid>
-
-                  <Grid item xs={12} md={4}>
-                    <Paper
-                      sx={{
-                        p: 3,
-                        bgcolor: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 2,
-                          mb: 2,
-                        }}
-                      >
-                        <Trash2 size={20} color="#7367F0" />
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                          Deletable
-                        </Typography>
-                      </Box>
-                      <Chip
-                        label={item.is_deletable ? 'Yes' : 'No'}
-                        color={item.is_deletable ? 'success' : 'default'}
                         sx={{ fontWeight: 500 }}
                       />
                     </Paper>
@@ -505,95 +416,7 @@ const TaskDetailDialog = ({
                 </Grid>
               </Box>
 
-              {/* Additional Information */}
-              {(item.slug || item.root_slug || item.model_id || item.firm_id) && (
-                <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ mb: 3, color: '#374151', fontWeight: 600 }}
-                  >
-                    Additional Information
-                  </Typography>
 
-                  <Grid container spacing={3}>
-                    {item.slug && (
-                      <Grid item xs={12} md={6}>
-                        <Paper
-                          sx={{
-                            p: 3,
-                            bgcolor: '#f8fafc',
-                            border: '1px solid #e2e8f0',
-                          }}
-                        >
-                          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                            Slug
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                            {item.slug}
-                          </Typography>
-                        </Paper>
-                      </Grid>
-                    )}
-
-                    {item.model_id && (
-                      <Grid item xs={12} md={6}>
-                        <Paper
-                          sx={{
-                            p: 3,
-                            bgcolor: '#f8fafc',
-                            border: '1px solid #e2e8f0',
-                          }}
-                        >
-                          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                            Model ID
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                            {item.model_id}
-                          </Typography>
-                        </Paper>
-                      </Grid>
-                    )}
-
-                    {item.firm_id && (
-                      <Grid item xs={12} md={6}>
-                        <Paper
-                          sx={{
-                            p: 3,
-                            bgcolor: '#f8fafc',
-                            border: '1px solid #e2e8f0',
-                          }}
-                        >
-                          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                            Firm ID
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                            {item.firm_id}
-                          </Typography>
-                        </Paper>
-                      </Grid>
-                    )}
-
-                    {item.root_slug && (
-                      <Grid item xs={12} md={6}>
-                        <Paper
-                          sx={{
-                            p: 3,
-                            bgcolor: '#f8fafc',
-                            border: '1px solid #e2e8f0',
-                          }}
-                        >
-                          <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 1 }}>
-                            Root Slug
-                          </Typography>
-                          <Typography variant="body2" sx={{ color: '#6b7280' }}>
-                            {item.root_slug}
-                          </Typography>
-                        </Paper>
-                      </Grid>
-                    )}
-                  </Grid>
-                </Box>
-              )}
             </Stack>
           )}
         </DialogContent>
