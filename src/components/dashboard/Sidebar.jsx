@@ -219,6 +219,12 @@ const sidebarItems = [
         type: 'link',
         iconType: 'calendar',
       },
+      {
+        id: '/dashboard/setup/event-status',
+        label: 'Event Status',
+        type: 'link',
+        iconType: 'activity',
+      },
     ],
   },
   // {

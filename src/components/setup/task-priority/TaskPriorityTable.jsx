@@ -83,6 +83,7 @@ const TaskPriorityTable = ({
                 handleStatusChange(params.row.id, e.target.checked)
               }
               size="small"
+              disabled={params?.row?.is_editable === false}
             />
           </div>
         );

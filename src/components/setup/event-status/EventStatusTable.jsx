@@ -5,14 +5,21 @@ import { Pencil, CircleOff, Trash2, Eye } from 'lucide-react';
 import { noFilterColumns } from '@/utils/noFilterColumns';
 import { truncateStr } from '@/utils/truncateStr';
 
-const EventCategoryTable = ({
-  eventCategories = [],
+const EventStatusTable = ({
+  eventStatuses = [],
+  isLoading,
   handleEdit,
   handleDelete,
   handleStatusChange,
   handleView,
 }) => {
-  const [eventCategoryData, setEventCategoryData] = useState([]);
+  const [eventStatusData, setEventStatusData] = useState([]);
+
+  useEffect(() => {
+    if (eventStatuses && Array.isArray(eventStatuses)) {
+      setEventStatusData(eventStatuses);
+    }
+  }, [eventStatuses]);
 
   const columns = [
     {
@@ -183,12 +190,6 @@ const EventCategoryTable = ({
 
   const filteredColumns = noFilterColumns(columns);
 
-  useEffect(() => {
-    if (eventCategories && Array.isArray(eventCategories)) {
-      setEventCategoryData(eventCategories);
-    }
-  }, [eventCategories]);
-
   return (
     <>
       <Box
@@ -207,7 +208,7 @@ const EventCategoryTable = ({
         }}
       >
         <DataGrid
-          rows={eventCategoryData}
+          rows={eventStatusData}
           columns={filteredColumns}
           pageSize={10}
           rowsPerPageOptions={[5, 10, 25]}
@@ -295,4 +296,4 @@ const EventCategoryTable = ({
   );
 };
 
-export default EventCategoryTable;
+export default EventStatusTable;

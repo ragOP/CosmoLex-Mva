@@ -184,7 +184,10 @@ export const updateTaskStatus = (id, data) => {
 
 // Update task status status (is_active)
 export const updateTaskStatusStatus = (id, data) => {
-  return getSetupUpdateStatus(`${endpoints.updateTaskStatusStatus}/${id}`, data);
+  return getSetupUpdateStatus(
+    `${endpoints.updateTaskStatusStatus}/${id}`,
+    data
+  );
 };
 
 // Delete task status
@@ -216,7 +219,10 @@ export const updateTaskPriority = (id, data) => {
 
 // Update task priority status (is_active)
 export const updateTaskPriorityStatus = (id, data) => {
-  return getSetupUpdateStatus(`${endpoints.updateTaskPriorityStatus}/${id}`, data);
+  return getSetupUpdateStatus(
+    `${endpoints.updateTaskPriorityStatus}/${id}`,
+    data
+  );
 };
 
 // Delete task priority
@@ -248,7 +254,10 @@ export const updateTaskUTBMSCode = (id, data) => {
 
 // Update task UTBMS code status (is_active)
 export const updateTaskUTBMSCodeStatus = (id, data) => {
-  return getSetupUpdateStatus(`${endpoints.updateTaskUTBMSCodeStatus}/${id}`, data);
+  return getSetupUpdateStatus(
+    `${endpoints.updateTaskUTBMSCodeStatus}/${id}`,
+    data
+  );
 };
 
 // Delete task UTBMS code
@@ -280,10 +289,48 @@ export const updateEventCategory = (id, data) => {
 
 // Update event category status (is_active)
 export const updateEventCategoryStatus = (id, data) => {
-  return getSetupUpdateStatus(`${endpoints.updateEventCategoryStatus}/${id}`, data);
+  return getSetupUpdateStatus(
+    `${endpoints.updateEventCategoryStatus}/${id}`,
+    data
+  );
 };
 
 // Delete event category
 export const deleteEventCategory = (id) => {
   return getSetupDelete(`${endpoints.deleteEventCategory}/${id}`);
+};
+
+// Event Status-specific API functions using the reusable pattern
+
+// Get all event statuses
+export const getEventStatuses = () => {
+  return getSetup(endpoints.getEventStatus);
+};
+
+// Get single event status by ID
+export const getEventStatus = (id) => {
+  return getSetupShow(`${endpoints.showEventStatus}/${id}`);
+};
+
+// Create new event status
+export const createEventStatus = (data) => {
+  return getSetupStore(endpoints.storeEventStatus, data);
+};
+
+// Update event status
+export const updateEventStatus = (id, data) => {
+  return getSetupUpdate(`${endpoints.updateEventStatus}/${id}`, data);
+};
+
+// Update event status status (is_active)
+export const updateEventStatusStatus = (id, data) => {
+  return getSetupUpdateStatus(
+    `${endpoints.updateEventStatusStatus}/${id}`,
+    data
+  );
+};
+
+// Delete event status
+export const deleteEventStatus = (id) => {
+  return getSetupDelete(`${endpoints.deleteEventStatus}/${id}`);
 };

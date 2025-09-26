@@ -61,6 +61,7 @@ const TaskStatusPage = lazy(() => import('./pages/setup/task-status'));
 const TaskPriorityPage = lazy(() => import('./pages/setup/task-priority'));
 const TaskUTBMSCodePage = lazy(() => import('./pages/setup/task-utbms-code'));
 const EventCategoryPage = lazy(() => import('./pages/setup/event-category'));
+const EventStatus = lazy(() => import('./pages/setup/event-status'));
 
 const AppRouter = () => (
   <Router>
@@ -132,6 +133,7 @@ const AppRouter = () => (
           <Route path="setup/task-priority" element={<TaskPriorityPage />} />
           <Route path="setup/task-utbms-code" element={<TaskUTBMSCodePage />} />
           <Route path="setup/event-category" element={<EventCategoryPage />} />
+          <Route path="setup/event-status" element={<EventStatus />} />
         </Route>
         <Route path="/2fa" element={<TwoFactorPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />

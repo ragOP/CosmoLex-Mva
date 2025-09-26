@@ -145,4 +145,12 @@ export const endpoints = {
   storeEventCategory: 'v2/setup/master/store/event-category-id',
   updateEventCategory: 'v2/setup/master/update',
   updateEventCategoryStatus: 'v2/setup/master/updateStatus',
+
+  // Event Status
+  getEventStatus: 'v2/setup/master/list/event-status',
+  showEventStatus: 'v2/setup/master/show',
+  deleteEventStatus: 'v2/setup/master/delete',
+  storeEventStatus: 'v2/setup/master/store/event-status',
+  updateEventStatus: 'v2/setup/master/update',
+  updateEventStatusStatus: 'v2/setup/master/updateStatus',
 };

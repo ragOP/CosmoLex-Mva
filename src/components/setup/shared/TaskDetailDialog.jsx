@@ -30,32 +30,56 @@ import {
   updateTaskType,
   getTaskStatus,
   deleteTaskStatus,
-  updateTaskStatus
+  updateTaskStatus,
+  getEventStatus,
+  deleteEventStatus,
+  updateEventStatus
 } from '@/api/api_services/setup';
 import { toast } from 'sonner';
 import CreateTaskTypeDialog from '../task-type/CreateTaskTypeDialog';
 import CreateTaskStatusDialog from '../task-status/CreateTaskStatusDialog';
+import CreateEventStatusDialog from '../event-status/CreateEventStatusDialog';
 import { Button } from '@/components/ui/button';
 
 const TaskDetailDialog = ({ 
   open, 
   onClose, 
   itemId, 
-  type, // 'task-type' or 'task-status'
-  onRefresh 
+  type, // 'task-type', 'task-status', or 'event-status'
+  itemType, // For backward compatibility
+  onRefresh,
+  onEdit,
+  onDelete,
+  CreateDialog,
+  updateMutation: externalUpdateMutation,
+  deleteMutation: externalDeleteMutation
 }) => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const isTaskType = type === 'task-type';
-  const queryKey = isTaskType ? 'taskTypes' : 'taskStatuses';
-  const itemQueryKey = isTaskType ? 'taskType' : 'taskStatus';
+  // Support both type and itemType props for backward compatibility
+  const actualType = itemType || type;
+  
+  const isTaskType = actualType === 'task-type';
+  const isTaskStatus = actualType === 'task-status';
+  const isEventStatus = actualType === 'event-status';
+  
+  // Dynamic title based on type
+  const getItemTypeTitle = () => {
+    if (isTaskType) return "Task Type";
+    if (isTaskStatus) return "Task Status";
+    if (isEventStatus) return "Event Status";
+    return "Item";
+  };
+  
+  const queryKey = isTaskType ? 'taskTypes' : isTaskStatus ? 'taskStatuses' : 'eventStatuses';
+  const itemQueryKey = isTaskType ? 'taskType' : isTaskStatus ? 'taskStatus' : 'eventStatus';
   
   // API functions based on type
-  const getItemFn = isTaskType ? getTaskType : getTaskStatus;
-  const deleteItemFn = isTaskType ? deleteTaskType : deleteTaskStatus;
-  const updateItemFn = isTaskType ? updateTaskType : updateTaskStatus;
+  const getItemFn = isTaskType ? getTaskType : isTaskStatus ? getTaskStatus : getEventStatus;
+  const deleteItemFn = isTaskType ? deleteTaskType : isTaskStatus ? deleteTaskStatus : deleteEventStatus;
+  const updateItemFn = isTaskType ? updateTaskType : isTaskStatus ? updateTaskStatus : updateEventStatus;
 
   // Fetch item details
   const {
@@ -76,7 +100,7 @@ const TaskDetailDialog = ({
   const deleteMutation = useMutation({
     mutationFn: deleteItemFn,
     onSuccess: () => {
-      toast.success(`${isTaskType ? 'Task Type' : 'Task Status'} deleted successfully!`);
+      toast.success(`${getItemTypeTitle()} deleted successfully!`);
       queryClient.invalidateQueries([queryKey]);
       onRefresh?.();
       onClose();
@@ -91,7 +115,7 @@ const TaskDetailDialog = ({
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => updateItemFn(id, data),
     onSuccess: () => {
-      toast.success(`${isTaskType ? 'Task Type' : 'Task Status'} updated successfully!`);
+      toast.success(`${getItemTypeTitle()} updated successfully!`);
       queryClient.invalidateQueries([queryKey]);
       queryClient.invalidateQueries([itemQueryKey, itemId]);
       onRefresh?.();
@@ -168,7 +192,7 @@ const TaskDetailDialog = ({
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Settings size={24} color="#7367F0" />
               <Typography variant="h5" sx={{ fontWeight: 600, color: '#374151' }}>
-                {isTaskType ? 'Task Type' : 'Task Status'} Details
+                {getItemTypeTitle()} Details
               </Typography>
             </Box>
 
@@ -427,12 +451,12 @@ const TaskDetailDialog = ({
         <CreateTaskTypeDialog
           open={editDialogOpen}
           onClose={() => setEditDialogOpen(false)}
-          onSubmit={handleEditSubmit}
+          onSubmit={(data) => updateMutation.mutate({ id: itemId, data })}
           isLoading={updateMutation.isPending}
           editMode={true}
           editingTaskType={item}
         />
-      ) : (
+      ) : isTaskStatus ? (
         <CreateTaskStatusDialog
           open={editDialogOpen}
           onClose={() => setEditDialogOpen(false)}
@@ -440,6 +464,15 @@ const TaskDetailDialog = ({
           isLoading={updateMutation.isPending}
           editMode={true}
           editingTaskStatus={item}
+        />
+      ) : (
+        <CreateEventStatusDialog
+          open={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          onSubmit={handleEditSubmit}
+          isLoading={updateMutation.isPending}
+          editMode={true}
+          editingEventStatus={item}
         />
       )}
 
