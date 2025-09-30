@@ -10,6 +10,7 @@ export const endpoints = {
   formData: 'form-data',
   firmRegister: 'firm/register',
   resendVerification: 'firm/resend-link',
+  resendUserVerification: 'user/resend-verification',
   forgotPassword: 'forgot-password',
   resetPassword: 'reset-password',
   login: 'login',
@@ -97,6 +98,12 @@ export const endpoints = {
   deleteUser: 'v2/setup/users/delete',
   searchUser: 'v2/setup/users/search',
   updateUserStatus: 'v2/setup/users/status',
+
+  // Profile endpoints
+  getProfile: 'v2/profile/show',
+  updateProfile: 'v2/profile/update',
+  changePassword: 'v2/profile/change-password',
+  uploadProfilePicture: 'v2/profile/upload-picture',
 
   // Role
   getRoles: 'v2/setup/roles/list',

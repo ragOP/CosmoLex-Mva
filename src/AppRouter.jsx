@@ -11,8 +11,10 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 const LoginPage = lazy(() => import('./pages/Login'));
 const SignupPage = lazy(() => import('./pages/signup'));
 const VerificationPage = lazy(() => import('./pages/verification'));
+const UserVerifyPage = lazy(() => import('./pages/user-verify'));
 const TwoFactorPage = lazy(() => import('./pages/two-factor'));
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const ProfilePage = lazy(() => import('./pages/profile'));
 const ForgotPasswordPage = lazy(() => import('./pages/forget-password'));
 const ResetPasswordPage = lazy(() => import('./pages/reset-password'));
 const EmailVerifyPage = lazy(() => import('./pages/email-verify'));
@@ -71,6 +73,7 @@ const AppRouter = () => (
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/verification" element={<VerificationPage />} />
+        <Route path="/user-verify" element={<UserVerifyPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/email-verify" element={<EmailVerifyPage />} />
@@ -84,6 +87,7 @@ const AppRouter = () => (
         >
           <Route index element={<DashboardHome />} />
           <Route path="dashboard-form" element={<DashboardForm />} />
+          <Route path="profile" element={<ProfilePage />} />
           <Route path="tasks/" element={<TasksPage />} />
           <Route path="matter" element={<MatterPage />} />
           <Route path="user-management" element={<UserManagementPage />} />

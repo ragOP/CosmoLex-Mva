@@ -261,12 +261,12 @@ const sidebarItems = [
   //         { id: '/dashboard/crm/setup', label: 'Setup', fileType: 'file' },
   //     ],
   // },
-  // {
-  //     id: '/dashboard/profile',
-  //     label: 'My Profile',
-  //     type: 'link',
-  //     iconType: 'link',
-  // },
+  {
+    id: '/dashboard/profile',
+    label: 'My Profile',
+    type: 'link',
+    iconType: 'link',
+  },
 ];
 
 const inboxSidebarItems = [
