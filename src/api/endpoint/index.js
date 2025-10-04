@@ -3,8 +3,8 @@ export const isDev = () => {
 };
 
 export const BACKEND_URL = isDev()
-  ? 'https://maplelawpro.com/newapp/public/api'
-  : 'https://maplelawpro.com/newapp/public/api';
+  ? 'https://backend.vsrlaw.ca/api'
+  : 'https://backend.vsrlaw.ca/api';
 
 export const endpoints = {
   formData: 'form-data',

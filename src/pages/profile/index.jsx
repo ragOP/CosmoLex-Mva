@@ -39,9 +39,9 @@ import { Badge } from '@/components/ui/badge';
 import { Alert } from '@/components/ui/alert';
 import { Avatar } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
+// import { Switch } from '@/components/ui/switch';
 import { isMobile } from '@/utils/isMobile';
-import { formatDate } from '@/utils/formatDate';
+import formatDate from '@/utils/formatDate';
 import {
   updateProfile,
   changePassword,
@@ -572,14 +572,14 @@ const ProfilePage = () => {
                     Add an extra layer of security to your account
                   </p>
                 </div>
-                <Switch
+                {/* <Switch
                   id="two_factor"
                   checked={formData.two_factor_enabled}
                   onCheckedChange={(checked) =>
                     handleInputChange('two_factor_enabled', checked)
                   }
                   disabled={!isEditing}
-                />
+                /> */}
               </div>
             </CardContent>
           </Card>

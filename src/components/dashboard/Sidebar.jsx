@@ -25,6 +25,10 @@ import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import CustomRickTreeView from '../custom_tree_view/CustomRickTreeView';
 import { useLocation } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { getToken, decodeToken } from '@/utils/auth';
+import { getUserById } from '@/api/api_services/user';
+import { setUser } from '@/store/slices/authSlice';
 
 const typeToIcon = {
   file: File,
@@ -171,6 +175,104 @@ const sidebarItems = [
     iconType: 'link',
   },
 
+  // {
+  //   id: '/dashboard/setup',
+  //   label: 'Setup',
+  //   type: 'tree',
+  //   iconType: 'setup',
+  //   treeData: [
+  //     {
+  //       id: '/dashboard/setup/users',
+  //       label: 'Users',
+  //       type: 'link',
+  //       iconType: 'users',
+  //     },
+  //     {
+  //       id: '/dashboard/setup/roles',
+  //       label: 'Roles',
+  //       type: 'link',
+  //       iconType: 'roles',
+  //     },
+  //     {
+  //       id: '/dashboard/setup/task-types',
+  //       label: 'Task Type',
+  //       type: 'link',
+  //       iconType: 'tasks',
+  //     },
+  //     {
+  //       id: '/dashboard/setup/task-status',
+  //       label: 'Task Status',
+  //       type: 'link',
+  //       iconType: 'tasks',
+  //     },
+  //     {
+  //       id: '/dashboard/setup/task-priority',
+  //       label: 'Task Priority',
+  //       type: 'link',
+  //       iconType: 'tasks',
+  //     },
+  //     {
+  //       id: '/dashboard/setup/task-utbms-code',
+  //       label: 'Task UTBMS Code',
+  //       type: 'link',
+  //       iconType: 'tasks',
+  //     },
+  //     {
+  //       id: '/dashboard/setup/event-category',
+  //       label: 'Event Category',
+  //       type: 'link',
+  //       iconType: 'calendar',
+  //     },
+  //     {
+  //       id: '/dashboard/setup/event-status',
+  //       label: 'Event Status',
+  //       type: 'link',
+  //       iconType: 'activity',
+  //     },
+  //   ],
+  // },
+  // {
+  //   id: '/dashboard/matter-intake',
+  //   label: 'Intake',
+  //   type: 'link',
+  //   iconType: 'link',
+  // children: [
+  //   { id: '/dashboard/matter-intake', label: 'Intake', fileType: 'link' },
+  //   // { id: '5.2', label: 'Intake Status', fileType: 'file' },
+  //   // { id: '5.3', label: 'Intake History', fileType: 'file' },
+  // ],
+  // },
+  // {
+  //     id: 'crm',
+  //     label: 'CRM',
+  //     type: 'tree',
+  //     iconType: 'tree',
+  //     treeData: [
+  //         { id: '/dashboard/crm/launchpad', label: 'Launchpad', fileType: 'file' },
+  //         { id: '/dashboard/crm/inbox', label: 'Inbox', fileType: 'file' },
+  //         { id: '/dashboard/crm/new-intake', label: 'New Intake', fileType: 'file' },
+  //         { id: '/dashboard/crm/advanced-search', label: 'Advanced Search', fileType: 'file' },
+  //         { id: '/dashboard/crm/new-inquiries', label: 'New Inquiries', fileType: 'file' },
+  //         { id: '/dashboard/crm/text-messages', label: 'Text Messages', fileType: 'file' },
+  //         { id: '/dashboard/crm/tasks', label: 'Tasks', fileType: 'file' },
+  //         { id: '/dashboard/crm/calendar-events', label: 'Calendar Events', fileType: 'file' },
+  //         { id: '/dashboard/crm/newsfeed', label: 'Newsfeed', fileType: 'file' },
+  //         { id: '/dashboard/crm/contacts', label: 'Contacts', fileType: 'file' },
+  //         { id: '/dashboard/crm/reports', label: 'Reports', fileType: 'file' },
+  //         { id: '/dashboard/crm/documents', label: 'Documents', fileType: 'file' },
+  //         { id: '/dashboard/crm/automations', label: 'Automations', fileType: 'file' },
+  //         { id: '/dashboard/crm/email-marketing', label: 'Email Marketing', fileType: 'file' },
+  //         { id: '/dashboard/crm/setup', label: 'Setup', fileType: 'file' },
+  //     ],
+  // },
+  {
+    id: '/dashboard/profile',
+    label: 'My Profile',
+    type: 'link',
+    iconType: 'link',
+  },
+];
+const adminSidebarItems = [
   {
     id: '/dashboard/setup',
     label: 'Setup',
@@ -226,46 +328,6 @@ const sidebarItems = [
         iconType: 'activity',
       },
     ],
-  },
-  // {
-  //   id: '/dashboard/matter-intake',
-  //   label: 'Intake',
-  //   type: 'link',
-  //   iconType: 'link',
-  // children: [
-  //   { id: '/dashboard/matter-intake', label: 'Intake', fileType: 'link' },
-  //   // { id: '5.2', label: 'Intake Status', fileType: 'file' },
-  //   // { id: '5.3', label: 'Intake History', fileType: 'file' },
-  // ],
-  // },
-  // {
-  //     id: 'crm',
-  //     label: 'CRM',
-  //     type: 'tree',
-  //     iconType: 'tree',
-  //     treeData: [
-  //         { id: '/dashboard/crm/launchpad', label: 'Launchpad', fileType: 'file' },
-  //         { id: '/dashboard/crm/inbox', label: 'Inbox', fileType: 'file' },
-  //         { id: '/dashboard/crm/new-intake', label: 'New Intake', fileType: 'file' },
-  //         { id: '/dashboard/crm/advanced-search', label: 'Advanced Search', fileType: 'file' },
-  //         { id: '/dashboard/crm/new-inquiries', label: 'New Inquiries', fileType: 'file' },
-  //         { id: '/dashboard/crm/text-messages', label: 'Text Messages', fileType: 'file' },
-  //         { id: '/dashboard/crm/tasks', label: 'Tasks', fileType: 'file' },
-  //         { id: '/dashboard/crm/calendar-events', label: 'Calendar Events', fileType: 'file' },
-  //         { id: '/dashboard/crm/newsfeed', label: 'Newsfeed', fileType: 'file' },
-  //         { id: '/dashboard/crm/contacts', label: 'Contacts', fileType: 'file' },
-  //         { id: '/dashboard/crm/reports', label: 'Reports', fileType: 'file' },
-  //         { id: '/dashboard/crm/documents', label: 'Documents', fileType: 'file' },
-  //         { id: '/dashboard/crm/automations', label: 'Automations', fileType: 'file' },
-  //         { id: '/dashboard/crm/email-marketing', label: 'Email Marketing', fileType: 'file' },
-  //         { id: '/dashboard/crm/setup', label: 'Setup', fileType: 'file' },
-  //     ],
-  // },
-  {
-    id: '/dashboard/profile',
-    label: 'My Profile',
-    type: 'link',
-    iconType: 'link',
   },
 ];
 
@@ -339,12 +401,56 @@ function getIconForType(type) {
 const Sidebar = ({ isDrawer }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
   const [openTree, setOpenTree] = React.useState(null);
   const [hovered, setHovered] = React.useState(null);
   const [sidebarMode, setSidebarMode] = React.useState('default');
 
-  const itemsToRender =
-    sidebarMode === 'inbox' ? inboxSidebarItems : sidebarItems;
+  React.useEffect(() => {
+    const fetchUserData = async () => {
+      const token = getToken();
+      console.log('token>>>>>', token);
+
+      if (token && !user) {
+        try {
+          // Decode token
+          const decodedToken = decodeToken(token);
+          console.log('decodedToken>>>>>', decodedToken);
+
+          if (decodedToken && decodedToken.sub) {
+            // Fetch user data by ID
+            const userResponse = await getUserById(decodedToken.sub);
+            console.log('userResponse>>>>>', userResponse);
+
+            if (userResponse && userResponse.data) {
+              dispatch(setUser(userResponse.data));
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch user data:', error);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [dispatch, user]);
+
+  // check if user is admin
+  const isAdmin = user?.role_id === 1;
+  console.log('user>>>>>', user?.role_id, 'isAdmin:', isAdmin);
+
+  const getSidebarItems = () => {
+    if (sidebarMode === 'inbox') {
+      return inboxSidebarItems;
+    }
+
+    return isAdmin ? [...sidebarItems, ...adminSidebarItems] : sidebarItems;
+  };
+  const itemsToRender = getSidebarItems();
+
+  // const itemsToRender =
+  //   sidebarMode === 'inbox' ? inboxSidebarItems : sidebarItems;
 
   // const activeItems = location.pathname
   //   .split('/')
@@ -391,7 +497,7 @@ const Sidebar = ({ isDrawer }) => {
       >
         <img src="/brand-logo.png" alt="Logo" className="h-10 w-10" />
         <span className="text-xl font-bold text-white ml-3 self-center">
-          MVA
+          {user?.first_name || 'User'}
         </span>
       </div>
       <div className="flex flex-col gap-2">
