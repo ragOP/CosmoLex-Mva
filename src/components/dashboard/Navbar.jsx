@@ -21,12 +21,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Breadcrumb } from '@/components/breadcrumb/index';
 
 export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [loadingLogout, setLoadingLogout] = React.useState(false);
   const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
 
   const handleLogout = () => {
     setLoadingLogout(true);
@@ -104,7 +106,11 @@ export default function Navbar() {
               </div>
               <div className="hidden md:block text-left">
                 <span className="block text-sm font-semibold text-gray-800">
-                  Shibtain
+                  {user
+                    ? `${user.first_name || ''} ${
+                        user.last_name || ''
+                      }`.trim() || 'User'
+                    : 'User'}
                 </span>
               </div>
               <ChevronDown className="h-4 w-4 text-black" />

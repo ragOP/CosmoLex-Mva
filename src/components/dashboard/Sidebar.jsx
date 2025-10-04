@@ -497,7 +497,7 @@ const Sidebar = ({ isDrawer }) => {
       >
         <img src="/brand-logo.png" alt="Logo" className="h-10 w-10" />
         <span className="text-xl font-bold text-white ml-3 self-center">
-          {user?.first_name || 'User'}
+          MVA
         </span>
       </div>
       <div className="flex flex-col gap-2">
