@@ -268,12 +268,12 @@ export default function TaskDialog({
 
     // Required field validations
     // Backend requires contact_id and slug
-    if (!data.contact_id) {
-      errors.contact_id = 'Contact is required';
-    }
-    if (!data.slug) {
-      errors.slug = 'Slug is required';
-    }
+    // if (!data.contact_id) {
+    //   errors.contact_id = 'Contact is required';
+    // }
+    // if (!data.slug) {
+    //   errors.slug = 'Slug is required';
+    // }
 
     if (!data.type_id) {
       errors.type_id = 'Task type is required';
