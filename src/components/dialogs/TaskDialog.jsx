@@ -267,7 +267,13 @@ export default function TaskDialog({
     const errors = {};
 
     // Required field validations
-    // Note: contact_id and slug are now optional
+    // Backend requires contact_id and slug
+    if (!data.contact_id) {
+      errors.contact_id = 'Contact is required';
+    }
+    if (!data.slug) {
+      errors.slug = 'Slug is required';
+    }
 
     if (!data.type_id) {
       errors.type_id = 'Task type is required';
@@ -721,9 +727,10 @@ export default function TaskDialog({
                             name={name}
                             render={({ field }) => (
                               <Switch
-                                disabled={!contact}
                                 checked={field.value}
-                                onChange={field.onChange}
+                                onChange={(e, checked) =>
+                                  field.onChange(checked)
+                                }
                               />
                             )}
                           />
@@ -734,13 +741,13 @@ export default function TaskDialog({
                           name={name}
                           render={({ field }) => (
                             <Textarea
-                              disabled={!contact}
                               className="w-full bg-white"
                               minRows={3}
                               maxRows={5}
+                              value={field.value ?? ''}
                               {...field}
                               onChange={(e) => {
-                                field.onChange(e);
+                                field.onChange(e.target.value);
                                 // Clear validation error when user types
                                 if (validationErrors[name]) {
                                   setValidationErrors((prev) => ({
@@ -758,12 +765,12 @@ export default function TaskDialog({
                           name={name}
                           render={({ field }) => (
                             <Input
-                              disabled={!contact}
                               type={type}
+                              value={field.value ?? ''}
                               {...field}
                               maxLength={maxLength}
                               onChange={(e) => {
-                                field.onChange(e);
+                                field.onChange(e.target.value);
                                 // Clear validation error when user types
                                 if (validationErrors[name]) {
                                   setValidationErrors((prev) => ({

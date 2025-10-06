@@ -109,7 +109,7 @@ const GraphPage = () => {
                 headerName: 'ID',
                 flex: 0.4,
                 minWidth: 80,
-                sortable: false,
+                sortable: false,   
                 filterable: false,
               },
               {
