@@ -334,3 +334,15 @@ export const updateEventStatusStatus = (id, data) => {
 export const deleteEventStatus = (id) => {
   return getSetupDelete(`${endpoints.deleteEventStatus}/${id}`);
 };
+
+// Services (Graph/SMTP) - create/list utilities
+export const createService = (data) => {
+  // POST /api/v2/setup/services
+  return getSetupStore('v2/setup/services', data);
+};
+
+// Delete a service by ID
+export const deleteService = (id) => {
+  // DELETE /api/v2/setup/services/:id
+  return getSetupDelete(`v2/setup/services/${id}`);
+};

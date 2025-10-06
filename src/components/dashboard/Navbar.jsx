@@ -10,6 +10,7 @@ import {
   Share2,
   Settings,
   LogOut,
+  User,
 } from 'lucide-react';
 import Sidebar from './Sidebar';
 import MuiDrawer from '@mui/material/Drawer';
@@ -37,6 +38,10 @@ export default function Navbar() {
       localStorage.removeItem('authToken');
       navigate('/login');
     }, 1500);
+  };
+
+  const handleEditProfile = () => {
+    navigate('/dashboard/profile');
   };
 
   const items = [
@@ -125,6 +130,14 @@ export default function Navbar() {
               boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
             }}
           >
+            <DropdownMenuItem
+              onClick={handleEditProfile}
+              className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors text-gray-700 focus:text-gray-700"
+            >
+              <User className="h-4 w-4 text-gray-600" />
+              <span className="text-sm font-medium">Edit Profile</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="my-1" />
             <DropdownMenuItem
               onClick={handleLogout}
               disabled={loadingLogout}

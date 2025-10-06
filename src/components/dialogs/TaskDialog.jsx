@@ -158,11 +158,11 @@ export default function TaskDialog({
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [debouncedFromSearchTerm, setDebouncedFromSearchTerm] = useState('');
 
-    const { data: contacts, } = useQuery({
+  const { data: contacts } = useQuery({
     queryKey: ['contacts', slugId],
     queryFn: getContacts,
-    enabled: !!slugId
-  })
+    enabled: !!slugId,
+  });
 
   // Debounce effect for recipient search term
   useEffect(() => {
@@ -267,13 +267,7 @@ export default function TaskDialog({
     const errors = {};
 
     // Required field validations
-    if (!data.contact_id) {
-      errors.contact_id = 'Contact is required';
-    }
-
-    if (!data.slug) {
-      errors.slug = 'Contact slug is required';
-    }
+    // Note: contact_id and slug are now optional
 
     if (!data.type_id) {
       errors.type_id = 'Task type is required';
@@ -430,8 +424,10 @@ export default function TaskDialog({
       // Format the data for API
       const formattedData = {
         ...data,
-        contact_id: parseInt(data.contact_id) || data.contact_id,
-        slug: data.slug,
+        contact_id: data.contact_id
+          ? parseInt(data.contact_id) || data.contact_id
+          : null,
+        slug: data.slug || null,
         type_id: parseInt(data.type_id) || data.type_id,
         reminders: reminderFields.map((reminder, index) => ({
           // FIXED: Use dbId for existing reminders, undefined for new ones
@@ -575,11 +571,13 @@ export default function TaskDialog({
   // Auto-select contact from matter data when in matter context
   useEffect(() => {
     if (open && slugId && matterData?.matter?.contact_id && !isUpdateMode) {
-          const matterContact = contacts.find((contact) => contact.id === matterData?.matter?.contact_id);
-          setContact(matterContact);
-          setValue('contact_id', matterContact.id);
-          setValue('slug', slugId);
-      
+      const matterContact = contacts.find(
+        (contact) => contact.id === matterData?.matter?.contact_id
+      );
+      setContact(matterContact);
+      setValue('contact_id', matterContact.id);
+      setValue('slug', slugId);
+
       // Clear any validation errors for contact
       setValidationErrors((prev) => ({
         ...prev,
@@ -615,19 +613,24 @@ export default function TaskDialog({
                     <div className="flex items-center gap-2">
                       <Chip
                         label={contact?.contact_name}
-                        onDelete={slugId && matterData?.matter?.contact_id ? undefined : () => {
-                          setContact(null);
-                          setValue('contact_id', '');
-                          setValue('slug', '');
-                          setSearchDialogOpen(true);
-                        }}
+                        onDelete={
+                          slugId && matterData?.matter?.contact_id
+                            ? undefined
+                            : () => {
+                                setContact(null);
+                                setValue('contact_id', '');
+                                setValue('slug', '');
+                                setSearchDialogOpen(true);
+                              }
+                        }
                         deleteIcon={<X size={16} />}
                         size="small"
-                        sx={{ 
-                          bgcolor: '#e8f5e8', 
-                          color: '#2e7d32', 
+                        sx={{
+                          bgcolor: '#e8f5e8',
+                          color: '#2e7d32',
                           p: 1,
-                          opacity: slugId && matterData?.matter?.contact_id ? 0.7 : 1
+                          opacity:
+                            slugId && matterData?.matter?.contact_id ? 0.7 : 1,
                         }}
                       />
                     </div>
@@ -674,7 +677,6 @@ export default function TaskDialog({
                           name={name}
                           render={({ field }) => (
                             <Select
-                              disabled={!contact}
                               onValueChange={(value) => {
                                 field.onChange(value);
                                 // Clear validation error when user selects a value

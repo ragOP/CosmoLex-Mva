@@ -91,6 +91,7 @@ const ProfilePage = () => {
   // Initialize form data with user data
   useEffect(() => {
     if (user) {
+      console.log(user);
       setFormData({
         first_name: user.first_name || '',
         last_name: user.last_name || '',
@@ -148,6 +149,7 @@ const ProfilePage = () => {
         ...formData,
         user_id: user.id,
       });
+      console.log('response >>>', response);
 
       setMessage('Profile updated successfully!');
       setIsEditing(false);

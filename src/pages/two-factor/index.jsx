@@ -217,7 +217,7 @@ const TwoFactorPage = () => {
             >
               Didn't receive code? Resend OTP
             </button>
-          </div>
+          </div>34
 
           <CustomButton
             type="submit"

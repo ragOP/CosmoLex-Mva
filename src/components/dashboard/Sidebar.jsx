@@ -304,6 +304,12 @@ const adminSidebarItems = [
         iconType: 'tasks',
       },
       {
+        id: '/dashboard/setup/graph',
+        label: 'Graph',
+        type: 'link',
+        iconType: 'graph',
+      },
+      {
         id: '/dashboard/setup/task-priority',
         label: 'Task Priority',
         type: 'link',
@@ -487,7 +493,7 @@ const Sidebar = ({ isDrawer }) => {
 
   return (
     <aside
-      className={`bg-black   shadow h-full w-64 flex-shrink-0 flex flex-col p-4 ${
+      className={`bg-white shadow h-full w-64 flex-shrink-0 flex flex-col p-4 border-r border-gray-200 ${
         isDrawer ? '' : 'hidden md:flex'
       }`}
     >
@@ -496,7 +502,7 @@ const Sidebar = ({ isDrawer }) => {
         className="flex p-4 mb-4 cursor-pointer hover:scale-102 transition"
       >
         <img src="/brand-logo.png" alt="Logo" className="h-10 w-10" />
-        <span className="text-xl font-bold text-white ml-3 self-center">
+        <span className="text-xl font-bold text-gray-800 ml-3 self-center">
           MVA
         </span>
       </div>
@@ -504,23 +510,13 @@ const Sidebar = ({ isDrawer }) => {
         {itemsToRender.map((item) => (
           <React.Fragment key={item.id}>
             <button
-              className={`flex items-center w-full px-4 py-2 rounded transition font-medium text-white ${
+              className={`flex items-center w-full px-4 py-2 rounded transition font-medium ${
                 openTree === item.id ||
                 hovered === item.id ||
                 activeItem?.id === item.id
-                  ? 'text-white'
-                  : ''
+                  ? 'text-white bg-blue-600'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
               }`}
-              style={
-                openTree === item.id ||
-                hovered === item.id ||
-                activeItem?.id === item.id
-                  ? {
-                      background:
-                        'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
-                    }
-                  : {}
-              }
               onClick={() => handleItemClick(item)}
               onMouseEnter={() => setHovered(item.id)}
               onMouseLeave={() => setHovered(null)}
