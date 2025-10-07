@@ -22,13 +22,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { Breadcrumb } from '@/components/breadcrumb/index';
+import { getProfile } from '@/api/api_services/profile';
+import { setUser } from '@/store/slices/authSlice';
 
 export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [loadingLogout, setLoadingLogout] = React.useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
   const handleLogout = () => {
@@ -43,6 +46,27 @@ export default function Navbar() {
   const handleEditProfile = () => {
     navigate('/dashboard/profile');
   };
+
+  // Fetch user profile data
+  const fetchUserProfile = React.useCallback(async () => {
+    if (!user?.id) return;
+
+    try {
+      const profileData = await getProfile();
+      if (profileData && Object.keys(profileData).length > 0) {
+        dispatch(setUser({ ...user, ...profileData }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+    }
+  }, [user, dispatch]);
+
+  // Fetch profile on component mount and when user changes
+  React.useEffect(() => {
+    if (user?.id) {
+      fetchUserProfile();
+    }
+  }, [user?.id, fetchUserProfile]);
 
   const items = [
     { label: 'Dashboard', href: '/dashboard' },
@@ -102,11 +126,23 @@ export default function Navbar() {
               }}
             >
               <div className="relative">
-                <img
-                  src="https://randomuser.me/api/portraits/men/32.jpg"
-                  alt="User Avatar"
-                  className="h-8 w-8 rounded-full object-cover shadow-lg border-2 border-white/50"
-                />
+                {user?.profile_picture ? (
+                  <img
+                    src={
+                      user.profile_picture.startsWith('http')
+                        ? user.profile_picture
+                        : `https://backend.vsrlaw.ca/storage/user_profiles/${user.profile_picture}`
+                    }
+                    alt="User Avatar"
+                    className="h-8 w-8 rounded-full object-cover shadow-lg border-2 border-white/50"
+                    onError={(e) => {
+                      // Fallback to initials if image fails to load
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+
                 <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
               </div>
               <div className="hidden md:block text-left">

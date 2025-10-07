@@ -37,7 +37,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert } from '@/components/ui/alert';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { BACKEND_URL } from '@/api/endpoint';
 import { Separator } from '@/components/ui/separator';
 // import { Switch } from '@/components/ui/switch';
 import { isMobile } from '@/utils/isMobile';
@@ -60,6 +61,7 @@ const ProfilePage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [selectedProfileFile, setSelectedProfileFile] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -91,7 +93,7 @@ const ProfilePage = () => {
   // Initialize form data with user data
   useEffect(() => {
     if (user) {
-      console.log(user);
+      console.log(user, '<<<<<<userData');
       setFormData({
         first_name: user.first_name || '',
         last_name: user.last_name || '',
@@ -145,17 +147,36 @@ const ProfilePage = () => {
     setMessage('');
 
     try {
-      const response = await updateProfile({
-        ...formData,
-        user_id: user.id,
-      });
-      console.log('response >>>', response);
+      let payload;
+      if (selectedProfileFile) {
+        const fd = new FormData();
+        Object.entries({ ...formData, user_id: user.id }).forEach(([k, v]) => {
+          if (v === undefined || v === null) return;
+          if (typeof v === 'boolean') {
+            fd.append(k, v ? '1' : '0');
+            return;
+          }
+          fd.append(k, v);
+        });
+        fd.append('profile_picture', selectedProfileFile);
+        payload = fd;
+      } else {
+        payload = { ...formData, user_id: user.id };
+      }
+
+      const updated = await updateProfile(payload);
+      console.log('updated >>>', updated);
 
       setMessage('Profile updated successfully!');
       setIsEditing(false);
 
       // Update user in Redux store
-      dispatch(setUser({ ...user, ...formData }));
+      if (updated && typeof updated === 'object') {
+        dispatch(setUser({ ...user, ...updated }));
+      } else {
+        dispatch(setUser({ ...user, ...formData }));
+      }
+      setSelectedProfileFile(null);
     } catch (error) {
       console.error('Profile update error:', error);
       setError(
@@ -244,6 +265,12 @@ const ProfilePage = () => {
   }
 
   const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
+  const storageHost = BACKEND_URL.replace('/api', '');
+  const profilePictureSrc = user.profile_picture
+    ? user.profile_picture.startsWith('http')
+      ? user.profile_picture
+      : `${storageHost}/storage/user_profiles/${user.profile_picture}`
+    : null;
   const fullAddress = [
     user.street_number,
     user.street_name,
@@ -330,24 +357,45 @@ const ProfilePage = () => {
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative">
                   <Avatar className="w-24 h-24 text-2xl font-semibold">
-                    {user.profile_picture ? (
-                      <img
-                        src={user.profile_picture}
+                    {user.profile_picture && (
+                      <AvatarImage
+                        src={profilePictureSrc || user.profile_picture}
                         alt={fullName}
-                        className="w-full h-full object-cover rounded-full"
                       />
-                    ) : (
-                      `${user.first_name?.[0] || ''}${
-                        user.last_name?.[0] || ''
-                      }`
                     )}
+                    <AvatarFallback>
+                      {`${user.first_name?.[0] || ''}${
+                        user.last_name?.[0] || ''
+                      }`}
+                    </AvatarFallback>
                   </Avatar>
                   {isEditing && (
-                    <Button
-                      size="sm"
-                      className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
-                      icon={Camera}
-                    />
+                    <>
+                      <input
+                        id="profile_picture_input"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files && e.target.files[0];
+                          if (file) setSelectedProfileFile(file);
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="secondary"
+                        aria-label="Change profile picture"
+                        className="absolute -bottom-2 -right-2 rounded-full z-10"
+                        onClick={() =>
+                          document
+                            .getElementById('profile_picture_input')
+                            ?.click()
+                        }
+                      >
+                        <Camera className="w-4 h-4" />
+                      </Button>
+                    </>
                   )}
                 </div>
                 <div>

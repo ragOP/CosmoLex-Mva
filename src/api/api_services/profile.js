@@ -16,12 +16,18 @@ export const getProfile = async () => {
 export const updateProfile = async (profileData) => {
   const response = await apiService({
     endpoint: endpoints.updateProfile,
-    method: 'PUT',
+    method: 'POST',
     data: profileData,
   });
-  if (response.response?.Apistatus === false)
-    throw new Error(response.response.message);
-  return response.response?.data;
+  // Ensure we throw on any unsuccessful outcome or missing response
+  const apiRes = response?.response;
+  if (!apiRes) {
+    throw new Error('No response from server');
+  }
+  if (apiRes.Apistatus !== true) {
+    throw new Error(apiRes.message || 'Failed to update profile');
+  }
+  return apiRes.data;
 };
 
 // Change user password

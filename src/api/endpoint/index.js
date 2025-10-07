@@ -101,7 +101,7 @@ export const endpoints = {
 
   // Profile endpoints
   getProfile: 'v2/profile/show',
-  updateProfile: 'v2/profile/update',
+  updateProfile: 'v2/update-profile',
   changePassword: 'v2/profile/change-password',
   uploadProfilePicture: 'v2/profile/upload-picture',
 
