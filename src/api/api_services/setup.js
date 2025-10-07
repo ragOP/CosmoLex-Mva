@@ -346,3 +346,9 @@ export const deleteService = (id) => {
   // DELETE /api/v2/setup/services/:id
   return getSetupDelete(`v2/setup/services/${id}`);
 };
+
+// Update a service by ID
+export const updateService = (id, data) => {
+  // PUT /api/v2/setup/services/:id
+  return getSetupUpdate(`v2/setup/services/${id}`, data);
+};

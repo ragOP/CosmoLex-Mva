@@ -52,7 +52,8 @@ const AdvancedSearchPage = lazy(() =>
   import('./components/advancedSearch/AdvancedSearch')
 );
 const AdvancedSearch = () => <AdvancedSearchPage />;
-const ActivityLogs = () => <ErrorPage pageName="Activity Logs" />;
+const ActivityLogsPage = lazy(() => import('./components/inbox/ActivityLogs'));
+const ActivityLogs = () => <ActivityLogsPage />;
 const UsersPage = lazy(() => import('./pages/users'));
 const ContactPage = lazy(() => import('./pages/contact'));
 

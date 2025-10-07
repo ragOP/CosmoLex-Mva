@@ -13,15 +13,19 @@ import { getSetup } from '@/api/api_services/setup';
 import { createService } from '@/api/api_services/setup';
 import { deleteService } from '@/api/api_services/setup';
 // Chart imports removed
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Pencil } from 'lucide-react';
 import { DataGrid } from '@mui/x-data-grid';
 import CreateServiceDialog from './CreateServiceDialog';
+import UpdateServiceDialog from './UpdateServiceDialog';
 import { useTheme, useMediaQuery } from '@mui/material';
 import Button from '@/components/Button';
 import { getTableWidth } from '@/utils/isMobile';
+import { updateService } from '@/api/api_services/setup';
 
 const GraphPage = () => {
   const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedService, setSelectedService] = useState(null);
   const queryClient = useQueryClient();
   const theme = useTheme();
   const isSmDown = useMediaQuery(theme.breakpoints.down('sm'));
@@ -54,6 +58,15 @@ const GraphPage = () => {
     onSuccess: async () => {
       await queryClient.invalidateQueries(['setup-services-list']);
       setCreateOpen(false);
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, payload }) => updateService(id, payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries(['setup-services-list']);
+      setEditOpen(false);
+      setSelectedService(null);
     },
   });
 
@@ -109,7 +122,37 @@ const GraphPage = () => {
                 headerName: 'ID',
                 flex: 0.4,
                 minWidth: 80,
-                sortable: false,   
+                sortable: false,
+                filterable: false,
+              },
+              {
+                field: 'edit',
+                headerName: 'Edit',
+                flex: 0.4,
+                minWidth: 70,
+                headerClassName:
+                  'uppercase text-[#40444D] font-semibold text-xs',
+                headerAlign: 'center',
+                align: 'center',
+                renderCell: (params) => {
+                  if (!params || !params.row) return null;
+                  const svc = services.find((s) => s.id === params.row.id);
+                  return (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <IconButton
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedService(svc || null);
+                          setEditOpen(true);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <Pencil className="h-4 w-4 text-blue-600" />
+                      </IconButton>
+                    </div>
+                  );
+                },
+                sortable: false,
                 filterable: false,
               },
               {
@@ -152,6 +195,7 @@ const GraphPage = () => {
                 sortable: false,
                 filterable: false,
               },
+
               {
                 field: 'delete',
                 headerName: 'Delete',
@@ -213,6 +257,22 @@ const GraphPage = () => {
           createMutation.mutate(payload, { onSuccess: close })
         }
         isLoading={createMutation.isPending}
+      />
+
+      <UpdateServiceDialog
+        open={editOpen}
+        onClose={() => {
+          setEditOpen(false);
+          setSelectedService(null);
+        }}
+        service={selectedService}
+        onSubmit={(payload, close) =>
+          updateMutation.mutate(
+            { id: selectedService?.id, payload },
+            { onSuccess: close }
+          )
+        }
+        isLoading={updateMutation.isPending}
       />
     </div>
   );

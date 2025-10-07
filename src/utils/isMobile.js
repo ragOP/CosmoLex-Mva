@@ -1,5 +1,3 @@
-import { useMediaQuery } from '@mui/material';
-
 // Mobile detection utility
 export const isMobile = () => {
   if (typeof window === 'undefined') return false;
@@ -18,8 +16,9 @@ export const getScreenSize = () => {
 };
 
 export const getTableWidth = () => {
-  const isMobile = useMediaQuery('(max-width:600px)');
-  const isTablet = useMediaQuery('(max-width:1024px)');
-
+  if (typeof window === 'undefined') return '100%';
+  const width = window.innerWidth;
+  const isMobile = width <= 600;
+  const isTablet = width <= 1024;
   return isMobile ? '100vw' : isTablet ? 'calc(100vw - 256px)' : '100%';
 };
