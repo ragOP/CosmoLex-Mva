@@ -18,8 +18,20 @@ export const getScreenSize = () => {
 };
 
 export const getTableWidth = () => {
-  const isMobile = useMediaQuery('(max-width:600px)');
-  const isTablet = useMediaQuery('(max-width:1024px)');
+  // Breakpoints aligned with common device sizes
+  const isXs = useMediaQuery('(max-width:600px)'); // phones
+  const isSmMd = useMediaQuery('(min-width:601px) and (max-width:1200px)'); // small tablets to small laptops
+  const isLgUp = useMediaQuery('(min-width:1201px)'); // large laptops and desktops
 
-  return isMobile ? '100vw' : isTablet ? 'calc(100vw - 256px)' : '100%';
+  // On phones, use full viewport width
+  if (isXs) return '100vw';
+
+  // On tablets and small laptops, subtract sidebar width to avoid overflow
+  if (isSmMd) return 'calc(100vw - 256px)';
+
+  // On large screens, also subtract sidebar width for consistent layout
+  if (isLgUp) return 'calc(100vw - 256px)';
+
+  // Fallback
+  return '100%';
 };
