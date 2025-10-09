@@ -115,8 +115,13 @@ export const useTasks = () => {
   const uploadFileMutation = useMutation({
     mutationFn: (fileData) => uploadTaskFile(fileData),
     onSuccess: () => {
-      if (selectedTask)
-        queryClient.invalidateQueries(['tasks', selectedTask.id]);
+      // Ensure the single task query refetches so attachments appear in details
+      if (taskId) {
+        queryClient.invalidateQueries(['task', taskId]);
+      }
+      if (selectedTask) {
+        queryClient.invalidateQueries(['task', selectedTask.id]);
+      }
       toast.success('File uploaded successfully');
     },
     onError: (error) => {
@@ -197,7 +202,6 @@ export const useTasks = () => {
 
   const handleCreateComment = useCallback(
     (commentData) => {
-      console.log('commentData', commentData);
       createCommentMutation.mutateAsync(commentData);
     },
     [createCommentMutation]

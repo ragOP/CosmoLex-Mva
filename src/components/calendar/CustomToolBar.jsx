@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { setQueryParam } from '@/utils/setQueryParam';
 import { useSearchParams } from 'react-router-dom';
 import { useMatter } from '@/components/inbox/MatterContext';
+import { useSelector } from 'react-redux';
 
 const CustomToolBar = ({
   onNavigate,
@@ -19,15 +20,22 @@ const CustomToolBar = ({
   const navigate = useNavigate();
   const [selectedUser, setSelectedUser] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user: currentUser } = useSelector((state) => state.auth);
 
   const slugId = searchParams.get('slugId');
 
-useEffect(() => {
-  if (slugId && users.length > 0) {
-    setSelectedUser(users[0].id);
-  }
-}, [slugId, users]);
-
+  useEffect(() => {
+    if (users.length > 0) {
+      // If current user is available and exists in users list, select them
+      if (currentUser?.id && users.find((user) => user.id === currentUser.id)) {
+        setSelectedUser(currentUser.id);
+        setQueryParam('userId', currentUser.id, setSearchParams, searchParams);
+      } else if (slugId) {
+        // Fallback to first user if slugId is present and current user not found
+        setSelectedUser(users[0].id);
+      }
+    }
+  }, [slugId, users, currentUser, setSearchParams, searchParams]);
 
   return (
     <Box
@@ -64,13 +72,13 @@ useEffect(() => {
           displayEmpty
           size="small"
           IconComponent={ChevronDown}
-          sx={{ 
+          sx={{
             minWidth: 200,
-            opacity: slugId ? 0.7 : 1
+            opacity: slugId ? 0.7 : 1,
           }}
         >
           <MenuItem value="" disabled>
-           Select User
+            Select User
           </MenuItem>
           {users.map((user) => (
             <MenuItem key={user.id} value={user.id}>

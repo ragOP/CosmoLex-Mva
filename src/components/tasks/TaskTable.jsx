@@ -227,8 +227,6 @@ const TaskTable = ({
         <IconButton
           onClick={(e) => {
             e.stopPropagation();
-
-            console.log('params.row', params);
             onRowClick(params);
           }}
           className="cursor-pointer"
@@ -309,7 +307,7 @@ const TaskTable = ({
         sx={{
           height: '100%',
           width: getTableWidth(),
-          overflow: 'auto',
+          overflowX: 'auto',
           p: 2,
         }}
       >
@@ -335,7 +333,7 @@ const TaskTable = ({
               backgroundColor: 'black',
               color: 'white',
               borderRadius: '2rem',
-              overflow: 'hidden',
+
               border: 'none',
               marginBottom: '1rem',
             },
@@ -372,7 +370,6 @@ const TaskTable = ({
               borderRadius: '2rem',
               backgroundColor: 'white',
               marginBottom: '0.5rem',
-              overflow: 'hidden',
             },
 
             // FOOTER

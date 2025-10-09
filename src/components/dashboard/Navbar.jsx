@@ -59,7 +59,7 @@ export default function Navbar() {
     } catch (error) {
       console.error('Failed to fetch user profile:', error);
     }
-  }, [user, dispatch]);
+  }, []);
 
   // Fetch profile on component mount and when user changes
   React.useEffect(() => {

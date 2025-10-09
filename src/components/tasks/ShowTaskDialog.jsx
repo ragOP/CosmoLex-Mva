@@ -98,8 +98,22 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
     trigger_appointment_reminders,
     assignees = [],
     reminders = [],
-    attachments = [],
   } = task;
+
+  // Support multiple API shapes for attachments container
+  const rawAttachments =
+    task?.attachments ||
+    task?.files ||
+    task?.task_files ||
+    task?.task_attachments ||
+    [];
+
+  // Normalize attachments to support different API shapes
+  const normalizedAttachments = (rawAttachments || []).map((att) => ({
+    id: att?.id || att?.attachment_id || att?.file_id,
+    file_path: att?.file_path || att?.url || att?.fileUrl,
+    file_name: att?.file_name || att?.name || att?.filename,
+  }));
 
   const priorityName = mapMetaValue(tasksMeta?.taks_priority, priority_id);
   const statusName = mapMetaValue(tasksMeta?.taks_status, status_id);
@@ -258,13 +272,13 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
               <h3 className="text-lg font-semibold text-[#40444D] mb-2">
                 Attachments
               </h3>
-              {attachments.length === 0 && (
+              {normalizedAttachments.length === 0 && (
                 <p className="text-muted-foreground">
                   No attachments uploaded.
                 </p>
               )}
               <div className="grid grid-cols-2 gap-3">
-                {attachments.map((file) => (
+                {normalizedAttachments.map((file) => (
                   <Card
                     key={file.id}
                     className="p-2 flex items-center gap-2 shadow-sm"

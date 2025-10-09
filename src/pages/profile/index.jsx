@@ -40,7 +40,7 @@ import { Alert } from '@/components/ui/alert';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { BACKEND_URL } from '@/api/endpoint';
 import { Separator } from '@/components/ui/separator';
-// import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { isMobile } from '@/utils/isMobile';
 import formatDate from '@/utils/formatDate';
 import {
@@ -62,6 +62,7 @@ const ProfilePage = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [selectedProfileFile, setSelectedProfileFile] = useState(null);
+  const [profilePreviewUrl, setProfilePreviewUrl] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -127,6 +128,15 @@ const ProfilePage = () => {
     }
   }, [error]);
 
+  // Cleanup preview URL on component unmount
+  useEffect(() => {
+    return () => {
+      if (profilePreviewUrl) {
+        URL.revokeObjectURL(profilePreviewUrl);
+      }
+    };
+  }, [profilePreviewUrl]);
+
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
@@ -177,6 +187,11 @@ const ProfilePage = () => {
         dispatch(setUser({ ...user, ...formData }));
       }
       setSelectedProfileFile(null);
+      // Clean up preview URL
+      if (profilePreviewUrl) {
+        URL.revokeObjectURL(profilePreviewUrl);
+        setProfilePreviewUrl(null);
+      }
     } catch (error) {
       console.error('Profile update error:', error);
       setError(
@@ -245,6 +260,12 @@ const ProfilePage = () => {
     });
     setError('');
     setMessage('');
+    // Clean up preview URL when cancelling
+    if (profilePreviewUrl) {
+      URL.revokeObjectURL(profilePreviewUrl);
+      setProfilePreviewUrl(null);
+    }
+    setSelectedProfileFile(null);
   };
 
   if (!user) {
@@ -357,9 +378,13 @@ const ProfilePage = () => {
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative">
                   <Avatar className="w-24 h-24 text-2xl font-semibold">
-                    {user.profile_picture && (
+                    {(profilePreviewUrl || user.profile_picture) && (
                       <AvatarImage
-                        src={profilePictureSrc || user.profile_picture}
+                        src={
+                          profilePreviewUrl ||
+                          profilePictureSrc ||
+                          user.profile_picture
+                        }
                         alt={fullName}
                       />
                     )}
@@ -378,7 +403,12 @@ const ProfilePage = () => {
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files && e.target.files[0];
-                          if (file) setSelectedProfileFile(file);
+                          if (file) {
+                            setSelectedProfileFile(file);
+                            // Create preview URL for the selected file
+                            const previewUrl = URL.createObjectURL(file);
+                            setProfilePreviewUrl(previewUrl);
+                          }
                         }}
                       />
                       <Button
@@ -622,14 +652,19 @@ const ProfilePage = () => {
                     Add an extra layer of security to your account
                   </p>
                 </div>
-                {/* <Switch
-                  id="two_factor"
-                  checked={formData.two_factor_enabled}
-                  onCheckedChange={(checked) =>
-                    handleInputChange('two_factor_enabled', checked)
-                  }
-                  disabled={!isEditing}
-                /> */}
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="two_factor"
+                    checked={!!formData.two_factor_enabled}
+                    onCheckedChange={(checked) =>
+                      handleInputChange('two_factor_enabled', Boolean(checked))
+                    }
+                    disabled={!isEditing}
+                  />
+                  <Label htmlFor="two_factor" className="text-sm text-gray-700">
+                    {formData.two_factor_enabled ? 'Enabled' : 'Disabled'}
+                  </Label>
+                </div>
               </div>
             </CardContent>
           </Card>

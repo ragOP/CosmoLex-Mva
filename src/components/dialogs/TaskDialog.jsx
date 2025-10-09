@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -150,6 +150,7 @@ export default function TaskDialog({
 
   // Upload media
   const [showUploadMediaDialog, setShowUploadMediaDialog] = useState(false);
+  const [attachments, setAttachments] = useState([]);
 
   // Validation errors state
   const [validationErrors, setValidationErrors] = useState({});
@@ -158,10 +159,10 @@ export default function TaskDialog({
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [debouncedFromSearchTerm, setDebouncedFromSearchTerm] = useState('');
 
-  const { data: contacts } = useQuery({
-    queryKey: ['contacts', slugId],
+  const { data: contacts = [] } = useQuery({
+    queryKey: ['contacts'],
     queryFn: getContacts,
-    enabled: !!slugId,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Debounce effect for recipient search term
@@ -182,20 +183,27 @@ export default function TaskDialog({
     return () => clearTimeout(timer);
   }, [fromSearchTerm]);
 
-  const { data: taskSearchResults, isLoading: taskLoading } = useQuery({
-    queryKey: ['task-search', debouncedSearchTerm],
-    queryFn: () =>
-      searchTask({ searchBar: debouncedSearchTerm, contact_type_id: '' }, 1),
-    enabled: open && debouncedSearchTerm.length > 0,
-  });
+  // Build a filtered contacts list for the search dialog
+  const filteredContacts = useMemo(() => {
+    if (!Array.isArray(contacts)) return [];
+    const term = (searchTerm || '').toLowerCase().trim();
+    if (!term) return contacts;
+    return contacts.filter((c) => {
+      const name = (c.contact_name || '').toLowerCase();
+      const email = (c.primary_email || '').toLowerCase();
+      return name.includes(term) || email.includes(term);
+    });
+  }, [contacts, searchTerm]);
 
   const {
     tasksMeta,
     task: taskFromHook,
     createTask,
     updateTask,
+    uploadTaskFile,
     isCreating,
     isUpdating,
+    isUploadingFile,
     handleDeleteReminder,
     isDeletingReminder,
   } = useTasks();
@@ -388,6 +396,36 @@ export default function TaskDialog({
     }));
   };
 
+  // Upload attachment handler
+  const handleUploadSubmit = async (payload) => {
+    try {
+      const files = payload.files;
+
+      // Create FormData for each file
+      for (const fileItem of files) {
+        const formData = new FormData();
+
+        // Add file metadata
+        formData.append('category_id', payload.category_id);
+        formData.append('folder_id', payload.folder_id);
+        formData.append('description', payload.description);
+        formData.append('attachment', fileItem.file);
+
+        // Upload the file
+        const uploadedFile = await uploadTaskFile(formData);
+
+        // Add to attachments list
+        setAttachments((prev) => [...prev, uploadedFile]);
+      }
+
+      toast.success('Files uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      toast.error(error?.message || 'Failed to upload files');
+      throw error; // Re-throw to let UploadMediaDialog handle the error display
+    }
+  };
+
   const handleEditReminder = (reminder, index) => {
     setEditingReminder({
       ...reminder,
@@ -450,6 +488,11 @@ export default function TaskDialog({
           : null, // Send null instead of undefined
         priority_id: parseInt(data.priority_id) || data.priority_id,
         status_id: parseInt(data.status_id) || data.status_id,
+        // Include attachment IDs if any files were uploaded
+        attachment_ids: attachments
+          .filter(Boolean)
+          .map((att) => att?.attachment_id || att?.id)
+          .filter(Boolean),
       };
 
       if (isUpdateMode) {
@@ -940,6 +983,45 @@ export default function TaskDialog({
 
             <Divider />
 
+            {/* Attachments Section */}
+            {attachments.filter(Boolean).length > 0 && (
+              <div className="px-6 py-2">
+                <Label className="text-[#40444D] font-semibold mb-2 block">
+                  Attachments ({attachments.filter(Boolean).length})
+                </Label>
+                <div className="space-y-2">
+                  {attachments.filter(Boolean).map((attachment, index) => (
+                    <div
+                      key={attachment?.id || index}
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded border"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Paperclip size={16} className="text-gray-600" />
+                        <span className="text-sm text-gray-700">
+                          {attachment?.name ||
+                            attachment?.file_name ||
+                            `Attachment ${index + 1}`}
+                        </span>
+                      </div>
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          setAttachments((prev) =>
+                            prev.filter((item, i) => item !== attachment)
+                          );
+                        }}
+                        sx={{ p: 0.5 }}
+                      >
+                        <X size={14} />
+                      </IconButton>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Divider />
+
             <div className="flex items-center justify-between p-4 gap-2">
               <Stack direction="row" alignItems="center" spacing={1}>
                 <label htmlFor="attachment-input">
@@ -1001,9 +1083,8 @@ export default function TaskDialog({
       <UploadMediaDialog
         open={showUploadMediaDialog}
         onClose={() => setShowUploadMediaDialog(false)}
-        onSubmit={(payload) => {
-          console.log(payload);
-        }}
+        onSubmit={handleUploadSubmit}
+        isLoading={isUploadingFile}
       />
 
       <SearchDialog
@@ -1012,17 +1093,16 @@ export default function TaskDialog({
         title="Select Contact"
         searchPlaceholder="Search contacts..."
         maxWidth="sm"
-        items={taskSearchResults}
-        selectedItems={currentTask?.contact_id || []}
-        loading={taskLoading}
+        items={filteredContacts}
+        selectedItems={contact ? [contact] : []}
+        loading={false}
         searchTerm={searchTerm}
-        onSearchChange={(searchTerm) => setSearchTerm(searchTerm)}
+        onSearchChange={(val) => setSearchTerm(val)}
         onItemSelect={(item) => {
           setContact(item);
           setSearchDialogOpen(false);
           setValue('contact_id', item.id);
           setValue('slug', item.slug);
-          // Clear validation error when contact is selected
           if (validationErrors.contact_id) {
             setValidationErrors((prev) => ({
               ...prev,
@@ -1031,8 +1111,7 @@ export default function TaskDialog({
             }));
           }
         }}
-        onItemDeselect={(item) => {
-          console.log(item);
+        onItemDeselect={() => {
           setContact(null);
           setSearchDialogOpen(false);
           setValue('contact_id', '');
@@ -1042,20 +1121,22 @@ export default function TaskDialog({
         getItemDisplay={(item) => ({
           primary: item.contact_name,
           secondary: item.primary_email,
-          avatar: item.contact_name.charAt(0).toUpperCase(),
+          avatar: (item.contact_name || 'U').charAt(0).toUpperCase(),
         })}
         emptyStateText="No contacts found"
         loadingText="Searching..."
-        getEmptySearchText={(searchTerm) =>
-          `No contacts found for "${searchTerm}"`
-        }
+        getEmptySearchText={(st) => `No contacts found for "${st}"`}
         onCancel={() => setSearchDialogOpen(false)}
         onConfirm={(selectedItems) => {
+          const selected = Array.isArray(selectedItems)
+            ? selectedItems[0]
+            : selectedItems;
+          if (selected) {
+            setContact(selected);
+            setValue('contact_id', selected.id);
+            setValue('slug', selected.slug);
+          }
           setSearchDialogOpen(false);
-          setContact(selectedItems);
-          setValue('contact_id', selectedItems.id);
-          setValue('slug', selectedItems.slug);
-          // Clear validation error when contact is selected
           if (validationErrors.contact_id) {
             setValidationErrors((prev) => ({
               ...prev,

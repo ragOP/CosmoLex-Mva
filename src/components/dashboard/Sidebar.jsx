@@ -416,26 +416,21 @@ const Sidebar = ({ isDrawer }) => {
   React.useEffect(() => {
     const fetchUserData = async () => {
       const token = getToken();
-      console.log('token>>>>>', token);
 
       if (token && !user) {
         try {
           // Decode token
           const decodedToken = decodeToken(token);
-          console.log('decodedToken>>>>>', decodedToken);
 
           if (decodedToken && decodedToken.sub) {
             // Fetch user data by ID
             const userResponse = await getUserById(decodedToken.sub);
-            console.log('userResponse>>>>>', userResponse);
 
             if (userResponse && userResponse.data) {
               dispatch(setUser(userResponse.data));
             }
           }
-        } catch (error) {
-          console.error('Failed to fetch user data:', error);
-        }
+        } catch (error) {}
       }
     };
 
@@ -444,7 +439,6 @@ const Sidebar = ({ isDrawer }) => {
 
   // check if user is admin
   const isAdmin = user?.role_id === 1;
-  console.log('user>>>>>', user?.role_id, 'isAdmin:', isAdmin);
 
   const getSidebarItems = () => {
     if (sidebarMode === 'inbox') {

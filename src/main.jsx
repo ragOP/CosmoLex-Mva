@@ -9,9 +9,9 @@ import './index.css';
 import App from './App.jsx';
 
 // Setup axios interceptor with store
-console.log("Setting up axios interceptor...");
+
 setupAxiosInterceptor(store);
-console.log("Axios interceptor setup complete");
+
 
 // Create a client
 const queryClient = new QueryClient({

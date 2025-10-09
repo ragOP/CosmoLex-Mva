@@ -30,17 +30,27 @@ const UploadMediaDialog = ({ open, onClose, onSubmit, isLoading }) => {
   // Allowed file types
   const allowedFileTypes = [
     'image/jpeg',
-    'image/jpg', 
+    'image/jpg',
     'image/png',
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/vnd.ms-excel',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'text/plain'
+    'text/plain',
   ];
 
-  const allowedFileExtensions = ['.jpg', '.jpeg', '.png', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'];
+  const allowedFileExtensions = [
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.pdf',
+    '.doc',
+    '.docx',
+    '.xls',
+    '.xlsx',
+    '.txt',
+  ];
 
   const { documentsMeta, folders } = useDocuments();
 
@@ -81,7 +91,7 @@ const UploadMediaDialog = ({ open, onClose, onSubmit, isLoading }) => {
     let validFiles = [];
     let validationErrors = [];
 
-    newFiles.forEach(file => {
+    newFiles.forEach((file) => {
       const validationError = validateFile(file);
       if (validationError) {
         validationErrors.push(validationError);
@@ -104,7 +114,10 @@ const UploadMediaDialog = ({ open, onClose, onSubmit, isLoading }) => {
     }
 
     if (validFiles.length > 0) {
-      setPayload((prev) => ({ ...prev, files: [...prev.files, ...validFiles] }));
+      setPayload((prev) => ({
+        ...prev,
+        files: [...prev.files, ...validFiles],
+      }));
     }
   };
 
@@ -116,6 +129,7 @@ const UploadMediaDialog = ({ open, onClose, onSubmit, isLoading }) => {
   };
 
   const handleSubmit = async () => {
+    console.log('handleSubmit');
     const newErrors = {};
     if (!payload.category_id)
       newErrors.category_id = 'Please select a category';
@@ -144,7 +158,8 @@ const UploadMediaDialog = ({ open, onClose, onSubmit, isLoading }) => {
       onClose();
     } catch (error) {
       // Show specific error message from API if available
-      const errorMessage = error?.message || 'Error uploading files. Please try again.';
+      const errorMessage =
+        error?.message || 'Error uploading files. Please try again.';
       setErrors({ global: errorMessage });
       // Don't close dialog on error - let user see the error and decide what to do
     }
@@ -251,12 +266,12 @@ const UploadMediaDialog = ({ open, onClose, onSubmit, isLoading }) => {
               <h3 className="text-lg font-semibold text-[#40444D] mb-2">
                 Drop files here or click to browse
               </h3>
-                          <p className="text-sm text-gray-600">
-              Support for multiple files
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Allowed file types: JPG, PNG, PDF, DOC, DOCX, XLS, XLSX, TXT
-            </p>
+              <p className="text-sm text-gray-600">
+                Support for multiple files
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Allowed file types: JPG, PNG, PDF, DOC, DOCX, XLS, XLSX, TXT
+              </p>
             </div>
 
             <input

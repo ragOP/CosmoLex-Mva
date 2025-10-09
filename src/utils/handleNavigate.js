@@ -1,8 +1,4 @@
 export const handleNavigate = (type, key, id, matterSlug, navigate) => {
-  console.log('type >>>', type);
-  console.log('key >>>', key);
-  console.log('id >>>', id);
-  console.log('matterSlug >>>', matterSlug);
   if (matterSlug) {
     if (id) {
       navigate(`/dashboard/inbox/${type}?slugId=${matterSlug}&${key}Id=${id}`, {
