@@ -18,16 +18,21 @@ const TasksPage = () => {
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+  // Comment dialog removed
 
   // Get matter slug from URL params (assuming notes are matter-specific)
   const matterSlug = searchParams.get('slugId');
 
-  let matter = null;
-  if (matterSlug) {
-    matter = useMatter();
-  }
-  const { tasks, tasksLoading, updateStatus, deleteTask, isDeleting } =
-    useTasks();
+  // Only call useMatter if slugId exists to prevent unnecessary API calls
+  const matter = matterSlug ? useMatter() : null;
+  const {
+    tasks,
+    tasksMeta,
+    tasksLoading,
+    updateStatus,
+    deleteTask,
+    isDeleting,
+  } = useTasks();
 
   // Handlers
   const handleDelete = (id) => {
@@ -36,6 +41,20 @@ const TasksPage = () => {
 
   const handleUpdateTaskStatus = (id, status) =>
     updateStatus({ taskId: id, status_id: parseInt(status) });
+
+  const handleCommentClick = (task) => {
+    // Navigate to comments page with taskId (and slugId if present)
+    if (matterSlug) {
+      navigate(
+        `/dashboard/inbox/tasks/comments?slugId=${matterSlug}&taskId=${task.id}`,
+        { replace: false }
+      );
+    } else {
+      navigate(`/dashboard/tasks/comments?taskId=${task.id}`, {
+        replace: false,
+      });
+    }
+  };
 
   const handleNavigate = (taskId) => {
     if (matterSlug) {
@@ -88,6 +107,7 @@ const TasksPage = () => {
 
       <TaskTable
         tasks={tasks || []}
+        tasksMeta={tasksMeta || []}
         handleUpdateTaskStatus={handleUpdateTaskStatus}
         onRowClick={(params) => {
           // append taskId to url params
@@ -106,38 +126,47 @@ const TasksPage = () => {
           setSelectedTask(task);
           setShowDeleteConfirm(true);
         }}
+        handleCommentClick={handleCommentClick}
       />
 
       {/* View */}
-      <ShowTaskDialog
-        open={showViewDialog}
-        onClose={() => {
-          // remove taskId from url params
-          handleNavigate(null);
-          setShowViewDialog(false);
-        }}
-      />
+      {showViewDialog && (
+        <ShowTaskDialog
+          open={showViewDialog}
+          onClose={() => {
+            // remove taskId from url params
+            handleNavigate(null);
+            setShowViewDialog(false);
+          }}
+        />
+      )}
 
-      <TaskDialog open={open} onClose={() => setOpen(false)} mode="create" />
+      {open && (
+        <TaskDialog open={open} onClose={() => setOpen(false)} mode="create" />
+      )}
 
-      <TaskDialog
-        open={showUpdateDialog}
-        onClose={() => {
-          setShowUpdateDialog(false);
-          handleNavigate(null);
-        }}
-        task={selectedTask}
-        mode="update"
-      />
+      {showUpdateDialog && (
+        <TaskDialog
+          open={showUpdateDialog}
+          onClose={() => {
+            setShowUpdateDialog(false);
+            handleNavigate(null);
+          }}
+          task={selectedTask}
+          mode="update"
+        />
+      )}
 
       {/* Delete */}
-      <DeleteTaskDialog
-        open={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        task={selectedTask}
-        onConfirm={() => handleDelete(selectedTask?.id)}
-        isDeleting={isDeleting}
-      />
+      {showDeleteConfirm && (
+        <DeleteTaskDialog
+          open={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          task={selectedTask}
+          onConfirm={() => handleDelete(selectedTask?.id)}
+          isDeleting={isDeleting}
+        />
+      )}
     </div>
   );
 };

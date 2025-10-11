@@ -345,8 +345,10 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
 
     if (Object.keys(errors).length === 0) {
       const currentAddresses = watch('addresses') || [];
-      const existingPrimaryAddress = currentAddresses.find(addr => addr.is_primary);
-      
+      const existingPrimaryAddress = currentAddresses.find(
+        (addr) => addr.is_primary
+      );
+
       // If this is the first address, automatically make it primary
       if (currentAddresses.length === 0) {
         const addressToAdd = { ...newAddress, is_primary: true };
@@ -354,14 +356,14 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
         resetAddressForm();
         return;
       }
-      
+
       // If setting as primary and a primary already exists, show confirmation
       if (newAddress.is_primary && existingPrimaryAddress) {
         setPendingPrimaryAddress(newAddress);
         setConfirmPrimaryDialog(true);
         return;
       }
-      
+
       // Add address normally
       append(newAddress);
       resetAddressForm();
@@ -386,19 +388,19 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
 
   const handleConfirmPrimaryChange = () => {
     const currentAddresses = watch('addresses') || [];
-    
+
     // Update existing addresses to set is_primary to false
-    const updatedAddresses = currentAddresses.map(addr => ({
+    const updatedAddresses = currentAddresses.map((addr) => ({
       ...addr,
-      is_primary: false
+      is_primary: false,
     }));
-    
+
     // Replace the addresses array with updated ones
     setValue('addresses', updatedAddresses);
-    
+
     // Add the new primary address
     append(pendingPrimaryAddress);
-    
+
     // Reset states
     setConfirmPrimaryDialog(false);
     setPendingPrimaryAddress(null);
@@ -407,7 +409,7 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
 
   const getCurrentPrimaryAddress = () => {
     const addresses = watch('addresses') || [];
-    return addresses.find(addr => addr.is_primary);
+    return addresses.find((addr) => addr.is_primary);
   };
 
   return (
@@ -419,7 +421,7 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
         maxWidth="lg"
         fullWidth
       >
-        <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000] ">
+        <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] shadow-[0px_4px_24px_0px_#000000] ">
           <div className="flex items-center justify-between p-4">
             <h1 className="text-xl text-[#40444D] text-center font-bold font-sans ">
               Create New Contact
@@ -431,7 +433,7 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
 
           <Divider />
 
-          <div className="space-y-4 flex-1 overflow-auto p-4 no-scrollbar">
+          <div className="space-y-4 flex-1 overflow-y-auto p-4">
             <div className="flex flex-wrap gap-4 overflow-auto">
               {formFields.map(({ label, name, type, required, options }) => (
                 <div key={name} className="w-full md:w-[49%]">
@@ -711,7 +713,7 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
           </DialogActions>
         </Stack>
       </Dialog>
-      
+
       <PrimaryAddressConfirmDialog
         open={confirmPrimaryDialog}
         onClose={() => {

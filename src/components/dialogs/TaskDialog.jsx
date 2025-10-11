@@ -413,6 +413,12 @@ export default function TaskDialog({
 
         // Upload the file
         const uploadedFile = await uploadTaskFile(formData);
+        // Check if upload was successful
+        if (!uploadedFile) {
+          console.error('TaskDialog - Upload returned undefined/null');
+          toast.error('Failed to upload file - no response from server');
+          return;
+        }
 
         // Add to attachments list
         setAttachments((prev) => [...prev, uploadedFile]);
@@ -491,7 +497,15 @@ export default function TaskDialog({
         // Include attachment IDs if any files were uploaded
         attachment_ids: attachments
           .filter(Boolean)
-          .map((att) => att?.attachment_id || att?.id)
+          .map((att) => {
+            // Try different possible ID field names
+            const attachmentId =
+              att?.attachment_id ||
+              att?.id ||
+              att?.file_id ||
+              att?.attachmentId;
+            return attachmentId;
+          })
           .filter(Boolean),
       };
 
@@ -582,6 +596,16 @@ export default function TaskDialog({
           })
         );
         replaceAssignedTo(formData.assigned_to);
+
+        // Load existing attachments
+        const existingAttachments =
+          currentTask?.attachments ||
+          currentTask?.files ||
+          currentTask?.task_files ||
+          currentTask?.task_attachments ||
+          [];
+
+        setAttachments(existingAttachments);
       } else {
         // Reset to default values for create mode
         reset({
@@ -605,6 +629,7 @@ export default function TaskDialog({
         setContact(null);
         replaceReminders([]);
         replaceAssignedTo([]);
+        setAttachments([]); // Reset attachments for create mode
       }
       setValidationErrors({});
     }

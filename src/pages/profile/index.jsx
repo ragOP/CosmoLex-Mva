@@ -12,7 +12,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   User,
@@ -43,26 +43,31 @@ import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { isMobile } from '@/utils/isMobile';
 import formatDate from '@/utils/formatDate';
-import {
-  updateProfile,
-  changePassword,
-  uploadProfilePicture,
-} from '@/api/api_services/profile';
-import { setUser } from '@/store/slices/authSlice';
+import { useProfile } from '@/hooks/useProfile';
+import { getProfilePictureUrl, getUserInitials } from '@/utils/profilePicture';
 
 const ProfilePage = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
 
+  // Use the custom profile hook
+  const {
+    profileData,
+    updateProfileMutation,
+    changePasswordMutation,
+    selectedProfileFile,
+    profilePreviewUrl,
+    handleFileSelection,
+    clearFileSelection,
+    updateProfileWithFile,
+    isUpdatingProfile,
+    isChangingPassword,
+  } = useProfile();
+
   // State management
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [selectedProfileFile, setSelectedProfileFile] = useState(null);
-  const [profilePreviewUrl, setProfilePreviewUrl] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -84,6 +89,7 @@ const ProfilePage = () => {
     two_factor_enabled: false,
   });
 
+
   // Password change form
   const [passwordData, setPasswordData] = useState({
     current_password: '',
@@ -91,27 +97,26 @@ const ProfilePage = () => {
     confirm_password: '',
   });
 
-  // Initialize form data with user data
+  // Initialize form data with profile data
   useEffect(() => {
-    if (user) {
-      console.log(user, '<<<<<<userData');
+    if (profileData) {
       setFormData({
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        email: user.email || '',
-        phone_number: user.phone_number || '',
-        street_number: user.street_number || '',
-        street_name: user.street_name || '',
-        unit_number: user.unit_number || '',
-        city: user.city || '',
-        province: user.province || '',
-        postal_code: user.postal_code || '',
-        country: user.country || '',
-        country_code: user.country_code || '',
-        two_factor_enabled: user.two_factor_enabled || false,
+        first_name: profileData.first_name || '',
+        last_name: profileData.last_name || '',
+        email: profileData.email || '',
+        phone_number: profileData.phone_number || '',
+        street_number: profileData.street_number || '',
+        street_name: profileData.street_name || '',
+        unit_number: profileData.unit_number || '',
+        city: profileData.city || '',
+        province: profileData.province || '',
+        postal_code: profileData.postal_code || '',
+        country: profileData.country || '',
+        country_code: profileData.country_code || '',
+        two_factor_enabled: profileData.two_factor_enabled || false,
       });
     }
-  }, [user]);
+  }, [profileData]);
 
   // Clear messages after timeout
   useEffect(() => {
@@ -152,54 +157,18 @@ const ProfilePage = () => {
   };
 
   const handleSaveProfile = async () => {
-    setIsSaving(true);
     setError('');
     setMessage('');
 
     try {
-      let payload;
-      if (selectedProfileFile) {
-        const fd = new FormData();
-        Object.entries({ ...formData, user_id: user.id }).forEach(([k, v]) => {
-          if (v === undefined || v === null) return;
-          if (typeof v === 'boolean') {
-            fd.append(k, v ? '1' : '0');
-            return;
-          }
-          fd.append(k, v);
-        });
-        fd.append('profile_picture', selectedProfileFile);
-        payload = fd;
-      } else {
-        payload = { ...formData, user_id: user.id };
-      }
-
-      const updated = await updateProfile(payload);
-      console.log('updated >>>', updated);
-
-      setMessage('Profile updated successfully!');
+      await updateProfileWithFile(formData, profileData.id);
       setIsEditing(false);
-
-      // Update user in Redux store
-      if (updated && typeof updated === 'object') {
-        dispatch(setUser({ ...user, ...updated }));
-      } else {
-        dispatch(setUser({ ...user, ...formData }));
-      }
-      setSelectedProfileFile(null);
-      // Clean up preview URL
-      if (profilePreviewUrl) {
-        URL.revokeObjectURL(profilePreviewUrl);
-        setProfilePreviewUrl(null);
-      }
     } catch (error) {
       console.error('Profile update error:', error);
       setError(
         error.message ||
           'An error occurred while updating your profile. Please try again.'
       );
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -214,17 +183,15 @@ const ProfilePage = () => {
       return;
     }
 
-    setIsSaving(true);
     setError('');
 
     try {
-      await changePassword({
+      await changePasswordMutation.mutateAsync({
         current_password: passwordData.current_password,
         new_password: passwordData.new_password,
-        user_id: user.id,
+        user_id: profileData.id,
       });
 
-      setMessage('Password changed successfully!');
       setPasswordData({
         current_password: '',
         new_password: '',
@@ -236,39 +203,33 @@ const ProfilePage = () => {
         error.message ||
           'An error occurred while changing your password. Please try again.'
       );
-    } finally {
-      setIsSaving(false);
     }
   };
 
   const handleCancel = () => {
     setIsEditing(false);
     setFormData({
-      first_name: user.first_name || '',
-      last_name: user.last_name || '',
-      email: user.email || '',
-      phone_number: user.phone_number || '',
-      street_number: user.street_number || '',
-      street_name: user.street_name || '',
-      unit_number: user.unit_number || '',
-      city: user.city || '',
-      province: user.province || '',
-      postal_code: user.postal_code || '',
-      country: user.country || '',
-      country_code: user.country_code || '',
-      two_factor_enabled: user.two_factor_enabled || false,
+      first_name: profileData.first_name || '',
+      last_name: profileData.last_name || '',
+      email: profileData.email || '',
+      phone_number: profileData.phone_number || '',
+      street_number: profileData.street_number || '',
+      street_name: profileData.street_name || '',
+      unit_number: profileData.unit_number || '',
+      city: profileData.city || '',
+      province: profileData.province || '',
+      postal_code: profileData.postal_code || '',
+      country: profileData.country || '',
+      country_code: profileData.country_code || '',
+      two_factor_enabled: profileData.two_factor_enabled || false,
     });
     setError('');
     setMessage('');
-    // Clean up preview URL when cancelling
-    if (profilePreviewUrl) {
-      URL.revokeObjectURL(profilePreviewUrl);
-      setProfilePreviewUrl(null);
-    }
-    setSelectedProfileFile(null);
+    // Clean up file selection and preview
+    clearFileSelection();
   };
 
-  if (!user) {
+  if (!profileData) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -285,21 +246,18 @@ const ProfilePage = () => {
     );
   }
 
-  const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim();
-  const storageHost = BACKEND_URL.replace('/api', '');
-  const profilePictureSrc = user.profile_picture
-    ? user.profile_picture.startsWith('http')
-      ? user.profile_picture
-      : `${storageHost}/storage/user_profiles/${user.profile_picture}`
-    : null;
+  const fullName = `${profileData.first_name || ''} ${
+    profileData.last_name || ''
+  }`.trim();
+  const profilePictureSrc = getProfilePictureUrl(profileData.profile_picture);
   const fullAddress = [
-    user.street_number,
-    user.street_name,
-    user.unit_number,
-    user.city,
-    user.province,
-    user.postal_code,
-    user.country,
+    profileData.street_number,
+    profileData.street_name,
+    profileData.unit_number,
+    profileData.city,
+    profileData.province,
+    profileData.postal_code,
+    profileData.country,
   ]
     .filter(Boolean)
     .join(', ');
@@ -334,12 +292,12 @@ const ProfilePage = () => {
               </Button>
               <Button
                 onClick={handleSaveProfile}
-                disabled={isSaving}
+                disabled={isUpdatingProfile}
                 className="flex items-center gap-2"
                 icon={Save}
                 iconPosition="left"
               >
-                {isSaving ? 'Saving...' : 'Save Changes'}
+                {isUpdatingProfile ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
           )}
@@ -378,20 +336,21 @@ const ProfilePage = () => {
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative">
                   <Avatar className="w-24 h-24 text-2xl font-semibold">
-                    {(profilePreviewUrl || user.profile_picture) && (
+                    {(profilePreviewUrl || profileData.profile_picture) && (
                       <AvatarImage
                         src={
                           profilePreviewUrl ||
                           profilePictureSrc ||
-                          user.profile_picture
+                          profileData.profile_picture
                         }
                         alt={fullName}
                       />
                     )}
                     <AvatarFallback>
-                      {`${user.first_name?.[0] || ''}${
-                        user.last_name?.[0] || ''
-                      }`}
+                      {getUserInitials(
+                        profileData.first_name,
+                        profileData.last_name
+                      )}
                     </AvatarFallback>
                   </Avatar>
                   {isEditing && (
@@ -404,10 +363,7 @@ const ProfilePage = () => {
                         onChange={(e) => {
                           const file = e.target.files && e.target.files[0];
                           if (file) {
-                            setSelectedProfileFile(file);
-                            // Create preview URL for the selected file
-                            const previewUrl = URL.createObjectURL(file);
-                            setProfilePreviewUrl(previewUrl);
+                            handleFileSelection(file);
                           }
                         }}
                       />
@@ -432,21 +388,27 @@ const ProfilePage = () => {
                   <h3 className="text-xl font-semibold text-gray-800">
                     {fullName}
                   </h3>
-                  <p className="text-gray-600">{user.email}</p>
+                  <p className="text-gray-600">{profileData.email}</p>
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center">
-                  <Badge variant={user.is_active ? 'default' : 'secondary'}>
-                    {user.is_active ? 'Active' : 'Inactive'}
+                  <Badge
+                    variant={profileData.is_active ? 'default' : 'secondary'}
+                  >
+                    {profileData.is_active ? 'Active' : 'Inactive'}
                   </Badge>
                   <Badge
-                    variant={user.email_verified_at ? 'default' : 'outline'}
+                    variant={
+                      profileData.email_verified_at ? 'default' : 'outline'
+                    }
                   >
-                    {user.email_verified_at ? 'Verified' : 'Unverified'}
+                    {profileData.email_verified_at ? 'Verified' : 'Unverified'}
                   </Badge>
                   <Badge
-                    variant={user.two_factor_enabled ? 'default' : 'outline'}
+                    variant={
+                      profileData.two_factor_enabled ? 'default' : 'outline'
+                    }
                   >
-                    {user.two_factor_enabled ? '2FA On' : '2FA Off'}
+                    {profileData.two_factor_enabled ? '2FA On' : '2FA Off'}
                   </Badge>
                 </div>
               </div>
@@ -456,15 +418,16 @@ const ProfilePage = () => {
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="w-4 h-4 text-gray-500" />
                   <span>
-                    <strong>Member since:</strong> {formatDate(user.created_at)}
+                    <strong>Member since:</strong>{' '}
+                    {formatDate(profileData.created_at)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="w-4 h-4 text-gray-500" />
                   <span>
                     <strong>Last login:</strong>{' '}
-                    {user.last_login_at
-                      ? formatDate(user.last_login_at)
+                    {profileData.last_login_at
+                      ? formatDate(profileData.last_login_at)
                       : 'Never'}
                   </span>
                 </div>
@@ -762,7 +725,7 @@ const ProfilePage = () => {
               <Button
                 onClick={handleChangePassword}
                 disabled={
-                  isSaving ||
+                  isChangingPassword ||
                   !passwordData.current_password ||
                   !passwordData.new_password ||
                   !passwordData.confirm_password
@@ -771,7 +734,9 @@ const ProfilePage = () => {
                 icon={Key}
                 iconPosition="left"
               >
-                {isSaving ? 'Changing Password...' : 'Change Password'}
+                {isChangingPassword
+                  ? 'Changing Password...'
+                  : 'Change Password'}
               </Button>
             </CardContent>
           </Card>

@@ -1,39 +1,103 @@
 import React, { useState } from 'react';
 import { Stack, IconButton, Typography, Box } from '@mui/material';
-import { Search, RotateCcw, Grid3X3, List, CheckSquare, User, Clock } from 'lucide-react';
+import {
+  Search,
+  RotateCcw,
+  Grid3X3,
+  List,
+  CheckSquare,
+  User,
+  Clock,
+} from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getAgenda } from '@/api/api_services/agenda';
 import { Input } from '@/components/ui/input';
+import ShowTaskDialog from '@/components/tasks/ShowTaskDialog';
 
 const TasksTab = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [showViewDialog, setShowViewDialog] = useState(false);
+
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Get matter slug from URL params if available
+  const matterSlug = searchParams.get('slugId');
 
   // Fetch agenda data
-  const { data: agendaResponse, isLoading, refetch } = useQuery({
+  const {
+    data: agendaResponse,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['agenda'],
     queryFn: getAgenda,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
-  const tasks = Array.isArray(agendaResponse?.tasks) ? agendaResponse.tasks : [];
+  const tasks = Array.isArray(agendaResponse?.tasks)
+    ? agendaResponse.tasks
+    : [];
 
   const handleRefresh = () => {
     refetch();
   };
 
-  const filteredTasks = Array.isArray(tasks) ? tasks.filter(task => 
-    task.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    task.contact?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) : [];
+  const handleNavigate = (taskId) => {
+    if (matterSlug) {
+      if (taskId) {
+        navigate(`/dashboard/agenda?slugId=${matterSlug}&taskId=${taskId}`, {
+          replace: false,
+        });
+      } else {
+        navigate(`/dashboard/agenda?slugId=${matterSlug}`, {
+          replace: false,
+        });
+      }
+    } else {
+      if (taskId) {
+        navigate(`/dashboard/agenda?taskId=${taskId}`, {
+          replace: false,
+        });
+      } else {
+        navigate(`/dashboard/agenda`, {
+          replace: false,
+        });
+      }
+    }
+  };
+
+  const handleTaskClick = (task) => {
+    handleNavigate(task.id);
+    setShowViewDialog(true);
+  };
+
+  const handleCloseDialog = () => {
+    handleNavigate(null);
+    setShowViewDialog(false);
+  };
+
+  const filteredTasks = Array.isArray(tasks)
+    ? tasks.filter(
+        (task) =>
+          task.subject?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          task.contact?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   return (
     <div className="p-4">
       <Stack spacing={3}>
         {/* Header */}
-        <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+        >
           <h2 className="text-xl font-semibold text-gray-900">Tasks</h2>
-          
+
           <Stack direction="row" spacing={2} alignItems="center">
             <IconButton onClick={handleRefresh} size="small">
               <RotateCcw size={18} />
@@ -54,8 +118,8 @@ const TasksTab = () => {
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'grid' 
-                    ? 'bg-white text-blue-600 shadow-sm' 
+                  viewMode === 'grid'
+                    ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
@@ -64,8 +128,8 @@ const TasksTab = () => {
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded-md transition-colors ${
-                  viewMode === 'list' 
-                    ? 'bg-white text-blue-600 shadow-sm' 
+                  viewMode === 'list'
+                    ? 'bg-white text-blue-600 shadow-sm'
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
@@ -74,7 +138,7 @@ const TasksTab = () => {
             </div>
           </Stack>
         </Stack>
-        
+
         {/* Tasks List */}
         <div className="flex items-center justify-center">
           {isLoading ? (
@@ -92,14 +156,20 @@ const TasksTab = () => {
               <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <CheckSquare className="w-12 h-12 text-blue-500" />
               </div>
-              <Typography variant="h5" sx={{ fontWeight: 600, color: '#374151', mb: 2 }}>
+              <Typography
+                variant="h5"
+                sx={{ fontWeight: 600, color: '#374151', mb: 2 }}
+              >
                 No tasks yet
               </Typography>
-              <Typography variant="body1" color="text.secondary" sx={{ mb: 4, lineHeight: 1.6 }}>
-                {searchTerm ? 
-                  `No tasks found matching "${searchTerm}". Try adjusting your search terms.` :
-                  "No tasks have been created yet. Tasks will appear here once they are added."
-                }
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{ mb: 4, lineHeight: 1.6 }}
+              >
+                {searchTerm
+                  ? `No tasks found matching "${searchTerm}". Try adjusting your search terms.`
+                  : 'No tasks have been created yet. Tasks will appear here once they are added.'}
               </Typography>
             </div>
           ) : (
@@ -107,91 +177,96 @@ const TasksTab = () => {
               {/* Grid View */}
               {viewMode === 'grid' && (
                 <div className="w-full grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {Array.isArray(filteredTasks) && filteredTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-lg transition-all duration-200 hover:border-gray-300"
-                    >
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center">
-                            <CheckSquare className="w-6 h-6 text-blue-600" />
+                  {Array.isArray(filteredTasks) &&
+                    filteredTasks.map((task) => (
+                      <div
+                        key={task.id}
+                        className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-lg transition-all duration-200 hover:border-gray-300 cursor-pointer"
+                        onClick={() => handleTaskClick(task)}
+                      >
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center">
+                              <CheckSquare className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900 text-sm mb-1">
+                                {task.subject}
+                              </h3>
+                              <p className="text-xs text-gray-500">
+                                Task ID: {task.id}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900 text-sm mb-1">
-                              {task.subject}
-                            </h3>
-                            <p className="text-xs text-gray-500">
-                              Task ID: {task.id}
-                            </p>
+                        </div>
+
+                        {/* Contact Info */}
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <User className="w-4 h-4 text-gray-400" />
+                            <span className="truncate">{task.contact}</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Clock className="w-4 h-4 text-gray-400" />
+                            <span>{task.created_at}</span>
                           </div>
                         </div>
                       </div>
-
-                      {/* Contact Info */}
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <User className="w-4 h-4 text-gray-400" />
-                          <span className="truncate">{task.contact}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Clock className="w-4 h-4 text-gray-400" />
-                          <span>{task.created_at}</span>
-                        </div>
-                      </div>
-
-
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
 
               {/* List View */}
               {viewMode === 'list' && (
                 <div className="w-full space-y-4">
-                  {Array.isArray(filteredTasks) && filteredTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="bg-white rounded-xl border border-gray-200 px-4 py-4 hover:shadow-lg transition-all duration-200 hover:border-gray-300"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center">
-                            <CheckSquare className="w-6 h-6 text-blue-600" />
+                  {Array.isArray(filteredTasks) &&
+                    filteredTasks.map((task) => (
+                      <div
+                        key={task.id}
+                        className="bg-white rounded-xl border border-gray-200 px-4 py-4 hover:shadow-lg transition-all duration-200 hover:border-gray-300 cursor-pointer"
+                        onClick={() => handleTaskClick(task)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center">
+                              <CheckSquare className="w-6 h-6 text-blue-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900 text-lg">
+                                {task.subject}
+                              </h3>
+                              <p className="text-sm text-gray-500">
+                                Task ID: {task.id}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-gray-900 text-lg">
-                              {task.subject}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                              Task ID: {task.id}
-                            </p>
+
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-gray-400" />
+                            <span>Created: {task.created_at}</span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-gray-400" />
-                          <span>Created: {task.created_at}</span>
+                        <div className="mt-6">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <User className="w-4 h-4 text-gray-400" />
+                            <span className="truncate">{task.contact}</span>
+                          </div>
                         </div>
                       </div>
-
-                      <div className="mt-6">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <User className="w-4 h-4 text-gray-400" />
-                          <span className="truncate">{task.contact}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               )}
             </>
           )}
         </div>
       </Stack>
+
+      {/* Task Dialog */}
+      <ShowTaskDialog open={showViewDialog} onClose={handleCloseDialog} />
     </div>
   );
 };
 
-export default TasksTab; 
+export default TasksTab;

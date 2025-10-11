@@ -3,13 +3,18 @@ import { endpoints } from '../endpoint';
 
 // Get current user profile
 export const getProfile = async () => {
-  const response = await apiService({
-    endpoint: endpoints.getProfile,
-    method: 'GET',
-  });
-  if (response.response?.Apistatus === false)
-    throw new Error(response.response.message);
-  return response.response?.data || {};
+  try {
+    const response = await apiService({
+      endpoint: endpoints.getProfile,
+      method: 'GET',
+    });
+    if (response.response?.Apistatus === false)
+      throw new Error(response.response.message);
+    return response.response?.data || {};
+  } catch (error) {
+    console.warn('Profile endpoint failed, using fallback:', error.message);
+    return null;
+  }
 };
 
 // Update user profile
@@ -19,7 +24,7 @@ export const updateProfile = async (profileData) => {
     method: 'POST',
     data: profileData,
   });
-  // Ensure we throw on any unsuccessful outcome or missing response
+
   const apiRes = response?.response;
   if (!apiRes) {
     throw new Error('No response from server');
@@ -27,7 +32,8 @@ export const updateProfile = async (profileData) => {
   if (apiRes.Apistatus !== true) {
     throw new Error(apiRes.message || 'Failed to update profile');
   }
-  return apiRes.data;
+
+  return apiRes.user; 
 };
 
 // Change user password

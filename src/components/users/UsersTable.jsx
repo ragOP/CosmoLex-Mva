@@ -8,6 +8,7 @@ import { Pencil, CircleOff, Trash2, Eye } from 'lucide-react';
 import { noFilterColumns } from '@/utils/noFilterColumns';
 import { truncateStr } from '@/utils/truncateStr';
 import { getTableWidth } from '@/utils/isMobile';
+import { getProfilePictureUrl, getUserInitials } from '@/utils/profilePicture';
 
 const UsersTable = ({
   users = [],
@@ -39,18 +40,31 @@ const UsersTable = ({
       align: 'center',
       renderCell: (params) => {
         if (!params || !params.row) return null;
+        const profilePictureUrl = getProfilePictureUrl(params.value);
+        const userInitials = getUserInitials(
+          params.row.first_name,
+          params.row.last_name
+        );
+
         return (
           <div className="w-full h-full flex items-center justify-center">
             <Avatar
-              src={params.value}
+              src={profilePictureUrl}
               alt={`${params.row.first_name || ''} ${
                 params.row.last_name || ''
               }`}
               sx={{ width: 28, height: 28 }}
+              onError={(e) => {
+                // Hide the broken image and show fallback
+                e.target.style.display = 'none';
+                const fallback = e.target.nextElementSibling;
+                if (fallback) fallback.style.display = 'flex';
+              }}
             >
-              {`${params.row.first_name?.[0] || ''}${
-                params.row.last_name?.[0] || ''
-              }`}
+              <div style={{ display: 'none' }} className="profile-fallback">
+                {userInitials}
+              </div>
+              {userInitials}
             </Avatar>
           </div>
         );

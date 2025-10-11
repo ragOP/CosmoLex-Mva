@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -26,14 +26,13 @@ import { useEvents } from '@/components/calendar/hooks/useEvent';
 import { toast } from 'sonner';
 import UploadMediaDialog from '@/components/UploadMediaDialog';
 import SearchDialog from '@/components/dialogs/SearchDialog';
-import { searchTask } from '@/api/api_services/task';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { ParticipantDialog } from './components/ParticipantDialog';
 import { ReminderDialog } from './components/ReminderDialog';
 import { formatDateForInput } from '@/utils/formatDateForInput';
 import isArrayWithValues from '@/utils/isArrayWithValues';
-import getContacts from '@/pages/matter/intake/helpers/getContacts';
+import { getContacts } from '@/api/api_services/contact';
 import { useMatter } from '@/components/inbox/MatterContext';
 
 export default function NewEventDialogRHF({
@@ -47,7 +46,7 @@ export default function NewEventDialogRHF({
 }) {
   const [searchParams] = useSearchParams();
   const slugId = searchParams.get('slugId');
-  
+
   // Get matter data if we're in a matter context
   let matterData = null;
   try {
@@ -109,19 +108,23 @@ export default function NewEventDialogRHF({
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const { data: contacts, } = useQuery({
-    queryKey: ['contacts', slugId],
+  const { data: contacts = [], isLoading: contactsLoading } = useQuery({
+    queryKey: ['contacts'],
     queryFn: getContacts,
-    enabled: !!slugId
-  })
-
-  // Contact search query
-  const { data: contactSearchResults, isLoading: contactLoading } = useQuery({
-    queryKey: ['contact-search', debouncedSearchTerm],
-    queryFn: () =>
-      searchTask({ searchBar: debouncedSearchTerm, contact_type_id: '' }, 1),
-    enabled: open && debouncedSearchTerm.length > 0,
+    staleTime: 5 * 60 * 1000,
   });
+
+  // Locally filter contacts for the search dialog
+  const filteredContacts = useMemo(() => {
+    if (!Array.isArray(contacts)) return [];
+    const term = (debouncedSearchTerm || '').toLowerCase().trim();
+    if (!term) return contacts;
+    return contacts.filter((c) => {
+      const name = (c.contact_name || '').toLowerCase();
+      const email = (c.primary_email || '').toLowerCase();
+      return name.includes(term) || email.includes(term);
+    });
+  }, [contacts, debouncedSearchTerm]);
 
   const {
     control,
@@ -201,17 +204,28 @@ export default function NewEventDialogRHF({
         };
 
         reset(defaultFormData);
-      
-        // Auto-select contact from matter if in matter context
-        if (slugId && matterData?.matter?.contact_id) {
-          const matterContact = contacts.find((contact) => contact.id === matterData?.matter?.contact_id);
-          setContact(matterContact);
-          setValue('contacts_id', matterContact.id);
-          setValue('slug', slugId);
-        } else {
+
+        // Auto-select contact from matter if in matter context (after contacts load)
+        if (
+          slugId &&
+          matterData?.matter?.contact_id &&
+          Array.isArray(contacts) &&
+          contacts.length > 0
+        ) {
+          const matterContact = contacts.find(
+            (c) => String(c.id) === String(matterData?.matter?.contact_id)
+          );
+          if (matterContact) {
+            setContact(matterContact);
+            setValue('contacts_id', matterContact.id);
+            setValue('slug', slugId);
+          } else {
+            setContact(null);
+          }
+        } else if (!(slugId && matterData?.matter?.contact_id)) {
           setContact(null);
         }
-        
+
         replaceReminders([]);
         replaceParticipants([]);
         setAttachments([]);
@@ -226,7 +240,17 @@ export default function NewEventDialogRHF({
       setAttachments([]);
       setValidationErrors({});
     }
-  }, [open, event, isUpdateMode, reset, replaceReminders, replaceParticipants, slugId, matterData]);
+  }, [
+    open,
+    event,
+    isUpdateMode,
+    reset,
+    replaceReminders,
+    replaceParticipants,
+    slugId,
+    matterData,
+    contacts,
+  ]);
 
   // Manual validation function
   const validateForm = (data) => {
@@ -410,18 +434,23 @@ export default function NewEventDialogRHF({
                 {contact ? (
                   <Chip
                     label={contact?.contact_name}
-                    onDelete={slugId && matterData?.matter?.contact_id ? undefined : () => {
-                      setContact(null);
-                      setValue('contacts_id', '');
-                      setValue('slug', '');
-                    }}
+                    onDelete={
+                      slugId && matterData?.matter?.contact_id
+                        ? undefined
+                        : () => {
+                            setContact(null);
+                            setValue('contacts_id', '');
+                            setValue('slug', '');
+                          }
+                    }
                     deleteIcon={<X size={16} />}
                     size="small"
-                    sx={{ 
-                      bgcolor: '#e8f5e8', 
-                      color: '#2e7d32', 
+                    sx={{
+                      bgcolor: '#e8f5e8',
+                      color: '#2e7d32',
                       p: 1,
-                      opacity: slugId && matterData?.matter?.contact_id ? 0.75 : 1
+                      opacity:
+                        slugId && matterData?.matter?.contact_id ? 0.75 : 1,
                     }}
                   />
                 ) : (
@@ -851,8 +880,8 @@ export default function NewEventDialogRHF({
         title="Select Contact"
         searchPlaceholder="Search contacts..."
         maxWidth="sm"
-        items={contactSearchResults}
-        loading={contactLoading}
+        items={filteredContacts}
+        loading={contactsLoading}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onItemSelect={(item) => {
@@ -880,7 +909,7 @@ export default function NewEventDialogRHF({
         getItemDisplay={(item) => ({
           primary: item.contact_name,
           secondary: item.primary_email,
-          avatar: item.contact_name.charAt(0).toUpperCase(),
+          avatar: (item.contact_name || 'U').charAt(0).toUpperCase(),
         })}
         emptyStateText="No contacts found"
         loadingText="Searching..."

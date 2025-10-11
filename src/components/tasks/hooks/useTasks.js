@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import {
   getTaskMeta,
-  getTasks,
   getTaskById,
   searchTask,
   filterTask,
@@ -21,6 +20,7 @@ import {
   createComment,
   uploadCommentAttachment,
 } from '@/api/api_services/task';
+import getTasks from '@/pages/tasks/helpers/getTasks';
 import { toast } from 'sonner';
 
 export const useTasks = () => {
@@ -36,21 +36,28 @@ export const useTasks = () => {
   const { data: tasksMeta = [], isLoading: tasksMetaLoading } = useQuery({
     queryKey: ['tasksMeta'],
     queryFn: getTaskMeta,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    cacheTime: 15 * 60 * 1000, // 15 minutes
+    refetchOnWindowFocus: false,
   });
 
   // All tasks
   const { data: tasks = [], isLoading: tasksLoading } = useQuery({
     queryKey: ['tasks'],
     queryFn: () => getTasks(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
   });
 
-  // Single task
+  // Single task - Only run when taskId exists
   const { data: task = {}, isLoading: taskLoading } = useQuery({
     queryKey: ['task', taskId],
     queryFn: () => getTaskById(taskId),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    enabled: !!taskId && !!taskId.trim(), // More strict check
   });
 
   // Search tasks
@@ -65,7 +72,9 @@ export const useTasks = () => {
 
   // Create Task
   const createTaskMutation = useMutation({
-    mutationFn: (taskData) => createTask(taskData),
+    mutationFn: (taskData) => {
+      return createTask(taskData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['tasks']);
       toast.success('Task created successfully');
@@ -77,7 +86,9 @@ export const useTasks = () => {
 
   // Update Task
   const updateTaskMutation = useMutation({
-    mutationFn: ({ taskId, taskData }) => updateTask(taskId, taskData),
+    mutationFn: ({ taskId, taskData }) => {
+      return updateTask(taskId, taskData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['tasks']);
       toast.success('Task updated successfully');
@@ -114,7 +125,7 @@ export const useTasks = () => {
   // Upload file
   const uploadFileMutation = useMutation({
     mutationFn: (fileData) => uploadTaskFile(fileData),
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Ensure the single task query refetches so attachments appear in details
       if (taskId) {
         queryClient.invalidateQueries(['task', taskId]);
@@ -154,29 +165,35 @@ export const useTasks = () => {
 
   // ---------------------Comments--------------------- //
 
-  // Get comment meta
+  // Get comment meta - Only run when needed (when taskId exists)
   const { data: commentMeta = [], isLoading: commentMetaLoading } = useQuery({
     queryKey: ['commentMeta'],
     queryFn: getCommentMeta,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    cacheTime: 15 * 60 * 1000, // 15 minutes
+    refetchOnWindowFocus: false,
+    enabled: !!taskId && !!taskId.trim(), // Only load when we have a task
   });
 
-  // Get all Comments
+  // Get all Comments - Only run when taskId exists
   const { data: comments = [], isLoading: commentsLoading } = useQuery({
     queryKey: ['comments', taskId],
     queryFn: () => getAllComments(taskId),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000, // 2 minutes (shorter for comments)
+    cacheTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    enabled: !!taskId && !!taskId.trim(), // More strict check
   });
 
   // Create comment
   const createCommentMutation = useMutation({
-    mutationFn: (commentData) => {
-      const res = createComment({ commentData, task_id: taskId });
+    mutationFn: ({ commentData, task_id }) => {
+      const res = createComment({ commentData, task_id });
       return res;
     },
-    onSuccess: (res) => {
+    onSuccess: (res, { task_id }) => {
       if (res?.Apistatus === true) {
-        queryClient.invalidateQueries(['comments']);
+        queryClient.invalidateQueries(['comments', task_id]);
         toast.success('Comment created successfully');
       } else {
         toast.error(res?.message || 'Failed to create comment');
@@ -191,7 +208,7 @@ export const useTasks = () => {
   const uploadCommentAttachmentMutation = useMutation({
     mutationFn: (attachmentData) => uploadCommentAttachment(attachmentData),
     onSuccess: () => {
-      queryClient.invalidateQueries(['comments']);
+      queryClient.invalidateQueries(['comments', taskId]);
       toast.success('Attachment uploaded successfully');
     },
     onError: (error) =>
@@ -202,9 +219,9 @@ export const useTasks = () => {
 
   const handleCreateComment = useCallback(
     (commentData) => {
-      createCommentMutation.mutateAsync(commentData);
+      createCommentMutation.mutateAsync({ commentData, task_id: taskId });
     },
-    [createCommentMutation]
+    [createCommentMutation, taskId]
   );
 
   const handleUploadCommentAttachment = useCallback(
@@ -286,6 +303,7 @@ export const useTasks = () => {
     // -- comments -- //
     handleCreateComment,
     handleUploadCommentAttachment,
+    createCommentMutation,
 
     // Mutations
     searchTasks: searchTasksMutation.mutateAsync,

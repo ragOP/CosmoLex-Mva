@@ -3,6 +3,7 @@ import Button from '@/components/Button';
 import TaskDialog from '@/components/dialogs/TaskDialog';
 import ShowTaskDialog from '@/components/tasks/ShowTaskDialog';
 import DeleteTaskDialog from '@/components/tasks/DeleteTaskDialog';
+// Removed dialog in favor of dedicated page
 import TaskTable from '@/components/tasks/TaskTable';
 import { Loader2, Plus } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -18,6 +19,7 @@ const TasksPage = () => {
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+  const [selectedTaskForComment, setSelectedTaskForComment] = useState(null);
 
   // Get matter slug from URL params (assuming notes are matter-specific)
   const matterSlug = searchParams.get('slugId');
@@ -36,6 +38,20 @@ const TasksPage = () => {
 
   const handleUpdateTaskStatus = (id, status) =>
     updateStatus({ taskId: id, status_id: parseInt(status) });
+
+  const handleCommentClick = (task) => {
+    setSelectedTaskForComment(task);
+    if (matterSlug) {
+      navigate(
+        `/dashboard/inbox/tasks/comments?slugId=${matterSlug}&taskId=${task.id}`,
+        { replace: false }
+      );
+    } else {
+      navigate(`/dashboard/tasks/comments?taskId=${task.id}`, {
+        replace: false,
+      });
+    }
+  };
 
   const handleNavigate = (taskId) => {
     if (matterSlug) {
@@ -106,6 +122,7 @@ const TasksPage = () => {
           setSelectedTask(task);
           setShowDeleteConfirm(true);
         }}
+        handleCommentClick={handleCommentClick}
       />
 
       {/* View */}
@@ -138,6 +155,8 @@ const TasksPage = () => {
         onConfirm={() => handleDelete(selectedTask?.id)}
         isDeleting={isDeleting}
       />
+
+      {/* Comments now open in a dedicated page via router */}
     </div>
   );
 };

@@ -32,6 +32,9 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
     handleCreateComment,
     isCreatingComment,
   } = useTasks();
+
+  const [searchParams] = useSearchParams();
+  const taskId = searchParams.get('taskId');
   const [commentOpen, setCommentOpen] = useState(false);
   const [comment, setComment] = useState('');
   const [attachment, setAttachment] = useState([]);
@@ -61,14 +64,13 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
           },
         ]);
       }
-      queryClient.invalidateQueries(['comments']);
+      queryClient.invalidateQueries(['comments', taskId]);
       toast.success(res?.message || 'Attachment uploaded successfully');
     },
     onError: (error) =>
       toast.error(error?.message || 'Failed to upload attachment'),
   });
 
-  const [searchParams] = useSearchParams();
   const slugId = searchParams.get('slugId');
   let contactId = null;
 

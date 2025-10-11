@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { Avatar, Box, Tooltip, IconButton } from '@mui/material';
 import formatDate from '@/utils/formatDate';
 import { Badge } from '@/components/ui/badge';
+import { getProfilePictureUrl, getUserInitials } from '@/utils/profilePicture';
 import {
   Select,
   SelectTrigger,
@@ -11,7 +12,7 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Pencil, CircleOff, Trash2, Eye } from 'lucide-react';
+import { Pencil, CircleOff, Trash2, Eye, MessageSquare } from 'lucide-react';
 import { useTasks } from '@/components/tasks/hooks/useTasks';
 import getMetaOptions from '@/utils/getMetaFields';
 import { truncateStr } from '@/utils/truncateStr';
@@ -20,17 +21,22 @@ import { getTableWidth } from '@/utils/isMobile';
 
 const TaskTable = ({
   tasks = [],
+  tasksMeta = [], // Receive tasksMeta as prop instead of calling useTasks again
   handleUpdateTaskStatus,
   onRowClick,
   handleEdit,
   handleDelete,
+  handleCommentClick,
 }) => {
-  const [taskData, setTaskData] = useState([]);
-  const { tasksMeta } = useTasks();
   const statusMeta = getMetaOptions({
     metaField: 'taks_status',
     metaObj: tasksMeta,
   });
+
+  // Use useMemo to prevent unnecessary re-renders
+  const taskData = useMemo(() => {
+    return tasks || [];
+  }, [tasks]);
 
   const columns = [
     {
@@ -122,7 +128,7 @@ const TaskTable = ({
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-start">
           <ScrollArea className="w-full">
-            <div className="text-sm text-muted-foreground flex justify-center">
+            <div className="text-sm text-muted-foreground flex justify-center gap-1">
               {params.row.assignees.map((a, index) => (
                 <Tooltip title={a?.name} key={index}>
                   <Avatar src={a?.profile} alt={a?.name} />
@@ -171,8 +177,6 @@ const TaskTable = ({
       renderCell: (params) => {
         return (
           <div className="w-full h-full flex items-center justify-start">
-            {/* Uncomment when backend send id rather string for status */}
-
             <Select
               value={statusMeta
                 .find((s) => s.id === params.value)
@@ -232,6 +236,27 @@ const TaskTable = ({
           className="cursor-pointer"
         >
           <Eye className="h-4 w-4" />
+        </IconButton>
+      ),
+    },
+    {
+      field: 'comments',
+      headerName: 'Comments',
+      flex: 0.5,
+      minWidth: 80,
+      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
+      renderCell: (params) => (
+        <IconButton
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCommentClick(params.row);
+          }}
+          className="cursor-pointer"
+        >
+          <MessageSquare className="h-4 w-4 text-[#6366F1]" />
         </IconButton>
       ),
     },
@@ -296,10 +321,6 @@ const TaskTable = ({
   ];
 
   const filteredColumns = noFilterColumns(columns);
-
-  useEffect(() => {
-    setTaskData(tasks);
-  }, [tasks]);
 
   return (
     <>

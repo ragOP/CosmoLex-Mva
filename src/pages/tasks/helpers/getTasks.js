@@ -13,7 +13,7 @@ const getTasks = async () => {
       result.response &&
       (result.response.Apistatus === true || result.response.success === true)
     ) {
-      return result.response;
+      return result.response.tasks || result.response.data || result.response;
     } else {
       console.error(
         'Tasks API error:',

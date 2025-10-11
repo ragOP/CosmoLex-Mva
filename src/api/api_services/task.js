@@ -22,16 +22,17 @@ export const getTasks = async () => {
   if (response && response?.response?.Apistatus === false) {
     throw new Error(response?.response?.message || 'Failed to get tasks');
   }
+  console.log(response.response.tasks);
   return response.response?.tasks || [];
 };
 
 // Get task by id
 export const getTaskById = async (id) => {
-  console.log('id', id);
   const response = await apiService({
     endpoint: `${endpoints.getTask}/${id}`,
     method: 'GET',
   });
+
   if (response && response?.response?.Apistatus === false) {
     throw new Error(response?.response?.message || 'Failed to get task');
   }
@@ -71,11 +72,16 @@ export const createTask = async (taskData) => {
     data: taskData,
   });
 
-  console.log('response', response);
   if (response && response?.response?.Apistatus === false) {
     throw new Error(response.message || 'Failed');
   }
-  return response.response?.data;
+
+  return (
+    response?.response?.data ||
+    response?.response?.task ||
+    response?.response ||
+    response
+  );
 };
 
 // Update task
@@ -126,12 +132,14 @@ export const uploadTaskFile = async (fileData) => {
     data: fileData,
     headers: { 'Content-Type': 'multipart/form-data' },
   });
+
   if (response && response?.response?.Apistatus === false) {
     throw new Error(
       response?.response?.message || 'Failed to upload task file'
     );
   }
-  return response.response?.data;
+
+  return response?.response?.data || response?.response || response;
 };
 
 // Delete task file
@@ -171,7 +179,7 @@ export const getCommentMeta = async () => {
       response?.response?.message || 'Failed to get comment meta'
     );
   }
-  return response.response?.data;
+  return response.response?.data || [];
 };
 
 // Get All comments

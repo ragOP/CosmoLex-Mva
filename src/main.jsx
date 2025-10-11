@@ -12,7 +12,6 @@ import App from './App.jsx';
 
 setupAxiosInterceptor(store);
 
-
 // Create a client
 const queryClient = new QueryClient({
   defaultOptions: {

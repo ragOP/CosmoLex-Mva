@@ -24,8 +24,14 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { Breadcrumb } from '@/components/breadcrumb/index';
-import { getProfile } from '@/api/api_services/profile';
-import { setUser } from '@/store/slices/authSlice';
+import { setUser, logout } from '@/store/slices/authSlice';
+import { clearAuthData } from '@/utils/auth';
+
+import {
+  getProfilePictureUrl,
+  getUserInitials,
+  handleProfilePictureError,
+} from '@/utils/profilePicture';
 
 export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
@@ -37,8 +43,8 @@ export default function Navbar() {
   const handleLogout = () => {
     setLoadingLogout(true);
     setTimeout(() => {
-      // clear auth (example)
-      localStorage.removeItem('authToken');
+      dispatch(logout());
+      clearAuthData();
       navigate('/login');
     }, 1500);
   };
@@ -47,26 +53,43 @@ export default function Navbar() {
     navigate('/dashboard/profile');
   };
 
-  // Fetch user profile data
-  const fetchUserProfile = React.useCallback(async () => {
-    if (!user?.id) return;
+  // Fetch user profile data - COMMENTED OUT TO AVOID 404 ERRORS
+  // const fetchUserProfile = React.useCallback(async () => {
+  //   if (!user?.id) return;
 
-    try {
-      const profileData = await getProfile();
-      if (profileData && Object.keys(profileData).length > 0) {
-        dispatch(setUser({ ...user, ...profileData }));
-      }
-    } catch (error) {
-      console.error('Failed to fetch user profile:', error);
-    }
-  }, []);
+  //   try {
+  //     // First try the profile endpoint
+  //     const profileData = await getProfile();
+  //     if (profileData && Object.keys(profileData).length > 0) {
+  //       dispatch(setUser({ ...user, ...profileData }));
+  //       return;
+  //     }
+  //   } catch (error) {
+  //     console.warn(
+  //       'Profile endpoint failed, trying user endpoint:',
+  //       error.message
+  //     );
+  //   }
 
-  // Fetch profile on component mount and when user changes
-  React.useEffect(() => {
-    if (user?.id) {
-      fetchUserProfile();
-    }
-  }, [user?.id, fetchUserProfile]);
+  //   try {
+  //     // Fallback to user endpoint if profile endpoint fails
+  //     const userData = await getUserById(user.id);
+  //     if (userData?.data && Object.keys(userData.data).length > 0) {
+  //       dispatch(setUser({ ...user, ...userData.data }));
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to fetch user data:', error);
+  //     // Don't throw the error - just log it and continue
+  //     // The user data from auth is sufficient for basic functionality
+  //   }
+  // }, [user]);
+
+  // Fetch profile on component mount and when user changes - COMMENTED OUT
+  // React.useEffect(() => {
+  //   if (user?.id) {
+  //     fetchUserProfile();
+  //   }
+  // }, [user?.id]);
 
   const items = [
     { label: 'Dashboard', href: '/dashboard' },
@@ -87,9 +110,7 @@ export default function Navbar() {
     >
       <Breadcrumb items={items} />
 
-      {/* Right Side - Actions & Profile */}
       <div className="flex justify-between items-center gap-3 ">
-        {/* Sidebar Icon (mobile only) */}
         <button
           className="md:hidden p-2 rounded bg-white shadow"
           aria-label="Open sidebar"
@@ -127,21 +148,25 @@ export default function Navbar() {
             >
               <div className="relative">
                 {user?.profile_picture ? (
-                  <img
-                    src={
-                      user.profile_picture.startsWith('http')
-                        ? user.profile_picture
-                        : `https://backend.vsrlaw.ca/storage/user_profiles/${user.profile_picture}`
-                    }
-                    alt="User Avatar"
-                    className="h-8 w-8 rounded-full object-cover shadow-lg border-2 border-white/50"
-                    onError={(e) => {
-                      // Fallback to initials if image fails to load
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                ) : null}
+                  <>
+                    <img
+                      src={getProfilePictureUrl(user.profile_picture)}
+                      alt="User Avatar"
+                      className="h-8 w-8 rounded-full object-cover shadow-lg border-2 border-white/50"
+                      onError={handleProfilePictureError}
+                    />
+                    <div
+                      className="profile-fallback h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-semibold shadow-lg border-2 border-white/50"
+                      style={{ display: 'none' }}
+                    >
+                      {getUserInitials(user.first_name, user.last_name)}
+                    </div>
+                  </>
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-semibold shadow-lg border-2 border-white/50">
+                    {getUserInitials(user?.first_name, user?.last_name)}
+                  </div>
+                )}
 
                 <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-white"></div>
               </div>

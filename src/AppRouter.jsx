@@ -30,6 +30,7 @@ const UserManagementPage = () => <div>User Management Page</div>;
 const BulkImportPage = () => <div>Bulk Import Page</div>;
 const CalendarPage = lazy(() => import('./pages/calendar'));
 const TasksPage = lazy(() => import('./pages/tasks'));
+const TaskCommentsPage = lazy(() => import('./pages/tasks/CommentsPage'));
 const MatterIntakePage = lazy(() => import('./pages/matter/intake'));
 const Overview = lazy(() => import('./components/inbox/Overview'));
 const CreateIntake = lazy(() => import('./components/inbox/CreateIntake'));
@@ -91,6 +92,7 @@ const AppRouter = () => (
           <Route path="dashboard-form" element={<DashboardForm />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="tasks/" element={<TasksPage />} />
+          <Route path="tasks/comments" element={<TaskCommentsPage />} />
           <Route path="matter" element={<MatterPage />} />
           <Route path="user-management" element={<UserManagementPage />} />
           <Route path="bulk-import" element={<BulkImportPage />} />
@@ -119,6 +121,7 @@ const AppRouter = () => (
             <Route path="notes/" element={<Notes />} />
             <Route path="event/" element={<CalendarPage />} />
             <Route path="tasks/" element={<TasksPage />} />
+            <Route path="tasks/comments" element={<TaskCommentsPage />} />
             <Route path="documentation/" element={<Documentation />} />
             <Route path="communication/" element={<Communication />} />
             <Route path="communication/:tab" element={<Communication />} />
