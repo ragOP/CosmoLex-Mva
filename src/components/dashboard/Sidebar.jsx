@@ -304,10 +304,10 @@ const adminSidebarItems = [
         iconType: 'tasks',
       },
       {
-        // id: '/dashboard/setup/graph',
-        // label: 'Graph',
-        // type: 'link',
-        // iconType: 'graph',
+        id: '/dashboard/setup/graph',
+        label: 'Graph',
+        type: 'link',
+        iconType: 'graph',
       },
       {
         id: '/dashboard/setup/task-priority',
