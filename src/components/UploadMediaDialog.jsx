@@ -183,7 +183,10 @@ const UploadMediaDialog = ({ open, onClose, onSubmit, isLoading }) => {
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={(event, reason) => {
+        if (reason === 'backdropClick') return;
+        handleClose();
+      }}
       maxWidth="md"
       fullWidth
       sx={{ zIndex: 9998 }}

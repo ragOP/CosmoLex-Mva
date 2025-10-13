@@ -417,7 +417,10 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
       {/* Main Contact Form */}
       <Dialog
         open={open}
-        onClose={() => setOpen(false)}
+        onClose={(event, reason) => {
+          if (reason === 'backdropClick') return;
+          setOpen(false);
+        }}
         maxWidth="lg"
         fullWidth
       >
@@ -606,7 +609,10 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
       {/* Address Dialog */}
       <Dialog
         open={addressDialogOpen}
-        onClose={() => setAddressDialogOpen(false)}
+        onClose={(event, reason) => {
+          if (reason === 'backdropClick') return;
+          setAddressDialogOpen(false);
+        }}
         maxWidth="md"
         fullWidth
       >

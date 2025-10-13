@@ -408,7 +408,20 @@ export default function NewEventDialogRHF({
 
   return (
     <>
-      <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
+      <Dialog
+        open={open}
+        onClose={(event, reason) => {
+          if (reason === 'escapeKeyDown') {
+            onClose();
+          }
+        }}
+        maxWidth="lg"
+        fullWidth
+        disableEscapeKeyDown={false}
+        PaperProps={{
+          onClick: (e) => e.stopPropagation(),
+        }}
+      >
         <form onSubmit={handleSubmit(onFormSubmit)}>
           {showDeleteConfirm && (
             <div className="absolute inset-0 bg-black/40 z-[60] rounded-lg"></div>

@@ -103,6 +103,8 @@ const CreateEventCategoryDialog = ({
           </Box>
           <IconButton
             onClick={handleClose}
+            disableEscapeKeyDown={false}
+            onBackdropClick={handleClose}
             size="small"
             sx={{
               color: 'grey.500',

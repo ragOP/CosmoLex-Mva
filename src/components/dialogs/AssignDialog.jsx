@@ -79,7 +79,10 @@ const AssignDialog = ({
   return (
     <Dialog
       open={assignedToDialogOpen}
-      onClose={handleClose}
+      onClose={(event, reason) => {
+        if (reason === 'backdropClick') return;
+        handleClose();
+      }}
       maxWidth="md"
       fullWidth
     >

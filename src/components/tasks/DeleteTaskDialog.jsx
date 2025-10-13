@@ -20,7 +20,10 @@ const DeleteTaskDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-[#F5F5FA] p-6 rounded-xl shadow-xl">
+      <DialogContent
+        className="max-w-md bg-[#F5F5FA] p-6 rounded-xl shadow-xl"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-red-500" />

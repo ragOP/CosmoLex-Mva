@@ -3,7 +3,7 @@ import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { Avatar, Box, Tooltip, IconButton } from '@mui/material';
 import formatDate from '@/utils/formatDate';
 import { Badge } from '@/components/ui/badge';
-import { getProfilePictureUrl, getUserInitials } from '@/utils/profilePicture';
+import { getUserInitials } from '@/utils/profilePicture';
 import {
   Select,
   SelectTrigger,
@@ -13,6 +13,13 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Pencil, CircleOff, Trash2, Eye, MessageSquare } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { useTasks } from '@/components/tasks/hooks/useTasks';
 import getMetaOptions from '@/utils/getMetaFields';
 import { truncateStr } from '@/utils/truncateStr';
@@ -125,19 +132,58 @@ const TaskTable = ({
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
       align: 'center',
-      renderCell: (params) => (
-        <div className="w-full h-full flex items-center justify-start">
-          <ScrollArea className="w-full">
-            <div className="text-sm text-muted-foreground flex justify-center gap-1">
-              {params.row.assignees.map((a, index) => (
-                <Tooltip title={a?.name} key={index}>
-                  <Avatar src={a?.profile} alt={a?.name} />
-                </Tooltip>
-              ))}
+      renderCell: (params) => {
+        const assignees = params.row.assignees || [];
+        const maxVisible = 3;
+
+        return (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="text-sm text-muted-foreground flex justify-center items-center gap-1">
+              {assignees.length <= maxVisible ? (
+                // Show all assignees if 3 or fewer
+                assignees.map((assignee, index) => (
+                  <Tooltip title={assignee?.name} key={index}>
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-medium text-blue-700 border border-blue-200">
+                      {getUserInitials(assignee?.name)}
+                    </div>
+                  </Tooltip>
+                ))
+              ) : (
+                // Show only the "more" button if more than 3
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium text-gray-600 border border-gray-200 hover:bg-gray-200 transition-colors cursor-pointer">
+                      +{assignees.length}
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>
+                        All Assignees ({assignees.length})
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {assignees.map((assignee, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-3 p-2 rounded-lg bg-gray-50"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium text-blue-700 border border-blue-200">
+                            {getUserInitials(assignee?.name)}
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">
+                            {assignee?.name}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
-          </ScrollArea>
-        </div>
-      ),
+          </div>
+        );
+      },
     },
     {
       field: 'assigned_by',

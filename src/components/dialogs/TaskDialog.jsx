@@ -663,7 +663,15 @@ export default function TaskDialog({
 
   return (
     <>
-      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <Dialog
+        open={open}
+        onClose={(event, reason) => {
+          if (reason === 'backdropClick') return;
+          onClose();
+        }}
+        maxWidth="md"
+        fullWidth
+      >
         <form onSubmit={handleSubmit(onFormSubmit)}>
           <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000]">
             <div className="flex items-center justify-between p-4">

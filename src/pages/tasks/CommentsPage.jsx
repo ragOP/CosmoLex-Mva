@@ -3,7 +3,7 @@ import { Stack, Divider, IconButton, Card } from '@mui/material';
 import { Button as ShadButton } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ArrowLeft, Plus, Loader2, Paperclip } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, Loader2, Paperclip } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { uploadCommentAttachment } from '@/api/api_services/task';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -20,7 +20,6 @@ const CommentsPage = () => {
   const [comment, setComment] = useState('');
   const [attachment, setAttachment] = useState([]);
   const [showUploadMediaDialog, setShowUploadMediaDialog] = useState(false);
-  const [showAddComment, setShowAddComment] = useState(false);
   const [searchParams] = useSearchParams();
   const slugId = searchParams.get('slugId');
 
@@ -109,13 +108,11 @@ const CommentsPage = () => {
       });
       setComment('');
       setAttachment([]);
-      setShowAddComment(false);
     } catch (error) {
       console.error('Error creating comment:', error);
       toast.error('Failed to create comment');
     }
   };
-
 
   const goBackToTasks = () => {
     const taskId = searchParams.get('taskId');
@@ -166,7 +163,7 @@ const CommentsPage = () => {
             <div className="w-full flex flex-col gap-4">
               {isArrayWithValues(comments) &&
                 comments.map((c) => {
-                  // More robust user comparison - handle both string and number IDs
+                  console.log('C', c);
                   const isCurrentUser =
                     c.user?.id?.toString() === currentUser?.id?.toString();
 
@@ -177,40 +174,61 @@ const CommentsPage = () => {
                         isCurrentUser ? 'justify-end' : 'justify-start'
                       }`}
                     >
-                      <Card className="p-2 flex flex-col gap-2 shadow-sm bg-white max-w-[60%] min-w-[60%] w-full">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="w-8 h-8">
-                            <img
-                              src={c.user?.profile}
-                              alt={c.user?.name}
-                              className="w-full h-full object-cover rounded-full"
-                            />
-                            <AvatarFallback className="bg-[#6366F1] text-white">
-                              {c.user?.name?.[0]?.toUpperCase() || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex flex-col">
-                            <span className="font-medium text-sm text-gray-800">
-                              {c.user?.name}
-                            </span>
-                            {c.user?.author && (
-                              <span className="text-xs text-[#6366F1]">
-                                Author
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                      <Card
+                        className="p-2 flex flex-col gap-2 border-none shadow-none bg-transparent max-w-[60%] min-w-[60%] w-full"
+                        sx={{
+                          backgroundColor: 'transparent',
+                          boxShadow: 'none',
+                          border: 'none',
+                          '&:before': {
+                            display: 'none',
+                          },
+                        }}
+                      >
+                        <div className="flex items-end gap-4">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="w-8 h-8">
+                              <img
+                                src={c.user?.profile}
+                                alt={c.user?.name}
+                                className="w-full h-full object-cover rounded-full"
+                              />
+                              <AvatarFallback className="bg-[#6366F1] text-white">
+                                {c.user?.name?.[0]?.toUpperCase() || 'U'}
+                              </AvatarFallback>
+                            </Avatar>
 
-                        <p className="text-sm text-gray-700">
-                          {c.comment || ''}
-                        </p>
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-1">
+                                <span className="font-medium text-sm text-gray-800">
+                                  {c.user?.name}
+                                </span>
+                                {c.user?.author && (
+                                  <BadgeCheck className="w-4 h-4 text-[#6366F1]" />
+                                )}
+                              </div>
+                              {c.user?.author && (
+                                <span className="text-xs text-[#6366F1]">
+                                  Author
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-md text-black-700">
+                            {c.user.comment || ''}
+                          </p>
+                        </div>
 
                         {isArrayWithValues(c.attachments) && (
                           <div className="flex flex-col gap-2">
                             {c.attachments.map((file) => (
                               <Card
                                 key={file.id}
-                                className="p-2 flex items-center gap-2 shadow-sm border border-gray-200"
+                                className="p-2 flex items-center gap-2 shadow-none"
+                                sx={{
+                                  backgroundColor: 'transparent',
+                                  boxShadow: 'none',
+                                }}
                               >
                                 <Paperclip className="w-4 h-4 text-gray-500" />
                                 <a
@@ -231,94 +249,86 @@ const CommentsPage = () => {
                 })}
             </div>
           )}
-
-          <ShadButton
-            type="button"
-            onClick={() => setShowAddComment(true)}
-            variant="outline"
-            className="w-fit mt-4 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Comment
-          </ShadButton>
         </Stack>
 
-        {showAddComment && (
-          <div className="border-t pt-4">
-            <h4 className="text-md font-semibold text-[#40444D] mb-3">
-              Add New Comment
-            </h4>
-            <div className="space-y-4">
-              <Input
-                placeholder="Write a comment..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-              />
+        <div className="border-t pt-4">
+          <h4 className="text-md font-semibold text-[#40444D] mb-3">
+            Add New Comment
+          </h4>
+          <div className="space-y-4">
+            <Input
+              placeholder="Write a comment..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            />
 
-              {isArrayWithValues(attachment) && (
-                <Stack className="mt-4">
-                  {attachment.map((file, index) => (
-                    <Card
-                      key={index}
-                      className="p-2 flex items-center gap-2 shadow-sm"
-                    >
-                      <Paperclip className="w-4 h-4 text-gray-500" />
-                      <a
-                        href={file.file_path}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:underline truncate"
-                      >
-                        {file.name}
-                      </a>
-                    </Card>
-                  ))}
-                </Stack>
-              )}
-
-              <div className="flex items-center justify-between">
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <IconButton
-                    onClick={() => setShowUploadMediaDialog(true)}
-                    component="span"
-                    size="small"
+            {isArrayWithValues(attachment) && (
+              <Stack className="mt-4">
+                {attachment.map((file, index) => (
+                  <Card
+                    key={index}
+                    className="p-2 flex items-center gap-2 shadow-sm"
                     sx={{
-                      p: 1.5,
-                      borderRadius: 1,
-                      '&:hover': { bgcolor: '#e3f2fd' },
+                      backgroundColor: 'transparent',
+                      boxShadow: 'none',
+                      border: 'none',
                     }}
                   >
-                    <Paperclip size={18} color="#666" />
-                  </IconButton>
-                </Stack>
-                <div className="flex gap-2">
-                  <ShadButton
-                    variant="outline"
-                    onClick={() => {
-                      setShowAddComment(false);
-                      setComment('');
-                      setAttachment([]);
-                    }}
-                    disabled={isCreatingComment}
-                  >
-                    Cancel
-                  </ShadButton>
-                  <ShadButton
-                    disabled={isCreatingComment}
-                    className="bg-[#6366F1] text-white hover:bg-[#4f51d8]"
-                    onClick={createNewComment}
-                  >
-                    {isCreatingComment ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      'Add Comment'
-                    )}
-                  </ShadButton>
-                </div>
+                    <Paperclip className="w-4 h-4 text-gray-500" />
+                    <a
+                      href={file.file_path}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline truncate"
+                    >
+                      {file.name}
+                    </a>
+                  </Card>
+                ))}
+              </Stack>
+            )}
+
+            <div className="flex items-center justify-between">
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <IconButton
+                  onClick={() => setShowUploadMediaDialog(true)}
+                  component="span"
+                  size="small"
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 1,
+                    '&:hover': { bgcolor: '#e3f2fd' },
+                  }}
+                >
+                  <Paperclip size={18} color="#666" />
+                </IconButton>
+              </Stack>
+              <div className="flex gap-2">
+                <ShadButton
+                  variant="outline"
+                  onClick={() => {
+                    setComment('');
+                    setAttachment([]);
+                  }}
+                  disabled={isCreatingComment}
+                >
+                  Cancel
+                </ShadButton>
+                <ShadButton
+                  disabled={isCreatingComment}
+                  className="bg-[#6366F1] text-white hover:bg-[#4f51d8]"
+                  onClick={createNewComment}
+                >
+                  {isCreatingComment ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    'Add Comment'
+                  )}
+                </ShadButton>
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
       <UploadMediaDialog

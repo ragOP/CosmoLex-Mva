@@ -17,6 +17,9 @@ export const endpoints = {
   verifyOtp: 'verify-otp',
   resendOtp: 'resend-otp',
 
+  // Dashboard endpoint
+  getDashboardSummary: 'v2/dashboard/summary',
+
   // Event endpoint
   eventMeta: 'v2/event/meta',
   getEvent: 'v2/event/show',

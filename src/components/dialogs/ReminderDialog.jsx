@@ -72,7 +72,10 @@ const ReminderDialog = ({
   return (
     <Dialog
       open={reminderDialogOpen}
-      onClose={handleClose}
+      onClose={(event, reason) => {
+        if (reason === 'backdropClick') return;
+        handleClose();
+      }}
       maxWidth="md"
       fullWidth
     >

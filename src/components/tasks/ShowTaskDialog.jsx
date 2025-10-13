@@ -15,69 +15,69 @@ import {
 import formatDate from '@/utils/formatDate';
 import { useTasks } from '@/components/tasks/hooks/useTasks';
 import isArrayWithValues from '@/utils/isArrayWithValues';
-import UploadMediaDialog from '@/components/UploadMediaDialog';
-import { useSearchParams } from 'react-router-dom';
-import { useMatter } from '@/components/inbox/MatterContext';
-import { uploadCommentAttachment } from '@/api/api_services/task';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+// import UploadMediaDialog from '@/components/UploadMediaDialog';
+// import { useSearchParams } from 'react-router-dom';
+// import { useMatter } from '@/components/inbox/MatterContext';
+// import { uploadCommentAttachment } from '@/api/api_services/task';
+// import { useMutation, useQueryClient } from '@tanstack/react-query';
+// import { toast } from 'sonner';
 
 const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
   const {
     task,
     tasksMeta,
-    comments,
-    commentMeta,
-    handleCreateComment,
-    isCreatingComment,
+    // comments,
+    // commentMeta,
+    // handleCreateComment,
+    // isCreatingComment,
   } = useTasks();
 
-  const [searchParams] = useSearchParams();
-  const taskId = searchParams.get('taskId');
-  const [commentOpen, setCommentOpen] = useState(false);
-  const [comment, setComment] = useState('');
-  const [attachment, setAttachment] = useState([]);
-  const [showUploadMediaDialog, setShowUploadMediaDialog] = useState(false);
+  // const [searchParams] = useSearchParams();
+  // const taskId = searchParams.get('taskId');
+  // const [commentOpen, setCommentOpen] = useState(false);
+  // const [comment, setComment] = useState('');
+  // const [attachment, setAttachment] = useState([]);
+  // const [showUploadMediaDialog, setShowUploadMediaDialog] = useState(false);
 
-  const uploadCommentAttachmentMutation = useMutation({
-    mutationFn: (attachmentData) => uploadCommentAttachment(attachmentData),
-    onSuccess: (res) => {
-      if (isArrayWithValues(res?.attachments)) {
-        res?.attachments?.forEach((attachment) => {
-          setAttachment((prev) => [
-            ...prev,
-            {
-              id: attachment?.attachment_id,
-              file_path: attachment?.file_path,
-              name: attachment?.file_name,
-            },
-          ]);
-        });
-      } else {
-        setAttachment((prev) => [
-          ...prev,
-          {
-            id: res?.attachment_id,
-            file_path: res?.file_path,
-            name: res?.file_name,
-          },
-        ]);
-      }
-      queryClient.invalidateQueries(['comments', taskId]);
-      toast.success(res?.message || 'Attachment uploaded successfully');
-    },
-    onError: (error) =>
-      toast.error(error?.message || 'Failed to upload attachment'),
-  });
+  // const uploadCommentAttachmentMutation = useMutation({
+  //   mutationFn: (attachmentData) => uploadCommentAttachment(attachmentData),
+  //   onSuccess: (res) => {
+  //     if (isArrayWithValues(res?.attachments)) {
+  //       res?.attachments?.forEach((attachment) => {
+  //         setAttachment((prev) => [
+  //           ...prev,
+  //           {
+  //             id: attachment?.attachment_id,
+  //             file_path: attachment?.file_path,
+  //             name: attachment?.file_name,
+  //           },
+  //         ]);
+  //       });
+  //     } else {
+  //       setAttachment((prev) => [
+  //         ...prev,
+  //         {
+  //           id: res?.attachment_id,
+  //           file_path: res?.file_path,
+  //           name: res?.file_name,
+  //         },
+  //       ]);
+  //     }
+  //     queryClient.invalidateQueries(['comments', taskId]);
+  //     toast.success(res?.message || 'Attachment uploaded successfully');
+  //   },
+  //   onError: (error) =>
+  //     toast.error(error?.message || 'Failed to upload attachment'),
+  // });
 
-  const slugId = searchParams.get('slugId');
-  let contactId = null;
+  // const slugId = searchParams.get('slugId');
+  // let contactId = null;
 
-  if (slugId) {
-    const matterData = useMatter();
-    contactId = matterData?.matter?.contact_id;
-  }
+  // if (slugId) {
+  //   const matterData = useMatter();
+  //   contactId = matterData?.matter?.contact_id;
+  // }
 
   // If task is empty or not found, return null
   if (!task || !Object?.keys(task)?.length > 0) return null;
@@ -135,45 +135,53 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
     };
   });
 
-  const handleCommentAttachment = (payload) => {
-    const formData = new FormData();
-    formData.append('category_id', payload.category_id);
-    formData.append('folder_id', payload.folder_id);
-    formData.append('description', payload.description);
-    // formData.append('attachment', payload.files);
+  // const handleCommentAttachment = (payload) => {
+  //   const formData = new FormData();
+  //   formData.append('category_id', payload.category_id);
+  //   formData.append('folder_id', payload.folder_id);
+  //   formData.append('description', payload.description);
+  //   // formData.append('attachment', payload.files);
 
-    payload.files.forEach((fileItem) => {
-      formData.append('attachment', fileItem.file);
-    });
+  //   payload.files.forEach((fileItem) => {
+  //     formData.append('attachment', fileItem.file);
+  //   });
 
-    if (slugId && contactId) {
-      formData.append('slug', slugId);
-      formData.append('contact_id', contactId);
-    }
+  //   if (slugId && contactId) {
+  //     formData.append('slug', slugId);
+  //     formData.append('contact_id', contactId);
+  //   }
 
-    uploadCommentAttachmentMutation.mutateAsync(formData);
-  };
+  //   uploadCommentAttachmentMutation.mutateAsync(formData);
+  // };
 
-  const createComment = () => {
-    if (!comment) return;
-    try {
-      handleCreateComment({
-        comment,
-        attachment_ids: isArrayWithValues(attachment)
-          ? attachment?.map((a) => a.id)
-          : [],
-      });
-      setComment('');
-      setAttachment([]);
-      setCommentOpen(false);
-    } catch (error) {
-      console.error('Error creating comment:', error);
-    }
-  };
+  // const createComment = () => {
+  //   if (!comment) return;
+  //   try {
+  //     handleCreateComment({
+  //       comment,
+  //       attachment_ids: isArrayWithValues(attachment)
+  //         ? attachment?.map((a) => a.id)
+  //         : [],
+  //     });
+  //     setComment('');
+  //     setAttachment([]);
+  //     setCommentOpen(false);
+  //   } catch (error) {
+  //     console.error('Error creating comment:', error);
+  //   }
+  // };
 
   return (
     <>
-      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+      <Dialog
+        open={open}
+        onClose={(event, reason) => {
+          if (reason === 'backdropClick') return;
+          onClose();
+        }}
+        maxWidth="md"
+        fullWidth
+      >
         <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000]">
           {/* Header */}
           <div className="flex items-center justify-between p-4">
@@ -301,8 +309,7 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
 
             <Divider />
 
-            {/* Comments */}
-            {/* Comments */}
+            {/* Comments Section - Commented Out
             <Stack className="overflow-auto no-scrollbar">
               <h3 className="text-lg font-semibold text-[#40444D] mb-2">
                 Comments
@@ -319,7 +326,6 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
                       key={c.id}
                       className="p-4 flex flex-col gap-3 shadow-sm bg-white"
                     >
-                      {/* User Info */}
                       <div className="flex items-center gap-3">
                         <Avatar className="w-8 h-8">
                           <img
@@ -343,10 +349,8 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
                         </div>
                       </div>
 
-                      {/* Comment text */}
                       <p className="text-sm text-gray-700">{c.comment || ''}</p>
 
-                      {/* Attachments */}
                       {isArrayWithValues(c.attachments) && (
                         <div className="flex flex-col gap-2">
                           {c.attachments.map((file) => (
@@ -381,6 +385,7 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
                 Add Comment
               </Button>
             </Stack>
+            */}
           </div>
 
           {/* Footer */}
@@ -395,15 +400,17 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
         </Stack>
       </Dialog>
 
-      {/* Comment Dialog */}
+      {/* Comment Dialog - Commented Out
       <Dialog
         open={commentOpen}
-        onClose={() => setCommentOpen(false)}
+        onClose={(event, reason) => {
+          if (reason === 'backdropClick') return;
+          setCommentOpen(false);
+        }}
         maxWidth="sm"
         fullWidth
       >
         <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000]">
-          {/* Header */}
           <div className="flex items-center justify-between p-4">
             <h1 className="text-xl text-[#40444D] text-center font-bold font-sans">
               Comments
@@ -422,7 +429,6 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
               onChange={(e) => setComment(e.target.value)}
             />
 
-            {/* Show uploaded attachments */}
             {isArrayWithValues(attachment) && (
               <Stack className="mt-4">
                 {attachment.map((file, index) => (
@@ -447,7 +453,6 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
 
           <Divider />
 
-          {/* Footer */}
           <div className="flex items-center justify-between p-4 gap-2">
             <Stack direction="row" alignItems="center" spacing={1}>
               <label htmlFor="attachment-input">
@@ -484,7 +489,7 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
         </Stack>
       </Dialog>
 
-      {/* Upload Media Dialog */}
+      Upload Media Dialog - Commented Out
       <UploadMediaDialog
         open={showUploadMediaDialog}
         onClose={() => setShowUploadMediaDialog(false)}
@@ -493,6 +498,7 @@ const ShowTaskDialog = ({ open = false, onClose = () => {} }) => {
         }}
         isLoading={false}
       />
+      */}
     </>
   );
 };

@@ -48,6 +48,7 @@ export default function CreateIntake() {
   const [showContactTable, setShowContactTable] = useState(false);
   const [hoveredContact, setHoveredContact] = useState(null);
   const [selectedContact, setSelectedContact] = useState(null);
+  const [selectedContacts, setSelectedContacts] = useState([]);
   const [isEventsCollapsed, setIsEventsCollapsed] = useState(false);
 
   const { contact, contactsMeta, contactLoading, contactsMetaLoading } =
@@ -110,8 +111,10 @@ export default function CreateIntake() {
     const errors = {};
 
     // Required field validation
-    if (!getValues('contact_id')) {
-      errors.contact_id = 'Contact is required';
+    const contactIds = getValues('contact_ids');
+    const contactId = getValues('contact_id');
+    if (!contactId && (!contactIds || contactIds.length === 0)) {
+      errors.contact_id = 'At least one contact is required';
     }
 
     if (!getValues('case_type_id')) {
@@ -177,6 +180,7 @@ export default function CreateIntake() {
       ad_campaign_id: '',
       case_description: '',
       contact_id: '',
+      contact_ids: [],
     },
     mode: 'onChange',
   });
@@ -222,10 +226,14 @@ export default function CreateIntake() {
     }
 
     // Additional contact validation
-    if (!selectedContact && !data.contact_id) {
+    if (
+      selectedContacts.length === 0 &&
+      !data.contact_id &&
+      (!data.contact_ids || data.contact_ids.length === 0)
+    ) {
       setError('contact_id', {
         type: 'manual',
-        message: 'Please select a contact or create a new one',
+        message: 'Please select at least one contact or create a new one',
       });
       toast.error('Contact selection is required');
       return;
@@ -508,7 +516,6 @@ export default function CreateIntake() {
                               setSearchContactQuery(e.target.value);
                               setShowContactTable(true);
                               setSelectedContact(null);
-                              setValue('contact_id', '');
                               if (formErrors.contact_id) {
                                 clearErrors('contact_id');
                               }
@@ -521,11 +528,11 @@ export default function CreateIntake() {
                       )}
                     />
                     {/* Contact Error Display */}
-                {formErrors.contact_id && (
-                  <p className="text-xs text-red-500">
-                    {formErrors.contact_id.message}
-                  </p>
-                )}
+                    {formErrors.contact_id && (
+                      <p className="text-xs text-red-500">
+                        {formErrors.contact_id.message}
+                      </p>
+                    )}
                     <p className="text-[0.7rem] text-[#40444D] text-start w-1/2">
                       Don't have a contact?{' '}
                       <span
@@ -539,15 +546,31 @@ export default function CreateIntake() {
                 </div>
 
                 {/* Contact Search Results */}
-                {searchContactQuery && showContactTable && !selectedContact && (
+                {showContactTable && (
                   <div
                     className="flex w-full mt-4"
                     style={{ minHeight: '220px' }}
                   >
                     <div className="w-1/2 border rounded-lg bg-white shadow overflow-y-auto">
+                      <div className="p-2 border-b bg-gray-50">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium">
+                            Search Results
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowContactTable(false)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
                       <table className="w-full text-left">
                         <thead>
                           <tr className="bg-gray-100">
+                            <th className="py-2 px-4">Select</th>
                             <th className="py-2 px-4">Name</th>
                             <th className="py-2 px-2">Case Type</th>
                             <th className="py-2 px-2">Email</th>
@@ -570,7 +593,7 @@ export default function CreateIntake() {
                               .map((contact) => (
                                 <tr
                                   key={contact.id}
-                                  className={`cursor-pointer hover:bg-indigo-100 transition duration-300 ease-in-out ${
+                                  className={`hover:bg-indigo-100 transition duration-300 ease-in-out ${
                                     hoveredContact?.id === contact.id
                                       ? 'bg-indigo-50'
                                       : ''
@@ -579,15 +602,51 @@ export default function CreateIntake() {
                                     setHoveredContact(contact)
                                   }
                                   onMouseLeave={() => setHoveredContact(null)}
-                                  onClick={() => {
-                                    setSelectedContact(contact);
-                                    setShowContactTable(false);
-                                    setValue('contact_id', contact.id);
-                                    if (formErrors.contact_id) {
-                                      clearErrors('contact_id');
-                                    }
-                                  }}
                                 >
+                                  <td className="py-2 px-4">
+                                    <Checkbox
+                                      checked={selectedContacts.some(
+                                        (c) => c.id === contact.id
+                                      )}
+                                      onCheckedChange={(checked) => {
+                                        if (checked) {
+                                          const newContacts = [
+                                            ...selectedContacts,
+                                            contact,
+                                          ];
+                                          setSelectedContacts(newContacts);
+                                          setValue(
+                                            'contact_ids',
+                                            newContacts.map((c) => c.id)
+                                          );
+                                          // Also set single contact_id for backward compatibility
+                                          setValue('contact_id', contact.id);
+                                        } else {
+                                          const newContacts =
+                                            selectedContacts.filter(
+                                              (c) => c.id !== contact.id
+                                            );
+                                          setSelectedContacts(newContacts);
+                                          setValue(
+                                            'contact_ids',
+                                            newContacts.map((c) => c.id)
+                                          );
+                                          // Set to last selected or empty
+                                          setValue(
+                                            'contact_id',
+                                            newContacts.length > 0
+                                              ? newContacts[
+                                                  newContacts.length - 1
+                                                ].id
+                                              : ''
+                                          );
+                                        }
+                                        if (formErrors.contact_id) {
+                                          clearErrors('contact_id');
+                                        }
+                                      }}
+                                    />
+                                  </td>
                                   <td className="py-2 px-4">
                                     {contact.contact_name}
                                   </td>
@@ -601,13 +660,24 @@ export default function CreateIntake() {
                               ))
                           ) : (
                             <tr>
-                              <td colSpan={3} className="py-2 px-2 text-center">
+                              <td colSpan={4} className="py-2 px-2 text-center">
                                 No contacts found
                               </td>
                             </tr>
                           )}
                         </tbody>
                       </table>
+                      {selectedContacts.length > 0 && (
+                        <div className="p-2 border-t bg-gray-50">
+                          <Button
+                            type="button"
+                            onClick={() => setShowContactTable(false)}
+                            className="w-full"
+                          >
+                            Done ({selectedContacts.length} selected)
+                          </Button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Contact Preview */}
@@ -649,59 +719,80 @@ export default function CreateIntake() {
                   </div>
                 )}
 
-                {/* Selected Contact Display */}
-                {selectedContact && (
+                {/* Selected Contacts Display */}
+                {selectedContacts.length > 0 && (
                   <div className="w-full mt-4">
-                    <div className="relative border rounded-lg bg-white shadow p-4">
-                      <Stack
-                        direction="row"
-                        alignItems="center"
-                        justifyContent="space-between"
-                      >
-                        <h2 className="font-bold text-lg mb-2">
-                          Selected Contact
-                        </h2>
-                        <IconButton
-                          onClick={() => {
-                            setSelectedContact(null);
-                            setValue('contact_id', '');
-                            setShowContactTable(true);
-                          }}
+                    <div className="space-y-2">
+                      <h2 className="font-bold text-lg">
+                        Selected Contacts ({selectedContacts.length})
+                      </h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {selectedContacts.map((contact) => (
+                          <div
+                            key={contact.id}
+                            className="relative border rounded-lg bg-white shadow p-4"
+                          >
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              justifyContent="space-between"
+                            >
+                              <h3 className="font-semibold text-base">
+                                {contact.contact_name}
+                              </h3>
+                              <IconButton
+                                onClick={() => {
+                                  const newContacts = selectedContacts.filter(
+                                    (c) => c.id !== contact.id
+                                  );
+                                  setSelectedContacts(newContacts);
+                                  setValue(
+                                    'contact_ids',
+                                    newContacts.map((c) => c.id)
+                                  );
+                                  setValue(
+                                    'contact_id',
+                                    newContacts.length > 0
+                                      ? newContacts[newContacts.length - 1].id
+                                      : ''
+                                  );
+                                }}
+                                size="small"
+                              >
+                                <X className="w-4 h-4" />
+                              </IconButton>
+                            </Stack>
+                            <div className="space-y-1 text-sm">
+                              <p>
+                                <span className="font-semibold">Type:</span>{' '}
+                                {contact.contact_type || 'N/A'}
+                              </p>
+                              <p>
+                                <span className="font-semibold">Email:</span>{' '}
+                                {contact.primary_email || 'N/A'}
+                              </p>
+                              <p>
+                                <span className="font-semibold">Phone:</span>{' '}
+                                {contact.phone || 'N/A'}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowContactTable(true)}
                         >
-                          <Edit className="w-5 h-5" />
-                        </IconButton>
-                      </Stack>
-                      <div className="space-y-1 text-sm">
-                        <p>
-                          <span className="font-semibold">Name:</span>{' '}
-                          {selectedContact.contact_name || 'No Value found'}
-                        </p>
-                        <p>
-                          <span className="font-semibold">Case Type:</span>{' '}
-                          {selectedContact.contact_type || 'No Value found'}
-                        </p>
-                        <p>
-                          <span className="font-semibold">Email:</span>{' '}
-                          {selectedContact.primary_email || 'No Value found'}
-                        </p>
-                        <p>
-                          <span className="font-semibold">Phone:</span>{' '}
-                          {selectedContact.phone || 'No Value found'}
-                        </p>
-                        <p>
-                          <span className="font-semibold">Address:</span>{' '}
-                          {selectedContact.primary_address || 'No Value found'}
-                        </p>
-                        <p>
-                          <span className="font-semibold">Created:</span>{' '}
-                          {selectedContact.date_created || 'No Value found'}
-                        </p>
+                          <Plus className="w-4 h-4 mr-1" />
+                          Add More Contacts
+                        </Button>
                       </div>
                     </div>
                   </div>
                 )}
-
-                
               </div>
             </div>
 
@@ -789,6 +880,19 @@ export default function CreateIntake() {
             setValueFn={(contactId) => {
               console.log('contactId >>>', contactId);
               setValue('contact_id', contactId);
+              // Add the new contact to selected contacts
+              const newContact = {
+                id: contactId,
+                contact_name: 'New Contact', // This will be updated when contact data is loaded
+                contact_type: 'Unknown',
+                primary_email: '',
+                phone: '',
+              };
+              setSelectedContacts((prev) => [...prev, newContact]);
+              setValue('contact_ids', [
+                ...selectedContacts.map((c) => c.id),
+                contactId,
+              ]);
               setQueryParam(
                 'contactId',
                 contactId,

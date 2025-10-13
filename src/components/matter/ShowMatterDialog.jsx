@@ -32,7 +32,10 @@ const ShowMatterDialog = ({ matter, open = false, onClose = () => {} }) => {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl bg-[#F5F5FA] p-6 rounded-xl shadow-xl overflow-auto max-h-[80vh] no-scrollbar">
+      <DialogContent
+        className="max-w-4xl bg-[#F5F5FA] p-6 rounded-xl shadow-xl overflow-auto max-h-[80vh] no-scrollbar"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="text-2xl font-semibold flex items-center gap-2 text-[#1E293B]">
             <CalendarDays className="w-5 h-5 text-[#6366F1]" />

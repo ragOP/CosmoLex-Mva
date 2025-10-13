@@ -22,7 +22,10 @@ const DeleteUserDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-[#F5F5FA] p-6 rounded-xl shadow-xl">
+      <DialogContent
+        className="max-w-md bg-[#F5F5FA] p-6 rounded-xl shadow-xl"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-red-500" />
@@ -35,8 +38,8 @@ const DeleteUserDialog = ({
         <div className="text-sm text-slate-700 space-y-3">
           <p>
             Are you sure you want to delete the user{' '}
-            <strong className="text-red-500">"{fullName}"</strong>? This
-            action cannot be undone.
+            <strong className="text-red-500">"{fullName}"</strong>? This action
+            cannot be undone.
           </p>
           <p className="text-muted-foreground">
             This will permanently remove the user and all associated data like
