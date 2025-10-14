@@ -104,14 +104,13 @@ const TaskTable = ({
         };
 
         return (
-          <div className="w-full h-full flex items-center justify-center">
-            <Tooltip title={params.value || 'No due date'}>
-              <FontAwesomeIcon
-                icon={faFlag}
-                className="h-4 w-4"
-                style={colorStyles[flagColor] || colorStyles.gray}
-              />
-            </Tooltip>
+          <div className="w-full h-full flex flex-col items-center justify-center">
+            <div className="text-sm">{params.value}</div>
+            <FontAwesomeIcon
+              icon={faFlag}
+              className="h-4 w-4"
+              style={colorStyles[flagColor] || colorStyles.gray}
+            />
           </div>
         );
       },
