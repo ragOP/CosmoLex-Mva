@@ -13,12 +13,12 @@ function Input({ className, type, error, ...props }) {
           'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
           'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
           'backdrop-blur-sm bg-white border-input dark:bg-input/30 dark:hover:bg-input/50',
-          error && 'border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/50',
+          error &&
+            'border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500/50',
           className
         )}
         {...props}
       />
-
     </div>
   );
 }

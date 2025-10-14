@@ -67,6 +67,7 @@ const TaskUTBMSCodePage = lazy(() => import('./pages/setup/task-utbms-code'));
 const EventCategoryPage = lazy(() => import('./pages/setup/event-category'));
 const EventStatus = lazy(() => import('./pages/setup/event-status'));
 const SetupGraphPage = lazy(() => import('./pages/setup/graph'));
+const ActiveFilesPage = lazy(() => import('./pages/active-files'));
 
 const AppRouter = () => (
   <Router>
@@ -90,6 +91,7 @@ const AppRouter = () => (
         >
           <Route index element={<DashboardHome />} />
           <Route path="dashboard-form" element={<DashboardForm />} />
+          <Route path="active-files" element={<ActiveFilesPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="tasks/" element={<TasksPage />} />
           <Route path="tasks/comments" element={<TaskCommentsPage />} />

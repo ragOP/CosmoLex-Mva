@@ -1,11 +1,12 @@
 import { apiService } from '@/api/api_services';
 import { endpoints } from '@/api/endpoint';
 
-const getMatters = async () => {
+const getMatters = async (params = {}) => {
   try {
     const result = await apiService({
       endpoint: endpoints.getMatters,
       method: 'GET',
+      params,
     });
 
     // Check if request was successful - API returns Apistatus: true for success

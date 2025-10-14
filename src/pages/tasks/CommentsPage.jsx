@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Stack, Divider, IconButton, Card } from '@mui/material';
 import { Button as ShadButton } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ArrowLeft, BadgeCheck, Loader2, Paperclip } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -13,6 +13,8 @@ import { toast } from 'sonner';
 import UploadMediaDialog from '@/components/UploadMediaDialog';
 import isArrayWithValues from '@/utils/isArrayWithValues';
 import { useSelector } from 'react-redux';
+import { profileUrlConversion } from '@/utils/profileUrlConversion';
+import { formatRelativeTime } from '@/utils/formatRelativeTime';
 
 const CommentsPage = () => {
   const navigate = useNavigate();
@@ -149,7 +151,7 @@ const CommentsPage = () => {
 
       <Divider />
 
-      <div className="space-y-6 flex-1 overflow-auto p-6 no-scrollbar">
+      <div className="space-y-6 flex-1 overflow-auto p-6 ">
         <Stack className="overflow-auto no-scrollbar">
           <h3 className="text-lg font-semibold text-[#40444D] mb-2">
             Comments ({comments.length})
@@ -163,7 +165,7 @@ const CommentsPage = () => {
             <div className="w-full flex flex-col gap-4">
               {isArrayWithValues(comments) &&
                 comments.map((c) => {
-                  console.log('C', c);
+                  const profileUrl = profileUrlConversion(c.user?.profile);
                   const isCurrentUser =
                     c.user?.id?.toString() === currentUser?.id?.toString();
 
@@ -171,15 +173,16 @@ const CommentsPage = () => {
                     <div
                       key={c.id}
                       className={`flex ${
-                        isCurrentUser ? 'justify-end' : 'justify-start'
+                        isCurrentUser ? 'justify-start' : 'justify-end'
                       }`}
                     >
                       <Card
-                        className="p-2 flex flex-col gap-2 border-none shadow-none bg-transparent max-w-[60%] min-w-[60%] w-full"
+                        className="p-2 flex flex-col gap-2 border-none shadow-none bg-[#F5F5FA] max-w-[60%] min-w-[60%] w-full"
                         sx={{
-                          backgroundColor: 'transparent',
+                          backgroundColor: 'white',
                           boxShadow: 'none',
-                          border: 'none',
+                          // border: '2px solid #e5e7eb',
+                          borderRadius: '10px',
                           '&:before': {
                             display: 'none',
                           },
@@ -189,16 +192,12 @@ const CommentsPage = () => {
                           <div className="flex items-center gap-2">
                             <Avatar className="w-8 h-8">
                               <img
-                                src={c.user?.profile}
+                                src={profileUrl}
                                 alt={c.user?.name}
-                                className="w-full h-full object-cover rounded-full"
+                                className="w-full h-full rounded-full"
                               />
-                              <AvatarFallback className="bg-[#6366F1] text-white">
-                                {c.user?.name?.[0]?.toUpperCase() || 'U'}
-                              </AvatarFallback>
                             </Avatar>
-
-                            <div className="flex flex-col">
+                            <div className="flex flex-col items-start gap-1">
                               <div className="flex items-center gap-1">
                                 <span className="font-medium text-sm text-gray-800">
                                   {c.user?.name}
@@ -207,18 +206,22 @@ const CommentsPage = () => {
                                   <BadgeCheck className="w-4 h-4 text-[#6366F1]" />
                                 )}
                               </div>
-                              {c.user?.author && (
-                                <span className="text-xs text-[#6366F1]">
-                                  Author
+                              <div className="flex items-center gap-2">
+                                {c.user?.author && (
+                                  <span className="text-xs text-[#6366F1]">
+                                    Author
+                                  </span>
+                                )}
+                                <span className="text-xs text-gray-500">
+                                  {formatRelativeTime(c.created_at)}
                                 </span>
-                              )}
+                              </div>
                             </div>
                           </div>
-                          <p className="text-md text-black-700">
-                            {c.user.comment || ''}
-                          </p>
                         </div>
-
+                        <p className="text-md text-black-700">
+                          {c.user?.comment || ''}
+                        </p>
                         {isArrayWithValues(c.attachments) && (
                           <div className="flex flex-col gap-2">
                             {c.attachments.map((file) => (
@@ -228,6 +231,7 @@ const CommentsPage = () => {
                                 sx={{
                                   backgroundColor: 'transparent',
                                   boxShadow: 'none',
+                                  // border: '1px solid #e5e7eb',
                                 }}
                               >
                                 <Paperclip className="w-4 h-4 text-gray-500" />
@@ -251,15 +255,16 @@ const CommentsPage = () => {
           )}
         </Stack>
 
-        <div className="border-t pt-4">
+        <div className="border-t  pb-4">
           <h4 className="text-md font-semibold text-[#40444D] mb-3">
             Add New Comment
           </h4>
           <div className="space-y-4">
-            <Input
+            <Textarea
               placeholder="Write a comment..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
+              className="min-h-[100px]"
             />
 
             {isArrayWithValues(attachment) && (

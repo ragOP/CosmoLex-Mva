@@ -26,11 +26,18 @@ export const getProfilePictureUrl = (profilePicture) => {
  * @param {string} lastName - User's last name
  * @returns {string} - User initials
  */
-export const getUserInitials = (firstName = '', lastName = '') => {
+export const getUserInitials = (firstName = '') => {
+  const lastName = firstName.split(' ')[1];
   const firstInitial = firstName?.[0]?.toUpperCase() || '';
   const lastInitial = lastName?.[0]?.toUpperCase() || '';
   return `${firstInitial}${lastInitial}` || 'U';
 };
+
+// get user first name
+export function getFirstName(fullName = '') {
+  if (!fullName) return '';
+  return fullName.trim().split(' ')[0];
+}
 
 /**
  * Handle profile picture load error

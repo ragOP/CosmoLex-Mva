@@ -26,16 +26,30 @@ const CustomToolBar = ({
 
   useEffect(() => {
     if (users.length > 0) {
-      // If current user is available and exists in users list, select them
-      if (currentUser?.id && users.find((user) => user.id === currentUser.id)) {
-        setSelectedUser(currentUser.id);
-        setQueryParam('userId', currentUser.id, setSearchParams, searchParams);
-      } else if (slugId) {
-        // Fallback to first user if slugId is present and current user not found
-        setSelectedUser(users[0].id);
+      const userIdFromUrl = searchParams.get('userId');
+
+      if (userIdFromUrl && users.find((user) => user.id === userIdFromUrl)) {
+        setSelectedUser(userIdFromUrl);
+      } else if (!selectedUser) {
+        //  set default user if no user is currently selected
+        if (
+          currentUser?.id &&
+          users.find((user) => user.id === currentUser.id)
+        ) {
+          setSelectedUser(currentUser.id);
+          setQueryParam(
+            'userId',
+            currentUser.id,
+            setSearchParams,
+            searchParams
+          );
+        } else if (slugId) {
+          setSelectedUser(users[0].id);
+          setQueryParam('userId', users[0].id, setSearchParams, searchParams);
+        }
       }
     }
-  }, [slugId, users, currentUser, setSearchParams, searchParams]);
+  }, [slugId, users, currentUser, setSearchParams, searchParams, selectedUser]);
 
   return (
     <Box

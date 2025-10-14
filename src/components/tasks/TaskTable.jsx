@@ -3,7 +3,7 @@ import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { Avatar, Box, Tooltip, IconButton } from '@mui/material';
 import formatDate from '@/utils/formatDate';
 import { Badge } from '@/components/ui/badge';
-import { getUserInitials } from '@/utils/profilePicture';
+import { getUserInitials, getFirstName } from '@/utils/profilePicture';
 import {
   Select,
   SelectTrigger,
@@ -13,6 +13,8 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Pencil, CircleOff, Trash2, Eye, MessageSquare } from 'lucide-react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFlag } from '@fortawesome/free-solid-svg-icons';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +27,33 @@ import getMetaOptions from '@/utils/getMetaFields';
 import { truncateStr } from '@/utils/truncateStr';
 import { noFilterColumns } from '@/utils/noFilterColumns';
 import { getTableWidth } from '@/utils/isMobile';
+
+// Utility function to determine flag color based on due status
+const getFlagColor = (dueStatus) => {
+  if (!dueStatus || typeof dueStatus !== 'string') return 'gray';
+
+  const status = dueStatus.toLowerCase();
+  const daysMatch = status.match(/(\d+)\s*day(s)?\s*left/);
+  if (daysMatch) {
+    const days = parseInt(daysMatch[1]);
+
+    if (days > 7) {
+      return 'orange';
+    } else if (days >= 3) {
+      return 'yellow';
+    } else {
+      return 'red';
+    }
+  }
+  if (status.includes('overdue')) {
+    return 'red';
+  }
+  if (status.includes('1 day left')) {
+    return 'red';
+  }
+
+  return 'gray';
+};
 
 const TaskTable = ({
   tasks = [],
@@ -55,6 +84,37 @@ const TaskTable = ({
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
       align: 'center',
+    },
+    {
+      field: 'due_status',
+      headerName: 'Due Status',
+      flex: 0.5,
+      minWidth: 70,
+      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
+      renderCell: (params) => {
+        const flagColor = getFlagColor(params.value);
+        const colorStyles = {
+          red: { color: '#ef4444' }, //red
+          yellow: { color: '#eab308' }, // yellow
+          orange: { color: '#f97316' }, // orange
+          gray: { color: '#9ca3af' }, // gray
+        };
+
+        return (
+          <div className="w-full h-full flex items-center justify-center">
+            <Tooltip title={params.value || 'No due date'}>
+              <FontAwesomeIcon
+                icon={faFlag}
+                className="h-4 w-4"
+                style={colorStyles[flagColor] || colorStyles.gray}
+              />
+            </Tooltip>
+          </div>
+        );
+      },
     },
     {
       field: 'subject',
@@ -128,23 +188,23 @@ const TaskTable = ({
       headerName: 'Assignees',
       flex: 1,
       minWidth: 100,
-      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      headerClassName: 'uppercase text-[#40444D] font-bold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
       align: 'center',
       renderCell: (params) => {
         const assignees = params.row.assignees || [];
-        const maxVisible = 3;
+        const maxVisible = 2;
 
         return (
           <div className="w-full h-full flex items-center justify-center">
-            <div className="text-sm text-muted-foreground flex justify-center items-center gap-1">
+            <div className="flex flex-col justify-center items-center gap-1">
               {assignees.length <= maxVisible ? (
                 // Show all assignees if 3 or fewer
                 assignees.map((assignee, index) => (
                   <Tooltip title={assignee?.name} key={index}>
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-xs font-medium text-blue-700 border border-blue-200">
-                      {getUserInitials(assignee?.name)}
+                    <div className="w-14 h-4 flex items-center justify-center text-xs font-medium text-[#6366F1] border border-gray-200 rounded-sm">
+                      {getFirstName(assignee?.name)}
                     </div>
                   </Tooltip>
                 ))
@@ -169,7 +229,7 @@ const TaskTable = ({
                           className="flex items-center gap-3 p-2 rounded-lg bg-gray-50"
                         >
                           <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium text-blue-700 border border-blue-200">
-                            {getUserInitials(assignee?.name)}
+                            {getFirstName(assignee?.name)}
                           </div>
                           <span className="text-sm font-medium text-gray-900">
                             {assignee?.name}
@@ -201,9 +261,15 @@ const TaskTable = ({
               {params.row.assigned_by && (
                 <Tooltip title={params.row.assigned_by?.name}>
                   <Avatar
-                    src={params.row.assigned_by?.profile}
-                    alt={params.row.assigned_by?.name}
-                  />
+                    sx={{
+                      backgroundColor: '#6366F1',
+                      color: 'white',
+                      fontWeight: 'bold',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    {getUserInitials(params.row.assigned_by?.name)}
+                  </Avatar>
                 </Tooltip>
               )}
             </div>

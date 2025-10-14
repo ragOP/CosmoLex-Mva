@@ -158,7 +158,7 @@ import {
 //       x.dataKey !== 'property_damage'
 //   );
 //   return <Tooltip payload={newPayload} {...rest} />;
-// };
+// };4
 
 // const renderLegendWithoutRange = ({ payload, content, ...rest }) => {
 //   // console.log(payload);
@@ -215,7 +215,9 @@ const Dashboard = () => {
       {
         total: activeIntakes,
         title: 'active files',
-        percentage: `${(activeIntakes / totalIntakes) * 100}%`,
+        percentage: `${
+          totalIntakes ? ((activeIntakes / totalIntakes) * 100).toFixed(1) : 0
+        }%`,
         icon: (
           <FileIcon
             color="#6366F1"
@@ -226,7 +228,9 @@ const Dashboard = () => {
       {
         total: closedIntakes,
         title: 'Closed Files',
-        percentage: `${(closedIntakes / totalIntakes) * 100}%`,
+        percentage: `${
+          totalIntakes ? ((closedIntakes / totalIntakes) * 100).toFixed(1) : 0
+        }%`,
         icon: (
           <FileIcon
             color="#6366F1"
@@ -237,7 +241,9 @@ const Dashboard = () => {
       {
         total: totalIntakes,
         title: 'Total Files',
-        percentage: `${(totalIntakes / totalIntakes) * 100}%`,
+        percentage: `${
+          totalIntakes ? ((totalIntakes / totalIntakes) * 100).toFixed(1) : 0
+        }%`,
         icon: (
           <FileIcon
             color="#6366F1"
@@ -260,17 +266,19 @@ const Dashboard = () => {
       //     />
       //   ),
       // },
-      {
-        total: pendingIntakes,
-        title: 'Pending Documents',
-        percentage: `${(pendingIntakes / totalIntakes) * 100}%`,
-        icon: (
-          <FileIcon
-            color="#6366F1"
-            className="bg-white p-3 rounded-md shadow-lg w-10 h-10"
-          />
-        ),
-      },
+      // {
+      //   total: pendingIntakes,
+      //   title: 'Pending Documents',
+      //   percentage: `${
+      //     totalIntakes ? ((pendingIntakes / totalIntakes) * 100).toFixed(1) : 0
+      //   }%`,
+      //   icon: (
+      //     <FileIcon
+      //       color="#6366F1"
+      //       className="bg-white p-3 rounded-md shadow-lg w-10 h-10"
+      //     />
+      //   ),
+      // },
       // {
       //   total: 'Preparation of notes',
       //   title: 'Calendar Note 23, June 2025',
@@ -344,7 +352,15 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-x-auto w-full overflow-hidden no-scrollbar">
         {dashBoardItem.cardData.map((item, index) => (
-          <DashboardCard key={index} item={item} />
+          <DashboardCard
+            key={index}
+            item={item}
+            onCardClick={() => {
+              if (item.title === 'active files') {
+                navigate('/dashboard/active-files');
+              }
+            }}
+          />
         ))}
       </div>
 
@@ -627,12 +643,13 @@ const Dashboard = () => {
 
 export default Dashboard;
 
-const DashboardCard = ({ item }) => {
+const DashboardCard = ({ item, onCardClick }) => {
   return (
     <div className="bg-white/30 backdrop-blur-sm p-4 rounded-md">
       <div
         key={item.id}
-        className="flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm p-3 shadow rounded-md space-y-3 "
+        className="flex flex-col items-center justify-center bg-white/50 backdrop-blur-sm p-3 shadow rounded-md space-y-3 cursor-pointer hover:bg-white/70 transition-colors"
+        onClick={onCardClick}
       >
         <div className="flex items-center justify-between w-full">
           <h3 className="text-base text-[#4e5564] font-semibold font-sans uppercase">
