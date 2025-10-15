@@ -357,7 +357,11 @@ const Dashboard = () => {
             item={item}
             onCardClick={() => {
               if (item.title === 'active files') {
-                navigate('/dashboard/active-files');
+                navigate('/dashboard/inbox?filter=active-files');
+              } else if (item.title === 'Closed Files') {
+                navigate('/dashboard/inbox?filter=closed-files');
+              } else if (item.title === 'Total Files') {
+                navigate('/dashboard/inbox?filter=all-files');
               }
             }}
           />

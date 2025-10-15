@@ -4,14 +4,22 @@ import MatterTable from '@/components/matter/MatterTable';
 import { Loader2, Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import getMatters from './helpers/getMatters';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const TasksPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+
+  const filter = searchParams.get('filter') || 'all-files';
+
+  const queryParams = {
+    filter: filter,
+  };
 
   const { data: matters, isLoading } = useQuery({
-    queryKey: ['matters'],
-    queryFn: getMatters,
+    queryKey: ['matters', queryParams],
+    queryFn: () => getMatters(queryParams),
   });
 
   if (isLoading) {
