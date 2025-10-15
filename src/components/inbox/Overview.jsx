@@ -88,6 +88,7 @@ export default function Overview() {
     queryKey: ['contactMeta'],
     queryFn: getContactMeta,
   });
+ 
 
   const { data: searchContactData, refetch: refetchSearchContact } = useQuery({
     queryKey: ['searchContact', searchContactQuery, selectedContactType],
@@ -106,6 +107,7 @@ export default function Overview() {
       refetchSearchContact();
     }
   }, 500);
+
 
   useEffect(() => {
     debouncedSearch(searchContactQuery, selectedContactType);
@@ -179,7 +181,7 @@ export default function Overview() {
   }, [matter, contacts, contactMeta, matterMeta, reset]);
 
   const formFields = [
-    { label: 'Description', name: 'description', type: 'textarea' },
+    // { label: 'Description', name: 'description', type: 'textarea' },
     {
       label: 'Case Role',
       name: 'case_role_id',
@@ -224,7 +226,7 @@ export default function Overview() {
       type: 'select',
       options: matterMeta?.ad_campaign_id || [],
     },
-    { label: 'Case Description', name: 'case_description', type: 'text' },
+    { label: 'Description', name: 'description', type: 'text' },
     // { label: 'Contact ID', name: 'contact_id', type: 'text' },
     {
       label: 'Rating',
@@ -269,7 +271,7 @@ export default function Overview() {
           >
             <div className="space-y-4">
               {/* Description field - full width */}
-              <div className="w-full">
+              {/* <div className="w-full">
                 <Label className="text-[#40444D] font-semibold mb-2">
                   Description
                 </Label>
@@ -289,10 +291,10 @@ export default function Overview() {
                     {errors.description.message}
                   </p>
                 )}
-              </div>
+              </div> */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {formFields
-                  .filter(({ name }) => name !== 'description')
+                  // .filter(({ name }) => name !== 'description')
                   .map(({ label, name, type, options, required }) => (
                     <div key={name} className="w-full">
                       {type !== 'checkbox' && (
@@ -412,7 +414,7 @@ export default function Overview() {
                           setSelectedContact(null);
                         }}
                         className="w-1/2 bg-white"
-                        disabled={!selectedContactType} // stays enabled as long as type is chosen
+                        //disabled={!selectedContactType} // stays enabled as long as type is chosen
                       />
                     )}
                   />

@@ -44,7 +44,7 @@ const TasksPage = () => {
         </Button>
       </div>
       <MatterTable
-        matters={matters || []}
+        matters={filteredMatters || []}
         onRowClick={(params) => {
           navigate(`/dashboard/inbox/overview?slugId=${params.row.slug}`, {
             state: { slug: params.row.slug },
