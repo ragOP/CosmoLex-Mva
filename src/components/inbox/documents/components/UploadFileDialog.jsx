@@ -1,21 +1,9 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import {
-  Dialog,
-  Stack,
-  Divider,
-  IconButton,
-} from '@mui/material';
+import { Dialog, Stack, Divider, IconButton } from '@mui/material';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import {
-  Upload,
-  FileText,
-  Trash2,
-  CloudUpload,
-  X,
-  Search
-} from 'lucide-react';
+import { Upload, FileText, Trash2, CloudUpload, X, Search } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -24,7 +12,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] }) => {
+const UploadFileDialog = ({
+  open,
+  onClose,
+  onSubmit,
+  isLoading,
+  categories = [],
+}) => {
   const [files, setFiles] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [categorySearchTerm, setCategorySearchTerm] = useState('');
@@ -36,17 +30,27 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
   // Allowed file types
   const allowedFileTypes = [
     'image/jpeg',
-    'image/jpg', 
+    'image/jpg',
     'image/png',
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/vnd.ms-excel',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'text/plain'
+    'text/plain',
   ];
 
-  const allowedFileExtensions = ['.jpg', '.jpeg', '.png', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.txt'];
+  const allowedFileExtensions = [
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.pdf',
+    '.doc',
+    '.docx',
+    '.xls',
+    '.xlsx',
+    '.txt',
+  ];
 
   // Set first category as default when categories change or component mounts
   useEffect(() => {
@@ -66,7 +70,7 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
           searchInputRef.current.select();
         }
       }, 150);
-      
+
       return () => clearTimeout(timer);
     }
   }, [selectOpen]);
@@ -74,9 +78,9 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
   const handleDrag = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
+    if (e.type === 'dragenter' || e.type === 'dragover') {
       setDragActive(true);
-    } else if (e.type === "dragleave") {
+    } else if (e.type === 'dragleave') {
       setDragActive(false);
     }
   }, []);
@@ -108,7 +112,7 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
     let validFiles = [];
     let validationErrors = [];
 
-    newFiles.forEach(file => {
+    newFiles.forEach((file) => {
       const validationError = validateFile(file);
       if (validationError) {
         validationErrors.push(validationError);
@@ -118,7 +122,7 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
           id: Math.random().toString(36).substr(2, 9),
           name: file.name,
           size: file.size,
-          type: file.type
+          type: file.type,
         };
         validFiles.push(fileWithId);
       }
@@ -131,12 +135,12 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
     }
 
     if (validFiles.length > 0) {
-      setFiles(prev => [...prev, ...validFiles]);
+      setFiles((prev) => [...prev, ...validFiles]);
     }
   };
 
   const removeFile = (fileId) => {
-    setFiles(prev => prev.filter(f => f.id !== fileId));
+    setFiles((prev) => prev.filter((f) => f.id !== fileId));
   };
 
   const handleSubmit = async () => {
@@ -157,12 +161,15 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
       // Only close dialog and reset on successful upload
       setFiles([]);
       // Reset to first category
-      setSelectedCategory(categories.length > 0 ? categories[0].id?.toString() || '' : '');
+      setSelectedCategory(
+        categories.length > 0 ? categories[0].id?.toString() || '' : ''
+      );
       setError('');
       onClose();
     } catch (error) {
       // Show specific error message from API if available
-      const errorMessage = error?.message || 'Error uploading files. Please try again.';
+      const errorMessage =
+        error?.message || 'Error uploading files. Please try again.';
       setError(errorMessage);
       // Don't close dialog on error - let user see the error and decide what to do
     }
@@ -171,7 +178,9 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
   const handleClose = () => {
     setFiles([]);
     // Reset to first category
-    setSelectedCategory(categories.length > 0 ? categories[0].id?.toString() || '' : '');
+    setSelectedCategory(
+      categories.length > 0 ? categories[0].id?.toString() || '' : ''
+    );
     setCategorySearchTerm('');
     setSelectOpen(false);
     setError('');
@@ -188,12 +197,18 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
   };
 
   // Filter categories based on search term
-  const filteredCategories = categories.filter(category =>
+  const filteredCategories = categories.filter((category) =>
     category.name.toLowerCase().includes(categorySearchTerm.toLowerCase())
   );
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth sx={{ zIndex: 9998 }}>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="md"
+      fullWidth
+      sx={{ zIndex: 9998 }}
+    >
       <Stack className="bg-[#F5F5FA] rounded-lg min-w-[60%] max-h-[90vh] no-scrollbar shadow-[0px_4px_24px_0px_#000000]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-3">
@@ -218,9 +233,10 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
             onDrop={handleDrop}
             className={`
               border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 cursor-pointer
-              ${dragActive
-                ? 'border-[#6366F1] bg-blue-50'
-                : 'border-gray-300 bg-white hover:border-[#6366F1] hover:bg-gray-50'
+              ${
+                dragActive
+                  ? 'border-[#6366F1] bg-blue-50'
+                  : 'border-gray-300 bg-white hover:border-[#6366F1] hover:bg-gray-50'
               }
             `}
             onClick={() => document.getElementById('file-input').click()}
@@ -229,9 +245,7 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
             <h3 className="text-lg font-semibold text-[#40444D] mb-2">
               Drop files here or click to browse
             </h3>
-            <p className="text-sm text-gray-600">
-              Support for multiple files
-            </p>
+            <p className="text-sm text-gray-600">Support for multiple files</p>
             <p className="text-xs text-gray-500 mt-1">
               Allowed file types: JPG, PNG, PDF, DOC, DOCX, XLS, XLSX, TXT
             </p>
@@ -258,8 +272,8 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
                 </p>
               </div>
             ) : (
-              <Select 
-                value={selectedCategory} 
+              <Select
+                value={selectedCategory}
                 onValueChange={setSelectedCategory}
                 onOpenChange={setSelectOpen}
               >
@@ -278,7 +292,9 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
                         onChange={(e) => setCategorySearchTerm(e.target.value)}
                         onKeyDown={(e) => {
                           // Prevent Select from handling arrow keys and enter
-                          if (['ArrowUp', 'ArrowDown', 'Enter'].includes(e.key)) {
+                          if (
+                            ['ArrowUp', 'ArrowDown', 'Enter'].includes(e.key)
+                          ) {
                             e.stopPropagation();
                           }
                         }}
@@ -299,7 +315,10 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
                     </div>
                   ) : (
                     filteredCategories.map((category) => (
-                      <SelectItem key={category.id} value={category.id.toString()}>
+                      <SelectItem
+                        key={category.id}
+                        value={category.id.toString()}
+                      >
                         {category.name}
                       </SelectItem>
                     ))
@@ -324,8 +343,12 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
                     <div className="flex items-center gap-3">
                       <FileText className="text-gray-600" />
                       <div>
-                        <p className="font-medium text-[#40444D]">{fileItem.name}</p>
-                        <p className="text-xs text-gray-500">{formatFileSize(fileItem.size)}</p>
+                        <p className="font-medium text-[#40444D]">
+                          {fileItem.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {formatFileSize(fileItem.size)}
+                        </p>
                       </div>
                     </div>
                     <Button
@@ -344,9 +367,14 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
 
           {isLoading && (
             <div className="space-y-2">
-              <p className="text-sm text-[#40444D] font-medium">Uploading files...</p>
+              <p className="text-sm text-[#40444D] font-medium">
+                Uploading files...
+              </p>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-[#6366F1] h-2 rounded-full animate-pulse" style={{ width: '70%' }}></div>
+                <div
+                  className="bg-[#6366F1] h-2 rounded-full animate-pulse"
+                  style={{ width: '70%' }}
+                ></div>
               </div>
             </div>
           )}
@@ -376,7 +404,9 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
             disabled={isLoading || files.length === 0}
           >
             <Upload className="mr-2 h-4 w-4" />
-            {isLoading ? 'Uploading...' : `Upload ${files.length} File${files.length !== 1 ? 's' : ''}`}
+            {isLoading
+              ? 'Uploading...'
+              : `Upload ${files.length} File${files.length !== 1 ? 's' : ''}`}
           </Button>
         </div>
       </Stack>
@@ -384,4 +414,4 @@ const UploadFileDialog = ({ open, onClose, onSubmit, isLoading, categories = [] 
   );
 };
 
-export default UploadFileDialog; 
+export default UploadFileDialog;

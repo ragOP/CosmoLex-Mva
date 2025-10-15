@@ -53,6 +53,7 @@ const typeToIcon = {
   agenda: ClipboardList,
   setup: Settings2,
   roles: Users,
+  firm: Users,
 };
 
 const sidebarItems = [
@@ -332,6 +333,12 @@ const adminSidebarItems = [
         label: 'Event Status',
         type: 'link',
         iconType: 'activity',
+      },
+      {
+        id: '/dashboard/setup/firm',
+        label: 'Firm',
+        type: 'link',
+        iconType: 'firm',
       },
     ],
   },

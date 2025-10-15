@@ -352,3 +352,14 @@ export const updateService = (id, data) => {
   // PUT /api/v2/setup/services/:id
   return getSetupUpdate(`v2/setup/services/${id}`, data);
 };
+
+// Firm - setup
+export const getFirmMeta = () => {
+  return getSetup(endpoints.getFirmMeta);
+};
+export const getFirmDetails = () => {
+  return getSetupShow(endpoints.getFirmDetails);
+};
+export const updateFirmDetails = (data) => {
+  return getSetupStore(endpoints.updateFirmDetails, data);
+};

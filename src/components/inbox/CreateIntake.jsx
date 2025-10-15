@@ -27,6 +27,7 @@ import {
   ChevronDown,
   ChevronRight,
   Plus,
+  Search,
   Loader2,
 } from 'lucide-react';
 import BreadCrumb from '@/components/BreadCrumb';
@@ -265,7 +266,7 @@ export default function CreateIntake() {
 
   const formFields = [
     {
-      label: 'Case Role',
+      label: 'Referral Source',
       name: 'case_role_id',
       type: 'select',
       required: false,
@@ -499,7 +500,7 @@ export default function CreateIntake() {
                   </div>
 
                   {/* Search Contact */}
-                  <div className="w-full space-y-2">
+                  <div className="w-full space-y-2 ">
                     <Label className="text-[#40444D] font-semibold block">
                       Search Contact
                       <span className="text-red-500 ml-1">*</span>
@@ -508,23 +509,36 @@ export default function CreateIntake() {
                       control={control}
                       name="contact_id"
                       render={() => (
-                        <>
-                          <Input
-                            placeholder="Search by name or email..."
-                            value={searchContactQuery}
-                            onChange={(e) => {
-                              setSearchContactQuery(e.target.value);
-                              setShowContactTable(true);
-                              setSelectedContact(null);
-                              if (formErrors.contact_id) {
-                                clearErrors('contact_id');
-                              }
-                            }}
-                            className={`w-1/2 bg-white ${
-                              formErrors.contact_id ? 'border-red-500' : ''
-                            }`}
-                          />
-                        </>
+                        <div className="flex items-center w-full gap-3">
+                          <div className="relative w-1/2">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input
+                              placeholder="Search by name or email..."
+                              value={searchContactQuery}
+                              onChange={(e) => {
+                                setSearchContactQuery(e.target.value);
+                                setShowContactTable(true);
+                                setSelectedContact(null);
+                                if (formErrors.contact_id) {
+                                  clearErrors('contact_id');
+                                }
+                              }}
+                              className={`bg-white pl-9 ${
+                                formErrors.contact_id ? 'border-red-500' : ''
+                              }`}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setOpen(true)}
+                            className="text-[#6366F1] hover:text-[#4F46E5] cursor-pointer"
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Add new contact
+                          </Button>
+                        </div>
                       )}
                     />
                     {/* Contact Error Display */}
@@ -533,15 +547,6 @@ export default function CreateIntake() {
                         {formErrors.contact_id.message}
                       </p>
                     )}
-                    <p className="text-[0.7rem] text-[#40444D] text-start w-1/2">
-                      Don't have a contact?{' '}
-                      <span
-                        onClick={() => setOpen(true)}
-                        className="text-[#6366F1] cursor-pointer hover:underline"
-                      >
-                        Add a new contact
-                      </span>
-                    </p>
                   </div>
                 </div>
 

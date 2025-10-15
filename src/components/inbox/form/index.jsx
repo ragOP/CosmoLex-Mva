@@ -80,12 +80,10 @@ const Form = () => {
 
   // Handle mode determination and form data initialization together
   useEffect(() => {
-
     if (!formResponse) {
       setMode('add');
       return;
     }
-
 
     let initialData;
     let newMode;
@@ -96,10 +94,7 @@ const Form = () => {
     ) {
       newMode = 'add';
       initialData = getInitialFormData(caseType, null, 'add');
-    } else if (
-      formResponse.Apistatus &&
-      formResponse.data
-    ) {
+    } else if (formResponse.Apistatus && formResponse.data) {
       newMode = 'edit';
 
       // Use API data for edit mode
@@ -180,7 +175,12 @@ const Form = () => {
     }
 
     // Handle dropdown fields with YES_NO options - ensure numeric values
-    if (field && field.type === 'dropdown' && field.options && field.options.length > 0) {
+    if (
+      field &&
+      field.type === 'dropdown' &&
+      field.options &&
+      field.options.length > 0
+    ) {
       // Check if this is a YES_NO dropdown by looking at the first option value
       const firstOption = field.options[0];
       if (firstOption && (firstOption.value === 1 || firstOption.value === 0)) {
@@ -201,7 +201,7 @@ const Form = () => {
 
     // Clear validation error for this field when user starts typing
     if (validationErrors[fieldName]) {
-      setValidationErrors(prev => {
+      setValidationErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[fieldName];
         return newErrors;
@@ -209,7 +209,7 @@ const Form = () => {
     }
   };
 
-  console.log("formData", formData)
+  console.log('formData', formData);
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -375,92 +375,110 @@ const Form = () => {
                       Please fix the following validation errors:
                     </h4>
                     <ul className="space-y-1">
-                      {Object.entries(validationErrors).map(([fieldName, errors]) => (
-                        <li key={fieldName} className="text-sm text-red-700">
-                          <span className="font-medium">
-                            {fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:
-                          </span>{' '}
-                          {errors[0]}
-                        </li>
-                      ))}
+                      {Object.entries(validationErrors).map(
+                        ([fieldName, errors]) => (
+                          <li key={fieldName} className="text-sm text-red-700">
+                            <span className="font-medium">
+                              {fieldName
+                                .replace(/_/g, ' ')
+                                .replace(/\b\w/g, (l) => l.toUpperCase())}
+                              :
+                            </span>{' '}
+                            {errors[0]}
+                          </li>
+                        )
+                      )}
                     </ul>
                   </div>
                 )}
-                {Object.entries(sections).map(([sectionName, sectionFields]) => (
-                  <Stack key={sectionName} spacing={2} sx={{ mb: 3 }}>
-                    {/* Section Heading */}
-                    {sectionName !== 'Other' && (
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontWeight: 600,
-                          color: '#1f2937',
-                          fontSize: '1.125rem',
-                        }}
-                      >
-                        {sectionName}
-                      </Typography>
-                    )}
+                {Object.entries(sections).map(
+                  ([sectionName, sectionFields]) => (
+                    <Stack key={sectionName} spacing={2} sx={{ mb: 3 }}>
+                      {/* Section Heading */}
+                      {sectionName !== 'Other' && (
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontWeight: 600,
+                            color: '#1f2937',
+                            fontSize: '1.125rem',
+                          }}
+                        >
+                          {sectionName}
+                        </Typography>
+                      )}
 
-                    {/* Section Fields */}
-                    <Grid container spacing={1}>
-                      {sectionFields.map((field, index) => {
-                        if (field.type === 'section') {
-                          return null;
-                        }
+                      {/* Section Fields */}
+                      <Grid container spacing={1}>
+                        {sectionFields.map((field, index) => {
+                          if (field.type === 'section') {
+                            return null;
+                          }
 
-                        const isTextarea = field.type === 'textarea';
-                        const gridProps = isTextarea
-                          ? { size: { xs: 12 } }
-                          : field.gridSize || { size: { xs: 12 } };
+                          const isTextarea = field.type === 'textarea';
+                          const gridProps = isTextarea
+                            ? { size: { xs: 12 } }
+                            : field.gridSize || { size: { xs: 12 } };
 
-                        return (
-                          <Grid
-                            key={index}
-                            {...gridProps}
-                            sx={{
-                              ...(isTextarea
-                                ? {
-                                  pageBreakBefore: 'always',
-                                  breakBefore: 'always',
-                                  clear: 'both',
-                                  display: 'block',
-                                  width: '100%',
-                                }
-                                : {}),
-                              '&.MuiGrid-item': {
-                                flexBasis: 'auto',
-                              },
-                            }}
-                          >
-                            <Stack
+                          return (
+                            <Grid
+                              key={index}
+                              {...gridProps}
                               sx={{
-                                height: '100%',
-                                // minHeight: isTextarea ? '100px' : '60px',
-                                mt: isTextarea ? 0.5 : 0,
-                                mb: isTextarea ? 0.5 : 0,
+                                ...(isTextarea
+                                  ? {
+                                      pageBreakBefore: 'always',
+                                      breakBefore: 'always',
+                                      clear: 'both',
+                                      display: 'block',
+                                      width: '100%',
+                                    }
+                                  : {}),
+                                '&.MuiGrid-item': {
+                                  flexBasis: 'auto',
+                                },
                               }}
                             >
-                              <FormFields
-                                label={field.label}
-                                type={field.type}
-                                options={field.options}
-                                maxLength={field.maxLength}
-                                required={field.required}
-                                value={formData[field.name] !== null && formData[field.name] !== undefined ? formData[field.name] : ''}
-                                onChange={(value) =>
-                                  handleFieldChange(field.name, value)
-                                }
-                                error={validationErrors[field.name] ? true : false}
-                                helperText={validationErrors[field.name] ? validationErrors[field.name][0] : ''}
-                              />
-                            </Stack>
-                          </Grid>
-                        );
-                      })}
-                    </Grid>
-                  </Stack>
-                ))}
+                              <Stack
+                                sx={{
+                                  height: '100%',
+                                  // minHeight: isTextarea ? '100px' : '60px',
+                                  mt: isTextarea ? 0.5 : 0,
+                                  mb: isTextarea ? 0.5 : 0,
+                                }}
+                              >
+                                <FormFields
+                                  label={field.label}
+                                  type={field.type}
+                                  options={field.options}
+                                  maxLength={field.maxLength}
+                                  required={field.required}
+                                  value={
+                                    formData[field.name] !== null &&
+                                    formData[field.name] !== undefined
+                                      ? formData[field.name]
+                                      : ''
+                                  }
+                                  onChange={(value) =>
+                                    handleFieldChange(field.name, value)
+                                  }
+                                  error={
+                                    validationErrors[field.name] ? true : false
+                                  }
+                                  helperText={
+                                    validationErrors[field.name]
+                                      ? validationErrors[field.name][0]
+                                      : ''
+                                  }
+                                />
+                              </Stack>
+                            </Grid>
+                          );
+                        })}
+                      </Grid>
+                    </Stack>
+                  )
+                )}
               </>
             )}
             <div className="flex items-end justify-end gap-2 p-2 ">

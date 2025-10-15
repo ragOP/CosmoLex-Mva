@@ -163,4 +163,9 @@ export const endpoints = {
   storeEventStatus: 'v2/setup/master/store/event-status',
   updateEventStatus: 'v2/setup/master/update',
   updateEventStatusStatus: 'v2/setup/master/updateStatus',
+
+  // Firm
+  getFirmMeta: 'v2/setup/firm-meta',
+  getFirmDetails: 'v2/setup/firm-update',
+  updateFirmDetails: 'v2/setup/firm-update',
 };

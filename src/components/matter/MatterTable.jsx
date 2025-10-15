@@ -132,6 +132,7 @@ const MatterTable = ({ matters = [], onRowClick }) => {
             zIndex: 10,
             overflow: 'auto',
             backgroundColor: 'rgba(255, 255, 255, 0.3)',
+            cursor: 'pointer',
             // width: '100%',
 
             // HEADER CONTAINER

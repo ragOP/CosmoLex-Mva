@@ -136,8 +136,8 @@ const CommentsPage = () => {
   }
 
   return (
-    <div className="flex flex-col h-full w-full overflow-auto bg-[#F5F5FA]">
-      <div className="flex items-center justify-between p-4">
+    <div className="flex flex-col h-full w-full bg-[#F5F5FA]">
+      {/* <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-2">
           <IconButton onClick={goBackToTasks}>
             <ArrowLeft className="text-black" />
@@ -147,124 +147,126 @@ const CommentsPage = () => {
           </h1>
         </div>
         <div />
-      </div>
+      </div> */}
 
       <Divider />
 
-      <div className="space-y-6 flex-1 overflow-auto p-6 ">
-        <Stack className="overflow-auto no-scrollbar">
-          <h3 className="text-lg font-semibold text-[#40444D] mb-2">
-            Comments ({comments.length})
-          </h3>
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex-1 overflow-auto p-6 pb-0">
+          <Stack className="overflow-auto no-scrollbar">
+            <h3 className="text-lg font-semibold text-[#40444D] mb-2">
+              Comments ({comments.length})
+            </h3>
 
-          {comments.length === 0 && (
-            <p className="text-muted-foreground">No comments added.</p>
-          )}
+            {comments.length === 0 && (
+              <p className="text-muted-foreground">No comments added.</p>
+            )}
 
-          {comments.length > 0 && (
-            <div className="w-full flex flex-col gap-4">
-              {isArrayWithValues(comments) &&
-                comments.map((c) => {
-                  const profileUrl = profileUrlConversion(c.user?.profile);
-                  const isCurrentUser =
-                    c.user?.id?.toString() === currentUser?.id?.toString();
+            {comments.length > 0 && (
+              <div className="w-full flex flex-col gap-4">
+                {isArrayWithValues(comments) &&
+                  comments.map((c) => {
+                    const profileUrl = profileUrlConversion(c.user?.profile);
+                    const isCurrentUser =
+                      c.user?.id?.toString() === currentUser?.id?.toString();
 
-                  return (
-                    <div
-                      key={c.id}
-                      className={`flex ${
-                        isCurrentUser ? 'justify-start' : 'justify-end'
-                      }`}
-                    >
-                      <Card
-                        className="p-2 flex flex-col gap-2 border-none shadow-none bg-[#F5F5FA] max-w-[60%] min-w-[60%] w-full"
-                        sx={{
-                          backgroundColor: 'white',
-                          boxShadow: 'none',
-                          // border: '2px solid #e5e7eb',
-                          borderRadius: '10px',
-                          '&:before': {
-                            display: 'none',
-                          },
-                        }}
+                    return (
+                      <div
+                        key={c.id}
+                        className={`flex ${
+                          isCurrentUser ? 'justify-start' : 'justify-end'
+                        }`}
                       >
-                        <div className="flex items-end gap-4">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="w-8 h-8">
-                              <img
-                                src={profileUrl}
-                                alt={c.user?.name}
-                                className="w-full h-full rounded-full"
-                              />
-                            </Avatar>
-                            <div className="flex flex-col items-start gap-1">
-                              <div className="flex items-center gap-1">
-                                <span className="font-medium text-sm text-gray-800">
-                                  {c.user?.name}
-                                </span>
-                                {c.user?.author && (
-                                  <BadgeCheck className="w-4 h-4 text-[#6366F1]" />
-                                )}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {c.user?.author && (
-                                  <span className="text-xs text-[#6366F1]">
-                                    Author
+                        <Card
+                          className="p-2 flex flex-col gap-2 border-none shadow-none bg-[#F5F5FA] max-w-[60%] min-w-[60%] w-full"
+                          sx={{
+                            backgroundColor: 'white',
+                            boxShadow: 'none',
+                            // border: '2px solid #e5e7eb',
+                            borderRadius: '10px',
+                            '&:before': {
+                              display: 'none',
+                            },
+                          }}
+                        >
+                          <div className="flex items-end gap-4">
+                            <div className="flex items-center gap-2">
+                              <Avatar className="w-8 h-8">
+                                <img
+                                  src={profileUrl}
+                                  alt={c.user?.name}
+                                  className="w-full h-full rounded-full"
+                                />
+                              </Avatar>
+                              <div className="flex flex-col items-start gap-1">
+                                <div className="flex items-center gap-1">
+                                  <span className="font-medium text-sm text-gray-800">
+                                    {c.user?.name}
                                   </span>
-                                )}
-                                <span className="text-xs text-gray-500">
-                                  {formatRelativeTime(c.created_at)}
-                                </span>
+                                  {c.user?.author && (
+                                    <BadgeCheck className="w-4 h-4 text-[#6366F1]" />
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {c.user?.author && (
+                                    <span className="text-xs text-[#6366F1]">
+                                      Author
+                                    </span>
+                                  )}
+                                  <span className="text-xs text-gray-500">
+                                    {formatRelativeTime(c.created_at)}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                        <p className="text-md text-black-700">
-                          {c.user?.comment || ''}
-                        </p>
-                        {isArrayWithValues(c.attachments) && (
-                          <div className="flex flex-col gap-2">
-                            {c.attachments.map((file) => (
-                              <Card
-                                key={file.id}
-                                className="p-2 flex items-center gap-2 shadow-none"
-                                sx={{
-                                  backgroundColor: 'transparent',
-                                  boxShadow: 'none',
-                                  // border: '1px solid #e5e7eb',
-                                }}
-                              >
-                                <Paperclip className="w-4 h-4 text-gray-500" />
-                                <a
-                                  href={file.file_path}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-sm text-blue-600 hover:underline truncate"
+                          <p className="text-md text-black-700">
+                            {c.user?.comment || ''}
+                          </p>
+                          {isArrayWithValues(c.attachments) && (
+                            <div className="flex flex-col gap-2">
+                              {c.attachments.map((file) => (
+                                <Card
+                                  key={file.id}
+                                  className="p-2 flex items-center gap-2 shadow-none"
+                                  sx={{
+                                    backgroundColor: 'transparent',
+                                    boxShadow: 'none',
+                                    // border: '1px solid #e5e7eb',
+                                  }}
                                 >
-                                  {file.file_name}
-                                </a>
-                              </Card>
-                            ))}
-                          </div>
-                        )}
-                      </Card>
-                    </div>
-                  );
-                })}
-            </div>
-          )}
-        </Stack>
+                                  <Paperclip className="w-4 h-4 text-gray-500" />
+                                  <a
+                                    href={file.file_path}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-blue-600 hover:underline truncate"
+                                  >
+                                    {file.file_name}
+                                  </a>
+                                </Card>
+                              ))}
+                            </div>
+                          )}
+                        </Card>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </Stack>
+        </div>
 
-        <div className="border-t  pb-4">
-          <h4 className="text-md font-semibold text-[#40444D] mb-3">
+        <div className="border-t bg-white p-6 pt-2">
+          {/* <h4 className="text-md font-semibold text-[#40444D]">
             Add New Comment
-          </h4>
-          <div className="space-y-4">
+          </h4> */}
+          <div className="space-y-2">
             <Textarea
               placeholder="Write a comment..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="min-h-[100px]"
+              className="min-h-[80px]"
             />
 
             {isArrayWithValues(attachment) && (
@@ -334,16 +336,15 @@ const CommentsPage = () => {
             </div>
           </div>
         </div>
+        <UploadMediaDialog
+          open={showUploadMediaDialog}
+          onClose={() => setShowUploadMediaDialog(false)}
+          onSubmit={(payload) => {
+            handleCommentAttachment(payload);
+          }}
+          isLoading={uploadCommentAttachmentMutation.isPending}
+        />
       </div>
-
-      <UploadMediaDialog
-        open={showUploadMediaDialog}
-        onClose={() => setShowUploadMediaDialog(false)}
-        onSubmit={(payload) => {
-          handleCommentAttachment(payload);
-        }}
-        isLoading={uploadCommentAttachmentMutation.isPending}
-      />
     </div>
   );
 };

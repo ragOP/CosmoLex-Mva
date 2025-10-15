@@ -207,7 +207,7 @@ export const useEvents = () => {
   };
 
   const formFields = [
-    { label: 'Title', name: 'title', type: 'text', required: true },
+    { label: 'Subject', name: 'title', type: 'text', required: true },
     { label: 'Description', name: 'description', type: 'text' },
     {
       label: 'Start Time',

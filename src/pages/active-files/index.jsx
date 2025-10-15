@@ -16,7 +16,7 @@ const ActiveFilesPage = () => {
     refetch,
   } = useQuery({
     queryKey: ['matters', 'active'],
-    queryFn: () => getMatters({ status: 'active' }),
+    queryFn: () => getMatters({ status: 'active_files' }),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 

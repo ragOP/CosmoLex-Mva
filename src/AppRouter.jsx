@@ -67,6 +67,7 @@ const TaskUTBMSCodePage = lazy(() => import('./pages/setup/task-utbms-code'));
 const EventCategoryPage = lazy(() => import('./pages/setup/event-category'));
 const EventStatus = lazy(() => import('./pages/setup/event-status'));
 const SetupGraphPage = lazy(() => import('./pages/setup/graph'));
+const FirmSetupPage = lazy(() => import('./pages/setup/firm'));
 const ActiveFilesPage = lazy(() => import('./pages/active-files'));
 
 const AppRouter = () => (
@@ -146,6 +147,7 @@ const AppRouter = () => (
           <Route path="setup/event-category" element={<EventCategoryPage />} />
           <Route path="setup/event-status" element={<EventStatus />} />
           <Route path="setup/graph" element={<SetupGraphPage />} />
+          <Route path="setup/firm" element={<FirmSetupPage />} />
         </Route>
         <Route path="/2fa" element={<TwoFactorPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />

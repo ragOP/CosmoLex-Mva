@@ -89,7 +89,7 @@ const TaskTable = ({
       field: 'due_status',
       headerName: 'Due Status',
       flex: 0.5,
-      minWidth: 70,
+      minWidth: 100,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -177,7 +177,7 @@ const TaskTable = ({
       headerAlign: 'center',
       align: 'center',
       renderCell: (params) => (
-        <div className="w-full h-full flex items-center justify-center">
+        <div className="w-full h-full muted-foreground flex items-center justify-center">
           {truncateStr(params.value, 15)}
         </div>
       ),
@@ -227,9 +227,6 @@ const TaskTable = ({
                           key={index}
                           className="flex items-center gap-3 p-2 rounded-lg bg-gray-50"
                         >
-                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-sm font-medium text-blue-700 border border-blue-200">
-                            {getFirstName(assignee?.name)}
-                          </div>
                           <span className="text-sm font-medium text-gray-900">
                             {assignee?.name}
                           </span>
@@ -259,16 +256,9 @@ const TaskTable = ({
             <div className="text-sm text-muted-foreground flex justify-center">
               {params.row.assigned_by && (
                 <Tooltip title={params.row.assigned_by?.name}>
-                  <Avatar
-                    sx={{
-                      backgroundColor: '#6366F1',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      fontSize: '0.875rem',
-                    }}
-                  >
-                    {getUserInitials(params.row.assigned_by?.name)}
-                  </Avatar>
+                  <div className="w-14 h-4 flex items-center justify-center text-xs font-medium text-[#6366F1] border border-gray-200 rounded-sm">
+                    {getFirstName(params.row.assigned_by?.name)}
+                  </div>
                 </Tooltip>
               )}
             </div>
