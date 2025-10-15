@@ -4,8 +4,11 @@ import { Box } from '@mui/material';
 import { noFilterColumns } from '@/utils/noFilterColumns';
 import { getTableWidth } from '@/utils/isMobile';
 
+
 const MatterTable = ({ matters = [], onRowClick }) => {
   const [matterData, setMatterData] = useState([]);
+ // const [searchParams, setSearchParams] = useSearchParams();
+  
 
   const columns = [
     {
@@ -13,6 +16,16 @@ const MatterTable = ({ matters = [], onRowClick }) => {
       headerName: 'ID',
       flex: 0.5,
       minWidth: 70,
+      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
+    },
+    {
+      field: 'contact',
+      headerName: 'Contact Name',
+      flex: 1.5,
+      minWidth: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
@@ -82,16 +95,6 @@ const MatterTable = ({ matters = [], onRowClick }) => {
       field: 'ad_campaign',
       headerName: 'Ad Campaign',
       flex: 1,
-      minWidth: 130,
-      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
-      cellClassName: 'text-[#6366F1]',
-      headerAlign: 'center',
-      align: 'center',
-    },
-    {
-      field: 'case_description',
-      headerName: 'Case Description',
-      flex: 1.5,
       minWidth: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',

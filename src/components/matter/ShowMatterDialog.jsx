@@ -26,6 +26,8 @@ const ShowMatterDialog = ({ matter, open = false, onClose = () => {} }) => {
     contact,
   } = matter;
 
+  //console.log("case-description in matter: ", case_description);
+
   const fullName = `${contact.prefix || ''} ${contact.first_name || ''} ${
     contact.middle_name || ''
   } ${contact.suffix || ''}`.trim();
