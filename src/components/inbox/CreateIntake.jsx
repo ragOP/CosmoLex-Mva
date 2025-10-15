@@ -76,6 +76,7 @@ export default function CreateIntake() {
     queryKey: ['matterMeta'],
     queryFn: getMatterMeta,
   });
+  console.log('matterMeta: ', matterMeta);
 
   const { data: contactMeta } = useQuery({
     queryKey: ['contactMeta'],
