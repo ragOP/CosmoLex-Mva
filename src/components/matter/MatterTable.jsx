@@ -4,22 +4,23 @@ import { Box } from '@mui/material';
 import { noFilterColumns } from '@/utils/noFilterColumns';
 import { getTableWidth } from '@/utils/isMobile';
 
-
 const MatterTable = ({ matters = [], onRowClick }) => {
   const [matterData, setMatterData] = useState([]);
- // const [searchParams, setSearchParams] = useSearchParams();
-  
+  // const [searchParams, setSearchParams] = useSearchParams();
 
   const columns = [
     {
-      field: 'id',
-      headerName: 'ID',
+      field: 'sno',
+      headerName: 'S.No',
       flex: 0.5,
       minWidth: 70,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
       align: 'center',
+      sortable: false,
+      renderCell: (params) =>
+        params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
     },
     {
       field: 'contact',
