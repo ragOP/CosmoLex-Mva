@@ -21,6 +21,7 @@ const TasksPage = () => {
   const navigate = useNavigate();
   const [filterText, setFilterText] = useState('all');
   const [filterApplied, setFilterApplied] = useState('');
+  const [searchText, setSearchText] = useState('');
 
   const { data: matters, isLoading } = useQuery({
     queryKey: ['matters'],
@@ -28,34 +29,35 @@ const TasksPage = () => {
   });
 
   const { data: matterMeta } = useQuery({
-      queryKey: ['matterMeta'],
-      queryFn: getMatterMeta,
-    });
-    
+    queryKey: ['matterMeta'],
+    queryFn: getMatterMeta,
+  });
 
+  const filteredMatters = React.useMemo(() => {
+    const baseMatters = matters || [];
+    const searchedMatters = searchText
+      ? baseMatters.filter((matter) =>
+          (matter?.contact || '')
+            .toString()
+            .toLowerCase()
+            .includes(searchText.toLowerCase())
+        )
+      : baseMatters;
 
-    const filteredMatters = React.useMemo(() => {
-      if (filterText === 'all' || !filterApplied) {
-        setFilterApplied('');
-        return matters;
+    if (filterText === 'all' || !filterApplied) {
+      return searchedMatters;
+    }
+
+    const filtered = [];
+    for (const matter of searchedMatters) {
+      if (matter[filterText] === filterApplied) {
+        filtered.push(matter);
       }
-      let filtered = [];
-      for(const matter of matters) {
-        if(matter[filterText]===filterApplied) {
-          filtered.push(matter);
-        }
-      }
-      return filtered;
-      // return matters?.filter((matter) => {
-      //   if (filterText === 'assignees' || filterText === 'owners') {
-      //     return matter[filterText]?.some((user) => user.name === filterApplied);
-      //   }
-      //   return matter[filterText] === filterApplied;
-      // });
-    }, [filterText, filterApplied, matters]);
-    
+    }
+    return filtered;
+  }, [filterText, filterApplied, matters, searchText]);
 
-    // Removed useEffect that assigns to matters, as filteredMatters should be used directly.
+  // Removed useEffect that assigns to matters, as filteredMatters should be used directly.
 
   // const filterType = {
   //   case_role: [
@@ -122,10 +124,7 @@ const TasksPage = () => {
   //     "Social Security Disability"
   //   ]
 
-
   // };
-
-  
 
   if (isLoading) {
     return (
@@ -139,7 +138,7 @@ const TasksPage = () => {
     <div className="flex flex-col gap-4 h-full w-full overflow-auto">
       <div className="flex justify-between w-full items-center px-4 pt-4">
         <p className="text-2xl font-bold">Matters ({matters?.length || 0})</p>
-        <div className='flex justify-evenly gap-2 items-center px-2 pt-4'>
+        <div className="flex justify-evenly gap-2 items-center px-2 pt-4">
           <div className="flex items-center gap-2 bg-white/50 backdrop-blur-sm border border-[#E2E8F0] rounded-md px-2 h-10 shadow w-auto outline-none focus:outline-none focus-within:outline-none focus-within:ring-0">
             <Clock size={16} className="text-[#6366F1]" />
             <span className="text-sm font-semibold uppercase text-[#40444D]">
@@ -148,9 +147,6 @@ const TasksPage = () => {
             <span className="h-5 w-px bg-[#E2E8F0]" />
             <div className="min-w-[110px] h-full flex items-center">
               <Select
-                // value={filter}
-                // onValueChange={(value) => setSearchParams({ filter: value })}
-                // disabled={dashboardSummaryLoading}
                 value={filterText}
                 onValueChange={(value) => setFilterText(value)}
                 disabled={isLoading}
@@ -159,22 +155,35 @@ const TasksPage = () => {
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent className="min-w-[140px]">
+                  <div className="px-2 py-1 sticky top-0 bg-white">
+                    <input
+                      autoFocus
+                      type="text"
+                      value={searchText}
+                      onChange={(e) => setSearchText(e.target.value)}
+                      placeholder="Search contact..."
+                      className="h-8 w-full border border-[#E2E8F0] rounded px-2 outline-none"
+                    />
+                  </div>
                   <SelectItem value="all">All</SelectItem>
                   <SelectItem value="case_role">Case Role</SelectItem>
                   <SelectItem value="case_type">Case Type</SelectItem>
                   <SelectItem value="case_status">Case Status</SelectItem>
-                  <SelectItem value="marketing_source">Marketing Source</SelectItem>
+                  <SelectItem value="marketing_source">
+                    Marketing Source
+                  </SelectItem>
                   <SelectItem value="assignees">Assignee</SelectItem>
                   <SelectItem value="owners">Owner</SelectItem>
                   <SelectItem value="ad_campaign_id">Ad Campaign</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className={`min-w-[110px] h-full flex items-center ${filterText === 'all' ? 'hidden' : ''}`}>
+            <div
+              className={`min-w-[110px] h-full flex items-center ${
+                filterText === 'all' ? 'hidden' : ''
+              }`}
+            >
               <Select
-                // value={filter}
-                // onValueChange={(value) => setSearchParams({ filter: value })}
-                // disabled={dashboardSummaryLoading}
                 value={filterApplied}
                 onValueChange={(value) => setFilterApplied(value)}
                 disabled={isLoading}
@@ -183,23 +192,15 @@ const TasksPage = () => {
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent className="min-w-[140px]">
-                  {
-                    filterText !== 'all' && matterMeta ? (
-                      matterMeta[filterText]?.map((item) => (
-                        <SelectItem key={item.id} value={item.name}>{item.name}</SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="all">All</SelectItem>
-                    )
-                  }
-                  {/* <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="case_role">Case Role</SelectItem>
-                  <SelectItem value="case_type">Case Type</SelectItem>
-                  <SelectItem value="case_status">Case Status</SelectItem>
-                  <SelectItem value="marketing_source">Marketing Source</SelectItem>
-                  <SelectItem value="assignee">Assignee</SelectItem>
-                  <SelectItem value="owner">Owner</SelectItem>
-                  <SelectItem value="ad_campaign">Ad Campaign</SelectItem> */}
+                  {filterText !== 'all' && matterMeta ? (
+                    matterMeta[filterText]?.map((item) => (
+                      <SelectItem key={item.id} value={item.name}>
+                        {item.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="all">All</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>

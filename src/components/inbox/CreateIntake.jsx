@@ -529,16 +529,22 @@ export default function CreateIntake() {
                               }`}
                             />
                           </div>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
+                          <button
+                            className="flex items-center gap-2 shadow-lg"
+                            style={{
+                              background:
+                                'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
+                              color: '#fff',
+                              padding: '8px 12px',
+                              borderRadius: '6px',
+                              border: 'none',
+                              cursor: 'pointer',
+                            }}
                             onClick={() => setOpen(true)}
-                            className="text-[#6366F1] hover:text-[#4F46E5] cursor-pointer"
                           >
-                            <Plus className="h-4 w-4 mr-1" />
-                            Add new contact
-                          </Button>
+                            <Plus className="h-4 w-4" />
+                            <span>Add new contact</span>
+                          </button>
                         </div>
                       )}
                     />

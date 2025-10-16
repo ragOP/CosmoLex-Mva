@@ -36,6 +36,7 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
     queryKey: ['contactMeta'],
     queryFn: getContactMeta,
   });
+  console.log(contactMeta, '>>> contactMeta');
 
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [confirmPrimaryDialog, setConfirmPrimaryDialog] = useState(false);
@@ -83,6 +84,19 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
   });
 
   const nature = watch('nature');
+  const countryValue = watch('country');
+
+  const normalizeCountryToName = (value) => {
+    if (value === 2 || value === '2') return 'Canada';
+    if (value === 1 || value === '1') return 'USA';
+    if (typeof value === 'string') return value.trim();
+    return '';
+  };
+
+  const isCanada =
+    countryValue === 2 ||
+    (typeof countryValue === 'string' &&
+      countryValue.trim().toLowerCase() === 'canada');
 
   const {
     fields: addressFields,
@@ -236,9 +250,22 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
       type: 'text',
       required: nature === 'Business',
     },
+    {
+      label: 'Country',
+      name: 'country',
+      type: 'select',
+      options: [
+        { id: '1', name: 'USA' },
+        { id: '2', name: 'Canada' },
+      ],
+    },
     { label: 'Job Title', name: 'job_title', type: 'text' },
-    { label: 'SSN', name: 'ssn', type: 'text' },
-    { label: 'Federal Tax ID', name: 'federal_tax_id', type: 'text' },
+    { label: isCanada ? 'SIN' : 'SSN', name: 'ssn', type: 'text' },
+    {
+      label: isCanada ? 'Bussiness Number' : 'Federal Tax ID',
+      name: 'federal_tax_id',
+      type: 'text',
+    },
     { label: 'Work Phone', name: 'work_phone', type: 'text' },
     { label: 'Home Phone', name: 'home_phone', type: 'text' },
     {
@@ -279,6 +306,7 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
       toast.error(error.message || 'Failed to create contact');
     },
   });
+  // console.log(contactMeta, '>>> contactMeta');
 
   const onSubmit = (data) => {
     console.log('[DEBUG] Submitting contact data:', data);
@@ -371,6 +399,7 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
   };
 
   const resetAddressForm = () => {
+    const formCountry = normalizeCountryToName(watch('country'));
     setNewAddress({
       address_1: '',
       address_2: '',
@@ -378,7 +407,7 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
       county: '',
       state: '',
       zip: '',
-      country: '',
+      country: formCountry,
       is_primary: false,
       address_type_id: null,
     });
@@ -552,7 +581,16 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
 
                 <Button
                   type="button"
-                  onClick={() => setAddressDialogOpen(true)}
+                  onClick={() => {
+                    const formCountry = normalizeCountryToName(
+                      watch('country')
+                    );
+                    setNewAddress((prev) => ({
+                      ...prev,
+                      country: formCountry,
+                    }));
+                    setAddressDialogOpen(true);
+                  }}
                   variant="outline"
                   className="w-fit mt-2 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
                 >
@@ -625,15 +663,27 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { field: 'address_1', label: 'Address Line 1', required: true },
-              { field: 'address_2', label: 'Address Line 2', required: false },
-              { field: 'city', label: 'City', required: true },
-              { field: 'county', label: 'County', required: false },
-              { field: 'state', label: 'State', required: false },
-              { field: 'zip', label: 'ZIP Code', required: false },
-              { field: 'country', label: 'Country', required: false },
-            ].map(({ field, label, required }) => (
+            {(() => {
+              const addressCountryIsCanada =
+                (newAddress.country || '').trim().toLowerCase() === 'canada';
+              return [
+                { field: 'address_1', label: 'Address Line 1', required: true },
+                {
+                  field: 'address_2',
+                  label: 'Address Line 2',
+                  required: false,
+                },
+                { field: 'city', label: 'City', required: true },
+                { field: 'county', label: 'County', required: false },
+                { field: 'country', label: 'Country', required: false },
+                {
+                  field: 'state',
+                  label: addressCountryIsCanada ? 'Province' : 'State',
+                  required: false,
+                },
+                { field: 'zip', label: 'ZIP Code', required: false },
+              ];
+            })().map(({ field, label, required }) => (
               <div key={field}>
                 <Label className="text-[#40444D] font-semibold mb-2">
                   {label}

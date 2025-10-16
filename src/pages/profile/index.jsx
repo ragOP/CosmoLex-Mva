@@ -68,9 +68,9 @@ const ProfilePage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // const [showPassword, setShowPassword] = useState(false); // current password toggle (commented out)
 
   // Form data
   const [formData, setFormData] = useState({
@@ -89,10 +89,9 @@ const ProfilePage = () => {
     two_factor_enabled: false,
   });
 
-
   // Password change form
   const [passwordData, setPasswordData] = useState({
-    current_password: '',
+    // current_password: '', // commented out, keeping only new + confirm
     new_password: '',
     confirm_password: '',
   });
@@ -187,13 +186,14 @@ const ProfilePage = () => {
 
     try {
       await changePasswordMutation.mutateAsync({
-        current_password: passwordData.current_password,
-        new_password: passwordData.new_password,
+        // current_password: passwordData.current_password, // commented out
+        password: passwordData.new_password,
+        password_confirmation: passwordData.confirm_password,
         user_id: profileData.id,
       });
 
       setPasswordData({
-        current_password: '',
+        // current_password: '', // commented out
         new_password: '',
         confirm_password: '',
       });
@@ -641,7 +641,7 @@ const ProfilePage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
+              {/* <div>
                 <Label htmlFor="current_password">Current Password</Label>
                 <div className="relative mt-1">
                   <Input
@@ -667,7 +667,7 @@ const ProfilePage = () => {
                     )}
                   </Button>
                 </div>
-              </div>
+              </div> */}
               <div>
                 <Label htmlFor="new_password">New Password</Label>
                 <div className="relative mt-1">
@@ -726,7 +726,6 @@ const ProfilePage = () => {
                 onClick={handleChangePassword}
                 disabled={
                   isChangingPassword ||
-                  !passwordData.current_password ||
                   !passwordData.new_password ||
                   !passwordData.confirm_password
                 }

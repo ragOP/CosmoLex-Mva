@@ -34,7 +34,7 @@ const MatterTable = ({ matters = [], onRowClick }) => {
     },
     {
       field: 'case_role',
-      headerName: 'Case Role',
+      headerName: 'Referral Source',
       flex: 1,
       minWidth: 130,
       headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
