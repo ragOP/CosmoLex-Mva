@@ -29,7 +29,6 @@ const GraphPage = () => {
 
   const services = Array.isArray(data?.data) ? data.data : [];
 
-
   const createMutation = useMutation({
     mutationFn: (payload) => createService(payload),
     onSuccess: async () => {
@@ -86,7 +85,8 @@ const GraphPage = () => {
             }}
           >
             <DataGrid
-              rows={services.map((s) => ({
+              rows={services.map((s, index) => ({
+                sno: index + 1,
                 id: s.id,
                 email: s.email,
                 display_name: s.display_name,
@@ -96,8 +96,8 @@ const GraphPage = () => {
               }))}
               columns={[
                 {
-                  field: 'id',
-                  headerName: 'ID',
+                  field: 'sno',
+                  headerName: 'S.No',
                   flex: 0.4,
                   minWidth: 80,
                   sortable: false,

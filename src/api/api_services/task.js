@@ -61,7 +61,9 @@ export const filterTask = async (queryParams) => {
   if (response && response?.response?.Apistatus === false) {
     throw new Error(response?.response?.message || 'Failed to filter task');
   }
-  return response.response?.data || [];
+  const res = response?.response || {};
+  const list = res?.tasks || res?.data || [];
+  return Array.isArray(list) ? list : [];
 };
 
 // Create task

@@ -1,16 +1,34 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import Button from '@/components/Button';
+import { Button as UIButton } from '@/components/ui/button';
 import TaskDialog from '@/components/dialogs/TaskDialog';
 import ShowTaskDialog from '@/components/tasks/ShowTaskDialog';
 import DeleteTaskDialog from '@/components/tasks/DeleteTaskDialog';
 import TaskTable from '@/components/tasks/TaskTable';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Filter as FilterIcon } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTasks } from '@/components/tasks/hooks/useTasks';
 import { useMatter } from '@/components/inbox/MatterContext';
+import getMetaOptions from '@/utils/getMetaFields';
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+// no client-side date parsing; filtering is done server-side
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 const TasksPage = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -32,7 +50,123 @@ const TasksPage = () => {
     updateStatus,
     deleteTask,
     isDeleting,
+    filterTasks,
   } = useTasks();
+
+  // Multi-filter params from URL
+  const clientNameParam = searchParams.get('client_name') || '';
+  const priorityIdParam = searchParams.get('priority_id') || '';
+  const statusIdParam = searchParams.get('status_id') || '';
+  const assignedToParam = searchParams.get('assigned_to') || '';
+  const fromDateParam = searchParams.get('from_date') || '';
+
+  // Build select options
+  const priorityOptions = useMemo(
+    () => getMetaOptions({ metaField: 'taks_priority', metaObj: tasksMeta }),
+    [tasksMeta]
+  );
+  const statusOptions = useMemo(
+    () => getMetaOptions({ metaField: 'taks_status', metaObj: tasksMeta }),
+    [tasksMeta]
+  );
+  const clientOptions = useMemo(() => {
+    const list = Array.isArray(tasks) ? tasks : [];
+    const setNames = new Set();
+    for (const t of list) {
+      const name = (t?.contact_name || '').trim();
+      if (name) setNames.add(name);
+    }
+    return Array.from(setNames).sort();
+  }, [tasks]);
+  const assigneeOptions = useMemo(() => {
+    const list = Array.isArray(tasks) ? tasks : [];
+    const map = new Map();
+    for (const t of list) {
+      const arr = Array.isArray(t?.assignees) ? t.assignees : [];
+      for (const a of arr) {
+        if (a?.id && a?.name && !map.has(a.id)) map.set(a.id, a.name);
+      }
+    }
+    return Array.from(map.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [tasks]);
+
+  const updateParam = (key, value) => {
+    const next = new URLSearchParams(searchParams);
+    if (value && value !== '') next.set(key, value);
+    else next.delete(key);
+    setSearchParams(next, { replace: true });
+  };
+
+  const clearAllFilters = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('client_name');
+    next.delete('priority_id');
+    next.delete('status_id');
+    next.delete('assigned_to');
+    next.delete('from_date');
+    setSearchParams(next, { replace: true });
+  };
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (clientNameParam) count += 1;
+    if (priorityIdParam) count += 1;
+    if (statusIdParam) count += 1;
+    if (assignedToParam) count += 1;
+    if (fromDateParam) count += 1;
+    return count;
+  }, [
+    clientNameParam,
+    priorityIdParam,
+    statusIdParam,
+    assignedToParam,
+    fromDateParam,
+  ]);
+
+  // Server-side filtered tasks
+  const [serverTasks, setServerTasks] = useState(null);
+  const [isFiltering, setIsFiltering] = useState(false);
+
+  useEffect(() => {
+    const hasFilters =
+      !!clientNameParam ||
+      !!priorityIdParam ||
+      !!statusIdParam ||
+      !!assignedToParam ||
+      !!fromDateParam;
+
+    if (!hasFilters) {
+      setServerTasks(Array.isArray(tasks) ? tasks : []);
+      return;
+    }
+
+    const qs = new URLSearchParams();
+    if (clientNameParam) qs.set('client_name', clientNameParam);
+    if (priorityIdParam) qs.set('priority_id', priorityIdParam);
+    if (statusIdParam) qs.set('status_id', statusIdParam);
+    if (assignedToParam) qs.set('assigned_to', assignedToParam);
+    if (fromDateParam) qs.set('from_date', fromDateParam);
+
+    setIsFiltering(true);
+    filterTasks(qs.toString())
+      .then((data) => {
+        setServerTasks(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        setServerTasks([]);
+      })
+      .finally(() => setIsFiltering(false));
+  }, [
+    tasks,
+    clientNameParam,
+    priorityIdParam,
+    statusIdParam,
+    assignedToParam,
+    fromDateParam,
+    filterTasks,
+  ]);
 
   // Handlers
   const handleDelete = (id) => {
@@ -94,19 +228,222 @@ const TasksPage = () => {
   return (
     <div className="flex flex-col gap-4 h-full w-full overflow-auto">
       <div className="flex justify-between w-full items-center px-4 pt-4">
-        <p className="text-2xl font-bold">Tasks ({tasks?.length || 0})</p>
-        <Button
-          onClick={() => setOpen(true)}
-          className="cursor-pointer max-w-48"
-          icon={Plus}
-          iconPosition="left"
-        >
-          Create Task
-        </Button>
+        <p className="text-2xl font-bold">
+          Tasks ({(serverTasks || tasks || []).length})
+        </p>
+        <div className="flex items-center gap-3">
+          <Dialog>
+            <DialogTrigger asChild>
+              <UIButton
+                variant="outline"
+                className={`h-10 px-4 flex items-center gap-2 transition-all duration-200 ${
+                  activeFiltersCount > 0
+                    ? 'border-primary-500 bg-primary-50 text-primary-700 shadow-sm'
+                    : 'hover:bg-gray-50'
+                }`}
+              >
+                <FilterIcon className="h-4 w-4" />
+                {activeFiltersCount
+                  ? `Filters (${activeFiltersCount})`
+                  : 'Filter'}
+                {activeFiltersCount > 0 && (
+                  <span className="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-white bg-primary-500 rounded-full">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </UIButton>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl w-full mx-4">
+              <DialogHeader className="pb-4">
+                <DialogTitle className="text-xl font-semibold text-gray-900">
+                  Filter Tasks
+                </DialogTitle>
+                {activeFiltersCount > 0 && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    {activeFiltersCount} filter
+                    {activeFiltersCount > 1 ? 's' : ''} applied
+                  </p>
+                )}
+              </DialogHeader>
+
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 block">
+                      Client
+                    </label>
+                    <Select
+                      value={
+                        clientNameParam === '' ? '__all__' : clientNameParam
+                      }
+                      onValueChange={(val) =>
+                        updateParam('client_name', val === '__all__' ? '' : val)
+                      }
+                      disabled={tasksLoading}
+                    >
+                      <SelectTrigger className="h-10 w-full">
+                        <SelectValue placeholder="All clients" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-64 overflow-auto">
+                        <SelectItem value="__all__">All clients</SelectItem>
+                        {clientOptions.map((name) => (
+                          <SelectItem key={name} value={name}>
+                            {name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 block">
+                      Priority
+                    </label>
+                    <Select
+                      value={
+                        priorityIdParam === '' ? '__all__' : priorityIdParam
+                      }
+                      onValueChange={(val) =>
+                        updateParam('priority_id', val === '__all__' ? '' : val)
+                      }
+                      disabled={tasksLoading}
+                    >
+                      <SelectTrigger className="h-10 w-full">
+                        <SelectValue placeholder="All priorities" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__all__">All priorities</SelectItem>
+                        {priorityOptions.map((p) => (
+                          <SelectItem key={p.id} value={p.id.toString()}>
+                            {p.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 block">
+                      Status
+                    </label>
+                    <Select
+                      value={statusIdParam === '' ? '__all__' : statusIdParam}
+                      onValueChange={(val) =>
+                        updateParam('status_id', val === '__all__' ? '' : val)
+                      }
+                      disabled={tasksLoading}
+                    >
+                      <SelectTrigger className="h-10 w-full">
+                        <SelectValue placeholder="All statuses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__all__">All statuses</SelectItem>
+                        {statusOptions.map((s) => (
+                          <SelectItem key={s.id} value={s.id.toString()}>
+                            {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 block">
+                      Assignee
+                    </label>
+                    <Select
+                      value={
+                        assignedToParam === '' ? '__all__' : assignedToParam
+                      }
+                      onValueChange={(val) =>
+                        updateParam('assigned_to', val === '__all__' ? '' : val)
+                      }
+                      disabled={tasksLoading}
+                    >
+                      <SelectTrigger className="h-10 w-full">
+                        <SelectValue placeholder="All assignees" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-64 overflow-auto">
+                        <SelectItem value="__all__">All assignees</SelectItem>
+                        {assigneeOptions.map((a) => (
+                          <SelectItem key={a.id} value={a.id.toString()}>
+                            {a.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-medium text-gray-700 block">
+                      From Date
+                    </label>
+                    <Input
+                      type="date"
+                      value={fromDateParam}
+                      onChange={(e) => updateParam('from_date', e.target.value)}
+                      className="h-10 w-full max-w-xs"
+                      placeholder="Select date"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-6 border-t border-gray-200 mt-6">
+                <button
+                  onClick={clearAllFilters}
+                  disabled={activeFiltersCount === 0}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    activeFiltersCount === 0
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                  }`}
+                >
+                  Clear all filters
+                </button>
+                <DialogTrigger asChild>
+                  <button
+                    className="flex items-center gap-2 shadow-lg"
+                    style={{
+                      background:
+                        'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
+                      color: '#fff',
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Apply filters
+                  </button>
+                </DialogTrigger>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <button
+            onClick={() => setOpen(true)}
+            className="flex items-center gap-2 shadow-lg cursor-pointer"
+            style={{
+              background:
+                'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
+              color: '#fff',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            <Plus className="w-4 h-4" />
+            <span>Create Task</span>
+          </button>
+        </div>
       </div>
 
       <TaskTable
-        tasks={tasks || []}
+        tasks={serverTasks || tasks || []}
         tasksMeta={tasksMeta || []}
         handleUpdateTaskStatus={handleUpdateTaskStatus}
         onRowClick={(params) => {

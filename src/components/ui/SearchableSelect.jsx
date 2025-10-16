@@ -28,7 +28,7 @@ const SearchableSelect = ({
   // Filter options based on search term
   const filteredOptions = useMemo(() => {
     if (!searchTerm) return options;
-    
+
     return options.filter((option) =>
       option[displayKey]?.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -60,7 +60,9 @@ const SearchableSelect = ({
       onOpenChange={handleOpenChange}
       disabled={disabled}
     >
-      <SelectTrigger className={`${className} ${error ? 'border-red-500' : ''}`}>
+      <SelectTrigger
+        className={`${className} ${error ? 'border-red-500' : ''}`}
+      >
         <SelectValue placeholder={placeholder}>
           {displayValue || placeholder}
         </SelectValue>
@@ -78,7 +80,7 @@ const SearchableSelect = ({
             onKeyDown={(e) => e.stopPropagation()}
           />
         </div>
-        
+
         {/* Options List */}
         <div className="max-h-60 overflow-auto">
           {filteredOptions.length > 0 ? (

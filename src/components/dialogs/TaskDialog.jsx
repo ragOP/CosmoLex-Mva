@@ -297,13 +297,14 @@ export default function TaskDialog({
       errors.due_date = 'Due date is required';
     }
 
-    if (data.due_date) {
-      const dueDate = new Date(data.due_date);
-      const today = new Date();
-      if (dueDate <= today) {
-        errors.due_date = 'Due date must be in the future';
-      }
-    }
+    // Previously enforced future-only due dates. Kept for reference:
+    // if (data.due_date) {
+    //   const dueDate = new Date(data.due_date);
+    //   const today = new Date();
+    //   if (dueDate <= today) {
+    //     errors.due_date = 'Due date must be in the future';
+    //   }
+    // }
 
     if (!data.status_id) {
       errors.status_id = 'Status is required';
@@ -325,9 +326,11 @@ export default function TaskDialog({
       });
     }
 
-    if (!data.reminders || data.reminders.length === 0) {
-      errors.reminders = 'At least one reminder is required';
-    } else {
+    // Previously enforced at least one reminder. Kept for reference:
+    // if (!data.reminders || data.reminders.length === 0) {
+    //   errors.reminders = 'At least one reminder is required';
+    // } else {
+    if (data.reminders && data.reminders.length > 0) {
       // Validate each reminder
       data.reminders.forEach((reminder, index) => {
         if (!reminder.type_id) {
@@ -339,14 +342,13 @@ export default function TaskDialog({
 
         if (!reminder.scheduled_at) {
           errors[`reminder_date_${index}`] = 'Reminder date is required';
-        } else {
-          const now = new Date();
-          const reminderDate = new Date(reminder.scheduled_at);
-          if (reminderDate <= now) {
-            errors[`reminder_date_${index}`] =
-              'Reminder date must be in the future';
-          }
         }
+        // Previously enforced future-only reminder dates. Kept for reference:
+        // const now = new Date();
+        // const reminderDate = new Date(reminder.scheduled_at);
+        // if (reminderDate <= now) {
+        //   errors[`reminder_date_${index}`] = 'Reminder date must be in the future';
+        // }
       });
     }
 

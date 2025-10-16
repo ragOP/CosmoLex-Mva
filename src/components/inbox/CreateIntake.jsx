@@ -38,6 +38,7 @@ import { setQueryParam } from '@/utils/setQueryParam';
 import { useContact } from '@/components/contact/hooks/useContact';
 import { isObjectWithValues } from '@/utils/isObjectWithValues';
 import { useSearchParams } from 'react-router-dom';
+import CustomButton from '@/components/CustomButton';
 
 export default function CreateIntake() {
   const navigate = useNavigate();
@@ -529,8 +530,12 @@ export default function CreateIntake() {
                               }`}
                             />
                           </div>
-                          <button
-                            className="flex items-center gap-2 shadow-lg"
+                          <CustomButton
+                            type="button"
+                            variant="primary"
+                            icon={Plus}
+                            iconPosition="left"
+                            className="w-auto px-3 py-2 shadow-lg"
                             style={{
                               background:
                                 'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
@@ -540,11 +545,14 @@ export default function CreateIntake() {
                               border: 'none',
                               cursor: 'pointer',
                             }}
-                            onClick={() => setOpen(true)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setOpen(true);
+                            }}
                           >
-                            <Plus className="h-4 w-4" />
-                            <span>Add new contact</span>
-                          </button>
+                            Add new contact
+                          </CustomButton>
                         </div>
                       )}
                     />
