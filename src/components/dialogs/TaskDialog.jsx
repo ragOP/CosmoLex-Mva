@@ -96,12 +96,12 @@ const formFields = [
     type: 'checkbox',
     required: false,
   },
-  {
-    label: 'Add Calendar Event',
-    name: 'add_calendar_event',
-    type: 'checkbox',
-    required: false,
-  },
+  // {
+  //   label: 'Add Calendar Event',
+  //   name: 'add_calendar_event',
+  //   type: 'checkbox',
+  //   required: false,
+  // },
   {
     label: 'Trigger Appointment Reminders',
     name: 'trigger_appointment_reminders',

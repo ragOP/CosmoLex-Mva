@@ -151,14 +151,15 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
       case 'primary_email':
         rules.required = 'Primary email is required';
         break;
-      case 'addresses':
-        rules.validate = (value) => {
-          if (!value || value.length === 0) {
-            return 'At least one address is required';
-          }
-          return true;
-        };
-        break;
+      // The following validation previously enforced at least one address
+      // case 'addresses':
+      //   rules.validate = (value) => {
+      //     if (!value || value.length === 0) {
+      //       return 'At least one address is required';
+      //     }
+      //     return true;
+      //   };
+      //   break;
       default:
         // Apply maxLength to other text fields
         if (
@@ -543,8 +544,8 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
               {/* Address Section */}
               <div className="w-full">
                 <h3 className="text-lg font-semibold mb-1">
-                  Addresses
-                  <span className="text-red-500 ml-1">*</span>
+                  Addresses{' '}
+                  {/* <span className=\"text-red-500 ml-1\">*</span> */}
                 </h3>
                 {addressFields.map((addr, idx) => (
                   <div
@@ -598,14 +599,15 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
                   Add Address
                 </Button>
 
-                {errors?.addresses?.root?.message && (
+                {/* Previous error display for required addresses */}
+                {/* {errors?.addresses?.root?.message && (
                   <p className="text-red-500 text-sm mt-1">
                     {errors?.addresses?.root?.message}
                   </p>
-                )}
+                )} */}
 
-                {/* Hidden field to enforce address validation */}
-                <Controller
+                {/* Hidden field that used to enforce address validation */}
+                {/* <Controller
                   control={control}
                   name="addresses"
                   rules={getValidationRules('addresses')}
@@ -616,7 +618,7 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
                       value={field.value?.length ? 'hasAddresses' : ''}
                     />
                   )}
-                />
+                /> */}
               </div>
             </div>
           </div>

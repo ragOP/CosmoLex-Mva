@@ -48,7 +48,6 @@ export default function CreateMatterDialog({
     queryKey: ['contacts'],
     queryFn: getContacts,
   });
-  
 
   const { data: searchContactData, refetch: refetchSearchContact } = useQuery({
     queryKey: ['searchContact', searchContactQuery, selectedContactType],

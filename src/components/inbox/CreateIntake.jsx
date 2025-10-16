@@ -535,7 +535,6 @@ export default function CreateIntake() {
                             variant="primary"
                             icon={Plus}
                             iconPosition="left"
-                            className="w-auto px-3 py-2 shadow-lg"
                             style={{
                               background:
                                 'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
