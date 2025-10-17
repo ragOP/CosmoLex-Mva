@@ -295,10 +295,24 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
 
   const createContactMutation = useMutation({
     mutationFn: createContact,
-    onSuccess: (res) => {
+    onSuccess: (res, variables) => {
       console.log('[DEBUG] Contact created successfully:', res);
       toast.success('Contact created successfully');
-      setValueFn(res.contact_id);
+      const formData = variables.data;
+      const contactData = {
+        id: res.contact_id,
+        contact_name: `${formData.first_name || ''} ${
+          formData.last_name || ''
+        }`.trim(),
+        contact_type:
+          contactMeta?.contact_type?.find(
+            (item) => item.id === formData.contact_type_id
+          )?.name || 'N/A',
+        primary_email: formData.primary_email || 'N/A',
+        phone: formData.primary_phone || 'N/A',
+        primary_address: formData.addresses?.[0]?.address_1 || 'N/A',
+      };
+      setValueFn(res.contact_id, contactData);
       setOpen(false);
       reset();
     },

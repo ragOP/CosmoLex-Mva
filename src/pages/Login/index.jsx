@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, Eye, EyeOff } from 'lucide-react';
 import CustomButton from '@/components/CustomButton';
@@ -6,6 +6,7 @@ import { Alert } from '@/components/ui/alert';
 import { isMobile } from '@/utils/isMobile';
 import { getBrowserInfo } from '@/utils/deviceDetection';
 import postLogin from './helper';
+import { queryClient } from '@/main';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -16,6 +17,11 @@ const LoginPage = () => {
   const [info, setInfo] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  // Clear React Query cache when login page loads to prevent stale data
+  useEffect(() => {
+    queryClient.clear();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

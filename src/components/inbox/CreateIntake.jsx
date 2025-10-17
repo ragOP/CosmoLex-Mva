@@ -60,7 +60,6 @@ export default function CreateIntake() {
     mutationFn: createMatter,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['matters'] });
-      console.log('DATA', data);
       toast.success(data.message || 'Intake created successfully!');
       if (data && data.slug) {
         navigate(`/dashboard/inbox/overview?slugId=${data.slug}`);
@@ -78,7 +77,6 @@ export default function CreateIntake() {
     queryKey: ['matterMeta'],
     queryFn: getMatterMeta,
   });
-  console.log('matterMeta: ', matterMeta);
 
   const { data: contactMeta } = useQuery({
     queryKey: ['contactMeta'],
@@ -241,8 +239,6 @@ export default function CreateIntake() {
       toast.error('Contact selection is required');
       return;
     }
-
-    console.log('[DEBUG] Submitting intake data:', data);
     createMatterMutation.mutate({ data });
   };
 
@@ -326,9 +322,6 @@ export default function CreateIntake() {
     },
   ];
 
-  console.log('[DEBUG] Selected contact type:', selectedContactType);
-  console.log('[DEBUG] Selected contact:', selectedContact);
-  console.log('[DEBUG] contact_id:', getValues('contact_id'));
   return (
     <div className="flex p-4 w-full h-full">
       <div className="flex flex-col items-center p-4 bg-white/30 w-full rounded-2xl">
@@ -472,11 +465,7 @@ export default function CreateIntake() {
 
               {/* Contact Selection Section */}
               <div className="space-y-4">
-                <div
-                  className={`flex gap-4 w-full ${
-                    selectedContact ? 'hidden' : ''
-                  }`}
-                >
+                <div className="flex gap-4 w-full">
                   <div className="w-[24vw] space-y-2">
                     <Label className="text-[#40444D] w-full font-semibold block">
                       Contact Type
@@ -485,7 +474,7 @@ export default function CreateIntake() {
                       options={contactType}
                       value={selectedContactType}
                       onValueChange={(value) => {
-                        setSelectedContactType(value);
+                        setSelectedContactType(Number(value));
                         // Clear contact search when type changes
                         setSearchContactQuery('');
                         setSelectedContact(null);
@@ -496,7 +485,7 @@ export default function CreateIntake() {
                       searchPlaceholder="Search contact types..."
                       className="w-full"
                       displayKey="name"
-                      valueKey="name"
+                      valueKey="id"
                       emptyMessage="No contact types found"
                     />
                   </div>
@@ -638,7 +627,6 @@ export default function CreateIntake() {
                                             'contact_ids',
                                             newContacts.map((c) => c.id)
                                           );
-                                          // Also set single contact_id for backward compatibility
                                           setValue('contact_id', contact.id);
                                         } else {
                                           const newContacts =
@@ -650,7 +638,7 @@ export default function CreateIntake() {
                                             'contact_ids',
                                             newContacts.map((c) => c.id)
                                           );
-                                          // Set to last selected or empty
+
                                           setValue(
                                             'contact_id',
                                             newContacts.length > 0
@@ -764,6 +752,7 @@ export default function CreateIntake() {
                                   const newContacts = selectedContacts.filter(
                                     (c) => c.id !== contact.id
                                   );
+
                                   setSelectedContacts(newContacts);
                                   setValue(
                                     'contact_ids',
@@ -896,17 +885,18 @@ export default function CreateIntake() {
           <CreateContactDialog
             open={open}
             setOpen={setOpen}
-            setValueFn={(contactId) => {
-              console.log('contactId >>>', contactId);
+            setValueFn={(contactId, contactData) => {
               setValue('contact_id', contactId);
-              // Add the new contact to selected contacts
-              const newContact = {
+
+              // Add the new contact to selected
+              const newContact = contactData || {
                 id: contactId,
-                contact_name: 'New Contact', // This will be updated when contact data is loaded
-                contact_type: 'Unknown',
-                primary_email: '',
-                phone: '',
+                contact_name: 'New Contact',
+                contact_type: 'N/A',
+                primary_email: 'N/A',
+                phone: 'N/A',
               };
+
               setSelectedContacts((prev) => [...prev, newContact]);
               setValue('contact_ids', [
                 ...selectedContacts.map((c) => c.id),
