@@ -181,6 +181,13 @@ export default function Overview() {
   const formFields = [
     // { label: 'Description', name: 'description', type: 'textarea' },
     {
+      label: 'Description',
+      name: 'description',
+      type: 'text',
+      required: false,
+      className: 'w-full ',
+    },
+    {
       label: 'Referral Source',
       name: 'case_role_id',
       type: 'select',
@@ -224,7 +231,7 @@ export default function Overview() {
       type: 'select',
       options: matterMeta?.ad_campaign_id || [],
     },
-    { label: 'Description', name: 'description', type: 'text' },
+    // { label: 'Description', name: 'description', type: 'text' },
     // { label: 'Contact ID', name: 'contact_id', type: 'text' },
     {
       label: 'Rating',
@@ -250,6 +257,13 @@ export default function Overview() {
       type: 'text',
       readOnly: true,
     },
+    {
+      label: 'Case Description',
+      name: 'case_description',
+      type: 'textarea',
+      required: false,
+      widthFull: true,
+    },
   ];
 
   return (
@@ -269,7 +283,7 @@ export default function Overview() {
           >
             <div className="space-y-4">
               {/* Description field - full width */}
-              {/* <div className="w-full">
+              <div className="w-full ">
                 <Label className="text-[#40444D] font-semibold mb-2">
                   Description
                 </Label>
@@ -289,10 +303,14 @@ export default function Overview() {
                     {errors.description.message}
                   </p>
                 )}
-              </div> */}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {formFields
-                  // .filter(({ name }) => name !== 'description')
+                  .filter(
+                    ({ name }) =>
+                      name !== 'description' && name !== 'case_description'
+                  )
                   .map(({ label, name, type, options, required }) => (
                     <div key={name} className="w-full">
                       {type !== 'checkbox' && (
@@ -376,6 +394,29 @@ export default function Overview() {
                       )}
                     </div>
                   ))}
+              </div>
+
+              {/* Case Description field - full width */}
+              <div className="w-full">
+                <Label className="text-[#40444D] font-semibold mb-2">
+                  Case Description
+                </Label>
+                <Controller
+                  control={control}
+                  name="case_description"
+                  render={({ field }) => (
+                    <textarea
+                      {...field}
+                      className="w-full min-h-[100px] p-3 border border-gray-300 rounded-md resize-vertical focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                      placeholder="Enter case description..."
+                    />
+                  )}
+                />
+                {errors.case_description && (
+                  <p className="text-xs text-red-500">
+                    {errors.case_description.message}
+                  </p>
+                )}
               </div>
 
               {/* Contact Type Select */}
