@@ -108,13 +108,13 @@ const TasksPage = () => {
   return (
     <div className="flex flex-col gap-2 h-full w-full overflow-auto">
       {/* --- Main Header Container --- */}
-      <div className="flex justify-between w-full items-center px-4 pt-4">
+      <div className="flex flex-col sm:flex-row justify-between w-full items-start sm:items-center px-[50px] pt-4 gap-3">
         <p className="text-2xl font-bold">Matters ({filteredMatters?.length || 0})</p>
 
-        {/* --- Right-side Controls Container --- */}
-        <div className="flex items-center gap-2 mr-[27px]">
-          {/* --- CHANGE 1: Standalone Search Input --- */}
-          <div className="flex items-center gap-2 bg-white/50 backdrop-blur-sm border border-[#E2E8F0] rounded-md px-2 h-10 shadow w-auto">
+        {/* --- Right-side Controls Container (responsive) --- */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-[80%] sm:w-auto">
+          {/* --- Standalone Search Input --- */}
+          <div className="flex items-center gap-2 bg-white/50 backdrop-blur-sm border border-[#E2E8F0] rounded-md px-2 h-10 shadow w-[80%] sm:w-auto">
             <Search size={16} className="text-gray-400" />
             <input
               type="text"
@@ -125,19 +125,19 @@ const TasksPage = () => {
             />
           </div>
 
-          <div className="flex items-center gap-3.5 bg-white/50 backdrop-blur-sm border border-[#E2E8F0] rounded-md px-2 h-10 shadow w-auto">
+          <div className="flex items-center gap-3.5 bg-white/50 backdrop-blur-sm border border-[#E2E8F0] rounded-md px-2 h-10 shadow w-full sm:w-auto">
             <Clock size={16} className="text-[#6366F1]" />
             <span className="text-sm font-semibold uppercase text-[#40444D]">
               Filter
             </span>
             <span className="h-5 w-px bg-[#E2E8F0]" />
-            <div className="min-w-[140px] h-full flex items-center mr-[-8px]">
+            <div className="min-w-[120px] h-full flex items-center mr-[-8px]">
               <Select
                 value={currentFilterType}
                 onValueChange={(value) => setCurrentFilterType(value)}
                 disabled={isLoading}
               >
-                <SelectTrigger className="h-10 bg-transparent border-0 shadow-none px-1 focus:ring-0 focus:outline-none w-auto min-w-[140px]">
+                <SelectTrigger className="h-10 bg-transparent border-0 shadow-none px-1 focus:ring-0 focus:outline-none w-auto min-w-[120px]">
                   <SelectValue placeholder="Select Category" />
                 </SelectTrigger>
                 <SelectContent className="min-w-[160px]">
@@ -151,7 +151,7 @@ const TasksPage = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="min-w-[140px] h-full flex items-center">
+            <div className="min-w-[120px] h-full flex items-center">
               <Select
                 value=""
                 onValueChange={(value) => {
@@ -161,7 +161,7 @@ const TasksPage = () => {
                 }}
                 disabled={!currentFilterType || isLoading}
               >
-                <SelectTrigger className="h-10 bg-transparent border-0 shadow-none px-1 focus:ring-0 focus:outline-none w-auto min-w-[140px]">
+                <SelectTrigger className="h-10 bg-transparent border-0 shadow-none px-1 focus:ring-0 focus:outline-none w-auto min-w-[120px]">
                   <SelectValue placeholder={activeFilters[currentFilterType]?.join(', ') || 'Select Value...'} />
                 </SelectTrigger>
                 <SelectContent className="min-w-[160px]">
@@ -175,18 +175,21 @@ const TasksPage = () => {
                     <div className="px-2 py-1 text-sm text-gray-500">Select a category first</div>
                   )}
                 </SelectContent>
-                <Button
-                  onClick={() => navigate(`/dashboard/inbox/overview/create`)}
-                  className="cursor-pointer text-center pr-1.5 max-w-48 ml-1.5"
-                  icon={Plus}
-                  iconPosition="left"
-                >
-                  Create Matter
-                </Button>
               </Select>
             </div>
-          </div>
 
+            {/* Create button moved outside of Select to avoid layout issues on small screens */}
+            <div className="ml-auto sm:ml-2">
+              <Button
+                onClick={() => navigate(`/dashboard/inbox/overview/create`)}
+                className="cursor-pointer text-center pr-1.5 max-w-48 rounded-md min-w-36 ml-3.5 sm:ml-1.5"
+                icon={Plus}
+                iconPosition="left"
+              >
+                Create Matter
+              </Button>
+            </div>
+          </div>
 
         </div>
       </div>
