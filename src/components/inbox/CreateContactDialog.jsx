@@ -145,12 +145,12 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
           message: 'Company name must be 255 characters or less',
         };
         break;
-      case 'primary_phone':
-        rules.required = 'Primary phone is required';
-        break;
-      case 'primary_email':
-        rules.required = 'Primary email is required';
-        break;
+      // case 'primary_phone':
+      //   rules.required = 'Primary phone is required';
+      //   break;
+      // case 'primary_email':
+      //   rules.required = 'Primary email is required';
+      //   break;
       // The following validation previously enforced at least one address
       // case 'addresses':
       //   rules.validate = (value) => {
@@ -273,14 +273,14 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
       label: 'Primary Phone',
       name: 'primary_phone',
       type: 'text',
-      required: true,
+      // required: true,
     },
     { label: 'Fax', name: 'fax', type: 'text' },
     {
       label: 'Primary Email',
       name: 'primary_email',
       type: 'text',
-      required: true,
+      // required: true,
     },
     { label: 'Secondary Email', name: 'secondary_email', type: 'text' },
     { label: 'When to Contact', name: 'when_to_contact', type: 'text' },
