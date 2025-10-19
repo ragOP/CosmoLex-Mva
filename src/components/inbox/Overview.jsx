@@ -51,8 +51,13 @@ export default function Overview() {
   const [searchContactQuery, setSearchContactQuery] = useState('');
   const [showContactTable, setShowContactTable] = useState(false);
   const [hoveredContact, setHoveredContact] = useState(null);
-  const [selectedContact, setSelectedContact] = useState(null);
+  const [selectedContacts, setSelectedContacts] = useState([]);
   const [isEventsCollapsed, setIsEventsCollapsed] = useState(false);
+  const [isContactsCollapsed, setIsContactsCollapsed] = useState(false);
+  const [deleteMode, setDeleteMode] = useState(false);
+  const [updateMode, setUpdateMode] = useState(false);
+  const [contactsToDelete, setContactsToDelete] = useState([]);
+  const [contactToUpdate, setContactToUpdate] = useState(null);
 
   const updateMatterMutation = useMutation({
     mutationFn: updateMatter,
@@ -68,7 +73,12 @@ export default function Overview() {
   });
 
   const handleUpdateMatter = () => {
-    updateMatterMutation.mutate({ slug: slugId, data: getValues() });
+    const formData = getValues();
+    // Set the first selected contact as the primary contact_id
+    if (selectedContacts.length > 0) {
+      formData.contact_id = selectedContacts[0].id;
+    }
+    updateMatterMutation.mutate({ slug: slugId, data: formData });
   };
 
   const { data: matter, isLoading } = useQuery({
@@ -111,6 +121,84 @@ export default function Overview() {
     debouncedSearch(searchContactQuery, selectedContactType);
     return () => debouncedSearch.cancel();
   }, [searchContactQuery, selectedContactType, debouncedSearch]);
+
+  // Add contact to selected contacts list
+  const handleAddContact = (contact) => {
+    if (!selectedContacts.find((c) => c.id === contact.id)) {
+      setSelectedContacts([...selectedContacts, contact]);
+      toast.success(`${contact.contact_name} added to contacts`);
+    } else {
+      toast.info(`${contact.contact_name} is already added`);
+    }
+    setSearchContactQuery('');
+    setShowContactTable(false);
+  };
+
+  // Handle delete mode toggle
+  const handleDeleteModeToggle = () => {
+    if (deleteMode) {
+      // Cancel delete mode
+      setDeleteMode(false);
+      setContactsToDelete([]);
+    } else {
+      // Enter delete mode
+      setDeleteMode(true);
+      setUpdateMode(false);
+      setContactToUpdate(null);
+    }
+  };
+
+  // Handle update mode toggle
+  const handleUpdateModeToggle = () => {
+    if (updateMode) {
+      // Cancel update mode
+      setUpdateMode(false);
+      setContactToUpdate(null);
+    } else {
+      // Enter update mode
+      setUpdateMode(true);
+      setDeleteMode(false);
+      setContactsToDelete([]);
+    }
+  };
+
+  // Toggle contact selection for deletion
+  const toggleDeleteSelection = (contactId) => {
+    setContactsToDelete((prev) => {
+      if (prev.includes(contactId)) {
+        return prev.filter((id) => id !== contactId);
+      } else {
+        return [...prev, contactId];
+      }
+    });
+  };
+
+  // Execute delete
+  const executeDelete = () => {
+    if (contactsToDelete.length === 0) {
+      toast.error('Please select at least one contact to delete');
+      return;
+    }
+    const deletedNames = selectedContacts
+      .filter((c) => contactsToDelete.includes(c.id))
+      .map((c) => c.contact_name);
+
+    setSelectedContacts((prev) =>
+      prev.filter((c) => !contactsToDelete.includes(c.id))
+    );
+    setContactsToDelete([]);
+    setDeleteMode(false);
+    toast.success(`Deleted: ${deletedNames.join(', ')}`);
+  };
+
+  // Handle contact selection for update
+  const handleSelectForUpdate = (contact) => {
+    setContactToUpdate(contact);
+    // Here you would typically open a dialog/form for updating
+    toast.info(
+      `Selected ${contact.contact_name} for update. Update functionality would open here.`
+    );
+  };
 
   const {
     control,
@@ -165,12 +253,17 @@ export default function Overview() {
 
     reset(formData);
 
-    if (matter.contact_id) {
+    if (matter.contact_id && contacts) {
       const upcomingContact = contacts.find(
         (contact) => contact.id === matter.contact_id
       );
       if (upcomingContact) {
-        setSelectedContact(upcomingContact);
+        setSelectedContacts((prev) => {
+          if (prev.length === 0 || prev[0]?.id !== upcomingContact.id) {
+            return [upcomingContact];
+          }
+          return prev;
+        });
         setSelectedContactType(upcomingContact.contact_type);
       }
     }
@@ -420,13 +513,7 @@ export default function Overview() {
               </div>
 
               {/* Contact Type Select */}
-
-              {/* Contact Type Select */}
-              <div
-                className={`flex gap-4 w-full ${
-                  selectedContact ? 'hidden' : ''
-                }`}
-              >
+              <div className="flex gap-4 w-full">
                 <div className="w-[24vw] space-y-2">
                   <Label className="text-[#40444D] w-full font-semibold block">
                     Contact Type
@@ -446,22 +533,20 @@ export default function Overview() {
                 {/* Search Contact */}
                 <div className="w-full space-y-2">
                   <Label className="text-[#40444D] font-semibold block">
-                    Search Contact
+                    Search & Add Contacts
                   </Label>
                   <Controller
                     control={control}
                     name="contact_id"
                     render={() => (
                       <Input
-                        placeholder="Search by name or email..."
+                        placeholder="Search by name or email to add..."
                         value={searchContactQuery}
                         onChange={(e) => {
                           setSearchContactQuery(e.target.value);
                           setShowContactTable(true);
-                          setSelectedContact(null);
                         }}
                         className="w-1/2 bg-white"
-                        //disabled={!selectedContactType} // stays enabled as long as type is chosen
                       />
                     )}
                   />
@@ -477,7 +562,7 @@ export default function Overview() {
                 </div>
               </div>
 
-              {searchContactQuery && showContactTable && !selectedContact && (
+              {searchContactQuery && showContactTable && (
                 <div
                   className="flex w-full mt-4"
                   style={{ minHeight: '220px' }}
@@ -489,6 +574,7 @@ export default function Overview() {
                           <th className="py-2 px-4">Name</th>
                           <th className="py-2 px-2">Case Type</th>
                           <th className="py-2 px-2">Email</th>
+                          <th className="py-2 px-2">Action</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -503,36 +589,58 @@ export default function Overview() {
                                   .toLowerCase()
                                   .includes(searchContactQuery.toLowerCase())
                             )
-                            .map((contact) => (
-                              <tr
-                                key={contact.id}
-                                className={`cursor-pointer hover:bg-indigo-100 transition duration-300 ease-in-out ${
-                                  hoveredContact?.id === contact.id
-                                    ? 'bg-indigo-50'
-                                    : ''
-                                }`}
-                                onMouseEnter={() => setHoveredContact(contact)}
-                                onMouseLeave={() => setHoveredContact(null)}
-                                onClick={() => {
-                                  setSelectedContact(contact);
-                                  setShowContactTable(false);
-                                  setValue('contact_id', contact.id);
-                                }}
-                              >
-                                <td className="py-2 px-4">
-                                  {contact.contact_name}
-                                </td>
-                                <td className="py-2 px-2">
-                                  {contact.contact_type}
-                                </td>
-                                <td className="py-2 px-2">
-                                  {contact.primary_email}
-                                </td>
-                              </tr>
-                            ))
+                            .map((contact) => {
+                              const isAlreadyAdded = selectedContacts.find(
+                                (c) => c.id === contact.id
+                              );
+                              return (
+                                <tr
+                                  key={contact.id}
+                                  className={`${
+                                    hoveredContact?.id === contact.id
+                                      ? 'bg-indigo-50'
+                                      : ''
+                                  } ${isAlreadyAdded ? 'opacity-50' : ''}`}
+                                  onMouseEnter={() =>
+                                    setHoveredContact(contact)
+                                  }
+                                  onMouseLeave={() => setHoveredContact(null)}
+                                >
+                                  <td className="py-2 px-4">
+                                    {contact.contact_name}
+                                  </td>
+                                  <td className="py-2 px-2">
+                                    {contact.contact_type}
+                                  </td>
+                                  <td className="py-2 px-2">
+                                    {contact.primary_email}
+                                  </td>
+                                  <td className="py-2 px-2">
+                                    {isAlreadyAdded ? (
+                                      <span className="text-xs text-gray-500">
+                                        Added
+                                      </span>
+                                    ) : (
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() =>
+                                          handleAddContact(contact)
+                                        }
+                                        className="h-7 px-2 text-xs bg-indigo-500 text-white hover:bg-indigo-600"
+                                      >
+                                        <Plus className="w-3 h-3 mr-1" />
+                                        Add
+                                      </Button>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })
                         ) : (
                           <tr>
-                            <td colSpan={3} className="py-2 px-2 text-center">
+                            <td colSpan={4} className="py-2 px-2 text-center">
                               No contacts found
                             </td>
                           </tr>
@@ -576,49 +684,212 @@ export default function Overview() {
                 </div>
               )}
 
-              {selectedContact && (
-                <div className="w-full mt-4">
-                  <div className="relative border rounded-lg bg-white shadow p-4">
-                    <h2 className="font-bold text-lg mb-2">Selected Contact</h2>
-                    <Button
-                      variant={'ghost'}
-                      type="icon"
-                      className="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-500 hover:text-white transition-colors duration-200 cursor-pointer"
-                      onClick={() => {
-                        setSelectedContact(null);
-                        setValue('contact_id', '');
-                        setShowContactTable(true);
-                      }}
+              {/* Selected Contacts Management Section */}
+              <div className="w-full mt-4">
+                <div className="bg-white rounded-lg shadow p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <div
+                      className="flex items-center gap-2 cursor-pointer"
+                      onClick={() =>
+                        setIsContactsCollapsed(!isContactsCollapsed)
+                      }
                     >
-                      <Edit className="w-8 h-8" />
-                    </Button>
-                    <p>
-                      <span className="font-semibold">Name:</span>{' '}
-                      {selectedContact.contact_name}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Type:</span>{' '}
-                      {selectedContact.contact_type}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Email:</span>{' '}
-                      {selectedContact.primary_email}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Phone:</span>{' '}
-                      {selectedContact.phone}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Address:</span>{' '}
-                      {selectedContact.primary_address}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Created:</span>{' '}
-                      {selectedContact.date_created}
-                    </p>
+                      <h2 className="text-lg font-semibold text-gray-800">
+                        Selected Contacts ({selectedContacts.length})
+                      </h2>
+                      <div className="text-gray-500 hover:text-gray-700 transition-colors">
+                        {isContactsCollapsed ? (
+                          <ChevronRight className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    {!isContactsCollapsed && selectedContacts.length > 0 && (
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => setOpen(true)}
+                          className="h-8 px-3 text-xs bg-green-500 text-white hover:bg-green-600"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Add New Contact
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleUpdateModeToggle}
+                          className={`h-8 px-3 text-xs ${
+                            updateMode
+                              ? 'bg-gray-500 text-white hover:bg-gray-600'
+                              : 'bg-blue-500 text-white hover:bg-blue-600'
+                          }`}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          {updateMode ? 'Cancel Update' : 'Update'}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleDeleteModeToggle}
+                          className={`h-8 px-3 text-xs ${
+                            deleteMode
+                              ? 'bg-gray-500 text-white hover:bg-gray-600'
+                              : 'bg-red-500 text-white hover:bg-red-600'
+                          }`}
+                        >
+                          <X className="w-4 h-4 mr-1" />
+                          {deleteMode ? 'Cancel' : 'Delete'}
+                        </Button>
+                      </div>
+                    )}
                   </div>
+
+                  {!isContactsCollapsed && (
+                    <>
+                      {/* Delete Mode Actions */}
+                      {deleteMode && (
+                        <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+                          <p className="text-sm text-red-700">
+                            <span className="font-semibold">Delete Mode:</span>{' '}
+                            Select contacts to delete ({contactsToDelete.length}{' '}
+                            selected)
+                          </p>
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={executeDelete}
+                            disabled={contactsToDelete.length === 0}
+                            className="h-8 px-3 text-xs bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Delete Selected ({contactsToDelete.length})
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Update Mode Info */}
+                      {updateMode && (
+                        <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-sm text-blue-700">
+                            <span className="font-semibold">Update Mode:</span>{' '}
+                            Click on a contact to update
+                          </p>
+                        </div>
+                      )}
+
+                      {isArrayWithValues(selectedContacts) ? (
+                        <div className="border rounded-lg overflow-hidden mt-2">
+                          <table className="w-full">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                {(deleteMode || updateMode) && (
+                                  <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 w-12">
+                                    {deleteMode ? 'Select' : 'Action'}
+                                  </th>
+                                )}
+                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                                  Name
+                                </th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                                  Type
+                                </th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                                  Email
+                                </th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                                  Phone
+                                </th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                                  Address
+                                </th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                                  Date Created
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-100">
+                              {selectedContacts.map((contact, index) => (
+                                <tr
+                                  key={contact.id}
+                                  className={`hover:bg-gray-50 transition-colors ${
+                                    updateMode ? 'cursor-pointer' : ''
+                                  } ${
+                                    contactsToDelete.includes(contact.id)
+                                      ? 'bg-red-50'
+                                      : ''
+                                  }`}
+                                  onClick={() =>
+                                    updateMode && handleSelectForUpdate(contact)
+                                  }
+                                >
+                                  {deleteMode && (
+                                    <td className="px-4 py-3 text-center">
+                                      <Checkbox
+                                        checked={contactsToDelete.includes(
+                                          contact.id
+                                        )}
+                                        onCheckedChange={() =>
+                                          toggleDeleteSelection(contact.id)
+                                        }
+                                        onClick={(e) => e.stopPropagation()}
+                                      />
+                                    </td>
+                                  )}
+                                  {updateMode && (
+                                    <td className="px-4 py-3 text-center">
+                                      <Edit className="w-4 h-4 text-blue-500 mx-auto" />
+                                    </td>
+                                  )}
+                                  <td className="px-4 py-3 text-left text-sm text-gray-900">
+                                    <div className="flex items-center gap-2">
+                                      {contact.contact_name}
+                                      {index === 0 && (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                                          Primary
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-3 text-left text-sm text-gray-700">
+                                    {contact.contact_type || '-'}
+                                  </td>
+                                  <td className="px-4 py-3 text-left text-sm text-gray-700">
+                                    {contact.primary_email || '-'}
+                                  </td>
+                                  <td className="px-4 py-3 text-left text-sm text-gray-700">
+                                    {contact.phone || '-'}
+                                  </td>
+                                  <td className="px-4 py-3 text-left text-sm text-gray-700">
+                                    {contact.primary_address || '-'}
+                                  </td>
+                                  <td className="px-4 py-3 text-left text-sm text-gray-700">
+                                    {formatDate(contact.date_created)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="border rounded-lg overflow-hidden mt-2 p-8 text-center text-gray-500">
+                          <div className="flex flex-col items-center">
+                            <div className="text-4xl mb-2">👥</div>
+                            <p className="text-sm font-medium">
+                              No contacts selected yet
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              Search and add contacts using the form above
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
-              )}
+              </div>
 
               {errors.contact_id && (
                 <p className="text-xs text-red-500">

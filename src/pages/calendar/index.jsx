@@ -54,6 +54,7 @@ const CalendarPage = () => {
           start: moment(event.start_time).toDate(),
           end: moment(event.end_time).toDate(),
           priority: event.priority,
+          priority_id: event.priority_id,
         }));
         setAllEvents(mappedEvents);
       } else {
