@@ -26,6 +26,8 @@ import formatDate from '@/utils/formatDate';
 import updateMatter from '@/pages/matter/intake/helpers/updateMatter';
 import { useNavigate } from 'react-router-dom';
 import CreateContactDialog from './CreateContactDialog';
+import ContactDialog from '@/components/contact/components/ContactDialog';
+import CustomButton from '@/components/CustomButton';
 import BreadCrumb from '@/components/BreadCrumb';
 import getContactMeta from '@/pages/matter/intake/helpers/getContactMeta';
 import { toast } from 'sonner';
@@ -58,6 +60,7 @@ export default function Overview() {
   const [updateMode, setUpdateMode] = useState(false);
   const [contactsToDelete, setContactsToDelete] = useState([]);
   const [contactToUpdate, setContactToUpdate] = useState(null);
+  const [updateContactDialogOpen, setUpdateContactDialogOpen] = useState(false);
 
   const updateMatterMutation = useMutation({
     mutationFn: updateMatter,
@@ -194,10 +197,21 @@ export default function Overview() {
   // Handle contact selection for update
   const handleSelectForUpdate = (contact) => {
     setContactToUpdate(contact);
-    // Here you would typically open a dialog/form for updating
-    toast.info(
-      `Selected ${contact.contact_name} for update. Update functionality would open here.`
+    setUpdateContactDialogOpen(true);
+  };
+
+  // Handle contact update success
+  const handleContactUpdateSuccess = (updatedContact) => {
+    // Update the contact in the selectedContacts array
+    setSelectedContacts((prev) =>
+      prev.map((contact) =>
+        contact.id === updatedContact.id ? updatedContact : contact
+      )
     );
+    setUpdateContactDialogOpen(false);
+    setContactToUpdate(null);
+    setUpdateMode(false);
+    toast.success(`${updatedContact.contact_name} updated successfully!`);
   };
 
   const {
@@ -535,30 +549,45 @@ export default function Overview() {
                   <Label className="text-[#40444D] font-semibold block">
                     Search & Add Contacts
                   </Label>
-                  <Controller
-                    control={control}
-                    name="contact_id"
-                    render={() => (
-                      <Input
-                        placeholder="Search by name or email to add..."
-                        value={searchContactQuery}
-                        onChange={(e) => {
-                          setSearchContactQuery(e.target.value);
-                          setShowContactTable(true);
-                        }}
-                        className="w-1/2 bg-white"
-                      />
-                    )}
-                  />
-                  <p className="text-[0.7rem] text-[#40444D] text-start w-1/2">
-                    Don't have a contact?{' '}
-                    <span
-                      onClick={() => setOpen(true)}
-                      className="text-[#6366F1] cursor-pointer hover:underline"
+                  <div className="flex items-center gap-2">
+                    <Controller
+                      control={control}
+                      name="contact_id"
+                      render={() => (
+                        <Input
+                          placeholder="Search by name or email to add..."
+                          value={searchContactQuery}
+                          onChange={(e) => {
+                            setSearchContactQuery(e.target.value);
+                            setShowContactTable(true);
+                          }}
+                          className="flex-1 bg-white"
+                        />
+                      )}
+                    />
+                    <CustomButton
+                      type="button"
+                      variant="primary"
+                      icon={Plus}
+                      iconPosition="left"
+                      style={{
+                        background:
+                          'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
+                        color: '#fff',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        cursor: 'pointer',
+                      }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setOpen(true);
+                      }}
                     >
-                      Add a new contact
-                    </span>
-                  </p>
+                      Add new contact
+                    </CustomButton>
+                  </div>
                 </div>
               </div>
 
@@ -712,15 +741,6 @@ export default function Overview() {
                         <Button
                           type="button"
                           size="sm"
-                          onClick={() => setOpen(true)}
-                          className="h-8 px-3 text-xs bg-green-500 text-white hover:bg-green-600"
-                        >
-                          <Plus className="w-4 h-4 mr-1" />
-                          Add New Contact
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
                           onClick={handleUpdateModeToggle}
                           className={`h-8 px-3 text-xs ${
                             updateMode
@@ -781,97 +801,105 @@ export default function Overview() {
                       )}
 
                       {isArrayWithValues(selectedContacts) ? (
-                        <div className="border rounded-lg overflow-hidden mt-2">
-                          <table className="w-full">
-                            <thead className="bg-gray-50">
-                              <tr>
-                                {(deleteMode || updateMode) && (
-                                  <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 w-12">
-                                    {deleteMode ? 'Select' : 'Action'}
-                                  </th>
-                                )}
-                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                                  Name
-                                </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                                  Type
-                                </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                                  Email
-                                </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                                  Phone
-                                </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                                  Address
-                                </th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                                  Date Created
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-100">
-                              {selectedContacts.map((contact, index) => (
-                                <tr
-                                  key={contact.id}
-                                  className={`hover:bg-gray-50 transition-colors ${
-                                    updateMode ? 'cursor-pointer' : ''
-                                  } ${
-                                    contactsToDelete.includes(contact.id)
-                                      ? 'bg-red-50'
-                                      : ''
-                                  }`}
-                                  onClick={() =>
-                                    updateMode && handleSelectForUpdate(contact)
-                                  }
-                                >
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
+                          {selectedContacts.map((contact, index) => (
+                            <div
+                              key={contact.id}
+                              className={`bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-200 ${
+                                updateMode
+                                  ? 'cursor-pointer hover:border-blue-300'
+                                  : ''
+                              } ${
+                                contactsToDelete.includes(contact.id)
+                                  ? 'border-red-300 bg-red-50'
+                                  : 'border-gray-200'
+                              }`}
+                              onClick={() =>
+                                updateMode && handleSelectForUpdate(contact)
+                              }
+                            >
+                              {/* Card Header */}
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex items-center gap-2">
                                   {deleteMode && (
-                                    <td className="px-4 py-3 text-center">
-                                      <Checkbox
-                                        checked={contactsToDelete.includes(
-                                          contact.id
-                                        )}
-                                        onCheckedChange={() =>
-                                          toggleDeleteSelection(contact.id)
-                                        }
-                                        onClick={(e) => e.stopPropagation()}
-                                      />
-                                    </td>
-                                  )}
-                                  {updateMode && (
-                                    <td className="px-4 py-3 text-center">
-                                      <Edit className="w-4 h-4 text-blue-500 mx-auto" />
-                                    </td>
-                                  )}
-                                  <td className="px-4 py-3 text-left text-sm text-gray-900">
-                                    <div className="flex items-center gap-2">
-                                      {contact.contact_name}
-                                      {index === 0 && (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
-                                          Primary
-                                        </span>
+                                    <Checkbox
+                                      checked={contactsToDelete.includes(
+                                        contact.id
                                       )}
-                                    </div>
-                                  </td>
-                                  <td className="px-4 py-3 text-left text-sm text-gray-700">
+                                      onCheckedChange={() =>
+                                        toggleDeleteSelection(contact.id)
+                                      }
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="mt-1"
+                                    />
+                                  )}
+                                  {updateMode && !deleteMode && (
+                                    <Edit className="w-4 h-4 text-blue-500 mt-1" />
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {index === 0 && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                                      Primary
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Contact Name */}
+                              <h3 className="font-semibold text-gray-900 text-lg mb-2">
+                                {contact.contact_name}
+                              </h3>
+
+                              {/* Contact Details */}
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium text-gray-600 w-16">
+                                    Type:
+                                  </span>
+                                  <span className="text-sm text-gray-700">
                                     {contact.contact_type || '-'}
-                                  </td>
-                                  <td className="px-4 py-3 text-left text-sm text-gray-700">
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium text-gray-600 w-16">
+                                    Email:
+                                  </span>
+                                  <span className="text-sm text-gray-700 truncate">
                                     {contact.primary_email || '-'}
-                                  </td>
-                                  <td className="px-4 py-3 text-left text-sm text-gray-700">
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium text-gray-600 w-16">
+                                    Phone:
+                                  </span>
+                                  <span className="text-sm text-gray-700">
                                     {contact.phone || '-'}
-                                  </td>
-                                  <td className="px-4 py-3 text-left text-sm text-gray-700">
+                                  </span>
+                                </div>
+
+                                <div className="flex items-start gap-2">
+                                  <span className="text-sm font-medium text-gray-600 w-16 mt-0.5">
+                                    Address:
+                                  </span>
+                                  <span className="text-sm text-gray-700 line-clamp-2">
                                     {contact.primary_address || '-'}
-                                  </td>
-                                  <td className="px-4 py-3 text-left text-sm text-gray-700">
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium text-gray-600 w-16">
+                                    Created:
+                                  </span>
+                                  <span className="text-sm text-gray-700">
                                     {formatDate(contact.date_created)}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       ) : (
                         <div className="border rounded-lg overflow-hidden mt-2 p-8 text-center text-gray-500">
@@ -993,6 +1021,16 @@ export default function Overview() {
       </div>
 
       {open && <CreateContactDialog open={open} setOpen={setOpen} />}
+
+      {updateContactDialogOpen && contactToUpdate && (
+        <ContactDialog
+          open={updateContactDialogOpen}
+          setOpen={setUpdateContactDialogOpen}
+          mode="update"
+          contact={contactToUpdate}
+          onSuccess={handleContactUpdateSuccess}
+        />
+      )}
     </div>
   );
 }
