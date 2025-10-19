@@ -353,6 +353,286 @@ export const updateService = (id, data) => {
   return getSetupUpdate(`v2/setup/services/${id}`, data);
 };
 
+// Matter Case Role-specific API functions using the reusable pattern
+
+// Get all matter case roles
+export const getMatterCaseRoles = () => {
+  return getSetup(endpoints.getMatterCaseRoles);
+};
+
+// Get single matter case role by ID
+export const getMatterCaseRole = (id) => {
+  return getSetupShow(`${endpoints.showMatterCaseRole}/${id}`);
+};
+
+// Create new matter case role
+export const createMatterCaseRole = (data) => {
+  return getSetupStore(endpoints.storeMatterCaseRole, data);
+};
+
+// Update matter case role
+export const updateMatterCaseRole = (id, data) => {
+  return getSetupUpdate(`${endpoints.updateMatterCaseRole}/${id}`, data);
+};
+
+// Update matter case role status (is_active)
+export const updateMatterCaseRoleStatus = (id, data) => {
+  return getSetupUpdateStatus(
+    `${endpoints.updateMatterCaseRoleStatus}/${id}`,
+    data
+  );
+};
+
+// Delete matter case role
+export const deleteMatterCaseRole = (id) => {
+  return getSetupDelete(`${endpoints.deleteMatterCaseRole}/${id}`);
+};
+
+// Matter Case Type-specific API functions using the reusable pattern
+
+// Get all matter case types
+export const getMatterCaseTypes = () => {
+  return getSetup(endpoints.getMatterCaseTypes);
+};
+
+// Get single matter case type by ID
+export const getMatterCaseType = (id) => {
+  return getSetupShow(`${endpoints.showMatterCaseType}/${id}`);
+};
+
+// Create new matter case type
+export const createMatterCaseType = (data) => {
+  return getSetupStore(endpoints.storeMatterCaseType, data);
+};
+
+// Update matter case type
+export const updateMatterCaseType = (id, data) => {
+  return getSetupUpdate(`${endpoints.updateMatterCaseType}/${id}`, data);
+};
+
+// Update matter case type status (is_active)
+export const updateMatterCaseTypeStatus = (id, data) => {
+  return getSetupUpdateStatus(
+    `${endpoints.updateMatterCaseTypeStatus}/${id}`,
+    data
+  );
+};
+
+// Delete matter case type
+export const deleteMatterCaseType = (id) => {
+  return getSetupDelete(`${endpoints.deleteMatterCaseType}/${id}`);
+};
+
+// Matter Case Status-specific API functions using the reusable pattern
+
+// Get all matter case statuses
+export const getMatterCaseStatuses = () => {
+  return getSetup(endpoints.getMatterCaseStatuses);
+};
+
+// Get single matter case status by ID
+export const getMatterCaseStatus = (id) => {
+  return getSetupShow(`${endpoints.showMatterCaseStatus}/${id}`);
+};
+
+// Create new matter case status
+export const createMatterCaseStatus = (data) => {
+  return getSetupStore(endpoints.storeMatterCaseStatus, data);
+};
+
+// Update matter case status
+export const updateMatterCaseStatus = (id, data) => {
+  return getSetupUpdate(`${endpoints.updateMatterCaseStatus}/${id}`, data);
+};
+
+// Update matter case status status (is_active)
+export const updateMatterCaseStatusStatus = (id, data) => {
+  return getSetupUpdateStatus(
+    `${endpoints.updateMatterCaseStatusStatus}/${id}`,
+    data
+  );
+};
+
+// Delete matter case status
+export const deleteMatterCaseStatus = (id) => {
+  return getSetupDelete(`${endpoints.deleteMatterCaseStatus}/${id}`);
+};
+
+// Matter Marketing Source-specific API functions using the reusable pattern
+
+// Get all matter marketing sources
+export const getMatterMarketingSources = () => {
+  return getSetup(endpoints.getMatterMarketingSources);
+};
+
+// Get single matter marketing source by ID
+export const getMatterMarketingSource = (id) => {
+  return getSetupShow(`${endpoints.showMatterMarketingSource}/${id}`);
+};
+
+// Create new matter marketing source
+export const createMatterMarketingSource = (data) => {
+  return getSetupStore(endpoints.storeMatterMarketingSource, data);
+};
+
+// Update matter marketing source
+export const updateMatterMarketingSource = (id, data) => {
+  return getSetupUpdate(`${endpoints.updateMatterMarketingSource}/${id}`, data);
+};
+
+// Update matter marketing source status (is_active)
+export const updateMatterMarketingSourceStatus = (id, data) => {
+  return getSetupUpdateStatus(
+    `${endpoints.updateMatterMarketingSourceStatus}/${id}`,
+    data
+  );
+};
+
+// Delete matter marketing source
+export const deleteMatterMarketingSource = (id) => {
+  return getSetupDelete(`${endpoints.deleteMatterMarketingSource}/${id}`);
+};
+
+// Matter Ad Campaign-specific API functions using the reusable pattern
+
+// Get all matter ad campaigns
+export const getMatterAdCampaigns = () => {
+  return getSetup(endpoints.getMatterAdCampaigns);
+};
+
+// Get single matter ad campaign by ID
+export const getMatterAdCampaign = (id) => {
+  return getSetupShow(`${endpoints.showMatterAdCampaign}/${id}`);
+};
+
+// Create new matter ad campaign
+export const createMatterAdCampaign = (data) => {
+  return getSetupStore(endpoints.storeMatterAdCampaign, data);
+};
+
+// Update matter ad campaign
+export const updateMatterAdCampaign = (id, data) => {
+  return getSetupUpdate(`${endpoints.updateMatterAdCampaign}/${id}`, data);
+};
+
+// Update matter ad campaign status (is_active)
+export const updateMatterAdCampaignStatus = (id, data) => {
+  return getSetupUpdateStatus(
+    `${endpoints.updateMatterAdCampaignStatus}/${id}`,
+    data
+  );
+};
+
+// Delete matter ad campaign
+export const deleteMatterAdCampaign = (id) => {
+  return getSetupDelete(`${endpoints.deleteMatterAdCampaign}/${id}`);
+};
+
+// Matter Rating-specific API functions using the reusable pattern
+
+// Get all matter ratings
+export const getMatterRatings = () => {
+  return getSetup(endpoints.getMatterRatings);
+};
+
+// Get single matter rating by ID
+export const getMatterRating = (id) => {
+  return getSetupShow(`${endpoints.showMatterRating}/${id}`);
+};
+
+// Create new matter rating
+export const createMatterRating = (data) => {
+  return getSetupStore(endpoints.storeMatterRating, data);
+};
+
+// Update matter rating
+export const updateMatterRating = (id, data) => {
+  return getSetupUpdate(`${endpoints.updateMatterRating}/${id}`, data);
+};
+
+// Update matter rating status (is_active)
+export const updateMatterRatingStatus = (id, data) => {
+  return getSetupUpdateStatus(
+    `${endpoints.updateMatterRatingStatus}/${id}`,
+    data
+  );
+};
+
+// Delete matter rating
+export const deleteMatterRating = (id) => {
+  return getSetupDelete(`${endpoints.deleteMatterRating}/${id}`);
+};
+
+// Matter Call Outcome-specific API functions using the reusable pattern
+
+// Get all matter call outcomes
+export const getMatterCallOutcomes = () => {
+  return getSetup(endpoints.getMatterCallOutcomes);
+};
+
+// Get single matter call outcome by ID
+export const getMatterCallOutcome = (id) => {
+  return getSetupShow(`${endpoints.showMatterCallOutcome}/${id}`);
+};
+
+// Create new matter call outcome
+export const createMatterCallOutcome = (data) => {
+  return getSetupStore(endpoints.storeMatterCallOutcome, data);
+};
+
+// Update matter call outcome
+export const updateMatterCallOutcome = (id, data) => {
+  return getSetupUpdate(`${endpoints.updateMatterCallOutcome}/${id}`, data);
+};
+
+// Update matter call outcome status (is_active)
+export const updateMatterCallOutcomeStatus = (id, data) => {
+  return getSetupUpdateStatus(
+    `${endpoints.updateMatterCallOutcomeStatus}/${id}`,
+    data
+  );
+};
+
+// Delete matter call outcome
+export const deleteMatterCallOutcome = (id) => {
+  return getSetupDelete(`${endpoints.deleteMatterCallOutcome}/${id}`);
+};
+
+// Matter Office Location-specific API functions using the reusable pattern
+
+// Get all matter office locations
+export const getMatterOfficeLocations = () => {
+  return getSetup(endpoints.getMatterOfficeLocations);
+};
+
+// Get single matter office location by ID
+export const getMatterOfficeLocation = (id) => {
+  return getSetupShow(`${endpoints.showMatterOfficeLocation}/${id}`);
+};
+
+// Create new matter office location
+export const createMatterOfficeLocation = (data) => {
+  return getSetupStore(endpoints.storeMatterOfficeLocation, data);
+};
+
+// Update matter office location
+export const updateMatterOfficeLocation = (id, data) => {
+  return getSetupUpdate(`${endpoints.updateMatterOfficeLocation}/${id}`, data);
+};
+
+// Update matter office location status (is_active)
+export const updateMatterOfficeLocationStatus = (id, data) => {
+  return getSetupUpdateStatus(
+    `${endpoints.updateMatterOfficeLocationStatus}/${id}`,
+    data
+  );
+};
+
+// Delete matter office location
+export const deleteMatterOfficeLocation = (id) => {
+  return getSetupDelete(`${endpoints.deleteMatterOfficeLocation}/${id}`);
+};
+
 // Firm - setup
 export const getFirmMeta = () => {
   return getSetup(endpoints.getFirmMeta);

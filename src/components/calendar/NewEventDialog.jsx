@@ -273,14 +273,14 @@ export default function NewEventDialogRHF({
     }
 
     // Atleast one reminder is needed
-    if (reminderFields.length === 0) {
-      errors.reminders = 'At least one reminder is required';
-    }
+    // if (reminderFields.length === 0) {
+    //   errors.reminders = 'At least one reminder is required';
+    // }
 
     // Atleast one participant is needed
-    if (participantFields.length === 0) {
-      errors.participants = 'At least one participant is required';
-    }
+    // if (participantFields.length === 0) {
+    //   errors.participants = 'At least one participant is required';
+    // }
 
     return errors;
   };
@@ -657,11 +657,11 @@ export default function NewEventDialogRHF({
                   Add Reminder
                 </Button>
 
-                {(validationErrors.reminders || errors.reminders) && (
+                {/* {(validationErrors.reminders || errors.reminders) && (
                   <p className="text-xs text-red-500">
                     {validationErrors.reminders || errors.reminders?.message}
                   </p>
-                )}
+                )} */}
               </div>
 
               {/* Participants Section */}
@@ -738,12 +738,12 @@ export default function NewEventDialogRHF({
                   Add Participant
                 </Button>
 
-                {(validationErrors.participants || errors.participants) && (
+                {/* {(validationErrors.participants || errors.participants) && (
                   <p className="text-xs text-red-500">
                     {validationErrors.participants ||
                       errors.participants?.message}
                   </p>
-                )}
+                )} */}
               </div>
 
               {/* Attachments Section */}

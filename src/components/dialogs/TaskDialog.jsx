@@ -102,12 +102,12 @@ const formFields = [
   //   type: 'checkbox',
   //   required: false,
   // },
-  {
-    label: 'Trigger Appointment Reminders',
-    name: 'trigger_appointment_reminders',
-    type: 'checkbox',
-    required: false,
-  },
+  // {
+  //   label: 'Trigger Appointment Reminders',
+  //   name: 'trigger_appointment_reminders',
+  //   type: 'checkbox',
+  //   required: false,
+  // },
 ];
 
 // Helper function to convert backend boolean values (0/1) to actual booleans
@@ -237,7 +237,7 @@ export default function TaskDialog({
       billable: false,
       notify_text: false,
       add_calendar_event: false,
-      trigger_appointment_reminders: false,
+      // trigger_appointment_reminders: false,
       status_id: '',
       assigned_to: [],
       reminders: [],
@@ -552,9 +552,9 @@ export default function TaskDialog({
           add_calendar_event: convertBackendBoolean(
             currentTask.add_calendar_event
           ),
-          trigger_appointment_reminders: convertBackendBoolean(
-            currentTask.trigger_appointment_reminders
-          ),
+          // trigger_appointment_reminders: convertBackendBoolean(
+          //   currentTask.trigger_appointment_reminders
+          // ),
           type_id: currentTask.type_id?.toString() || '',
           priority_id: currentTask.priority_id?.toString() || '',
           status_id: currentTask.status_id?.toString() || '',
@@ -622,7 +622,7 @@ export default function TaskDialog({
           billable: false,
           notify_text: false,
           add_calendar_event: false,
-          trigger_appointment_reminders: false,
+          // trigger_appointment_reminders: false,
           status_id: '',
           assigned_to: [],
           reminders: [],
@@ -874,9 +874,7 @@ export default function TaskDialog({
 
               <div className="flex flex-wrap gap-4 overflow-auto">
                 <div className="w-full">
-                  <h3 className="text-lg font-semibold mb-1">
-                    Reminders <span className="text-red-500">*</span>
-                  </h3>
+                  <h3 className="text-lg font-semibold mb-1">Reminders</h3>
                   {reminderFields.map((reminder, idx) => (
                     <>
                       <div

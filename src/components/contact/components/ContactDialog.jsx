@@ -140,18 +140,18 @@ export default function ContactDialog({ open, setOpen, mode }) {
         };
         break;
       case 'primary_phone':
-        rules.required = 'Primary phone is required';
+        // rules.required = 'Primary phone is required';
         break;
       case 'primary_email':
-        rules.required = 'Primary email is required';
+        // rules.required = 'Primary email is required';
         break;
       case 'addresses':
-        rules.validate = (value) => {
-          if (!value || value.length === 0) {
-            return 'At least one address is required';
-          }
-          return true;
-        };
+        // rules.validate = (value) => {
+        //   if (!value || value.length === 0) {
+        //     return 'At least one address is required';
+        //   }
+        //   return true;
+        // };
         break;
       default:
         // Apply maxLength to other text fields
@@ -390,8 +390,10 @@ export default function ContactDialog({ open, setOpen, mode }) {
 
     if (Object.keys(errors).length === 0) {
       const currentAddresses = watch('addresses') || [];
-      const existingPrimaryAddress = currentAddresses.find(addr => addr.is_primary);
-      
+      const existingPrimaryAddress = currentAddresses.find(
+        (addr) => addr.is_primary
+      );
+
       // If this is the first address, automatically make it primary
       if (currentAddresses.length === 0) {
         const addressToAdd = { ...newAddress, is_primary: true };
@@ -399,20 +401,20 @@ export default function ContactDialog({ open, setOpen, mode }) {
         resetAddressForm();
         return;
       }
-      
+
       // If setting as primary and a primary already exists, show confirmation
       if (newAddress.is_primary && existingPrimaryAddress) {
         setPendingPrimaryAddress(newAddress);
         setConfirmPrimaryDialog(true);
         return;
       }
-      
+
       // Add address normally
       append(newAddress);
       resetAddressForm();
     }
   };
-  
+
   const resetAddressForm = () => {
     setNewAddress({
       address_1: '',
@@ -428,31 +430,31 @@ export default function ContactDialog({ open, setOpen, mode }) {
     setAddressDialogOpen(false);
     setAddressErrors({});
   };
-  
+
   const handleConfirmPrimaryChange = () => {
     const currentAddresses = watch('addresses') || [];
-    
+
     // Update all addresses to set is_primary to false
-    const updatedAddresses = currentAddresses.map(addr => ({
+    const updatedAddresses = currentAddresses.map((addr) => ({
       ...addr,
-      is_primary: false
+      is_primary: false,
     }));
-    
+
     // Replace the addresses array
     setValue('addresses', updatedAddresses);
-    
+
     // Add the new primary address
     append(pendingPrimaryAddress);
-    
+
     // Reset states
     setPendingPrimaryAddress(null);
     setConfirmPrimaryDialog(false);
     resetAddressForm();
   };
-  
+
   const getCurrentPrimaryAddress = () => {
     const currentAddresses = watch('addresses') || [];
-    return currentAddresses.find(addr => addr.is_primary);
+    return currentAddresses.find((addr) => addr.is_primary);
   };
 
   return (
@@ -760,7 +762,7 @@ export default function ContactDialog({ open, setOpen, mode }) {
           </DialogActions>
         </Stack>
       </Dialog>
-      
+
       <PrimaryAddressConfirmDialog
         open={confirmPrimaryDialog}
         onClose={() => {

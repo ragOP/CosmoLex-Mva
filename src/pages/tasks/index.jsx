@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import Button from '@/components/Button';
 import { Button as UIButton } from '@/components/ui/button';
 import TaskDialog from '@/components/dialogs/TaskDialog';
@@ -38,6 +39,10 @@ const TasksPage = () => {
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   // Comment dialog removed
 
+  // Get user data from Redux store
+  const user = useSelector((state) => state.auth.user);
+  const isAdmin = user?.role_id === 1;
+
   // Get matter slug from URL params (assuming notes are matter-specific)
   const matterSlug = searchParams.get('slugId');
 
@@ -59,6 +64,9 @@ const TasksPage = () => {
   const statusIdParam = searchParams.get('status_id') || '';
   const assignedToParam = searchParams.get('assigned_to') || '';
   const fromDateParam = searchParams.get('from_date') || '';
+  const toDateParam = searchParams.get('to_date') || '';
+  const assignedByParam = searchParams.get('assigned_by') || '';
+  const administratorParam = searchParams.get('administrator') || '';
 
   // Build select options
   const priorityOptions = useMemo(
@@ -81,16 +89,53 @@ const TasksPage = () => {
   const assigneeOptions = useMemo(() => {
     const list = Array.isArray(tasks) ? tasks : [];
     const map = new Map();
+
     for (const t of list) {
       const arr = Array.isArray(t?.assignees) ? t.assignees : [];
       for (const a of arr) {
-        if (a?.id && a?.name && !map.has(a.id)) map.set(a.id, a.name);
+        // Handle assignees with or without ID
+        const assigneeId = a?.id || a?.user_id || a?.assignee_id;
+        const assigneeName = a?.name || a?.user_name || a?.assignee_name;
+
+        // Use ID if available, otherwise use name as the key
+        const key = assigneeId || assigneeName;
+
+        if (assigneeName && key && !map.has(key)) {
+          map.set(key, assigneeName);
+        }
       }
     }
+
     return Array.from(map.entries())
-      .map(([id, name]) => ({ id, name }))
+      .map(([key, name]) => ({ id: key, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [tasks]);
+
+  const assignedByOptions = useMemo(() => {
+    const list = Array.isArray(tasks) ? tasks : [];
+    const map = new Map();
+
+    for (const task of list) {
+      const assignedBy = task?.assigned_by;
+      if (assignedBy?.name) {
+        const key = assignedBy.id || assignedBy.name;
+        if (!map.has(key)) {
+          map.set(key, assignedBy.name);
+        }
+      }
+    }
+
+    return Array.from(map.entries())
+      .map(([key, name]) => ({ id: key, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [tasks]);
+
+  const administratorOptions = useMemo(() => {
+    return [
+      { id: 'all', name: 'All' },
+      { id: 'me', name: 'Me' },
+    ];
+  }, []);
 
   const updateParam = (key, value) => {
     const next = new URLSearchParams(searchParams);
@@ -105,7 +150,10 @@ const TasksPage = () => {
     next.delete('priority_id');
     next.delete('status_id');
     next.delete('assigned_to');
+    next.delete('assigned_by');
     next.delete('from_date');
+    next.delete('to_date');
+    next.delete('administrator');
     setSearchParams(next, { replace: true });
   };
 
@@ -116,6 +164,9 @@ const TasksPage = () => {
     if (statusIdParam) count += 1;
     if (assignedToParam) count += 1;
     if (fromDateParam) count += 1;
+    if (toDateParam) count += 1;
+    if (assignedByParam) count += 1;
+    if (administratorParam) count += 1;
     return count;
   }, [
     clientNameParam,
@@ -123,6 +174,9 @@ const TasksPage = () => {
     statusIdParam,
     assignedToParam,
     fromDateParam,
+    toDateParam,
+    assignedByParam,
+    administratorParam,
   ]);
 
   // Server-side filtered tasks
@@ -135,10 +189,57 @@ const TasksPage = () => {
       !!priorityIdParam ||
       !!statusIdParam ||
       !!assignedToParam ||
-      !!fromDateParam;
+      !!fromDateParam ||
+      !!toDateParam ||
+      !!assignedByParam ||
+      !!administratorParam;
 
     if (!hasFilters) {
       setServerTasks(Array.isArray(tasks) ? tasks : []);
+      return;
+    }
+
+    // For assignee or assigned by filtering, try client-side first since we're using names as keys
+    if (
+      (assignedToParam || assignedByParam) &&
+      !clientNameParam &&
+      !priorityIdParam &&
+      !statusIdParam &&
+      !fromDateParam &&
+      !toDateParam &&
+      !administratorParam
+    ) {
+      // Client-side filtering for assignee and/or assigned by
+      const filteredTasks = (Array.isArray(tasks) ? tasks : []).filter(
+        (task) => {
+          let matchesAssignee = true;
+          let matchesAssignedBy = true;
+
+          // Check assignee filter
+          if (assignedToParam) {
+            const assignees = Array.isArray(task?.assignees)
+              ? task.assignees
+              : [];
+            matchesAssignee = assignees.some((assignee) => {
+              const assigneeName =
+                assignee?.name ||
+                assignee?.user_name ||
+                assignee?.assignee_name;
+              return assigneeName === assignedToParam;
+            });
+          }
+
+          // Check assigned by filter
+          if (assignedByParam) {
+            const assignedBy = task?.assigned_by;
+            const assignedByName = assignedBy?.name;
+            matchesAssignedBy = assignedByName === assignedByParam;
+          }
+
+          return matchesAssignee && matchesAssignedBy;
+        }
+      );
+      setServerTasks(filteredTasks);
       return;
     }
 
@@ -148,7 +249,9 @@ const TasksPage = () => {
     if (statusIdParam) qs.set('status_id', statusIdParam);
     if (assignedToParam) qs.set('assigned_to', assignedToParam);
     if (fromDateParam) qs.set('from_date', fromDateParam);
-
+    if (toDateParam) qs.set('to_date', toDateParam);
+    if (assignedByParam) qs.set('assigned_by', assignedByParam);
+    if (administratorParam) qs.set('administrator', administratorParam);
     setIsFiltering(true);
     filterTasks(qs.toString())
       .then((data) => {
@@ -165,6 +268,9 @@ const TasksPage = () => {
     statusIdParam,
     assignedToParam,
     fromDateParam,
+    toDateParam,
+    assignedByParam,
+    administratorParam,
     filterTasks,
   ]);
 
@@ -374,7 +480,34 @@ const TasksPage = () => {
                     </Select>
                   </div>
 
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 block">
+                      Assigned By
+                    </label>
+                    <Select
+                      value={
+                        assignedByParam === '' ? '__all__' : assignedByParam
+                      }
+                      onValueChange={(val) =>
+                        updateParam('assigned_by', val === '__all__' ? '' : val)
+                      }
+                      disabled={tasksLoading}
+                    >
+                      <SelectTrigger className="h-10 w-full">
+                        <SelectValue placeholder="All assigned by" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-64 overflow-auto">
+                        <SelectItem value="__all__">All assigned by</SelectItem>
+                        {assignedByOptions.map((a) => (
+                          <SelectItem key={a.id} value={a.id.toString()}>
+                            {a.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700 block">
                       From Date
                     </label>
@@ -382,10 +515,57 @@ const TasksPage = () => {
                       type="date"
                       value={fromDateParam}
                       onChange={(e) => updateParam('from_date', e.target.value)}
-                      className="h-10 w-full max-w-xs"
-                      placeholder="Select date"
+                      className="h-10 w-full"
+                      placeholder="Select from date"
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 block">
+                      To Date
+                    </label>
+                    <Input
+                      type="date"
+                      value={toDateParam}
+                      onChange={(e) => updateParam('to_date', e.target.value)}
+                      className="h-10 w-full"
+                      placeholder="Select to date"
+                    />
+                  </div>
+
+                  {isAdmin && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 block">
+                        Administrator
+                      </label>
+                      <Select
+                        value={
+                          administratorParam === ''
+                            ? '__all__'
+                            : administratorParam
+                        }
+                        onValueChange={(val) =>
+                          updateParam(
+                            'administrator',
+                            val === '__all__' ? '' : val
+                          )
+                        }
+                        disabled={tasksLoading}
+                      >
+                        <SelectTrigger className="h-10 w-full">
+                          <SelectValue placeholder="All" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__all__">All</SelectItem>
+                          {administratorOptions.map((option) => (
+                            <SelectItem key={option.id} value={option.id}>
+                              {option.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
               </div>
 
