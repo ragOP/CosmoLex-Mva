@@ -1042,19 +1042,66 @@ button.rbc-input::-moz-focus-inner {
   color: white;
 }
 
-.fc .fc-event.high-priority {
-  background-color: #ef4444;
-  color: white;
+/* Priority-based event styling with higher specificity */
+.fc .fc-event.critical-priority,
+.fc .fc-event.critical-priority.fc-event {
+  background-color: #dc2626 !important;
+  color: white !important;
+  border-left: 4px solid #991b1b !important;
+  font-weight: 600 !important;
 }
 
-.fc .fc-event.medium-priority {
-  background-color: #f59e0b;
-  color: white;
+.fc .fc-event.critical-priority:hover,
+.fc .fc-event.critical-priority.fc-event:hover {
+  background-color: #b91c1c !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
-.fc .fc-event.low-priority {
-  background-color: #10b981;
-  color: white;
+.fc .fc-event.high-priority,
+.fc .fc-event.high-priority.fc-event {
+  background-color: #ea580c !important;
+  color: white !important;
+  border-left: 4px solid #c2410c !important;
+  font-weight: 600 !important;
+}
+
+.fc .fc-event.high-priority:hover,
+.fc .fc-event.high-priority.fc-event:hover {
+  background-color: #c2410c !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+}
+
+.fc .fc-event.medium-priority,
+.fc .fc-event.medium-priority.fc-event {
+  background-color: #eab308 !important;
+  color: #1f2937 !important;
+  border-left: 4px solid #ca8a04 !important;
+  font-weight: 500 !important;
+}
+
+.fc .fc-event.medium-priority:hover,
+.fc .fc-event.medium-priority.fc-event:hover {
+  background-color: #ca8a04 !important;
+  color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.3);
+}
+
+.fc .fc-event.low-priority,
+.fc .fc-event.low-priority.fc-event {
+  background-color: #16a34a !important;
+  color: white !important;
+  border-left: 4px solid #15803d !important;
+  font-weight: 500 !important;
+}
+
+.fc .fc-event.low-priority:hover,
+.fc .fc-event.low-priority.fc-event:hover {
+  background-color: #15803d !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
 .fc .fc-daygrid-event {

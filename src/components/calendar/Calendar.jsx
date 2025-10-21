@@ -25,16 +25,32 @@ const CalendarWrapper = ({
   const [label, setLabel] = React.useState('');
 
   // Convert events to FullCalendar format
-  const fullCalendarEvents = events.map((event) => ({
-    id: event.id,
-    title: event.title,
-    start: event.start,
-    end: event.end,
-    priority: event.priority,
-    extendedProps: {
-      priority: event.priority,
-    },
-  }));
+  const fullCalendarEvents = events.map((event) => {
+    // Get priority name from eventsMeta
+    let priorityName = 'medium'; // default
+
+    if (eventsMeta?.event_priority && event.priority_id) {
+      const priorityObj = eventsMeta.event_priority.find(
+        (p) => p.id === event.priority_id
+      );
+      priorityName = priorityObj?.name?.toLowerCase() || 'medium';
+    } else if (event.priority) {
+      // Fallback: use the priority field directly if it exists
+      priorityName = event.priority.toLowerCase();
+    }
+
+    return {
+      id: event.id,
+      title: event.title,
+      start: event.start,
+      end: event.end,
+      priority: priorityName,
+      extendedProps: {
+        priority: priorityName,
+        priority_id: event.priority_id,
+      },
+    };
+  });
 
   // Handle date range selection
   const handleDateSelect = (selectInfo) => {
@@ -65,26 +81,28 @@ const CalendarWrapper = ({
   // Handle event drop (drag and drop events)
   const handleEventDropInternal = async (dropInfo) => {
     const { event } = dropInfo;
-    
+
     try {
       // Format dates for API
       const timeData = {
         start_time: event.start.toISOString().slice(0, 19).replace('T', ' '),
-        end_time: event.end ? event.end.toISOString().slice(0, 19).replace('T', ' ') : event.start.toISOString().slice(0, 19).replace('T', ' '),
+        end_time: event.end
+          ? event.end.toISOString().slice(0, 19).replace('T', ' ')
+          : event.start.toISOString().slice(0, 19).replace('T', ' '),
       };
-      
+
       // Call the API to update event time
       if (handleUpdateEventTime) {
         await handleUpdateEventTime({ eventId: parseInt(event.id), timeData });
       }
-      
+
       // Update local state
       const updatedEvent = {
         ...event,
         start: event.start,
         end: event.end,
       };
-      
+
       setEvents((prevEvents) =>
         prevEvents.map((e) => (e.id === parseInt(event.id) ? updatedEvent : e))
       );
@@ -98,26 +116,28 @@ const CalendarWrapper = ({
   // Handle event resize
   const handleEventResize = async (resizeInfo) => {
     const { event } = resizeInfo;
-    
+
     try {
       // Format dates for API
       const timeData = {
         start_time: event.start.toISOString().slice(0, 19).replace('T', ' '),
-        end_time: event.end ? event.end.toISOString().slice(0, 19).replace('T', ' ') : event.start.toISOString().slice(0, 19).replace('T', ' '),
+        end_time: event.end
+          ? event.end.toISOString().slice(0, 19).replace('T', ' ')
+          : event.start.toISOString().slice(0, 19).replace('T', ' '),
       };
-      
+
       // Call the API to update event time
       if (handleUpdateEventTime) {
         await handleUpdateEventTime({ eventId: parseInt(event.id), timeData });
       }
-      
+
       // Update local state
       const updatedEvent = {
         ...event,
         start: event.start,
         end: event.end,
       };
-      
+
       setEvents((prevEvents) =>
         prevEvents.map((e) => (e.id === parseInt(event.id) ? updatedEvent : e))
       );
@@ -222,7 +242,8 @@ const CalendarWrapper = ({
             }}
             editable={true}
             selectable={true}
-            selectMirror={true}w
+            selectMirror={true}
+            w
             weekends={true}
             events={fullCalendarEvents}
             eventDragStart={handleEventDragStart}
@@ -260,11 +281,22 @@ const CalendarWrapper = ({
             // Custom styling
             eventClassNames={(arg) => {
               const classes = ['custom-event'];
-              if (arg.event.extendedProps.priority === 'high') {
+              const priority = arg.event.extendedProps.priority;
+
+              if (priority === 'critical' || priority === 'urgent') {
+                classes.push('critical-priority');
+              } else if (priority === 'high') {
                 classes.push('high-priority');
-              } else if (arg.event.extendedProps.priority === 'medium') {
+              } else if (
+                priority === 'medium' ||
+                priority === 'normal' ||
+                priority === 'standard'
+              ) {
                 classes.push('medium-priority');
-              } else if (arg.event.extendedProps.priority === 'low') {
+              } else if (priority === 'low' || priority === 'lowest') {
+                classes.push('low-priority');
+              } else {
+                // Default to medium priority if priority is not recognized
                 classes.push('medium-priority');
               }
               return classes;

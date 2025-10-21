@@ -70,6 +70,26 @@ const SetupGraphPage = lazy(() => import('./pages/setup/graph'));
 const FirmSetupPage = lazy(() => import('./pages/setup/firm'));
 const ActiveFilesPage = lazy(() => import('./pages/active-files'));
 
+// Matter Setup Pages
+const MatterCaseRolePage = lazy(() => import('./pages/setup/matter-case-role'));
+const MatterCaseTypePage = lazy(() => import('./pages/setup/matter-case-type'));
+const MatterCaseStatusPage = lazy(() =>
+  import('./pages/setup/matter-case-status')
+);
+const MatterMarketingSourcePage = lazy(() =>
+  import('./pages/setup/matter-marketing-source')
+);
+const MatterAdCampaignPage = lazy(() =>
+  import('./pages/setup/matter-ad-campaign')
+);
+const MatterRatingPage = lazy(() => import('./pages/setup/matter-rating'));
+const MatterCallOutcomePage = lazy(() =>
+  import('./pages/setup/matter-call-outcome')
+);
+const MatterOfficeLocationPage = lazy(() =>
+  import('./pages/setup/matter-office-location')
+);
+
 const AppRouter = () => (
   <Router>
     <Suspense fallback={<PageLoading />}>
@@ -148,6 +168,37 @@ const AppRouter = () => (
           <Route path="setup/event-status" element={<EventStatus />} />
           <Route path="setup/graph" element={<SetupGraphPage />} />
           <Route path="setup/firm" element={<FirmSetupPage />} />
+
+          {/* Matter Setup Pages */}
+          <Route
+            path="setup/matter-case-role"
+            element={<MatterCaseRolePage />}
+          />
+          <Route
+            path="setup/matter-case-type"
+            element={<MatterCaseTypePage />}
+          />
+          <Route
+            path="setup/matter-case-status"
+            element={<MatterCaseStatusPage />}
+          />
+          <Route
+            path="setup/matter-marketing-source"
+            element={<MatterMarketingSourcePage />}
+          />
+          <Route
+            path="setup/matter-ad-campaign"
+            element={<MatterAdCampaignPage />}
+          />
+          <Route path="setup/matter-rating" element={<MatterRatingPage />} />
+          <Route
+            path="setup/matter-call-outcome"
+            element={<MatterCallOutcomePage />}
+          />
+          <Route
+            path="setup/matter-office-location"
+            element={<MatterOfficeLocationPage />}
+          />
         </Route>
         <Route path="/2fa" element={<TwoFactorPage />} />
         <Route path="*" element={<Navigate to="/login" replace />} />

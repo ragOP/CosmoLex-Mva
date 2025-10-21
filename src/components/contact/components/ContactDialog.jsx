@@ -27,15 +27,15 @@ import PrimaryAddressConfirmDialog from './PrimaryAddressConfirmDialog';
 
 const defaultFields = {
   nature: '',
-  contact_type_id: null,
-  prefix_id: null,
+  contact_type_id: '',
+  prefix_id: '',
   first_name: '',
   middle_name: '',
   last_name: '',
   suffix: '',
-  gender_id: null,
+  gender_id: '',
   alias: '',
-  marital_status_id: null,
+  marital_status_id: '',
   company_name: '',
   job_title: '',
   ssn: '',
@@ -57,7 +57,13 @@ const defaultFields = {
   addresses: [],
 };
 
-export default function ContactDialog({ open, setOpen, mode }) {
+export default function ContactDialog({
+  open,
+  setOpen,
+  mode,
+  contact,
+  onSuccess,
+}) {
   // const { data: contactMeta } = useQuery({
   //   queryKey: ['contactMeta'],
   //   queryFn: getContactMeta,
@@ -70,7 +76,7 @@ export default function ContactDialog({ open, setOpen, mode }) {
 
   const {
     contactsMeta: contactMeta,
-    contact,
+    contact: hookContact,
     handleCreateContact,
     handleUpdateContact,
     isCreating,
@@ -140,18 +146,18 @@ export default function ContactDialog({ open, setOpen, mode }) {
         };
         break;
       case 'primary_phone':
-        rules.required = 'Primary phone is required';
+        // rules.required = 'Primary phone is required';
         break;
       case 'primary_email':
-        rules.required = 'Primary email is required';
+        // rules.required = 'Primary email is required';
         break;
       case 'addresses':
-        rules.validate = (value) => {
-          if (!value || value.length === 0) {
-            return 'At least one address is required';
-          }
-          return true;
-        };
+        // rules.validate = (value) => {
+        //   if (!value || value.length === 0) {
+        //     return 'At least one address is required';
+        //   }
+        //   return true;
+        // };
         break;
       default:
         // Apply maxLength to other text fields
@@ -291,12 +297,47 @@ export default function ContactDialog({ open, setOpen, mode }) {
   useEffect(() => {
     if (open) {
       if (mode === 'update' && contact) {
-        // Populate form with existing event data
+        // Map contact data to form structure
         const formData = {
-          ...contact,
+          nature: contact.nature || 'Individual',
+          contact_type_id: contact.contact_type_id || '',
+          prefix_id: contact.prefix_id || '',
+          first_name:
+            contact.first_name || contact.contact_name?.split(' ')[0] || '',
+          middle_name: contact.middle_name || '',
+          last_name:
+            contact.last_name ||
+            contact.contact_name?.split(' ').slice(1).join(' ') ||
+            '',
+          suffix: contact.suffix || '',
+          gender_id: contact.gender_id || '',
+          alias: contact.alias || '',
+          marital_status_id: contact.marital_status_id || '',
+          company_name: contact.company_name || '',
+          job_title: contact.job_title || '',
+          ssn: contact.ssn || '',
+          federal_tax_id: contact.federal_tax_id || '',
+          work_phone: contact.work_phone || '',
+          home_phone: contact.home_phone || '',
+          primary_phone: contact.primary_phone || contact.phone || '',
+          fax: contact.fax || '',
+          primary_email: contact.primary_email || '',
+          secondary_email: contact.secondary_email || '',
+          when_to_contact: contact.when_to_contact || '',
+          contact_preference: contact.contact_preference || '',
+          language: contact.language || '',
+          drivers_license: contact.drivers_license || '',
+          date_of_birth: contact.date_of_birth || '',
+          date_of_death: contact.date_of_death || '',
+          date_of_bankruptcy: contact.date_of_bankruptcy || '',
+          notes: contact.notes || '',
+          addresses: contact.addresses || [],
         };
 
-        reset(formData);
+        // Use a small delay to ensure the form is ready
+        setTimeout(() => {
+          reset(formData);
+        }, 50);
       } else {
         reset(defaultFields);
       }
@@ -305,7 +346,7 @@ export default function ContactDialog({ open, setOpen, mode }) {
       // Reset states when dialog closes
       setValidationErrors({});
     }
-  }, [open, mode, reset, contact?.id]);
+  }, [open, mode, reset, contact]);
 
   const onSubmit = (data) => {
     // createContactMutation.mutate({ data });
@@ -320,12 +361,28 @@ export default function ContactDialog({ open, setOpen, mode }) {
       return;
     }
 
-    mode === 'create'
-      ? handleCreateContact(data)
-      : handleUpdateContact({
-          contactId: contact.id,
-          contactData: data,
-        });
+    if (mode === 'create') {
+      handleCreateContact(data);
+    } else {
+      handleUpdateContact({
+        contactId: contact.id,
+        contactData: data,
+      });
+      // Call onSuccess callback with updated contact data
+      if (onSuccess) {
+        // Map form data back to contact structure
+        const updatedContact = {
+          ...contact,
+          ...data,
+          contact_name:
+            data.first_name && data.last_name
+              ? `${data.first_name} ${data.last_name}`.trim()
+              : contact.contact_name,
+          phone: data.primary_phone || contact.phone,
+        };
+        onSuccess(updatedContact);
+      }
+    }
     setOpen(false);
     reset();
   };
@@ -390,8 +447,10 @@ export default function ContactDialog({ open, setOpen, mode }) {
 
     if (Object.keys(errors).length === 0) {
       const currentAddresses = watch('addresses') || [];
-      const existingPrimaryAddress = currentAddresses.find(addr => addr.is_primary);
-      
+      const existingPrimaryAddress = currentAddresses.find(
+        (addr) => addr.is_primary
+      );
+
       // If this is the first address, automatically make it primary
       if (currentAddresses.length === 0) {
         const addressToAdd = { ...newAddress, is_primary: true };
@@ -399,20 +458,20 @@ export default function ContactDialog({ open, setOpen, mode }) {
         resetAddressForm();
         return;
       }
-      
+
       // If setting as primary and a primary already exists, show confirmation
       if (newAddress.is_primary && existingPrimaryAddress) {
         setPendingPrimaryAddress(newAddress);
         setConfirmPrimaryDialog(true);
         return;
       }
-      
+
       // Add address normally
       append(newAddress);
       resetAddressForm();
     }
   };
-  
+
   const resetAddressForm = () => {
     setNewAddress({
       address_1: '',
@@ -428,31 +487,31 @@ export default function ContactDialog({ open, setOpen, mode }) {
     setAddressDialogOpen(false);
     setAddressErrors({});
   };
-  
+
   const handleConfirmPrimaryChange = () => {
     const currentAddresses = watch('addresses') || [];
-    
+
     // Update all addresses to set is_primary to false
-    const updatedAddresses = currentAddresses.map(addr => ({
+    const updatedAddresses = currentAddresses.map((addr) => ({
       ...addr,
-      is_primary: false
+      is_primary: false,
     }));
-    
+
     // Replace the addresses array
     setValue('addresses', updatedAddresses);
-    
+
     // Add the new primary address
     append(pendingPrimaryAddress);
-    
+
     // Reset states
     setPendingPrimaryAddress(null);
     setConfirmPrimaryDialog(false);
     resetAddressForm();
   };
-  
+
   const getCurrentPrimaryAddress = () => {
     const currentAddresses = watch('addresses') || [];
-    return currentAddresses.find(addr => addr.is_primary);
+    return currentAddresses.find((addr) => addr.is_primary);
   };
 
   return (
@@ -498,7 +557,9 @@ export default function ContactDialog({ open, setOpen, mode }) {
                         <Select
                           onValueChange={(val) => {
                             console.log(`[DEBUG] Setting ${name}:`, val);
-                            field.onChange(isNaN(val) ? val : Number(val));
+                            field.onChange(
+                              val === '' ? '' : isNaN(val) ? val : Number(val)
+                            );
                           }}
                           value={field.value?.toString() ?? ''}
                         >
@@ -760,7 +821,7 @@ export default function ContactDialog({ open, setOpen, mode }) {
           </DialogActions>
         </Stack>
       </Dialog>
-      
+
       <PrimaryAddressConfirmDialog
         open={confirmPrimaryDialog}
         onClose={() => {

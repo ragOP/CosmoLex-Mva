@@ -164,6 +164,70 @@ export const endpoints = {
   updateEventStatus: 'v2/setup/master/update',
   updateEventStatusStatus: 'v2/setup/master/updateStatus',
 
+  // Matter Case Role
+  getMatterCaseRoles: 'v2/setup/master/list/matter-case-role',
+  showMatterCaseRole: 'v2/setup/master/show',
+  deleteMatterCaseRole: 'v2/setup/master/delete',
+  storeMatterCaseRole: 'v2/setup/master/store/matter-case-role',
+  updateMatterCaseRole: 'v2/setup/master/update',
+  updateMatterCaseRoleStatus: 'v2/setup/master/updateStatus',
+
+  // Matter Case Type
+  getMatterCaseTypes: 'v2/setup/master/list/matter-case-type',
+  showMatterCaseType: 'v2/setup/master/show',
+  deleteMatterCaseType: 'v2/setup/master/delete',
+  storeMatterCaseType: 'v2/setup/master/store/matter-case-type',
+  updateMatterCaseType: 'v2/setup/master/update',
+  updateMatterCaseTypeStatus: 'v2/setup/master/updateStatus',
+
+  // Matter Case Status
+  getMatterCaseStatuses: 'v2/setup/master/list/matter-case-status',
+  showMatterCaseStatus: 'v2/setup/master/show',
+  deleteMatterCaseStatus: 'v2/setup/master/delete',
+  storeMatterCaseStatus: 'v2/setup/master/store/matter-case-status',
+  updateMatterCaseStatus: 'v2/setup/master/update',
+  updateMatterCaseStatusStatus: 'v2/setup/master/updateStatus',
+
+  // Matter Marketing Source
+  getMatterMarketingSources: 'v2/setup/master/list/matter-marketing-source',
+  showMatterMarketingSource: 'v2/setup/master/show',
+  deleteMatterMarketingSource: 'v2/setup/master/delete',
+  storeMatterMarketingSource: 'v2/setup/master/store/matter-marketing-source',
+  updateMatterMarketingSource: 'v2/setup/master/update',
+  updateMatterMarketingSourceStatus: 'v2/setup/master/updateStatus',
+
+  // Matter Ad Campaign
+  getMatterAdCampaigns: 'v2/setup/master/list/matter-ad-campaign',
+  showMatterAdCampaign: 'v2/setup/master/show',
+  deleteMatterAdCampaign: 'v2/setup/master/delete',
+  storeMatterAdCampaign: 'v2/setup/master/store/matter-ad-campaign',
+  updateMatterAdCampaign: 'v2/setup/master/update',
+  updateMatterAdCampaignStatus: 'v2/setup/master/updateStatus',
+
+  // Matter Rating
+  getMatterRatings: 'v2/setup/master/list/matter-rating',
+  showMatterRating: 'v2/setup/master/show',
+  deleteMatterRating: 'v2/setup/master/delete',
+  storeMatterRating: 'v2/setup/master/store/matter-rating',
+  updateMatterRating: 'v2/setup/master/update',
+  updateMatterRatingStatus: 'v2/setup/master/updateStatus',
+
+  // Matter Call Outcome
+  getMatterCallOutcomes: 'v2/setup/master/list/matter-call-outcome',
+  showMatterCallOutcome: 'v2/setup/master/show',
+  deleteMatterCallOutcome: 'v2/setup/master/delete',
+  storeMatterCallOutcome: 'v2/setup/master/store/matter-call-outcome',
+  updateMatterCallOutcome: 'v2/setup/master/update',
+  updateMatterCallOutcomeStatus: 'v2/setup/master/updateStatus',
+
+  // Matter Office Location
+  getMatterOfficeLocations: 'v2/setup/master/list/matter-office-location',
+  showMatterOfficeLocation: 'v2/setup/master/show',
+  deleteMatterOfficeLocation: 'v2/setup/master/delete',
+  storeMatterOfficeLocation: 'v2/setup/master/store/matter-office-location',
+  updateMatterOfficeLocation: 'v2/setup/master/update',
+  updateMatterOfficeLocationStatus: 'v2/setup/master/updateStatus',
+
   // Firm
   getFirmMeta: 'v2/setup/firm-meta',
   getFirmDetails: 'v2/setup/firm-update',
