@@ -112,7 +112,7 @@ const TasksPage = () => {
         <p className="text-2xl font-bold">Matters ({filteredMatters?.length || 0})</p>
 
         {/* --- Right-side Controls Container (responsive) --- */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-[80%] sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-[70px] sm:w-auto">
           {/* --- Standalone Search Input --- */}
           <div className="flex items-center gap-2 bg-white/50 backdrop-blur-sm border border-[#E2E8F0] rounded-md px-2 h-10 shadow w-[80%] sm:w-auto">
             <Search size={16} className="text-gray-400" />
@@ -125,7 +125,7 @@ const TasksPage = () => {
             />
           </div>
 
-          <div className="flex items-center gap-3.5 bg-white/50 backdrop-blur-sm border border-[#E2E8F0] rounded-md px-2 h-10 shadow w-full sm:w-auto">
+          <div className="flex items-center gap-3.5 bg-white/50 backdrop-blur-sm border-[#E2E8F0] w-4 rounded-md px-2 h-10 shadow sm:w-auto">
             <Clock size={16} className="text-[#6366F1]" />
             <span className="text-sm font-semibold uppercase text-[#40444D]">
               Filter
@@ -178,19 +178,19 @@ const TasksPage = () => {
               </Select>
             </div>
 
-            {/* Create button moved outside of Select to avoid layout issues on small screens */}
-            <div className="ml-auto sm:ml-2">
-              <Button
-                onClick={() => navigate(`/dashboard/inbox/overview/create`)}
-                className="cursor-pointer text-center pr-1.5 max-w-48 rounded-md min-w-36 ml-3.5 sm:ml-1.5"
-                icon={Plus}
-                iconPosition="left"
-              >
-                Create Matter
-              </Button>
-            </div>
-          </div>
 
+          </div>
+          {/* Create button moved outside of Select to avoid layout issues on small screens */}
+          <div className="ml-auto">
+            <Button
+              onClick={() => navigate(`/dashboard/inbox/overview/create`)}
+              className="cursor-pointer text-center pr-1.5 max-w-48 rounded-md min-w-36"
+              icon={Plus}
+              iconPosition="left"
+            >
+              Create Matter
+            </Button>
+          </div>
         </div>
       </div>
 
