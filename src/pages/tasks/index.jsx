@@ -132,7 +132,7 @@ const TasksPage = () => {
 
   const administratorOptions = useMemo(() => {
     return [
-      { id: 'all', name: 'All' },
+      // { id: 'all', name: 'All' },
       { id: 'me', name: 'Me' },
     ];
   }, []);
