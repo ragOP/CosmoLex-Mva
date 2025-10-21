@@ -54,8 +54,7 @@ const TasksPage = () => {
     isDeleting,
     filterTasks,
   } = useTasks();
-  console.log('tasks', tasks);  
-
+  
   // Multi-filter params from URL
   const clientNameParam = searchParams.get('client_name') || '';
   const priorityIdParam = searchParams.get('priority_id') || '';
