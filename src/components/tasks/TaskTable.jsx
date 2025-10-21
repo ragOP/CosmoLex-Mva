@@ -434,6 +434,7 @@ const TaskTable = ({
           width: getTableWidth(),
           overflowX: 'auto',
           p: 2,
+          minHeight: '400px', // Add minimum height
         }}
       >
         <DataGrid

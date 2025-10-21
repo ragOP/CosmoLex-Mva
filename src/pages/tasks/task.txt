@@ -43,8 +43,6 @@ const TasksPage = () => {
 
   // Only call useMatter if slugId exists to prevent unnecessary API calls
   const matter = matterSlug ? useMatter() : null;
-
-  
   const {
     tasks,
     tasksMeta,
@@ -54,7 +52,6 @@ const TasksPage = () => {
     isDeleting,
     filterTasks,
   } = useTasks();
-  console.log('tasks', tasks);  
 
   // Multi-filter params from URL
   const clientNameParam = searchParams.get('client_name') || '';
@@ -95,12 +92,12 @@ const TasksPage = () => {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [tasks]);
 
-  // const updateParam = (key, value) => {
-  //   const next = new URLSearchParams(searchParams);
-  //   if (value && value !== '') next.set(key, value);
-  //   else next.delete(key);
-  //   setSearchParams(next, { replace: true });
-  // };
+  const updateParam = (key, value) => {
+    const next = new URLSearchParams(searchParams);
+    if (value && value !== '') next.set(key, value);
+    else next.delete(key);
+    setSearchParams(next, { replace: true });
+  };
 
   const clearAllFilters = () => {
     setTempFilters({
@@ -137,7 +134,6 @@ const TasksPage = () => {
   ]);
 
   // Server-side filtered tasks
-  // const [serverTasks, setServerTasks] = useState(Array.isArray(tasks) ? tasks : []);
   const [serverTasks, setServerTasks] = useState(null);
   const [isFiltering, setIsFiltering] = useState(false);
   const [tempFilters, setTempFilters] = useState({
@@ -157,7 +153,6 @@ const TasksPage = () => {
       !!tempFilters.from_date;
 
     if (!hasFilters) {
-     
       setServerTasks(Array.isArray(tasks) ? tasks : []);
       return;
     }
@@ -186,7 +181,7 @@ const TasksPage = () => {
   // Initialize server tasks on mount
   useEffect(() => {
     setServerTasks(Array.isArray(tasks) ? tasks : []);
-  }, [tasks?.length]); // Only depend on tasks length, not the entire tasks array
+  }, [tasks]);
 
   // Handlers
   const handleDelete = (id) => {
@@ -486,31 +481,29 @@ const TasksPage = () => {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0">
-        <TaskTable
-          tasks={serverTasks || tasks || []}
-          tasksMeta={tasksMeta || []}
-          handleUpdateTaskStatus={handleUpdateTaskStatus}
-          onRowClick={(params) => {
-            // append taskId to url params
-            handleNavigate(params.row.id);
-            setSelectedTaskId(params.row.id);
-            setSelectedTask(params.row);
-            setShowViewDialog(true);
-          }}
-          handleEdit={(task) => {
-            handleNavigate(task.id);
-            setSelectedTaskId(task.id);
-            setSelectedTask(task);
-            setShowUpdateDialog(true);
-          }}
-          handleDelete={(task) => {
-            setSelectedTask(task);
-            setShowDeleteConfirm(true);
-          }}
-          handleCommentClick={handleCommentClick}
-        />
-      </div>
+      <TaskTable
+        tasks={serverTasks || tasks || []}
+        tasksMeta={tasksMeta || []}
+        handleUpdateTaskStatus={handleUpdateTaskStatus}
+        onRowClick={(params) => {
+          // append taskId to url params
+          handleNavigate(params.row.id);
+          setSelectedTaskId(params.row.id);
+          setSelectedTask(params.row);
+          setShowViewDialog(true);
+        }}
+        handleEdit={(task) => {
+          handleNavigate(task.id);
+          setSelectedTaskId(task.id);
+          setSelectedTask(task);
+          setShowUpdateDialog(true);
+        }}
+        handleDelete={(task) => {
+          setSelectedTask(task);
+          setShowDeleteConfirm(true);
+        }}
+        handleCommentClick={handleCommentClick}
+      />
 
       {/* View */}
       {showViewDialog && (
