@@ -1,4 +1,10 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, {
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from 'react';
 import { useSelector } from 'react-redux';
 import Button from '@/components/Button';
 import { Button as UIButton } from '@/components/ui/button';
@@ -7,10 +13,12 @@ import ShowTaskDialog from '@/components/tasks/ShowTaskDialog';
 import DeleteTaskDialog from '@/components/tasks/DeleteTaskDialog';
 import TaskTable from '@/components/tasks/TaskTable';
 import { Loader2, Plus, Filter as FilterIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTasks } from '@/components/tasks/hooks/useTasks';
 import { useMatter } from '@/components/inbox/MatterContext';
 import getMetaOptions from '@/utils/getMetaFields';
+import { useTaskFilters } from '@/hooks/useTaskFilters';
 import {
   Select,
   SelectTrigger,
@@ -49,7 +57,6 @@ const TasksPage = () => {
   // Only call useMatter if slugId exists to prevent unnecessary API calls
   const matter = matterSlug ? useMatter() : null;
 
-  
   const {
     tasks,
     tasksMeta,
@@ -57,18 +64,23 @@ const TasksPage = () => {
     updateStatus,
     deleteTask,
     isDeleting,
-    filterTasks,
+    getFilteredTasks,
   } = useTasks();
-  
-  // Multi-filter params from URL
-  const clientNameParam = searchParams.get('client_name') || '';
-  const priorityIdParam = searchParams.get('priority_id') || '';
-  const statusIdParam = searchParams.get('status_id') || '';
-  const assignedToParam = searchParams.get('assigned_to') || '';
-  const fromDateParam = searchParams.get('from_date') || '';
-  const toDateParam = searchParams.get('to_date') || '';
-  const assignedByParam = searchParams.get('assigned_by') || '';
-  const administratorParam = searchParams.get('administrator') || '';
+
+  // Use custom hook for filter management
+  const {
+    tempFilters,
+    serverTasks,
+    isFiltering,
+    activeFiltersCount,
+    applyFilters,
+    clearAllFilters,
+    updateFilter,
+  } = useTaskFilters({
+    getFilteredTasks,
+    tasks,
+    tasksLoading,
+  });
 
   // Build select options
   const priorityOptions = useMemo(
@@ -80,24 +92,28 @@ const TasksPage = () => {
     [tasksMeta]
   );
   const clientOptions = useMemo(() => {
-    const list = Array.isArray(tasks) ? tasks : [];
+    if (!Array.isArray(tasks) || tasks.length === 0) return [];
+
     const setNames = new Set();
-    for (const t of list) {
-      const name = (t?.contact_name || '').trim();
+    for (const task of tasks) {
+      const name = (task?.contact_name || '').trim();
       if (name) setNames.add(name);
     }
     return Array.from(setNames).sort();
   }, [tasks]);
-  const assigneeOptions = useMemo(() => {
-    const list = Array.isArray(tasks) ? tasks : [];
-    const map = new Map();
 
-    for (const t of list) {
-      const arr = Array.isArray(t?.assignees) ? t.assignees : [];
-      for (const a of arr) {
+  const assigneeOptions = useMemo(() => {
+    if (!Array.isArray(tasks) || tasks.length === 0) return [];
+
+    const map = new Map();
+    for (const task of tasks) {
+      const assignees = Array.isArray(task?.assignees) ? task.assignees : [];
+      for (const assignee of assignees) {
         // Handle assignees with or without ID
-        const assigneeId = a?.id || a?.user_id || a?.assignee_id;
-        const assigneeName = a?.name || a?.user_name || a?.assignee_name;
+        const assigneeId =
+          assignee?.id || assignee?.user_id || assignee?.assignee_id;
+        const assigneeName =
+          assignee?.name || assignee?.user_name || assignee?.assignee_name;
 
         // Use ID if available, otherwise use name as the key
         const key = assigneeId || assigneeName;
@@ -114,10 +130,10 @@ const TasksPage = () => {
   }, [tasks]);
 
   const assignedByOptions = useMemo(() => {
-    const list = Array.isArray(tasks) ? tasks : [];
-    const map = new Map();
+    if (!Array.isArray(tasks) || tasks.length === 0) return [];
 
-    for (const task of list) {
+    const map = new Map();
+    for (const task of tasks) {
       const assignedBy = task?.assigned_by;
       if (assignedBy?.name) {
         const key = assignedBy.id || assignedBy.name;
@@ -139,208 +155,65 @@ const TasksPage = () => {
     ];
   }, []);
 
-  const updateParam = (key, value) => {
-    const next = new URLSearchParams(searchParams);
-    if (value && value !== '') next.set(key, value);
-    else next.delete(key);
-    setSearchParams(next, { replace: true });
-  };
-
-  const clearAllFilters = () => {
-    setTempFilters({
-      client_name: '',
-      priority_id: '',
-      status_id: '',
-      assigned_to: '',
-      from_date: ''
-    });
-    const next = new URLSearchParams(searchParams);
-    next.delete('client_name');
-    next.delete('priority_id');
-    next.delete('status_id');
-    next.delete('assigned_to');
-    next.delete('assigned_by');
-    next.delete('from_date');
-    next.delete('to_date');
-    next.delete('administrator');
-    setSearchParams(next, { replace: true });
-    setServerTasks(Array.isArray(tasks) ? tasks : []);
-  };
-
-  const activeFiltersCount = useMemo(() => {
-    let count = 0;
-    if (clientNameParam) count += 1;
-    if (priorityIdParam) count += 1;
-    if (statusIdParam) count += 1;
-    if (assignedToParam) count += 1;
-    if (fromDateParam) count += 1;
-    if (toDateParam) count += 1;
-    if (assignedByParam) count += 1;
-    if (administratorParam) count += 1;
-    return count;
-  }, [
-    clientNameParam,
-    priorityIdParam,
-    statusIdParam,
-    assignedToParam,
-    fromDateParam,
-    toDateParam,
-    assignedByParam,
-    administratorParam,
-  ]);
-
-  // Server-side filtered tasks
-  // const [serverTasks, setServerTasks] = useState(Array.isArray(tasks) ? tasks : []);
-  const [serverTasks, setServerTasks] = useState(null);
-  const [isFiltering, setIsFiltering] = useState(false);
-  const [tempFilters, setTempFilters] = useState({
-    client_name: clientNameParam,
-    priority_id: priorityIdParam,
-    status_id: statusIdParam,
-    assigned_to: assignedToParam,
-    from_date: fromDateParam
-  });
-  
-  const applyFilters = () => {
-    const hasFilters =
-      !!clientNameParam ||
-      !!priorityIdParam ||
-      !!statusIdParam ||
-      !!assignedToParam ||
-      !!fromDateParam ||
-      !!toDateParam ||
-      !!assignedByParam ||
-      !!administratorParam;
-
-    if (!hasFilters) {
-     
-      setServerTasks(Array.isArray(tasks) ? tasks : []);
-      return;
-    }
-
-    // For assignee or assigned by filtering, try client-side first since we're using names as keys
-    if (
-      (assignedToParam || assignedByParam) &&
-      !clientNameParam &&
-      !priorityIdParam &&
-      !statusIdParam &&
-      !fromDateParam &&
-      !toDateParam &&
-      !administratorParam
-    ) {
-      // Client-side filtering for assignee and/or assigned by
-      const filteredTasks = (Array.isArray(tasks) ? tasks : []).filter(
-        (task) => {
-          let matchesAssignee = true;
-          let matchesAssignedBy = true;
-
-          // Check assignee filter
-          if (assignedToParam) {
-            const assignees = Array.isArray(task?.assignees)
-              ? task.assignees
-              : [];
-            matchesAssignee = assignees.some((assignee) => {
-              const assigneeName =
-                assignee?.name ||
-                assignee?.user_name ||
-                assignee?.assignee_name;
-              return assigneeName === assignedToParam;
-            });
-          }
-
-          // Check assigned by filter
-          if (assignedByParam) {
-            const assignedBy = task?.assigned_by;
-            const assignedByName = assignedBy?.name;
-            matchesAssignedBy = assignedByName === assignedByParam;
-          }
-
-          return matchesAssignee && matchesAssignedBy;
-        }
-      );
-      setServerTasks(filteredTasks);
-      return;
-    }
-
-    const qs = new URLSearchParams();
-    if (clientNameParam) qs.set('client_name', clientNameParam);
-    if (priorityIdParam) qs.set('priority_id', priorityIdParam);
-    if (statusIdParam) qs.set('status_id', statusIdParam);
-    if (assignedToParam) qs.set('assigned_to', assignedToParam);
-    if (fromDateParam) qs.set('from_date', fromDateParam);
-    if (toDateParam) qs.set('to_date', toDateParam);
-    if (assignedByParam) qs.set('assigned_by', assignedByParam);
-    if (administratorParam) qs.set('administrator', administratorParam);
-    setIsFiltering(true);
-    filterTasks(qs.toString())
-      .then((data) => {
-        setServerTasks(Array.isArray(data) ? data : []);
-      })
-      .catch(() => {
-        setServerTasks([]);
-      })
-      .finally(() => setIsFiltering(false));
-  }, [
-    tasks,
-    clientNameParam,
-    priorityIdParam,
-    statusIdParam,
-    assignedToParam,
-    fromDateParam,
-    toDateParam,
-    assignedByParam,
-    administratorParam,
-    filterTasks,
-  ]);
-
   // Handlers
-  const handleDelete = (id) => {
-    deleteTask(id).then(() => setShowDeleteConfirm(false));
-  };
+  const handleDelete = useCallback(
+    (id) => {
+      deleteTask(id).then(() => setShowDeleteConfirm(false));
+    },
+    [deleteTask]
+  );
 
-  const handleUpdateTaskStatus = (id, status) =>
-    updateStatus({ taskId: id, status_id: parseInt(status) });
+  const handleUpdateTaskStatus = useCallback(
+    (id, status) => updateStatus({ taskId: id, status_id: parseInt(status) }),
+    [updateStatus]
+  );
 
-  const handleCommentClick = (task) => {
-    // Navigate to comments page with taskId (and slugId if present)
-    if (matterSlug) {
-      navigate(
-        `/dashboard/inbox/tasks/comments?slugId=${matterSlug}&taskId=${task.id}`,
-        { replace: false }
-      );
-    } else {
-      navigate(`/dashboard/tasks/comments?taskId=${task.id}`, {
-        replace: false,
-      });
-    }
-  };
-
-  const handleNavigate = (taskId) => {
-    if (matterSlug) {
-      if (taskId) {
+  const handleCommentClick = useCallback(
+    (task) => {
+      // Navigate to comments page with taskId (and slugId if present)
+      if (matterSlug) {
         navigate(
-          `/dashboard/inbox/tasks?slugId=${matterSlug}&taskId=${taskId}`,
-          {
-            replace: false,
-          }
+          `/dashboard/inbox/tasks/comments?slugId=${matterSlug}&taskId=${task.id}`,
+          { replace: false }
         );
       } else {
-        navigate(`/dashboard/inbox/tasks?slugId=${matterSlug}`, {
+        navigate(`/dashboard/tasks/comments?taskId=${task.id}`, {
           replace: false,
         });
       }
-    } else {
-      if (taskId) {
-        navigate(`/dashboard/tasks?taskId=${taskId}`, {
-          replace: false,
-        });
+    },
+    [navigate, matterSlug]
+  );
+
+  const handleNavigate = useCallback(
+    (taskId) => {
+      if (matterSlug) {
+        if (taskId) {
+          navigate(
+            `/dashboard/inbox/tasks?slugId=${matterSlug}&taskId=${taskId}`,
+            {
+              replace: false,
+            }
+          );
+        } else {
+          navigate(`/dashboard/inbox/tasks?slugId=${matterSlug}`, {
+            replace: false,
+          });
+        }
       } else {
-        navigate(`/dashboard/tasks`, {
-          replace: false,
-        });
+        if (taskId) {
+          navigate(`/dashboard/tasks?taskId=${taskId}`, {
+            replace: false,
+          });
+        } else {
+          navigate(`/dashboard/tasks`, {
+            replace: false,
+          });
+        }
       }
-    }
-  };
+    },
+    [navigate, matterSlug]
+  );
 
   if (tasksLoading) {
     return (
@@ -399,13 +272,15 @@ const TasksPage = () => {
                     </label>
                     <Select
                       value={
-                        tempFilters.client_name === '' ? '__all__' : tempFilters.client_name
+                        tempFilters.client_name === ''
+                          ? '__all__'
+                          : tempFilters.client_name
                       }
                       onValueChange={(val) =>
-                        setTempFilters(prev => ({
-                          ...prev,
-                          client_name: val === '__all__' ? '' : val
-                        }))
+                        updateFilter(
+                          'client_name',
+                          val === '__all__' ? '' : val
+                        )
                       }
                       disabled={tasksLoading}
                     >
@@ -429,13 +304,15 @@ const TasksPage = () => {
                     </label>
                     <Select
                       value={
-                        tempFilters.priority_id === '' ? '__all__' : tempFilters.priority_id
+                        tempFilters.priority_id === ''
+                          ? '__all__'
+                          : tempFilters.priority_id
                       }
                       onValueChange={(val) =>
-                        setTempFilters(prev => ({
-                          ...prev,
-                          priority_id: val === '__all__' ? '' : val
-                        }))
+                        updateFilter(
+                          'priority_id',
+                          val === '__all__' ? '' : val
+                        )
                       }
                       disabled={tasksLoading}
                     >
@@ -458,12 +335,13 @@ const TasksPage = () => {
                       Status
                     </label>
                     <Select
-                      value={tempFilters.status_id === '' ? '__all__' : tempFilters.status_id}
+                      value={
+                        tempFilters.status_id === ''
+                          ? '__all__'
+                          : tempFilters.status_id
+                      }
                       onValueChange={(val) =>
-                        setTempFilters(prev => ({
-                          ...prev,
-                          status_id: val === '__all__' ? '' : val
-                        }))
+                        updateFilter('status_id', val === '__all__' ? '' : val)
                       }
                       disabled={tasksLoading}
                     >
@@ -487,13 +365,15 @@ const TasksPage = () => {
                     </label>
                     <Select
                       value={
-                        tempFilters.assigned_to === '' ? '__all__' : tempFilters.assigned_to
+                        tempFilters.assigned_to === ''
+                          ? '__all__'
+                          : tempFilters.assigned_to
                       }
                       onValueChange={(val) =>
-                        setTempFilters(prev => ({
-                          ...prev,
-                          assigned_to: val === '__all__' ? '' : val
-                        }))
+                        updateFilter(
+                          'assigned_to',
+                          val === '__all__' ? '' : val
+                        )
                       }
                       disabled={tasksLoading}
                     >
@@ -503,7 +383,7 @@ const TasksPage = () => {
                       <SelectContent className="max-h-64 overflow-auto">
                         <SelectItem value="__all__">All assignees</SelectItem>
                         {assigneeOptions.map((a) => (
-                          <SelectItem key={a.id} value={a.id.toString()}>
+                          <SelectItem key={a.id} value={a.name}>
                             {a.name}
                           </SelectItem>
                         ))}
@@ -517,10 +397,15 @@ const TasksPage = () => {
                     </label>
                     <Select
                       value={
-                        assignedByParam === '' ? '__all__' : assignedByParam
+                        tempFilters.assigned_by === ''
+                          ? '__all__'
+                          : tempFilters.assigned_by
                       }
                       onValueChange={(val) =>
-                        updateParam('assigned_by', val === '__all__' ? '' : val)
+                        updateFilter(
+                          'assigned_by',
+                          val === '__all__' ? '' : val
+                        )
                       }
                       disabled={tasksLoading}
                     >
@@ -530,7 +415,7 @@ const TasksPage = () => {
                       <SelectContent className="max-h-64 overflow-auto">
                         <SelectItem value="__all__">All assigned by</SelectItem>
                         {assignedByOptions.map((a) => (
-                          <SelectItem key={a.id} value={a.id.toString()}>
+                          <SelectItem key={a.id} value={a.name}>
                             {a.name}
                           </SelectItem>
                         ))}
@@ -544,8 +429,10 @@ const TasksPage = () => {
                     </label>
                     <Input
                       type="date"
-                      value={fromDateParam}
-                      onChange={(e) => updateParam('from_date', e.target.value)}
+                      value={tempFilters.from_date}
+                      onChange={(e) =>
+                        updateFilter('from_date', e.target.value)
+                      }
                       className="h-10 w-full"
                       placeholder="Select from date"
                     />
@@ -557,8 +444,8 @@ const TasksPage = () => {
                     </label>
                     <Input
                       type="date"
-                      value={toDateParam}
-                      onChange={(e) => updateParam('to_date', e.target.value)}
+                      value={tempFilters.to_date}
+                      onChange={(e) => updateFilter('to_date', e.target.value)}
                       className="h-10 w-full"
                       placeholder="Select to date"
                     />
@@ -571,12 +458,12 @@ const TasksPage = () => {
                       </label>
                       <Select
                         value={
-                          administratorParam === ''
+                          tempFilters.administrator === ''
                             ? '__all__'
-                            : administratorParam
+                            : tempFilters.administrator
                         }
                         onValueChange={(val) =>
-                          updateParam(
+                          updateFilter(
                             'administrator',
                             val === '__all__' ? '' : val
                           )
@@ -612,33 +499,33 @@ const TasksPage = () => {
                 >
                   Clear all filters
                 </button>
-                  <DialogTrigger asChild>
-                    <button
-                      onClick={() => applyFilters()}
-                      className="flex items-center gap-2 shadow-lg"
-                      style={{
-                        background:
-                          'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
-                        color: '#fff',
-                        padding: '8px 16px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                      }}
-                      disabled={isFiltering}
-                    >
-                      {isFiltering ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Applying...
-                        </>
-                      ) : (
-                        'Apply filters'
-                      )}
-                    </button>
-                  </DialogTrigger>
+                <DialogTrigger asChild>
+                  <button
+                    onClick={() => applyFilters()}
+                    className="flex items-center gap-2 shadow-lg"
+                    style={{
+                      background:
+                        'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
+                      color: '#fff',
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                    }}
+                    disabled={isFiltering}
+                  >
+                    {isFiltering ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Applying...
+                      </>
+                    ) : (
+                      'Apply filters'
+                    )}
+                  </button>
+                </DialogTrigger>
               </div>
             </DialogContent>
           </Dialog>
@@ -663,29 +550,38 @@ const TasksPage = () => {
       </div>
 
       <div className="flex-1 min-h-0">
-        <TaskTable
-          tasks={serverTasks || tasks || []}
-          tasksMeta={tasksMeta || []}
-          handleUpdateTaskStatus={handleUpdateTaskStatus}
-          onRowClick={(params) => {
-            // append taskId to url params
-            handleNavigate(params.row.id);
-            setSelectedTaskId(params.row.id);
-            setSelectedTask(params.row);
-            setShowViewDialog(true);
-          }}
-          handleEdit={(task) => {
-            handleNavigate(task.id);
-            setSelectedTaskId(task.id);
-            setSelectedTask(task);
-            setShowUpdateDialog(true);
-          }}
-          handleDelete={(task) => {
-            setSelectedTask(task);
-            setShowDeleteConfirm(true);
-          }}
-          handleCommentClick={handleCommentClick}
-        />
+        {isFiltering ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+              <p className="text-sm text-gray-600">Applying filters...</p>
+            </div>
+          </div>
+        ) : (
+          <TaskTable
+            tasks={serverTasks || tasks || []}
+            tasksMeta={tasksMeta || []}
+            handleUpdateTaskStatus={handleUpdateTaskStatus}
+            onRowClick={(params) => {
+              // append taskId to url params
+              handleNavigate(params.row.id);
+              setSelectedTaskId(params.row.id);
+              setSelectedTask(params.row);
+              setShowViewDialog(true);
+            }}
+            handleEdit={(task) => {
+              handleNavigate(task.id);
+              setSelectedTaskId(task.id);
+              setSelectedTask(task);
+              setShowUpdateDialog(true);
+            }}
+            handleDelete={(task) => {
+              setSelectedTask(task);
+              setShowDeleteConfirm(true);
+            }}
+            handleCommentClick={handleCommentClick}
+          />
+        )}
       </div>
 
       {/* View */}

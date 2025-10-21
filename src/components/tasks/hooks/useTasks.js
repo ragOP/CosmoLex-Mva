@@ -65,10 +65,50 @@ export const useTasks = () => {
     mutationFn: (searchData) => searchTask(searchData),
   });
 
-  // Filter tasks
+  // Filter tasks with optimized query caching
   const filterTasksMutation = useMutation({
     mutationFn: (queryParams) => filterTask(queryParams),
+    onSuccess: (data, queryParams) => {
+      // Cache the filtered results with the query params as key
+      queryClient.setQueryData(['filteredTasks', queryParams], data);
+    },
   });
+
+  // Get filtered tasks with caching and debouncing
+  const getFilteredTasks = useCallback(
+    async (queryParams) => {
+      const queryKey = ['filteredTasks', queryParams];
+
+      // Check if we already have cached data
+      const cachedData = queryClient.getQueryData(queryKey);
+      if (cachedData) {
+        return cachedData;
+      }
+
+      // If not cached, fetch and cache the data
+      const data = await filterTask(queryParams);
+      queryClient.setQueryData(queryKey, data);
+      return data;
+    },
+    [queryClient]
+  );
+
+  // Debounced filter function for better UX
+  const debouncedFilterTasks = useCallback(
+    (queryParams, delay = 300) => {
+      return new Promise((resolve, reject) => {
+        setTimeout(async () => {
+          try {
+            const data = await getFilteredTasks(queryParams);
+            resolve(data);
+          } catch (error) {
+            reject(error);
+          }
+        }, delay);
+      });
+    },
+    [getFilteredTasks]
+  );
 
   // Create Task
   const createTaskMutation = useMutation({
@@ -308,6 +348,8 @@ export const useTasks = () => {
     // Mutations
     searchTasks: searchTasksMutation.mutateAsync,
     filterTasks: filterTasksMutation.mutateAsync,
+    getFilteredTasks, // Optimized cached filtering
+    debouncedFilterTasks, // Debounced filtering for better UX
     createTask: createTaskMutation.mutateAsync,
     updateTask: updateTaskMutation.mutateAsync,
     updateStatus: updateStatusMutation.mutateAsync,
