@@ -9,6 +9,8 @@ import { noFilterColumns } from '@/utils/noFilterColumns';
 import { truncateStr } from '@/utils/truncateStr';
 import { getTableWidth } from '@/utils/isMobile';
 import { getProfilePictureUrl, getUserInitials } from '@/utils/profilePicture';
+import PermissionGuard from '@/components/auth/PermissionGuard';
+import { usePermission } from '@/utils/usePermission';
 
 const UsersTable = ({
   users = [],
@@ -18,6 +20,13 @@ const UsersTable = ({
   handleStatusChange,
 }) => {
   const [userData, setUserData] = useState([]);
+
+  // Permission checks
+  const { hasPermission } = usePermission();
+  const canShowUser = hasPermission('users.show');
+  const canUpdateUser = hasPermission('users.update');
+  const canDeleteUser = hasPermission('users.delete');
+  const canUpdateUserStatus = hasPermission('users.status.update');
 
   const columns = [
     {
@@ -145,12 +154,14 @@ const UsersTable = ({
         if (!params) return null;
         return (
           <div className="w-full h-full flex items-center justify-start">
-            <Switch
-              checked={params.value}
-              onChange={(e) =>
-                handleStatusChange(params.row.id, e.target.checked)
-              }
-            />
+            <PermissionGuard permission="users.status.update">
+              <Switch
+                checked={params.value}
+                onChange={(e) =>
+                  handleStatusChange(params.row.id, e.target.checked)
+                }
+              />
+            </PermissionGuard>
           </div>
         );
       },
@@ -204,15 +215,17 @@ const UsersTable = ({
       renderCell: (params) => {
         if (!params || !params.row) return null;
         return (
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              onRowClick(params);
-            }}
-            className="cursor-pointer"
-          >
-            <Eye className="h-4 w-4" />
-          </IconButton>
+          <PermissionGuard permission="users.show">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                onRowClick(params);
+              }}
+              className="cursor-pointer"
+            >
+              <Eye className="h-4 w-4" />
+            </IconButton>
+          </PermissionGuard>
         );
       },
     },
@@ -229,21 +242,23 @@ const UsersTable = ({
         if (!params || !params.row) return null;
         return (
           <div className="w-full h-full flex items-center justify-center">
-            {params?.row?.is_editable !== false ? (
-              <IconButton
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEdit(params.row);
-                }}
-                className="cursor-pointer"
-              >
-                <Pencil className="h-4 w-4 text-[#6366F1]" />
-              </IconButton>
-            ) : (
-              <IconButton className="cursor-pointer">
-                <CircleOff className="h-4 w-4 text-[#6366F1]" />
-              </IconButton>
-            )}
+            <PermissionGuard permission="users.update">
+              {params?.row?.is_editable !== false ? (
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEdit(params.row);
+                  }}
+                  className="cursor-pointer"
+                >
+                  <Pencil className="h-4 w-4 text-[#6366F1]" />
+                </IconButton>
+              ) : (
+                <IconButton className="cursor-pointer">
+                  <CircleOff className="h-4 w-4 text-[#6366F1]" />
+                </IconButton>
+              )}
+            </PermissionGuard>
           </div>
         );
       },
@@ -261,21 +276,23 @@ const UsersTable = ({
         if (!params || !params.row) return null;
         return (
           <div className="w-full h-full flex items-center justify-center">
-            {params?.row?.is_deletable !== false ? (
-              <IconButton
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(params.row);
-                }}
-                className="cursor-pointer"
-              >
-                <Trash2 className="h-4 w-4 text-red-500" />
-              </IconButton>
-            ) : (
-              <IconButton className="cursor-pointer">
-                <CircleOff className="h-4 w-4" />
-              </IconButton>
-            )}
+            <PermissionGuard permission="users.delete">
+              {params?.row?.is_deletable !== false ? (
+                <IconButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(params.row);
+                  }}
+                  className="cursor-pointer"
+                >
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </IconButton>
+              ) : (
+                <IconButton className="cursor-pointer">
+                  <CircleOff className="h-4 w-4" />
+                </IconButton>
+              )}
+            </PermissionGuard>
           </div>
         );
       },

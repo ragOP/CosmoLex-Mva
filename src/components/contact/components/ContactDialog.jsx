@@ -24,6 +24,7 @@ import {
 } from '@mui/material';
 import { useContact } from '../hooks/useContact';
 import PrimaryAddressConfirmDialog from './PrimaryAddressConfirmDialog';
+import PermissionGuard from '@/components/auth/PermissionGuard';
 
 const defaultFields = {
   nature: '',
@@ -635,19 +636,21 @@ export default function ContactDialog({
                         className="text-xs"
                       />
                     </Stack>
-                    <Tooltip title="Remove Address">
-                      <IconButton
-                        onClick={() => {
-                          console.log(
-                            '[DEBUG] Removing address at index:',
-                            idx
-                          );
-                          remove(idx);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </IconButton>
-                    </Tooltip>
+                    <PermissionGuard permission="contacts.addresses.delete">
+                      <Tooltip title="Remove Address">
+                        <IconButton
+                          onClick={() => {
+                            console.log(
+                              '[DEBUG] Removing address at index:',
+                              idx
+                            );
+                            remove(idx);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </IconButton>
+                      </Tooltip>
+                    </PermissionGuard>
                   </div>
                 ))}
 

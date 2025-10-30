@@ -30,6 +30,7 @@ import {
   Chip,
 } from '@mui/material';
 import PrimaryAddressConfirmDialog from '@/components/contact/components/PrimaryAddressConfirmDialog';
+import PermissionGuard from '@/components/auth/PermissionGuard';
 
 export default function CreateContactDialog({ open, setOpen, setValueFn }) {
   const { data: contactMeta } = useQuery({
@@ -578,19 +579,21 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
                         className="text-xs"
                       />
                     </Stack>
-                    <Tooltip title="Remove Address">
-                      <IconButton
-                        onClick={() => {
-                          console.log(
-                            '[DEBUG] Removing address at index:',
-                            idx
-                          );
-                          remove(idx);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </IconButton>
-                    </Tooltip>
+                    <PermissionGuard permission="contacts.addresses.delete">
+                      <Tooltip title="Remove Address">
+                        <IconButton
+                          onClick={() => {
+                            console.log(
+                              '[DEBUG] Removing address at index:',
+                              idx
+                            );
+                            remove(idx);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </IconButton>
+                      </Tooltip>
+                    </PermissionGuard>
                   </div>
                 ))}
 

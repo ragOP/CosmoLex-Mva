@@ -7,6 +7,7 @@ import { useEvents } from '@/components/calendar/hooks/useEvent';
 import moment from 'moment';
 import isArrayWithValues from '@/utils/isArrayWithValues';
 import DeleteEventDialog from '@/components/calendar/components/deleteEventDialog';
+import PermissionGuard from '@/components/auth/PermissionGuard';
 
 const CalendarPage = () => {
   const navigate = useNavigate();
@@ -144,36 +145,40 @@ const CalendarPage = () => {
         handleUpdateEventTime={handleUpdateEventTime}
       />
 
-      <NewEventDialog
-        open={open}
-        onClose={
-          event
-            ? () => {
-                setOpen(false);
-                setEvent(null);
-                handleNavigate(null);
-              }
-            : () => setOpen(false)
-        }
-        selectedDateRange={selectedDateRange}
-        event={event ? event : null}
-        mode={event ? 'update' : 'create'}
-        onDelete={() => setShowDeleteConfirm(true)}
-        showDeleteConfirm={showDeleteConfirm}
-      />
+      <PermissionGuard permission="events.create">
+        <NewEventDialog
+          open={open}
+          onClose={
+            event
+              ? () => {
+                  setOpen(false);
+                  setEvent(null);
+                  handleNavigate(null);
+                }
+              : () => setOpen(false)
+          }
+          selectedDateRange={selectedDateRange}
+          event={event ? event : null}
+          mode={event ? 'update' : 'create'}
+          onDelete={() => setShowDeleteConfirm(true)}
+          showDeleteConfirm={showDeleteConfirm}
+        />
+      </PermissionGuard>
 
-      <DeleteEventDialog
-        event={event ? event : null}
-        open={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={() => {
-          handleDeleteEvent(event.id);
-          setShowDeleteConfirm(false);
-          setOpen(false);
-          handleNavigate(null);
-        }}
-        isDeleting={isDeleting}
-      />
+      <PermissionGuard permission="events.delete" fallback={<></>}>
+        <DeleteEventDialog
+          event={event ? event : null}
+          open={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          onConfirm={() => {
+            handleDeleteEvent(event.id);
+            setShowDeleteConfirm(false);
+            setOpen(false);
+            handleNavigate(null);
+          }}
+          isDeleting={isDeleting}
+        />
+      </PermissionGuard>
     </div>
   );
 };

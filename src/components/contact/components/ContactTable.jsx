@@ -17,6 +17,8 @@ import getMetaOptions from '@/utils/getMetaFields';
 import { noFilterColumns } from '@/utils/noFilterColumns';
 import { getTableWidth } from '@/utils/isMobile';
 import { truncateStr } from '@/utils/truncateStr';
+import PermissionGuard from '@/components/auth/PermissionGuard';
+import { usePermission } from '@/utils/usePermission';
 
 const ContactTable = ({
   contacts = [],
@@ -25,6 +27,16 @@ const ContactTable = ({
   handleDelete,
 }) => {
   const [contactData, setContactData] = useState([]);
+
+  // Check if user has show permission
+  const { hasPermission } = usePermission();
+  const canShowContact = hasPermission('contacts.show');
+
+  const handleRowClick = (params) => {
+    if (canShowContact) {
+      onRowClick(params);
+    }
+  };
 
   const columns = [
     {
@@ -154,15 +166,17 @@ const ContactTable = ({
       align: 'center',
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-center">
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit(params.row);
-            }}
-            className="cursor-pointer"
-          >
-            <Pencil className="h-4 w-4 text-[#6366F1]" />
-          </IconButton>
+          <PermissionGuard permission="contacts.update">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(params.row);
+              }}
+              className="cursor-pointer"
+            >
+              <Pencil className="h-4 w-4 text-[#6366F1]" />
+            </IconButton>
+          </PermissionGuard>
         </div>
       ),
     },
@@ -177,15 +191,17 @@ const ContactTable = ({
       align: 'center',
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-center">
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(params.row);
-            }}
-            className="cursor-pointer"
-          >
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </IconButton>
+          <PermissionGuard permission="contacts.delete">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(params.row);
+              }}
+              className="cursor-pointer"
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </IconButton>
+          </PermissionGuard>
         </div>
       ),
     },
@@ -214,6 +230,7 @@ const ContactTable = ({
           rowsPerPageOptions={[5, 10]}
           slots={{ toolbar: GridToolbar }}
           getRowId={(row) => row.id}
+          onRowClick={canShowContact ? onRowClick : undefined}
           sx={{
             padding: 2,
             border: 'none',

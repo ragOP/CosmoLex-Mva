@@ -8,6 +8,7 @@ import { setQueryParam } from '@/utils/setQueryParam';
 import { useSearchParams } from 'react-router-dom';
 import { useMatter } from '@/components/inbox/MatterContext';
 import { useSelector } from 'react-redux';
+import PermissionGuard from '@/components/auth/PermissionGuard';
 
 const CustomToolBar = ({
   onNavigate,
@@ -63,14 +64,16 @@ const CustomToolBar = ({
     >
       {/* Left Group */}
       <Box display="flex" gap={2} alignItems="center" className="w-fit">
-        <Button
-          variant="contained"
-          onClick={() => setOpen(true)}
-          className="flex flex-row w-fit items-center gap-2"
-        >
-          {/* <Plus className="w-4 h-4" /> */}
-          <span>New Event</span>
-        </Button>
+        <PermissionGuard permission="events.create">
+          <Button
+            variant="contained"
+            onClick={() => setOpen(true)}
+            className="flex flex-row w-fit items-center gap-2"
+          >
+            {/* <Plus className="w-4 h-4" /> */}
+            <span>New Event</span>
+          </Button>
+        </PermissionGuard>
 
         <Select
           value={selectedUser}

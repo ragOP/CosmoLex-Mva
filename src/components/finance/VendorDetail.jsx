@@ -24,12 +24,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import PermissionGuard from '@/components/auth/PermissionGuard';
+import { usePermission } from '@/utils/usePermission';
 
 const VendorDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const queryClient = useQueryClient();
+
+    // Permission checks
+    const { hasPermission } = usePermission();
+    const canShowVendor = hasPermission('vendors.show');
+    const canUpdateVendor = hasPermission('vendors.update');
+    const canDeleteVendor = hasPermission('vendors.delete');
+
     const [editMode, setEditMode] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [editData, setEditData] = useState({});
@@ -171,56 +180,82 @@ const VendorDetail = () => {
     }
 
     return (
-        <div className="px-2">
-            <Box sx={{ 
-                bgcolor: 'rgba(255, 255, 255, 0.5)', 
-                backdropFilter: 'blur(8px)',
-                borderRadius: 3, 
-                boxShadow: '0 4px 24px 0px rgba(0, 0, 0, 0.1)',
-                border: '1px solid rgba(226, 232, 240, 0.8)',
-                overflow: 'hidden'
-            }}>
-                {/* Header */}
-                <Box sx={{ 
-                    px: 3, 
-                    py: 2,
-                    borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between'
-                }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <IconButton onClick={handleBack} size="small">
-                            <ArrowLeft size={20} />
-                        </IconButton>
-                        <Typography variant="h5" sx={{ fontWeight: 600, color: '#374151' }}>
-                            Vendor Details
+        <PermissionGuard
+            permission="vendors.show"
+            fallback={
+                <div className="px-2">
+                    <Box
+                        sx={{
+                            bgcolor: 'rgba(255, 255, 255, 0.5)',
+                            backdropFilter: 'blur(8px)',
+                            borderRadius: 3,
+                            boxShadow: '0 4px 24px 0px rgba(0, 0, 0, 0.1)',
+                            border: '1px solid rgba(226, 232, 240, 0.8)',
+                            p: 4,
+                            textAlign: 'center',
+                        }}
+                    >
+                        <Typography variant="h6" color="error">
+                            You don't have permission to view vendor details.
                         </Typography>
                     </Box>
-
-                    {!editMode && (
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                            <IconButton 
-                                onClick={handleEdit}
-                                sx={{ 
-                                    color: '#7367F0',
-                                    '&:hover': { bgcolor: 'rgba(115, 103, 240, 0.1)' }
-                                }}
-                            >
-                                <Edit size={18} />
+                </div>
+            }
+        >
+            <div className="px-2">
+                <Box sx={{ 
+                    bgcolor: 'rgba(255, 255, 255, 0.5)', 
+                    backdropFilter: 'blur(8px)',
+                    borderRadius: 3, 
+                    boxShadow: '0 4px 24px 0px rgba(0, 0, 0, 0.1)',
+                    border: '1px solid rgba(226, 232, 240, 0.8)',
+                    overflow: 'hidden'
+                }}>
+                    {/* Header */}
+                    <Box sx={{ 
+                        px: 3, 
+                        py: 2,
+                        borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                    }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <IconButton onClick={handleBack} size="small">
+                                <ArrowLeft size={20} />
                             </IconButton>
-                            <IconButton 
-                                onClick={() => setDeleteDialogOpen(true)}
-                                sx={{ 
-                                    color: '#dc2626',
-                                    '&:hover': { bgcolor: 'rgba(220, 38, 38, 0.1)' }
-                                }}
-                            >
-                                <Trash2 size={18} />
-                            </IconButton>
+                            <Typography variant="h5" sx={{ fontWeight: 600, color: '#374151' }}>
+                                Vendor Details
+                            </Typography>
                         </Box>
-                    )}
-                </Box>
+
+                        {!editMode && (
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                <PermissionGuard permission="vendors.update">
+                                    <IconButton 
+                                        onClick={handleEdit}
+                                        sx={{ 
+                                            color: '#7367F0',
+                                            '&:hover': { bgcolor: 'rgba(115, 103, 240, 0.1)' }
+                                        }}
+                                    >
+                                        <Edit size={18} />
+                                    </IconButton>
+                                </PermissionGuard>
+                                <PermissionGuard permission="vendors.delete">
+                                    <IconButton 
+                                        onClick={() => setDeleteDialogOpen(true)}
+                                        sx={{ 
+                                            color: '#dc2626',
+                                            '&:hover': { bgcolor: 'rgba(220, 38, 38, 0.1)' }
+                                        }}
+                                    >
+                                        <Trash2 size={18} />
+                                    </IconButton>
+                                </PermissionGuard>
+                            </Box>
+                        )}
+                    </Box>
 
                 {/* Content */}
                 <Box sx={{ 
@@ -825,8 +860,9 @@ const VendorDetail = () => {
                         </Button>
                     </div>
                 </div>
-            </Dialog>
-        </div>
+                </Dialog>
+            </div>
+        </PermissionGuard>
     );
 };
 

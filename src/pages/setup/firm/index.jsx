@@ -4,6 +4,8 @@ import ShowFirmDialog from '@/components/setup/firm/ShowFirmDialog';
 import UpdateFirmDialog from '@/components/setup/firm/UpdateFirmDialog';
 import { getFirmMeta, updateFirmDetails } from '@/api/api_services/setup';
 import { useMutation } from '@tanstack/react-query';
+import PermissionGuard from '@/components/auth/PermissionGuard';
+import { usePermission } from '@/utils/usePermission';
 
 const FirmPage = () => {
   const [viewOpen, setViewOpen] = useState(false);
@@ -11,6 +13,15 @@ const FirmPage = () => {
   const [firmMeta, setFirmMeta] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+
+  // Permission checks
+  const { hasPermission } = usePermission();
+  const canViewMasters = hasPermission('masters.view');
+  const canCreateMasters = hasPermission('masters.create');
+  const canUpdateMasters = hasPermission('masters.update');
+  const canDeleteMasters = hasPermission('masters.delete');
+  const canShowMasters = hasPermission('masters.show');
+  const canUpdateStatus = hasPermission('masters.status.update');
 
   useEffect(() => {
     let isMounted = true;
@@ -60,30 +71,49 @@ const FirmPage = () => {
   };
 
   return (
-    <div className="p-4 h-full w-full">
-      <div className="mb-4">
-        <h1 className="text-xl font-bold text-[#40444D]">Firm</h1>
-        <p className="text-sm text-gray-500">View your firm details</p>
+    <PermissionGuard
+      permission="masters.view"
+      fallback={
+        <div className="p-4 h-full w-full">
+          <div className="mb-4">
+            <h1 className="text-xl font-bold text-[#40444D]">Firm</h1>
+            <p className="text-sm text-gray-500">View your firm details</p>
+          </div>
+          <div className="text-center py-8">
+            <p className="text-red-600">
+              You don't have permission to view masters.
+            </p>
+          </div>
+        </div>
+      }
+    >
+      <div className="p-4 h-full w-full">
+        <div className="mb-4">
+          <h1 className="text-xl font-bold text-[#40444D]">Firm</h1>
+          <p className="text-sm text-gray-500">View your firm details</p>
+        </div>
+        <FirmTable
+          onRowClick={canShowMasters ? handleRowView : undefined}
+          handleEdit={handleEdit}
+          reloadKey={reloadKey}
+        />
+        {canShowMasters && (
+          <ShowFirmDialog
+            open={viewOpen}
+            onClose={() => setViewOpen(false)}
+            firm={selectedFirm}
+            firmMeta={firmMeta}
+          />
+        )}
+        <UpdateFirmDialog
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          firm={selectedFirm}
+          onSubmit={handleSubmitFirm}
+          isLoading={isUpdating}
+        />
       </div>
-      <FirmTable
-        onRowClick={handleRowView}
-        handleEdit={handleEdit}
-        reloadKey={reloadKey}
-      />
-      <ShowFirmDialog
-        open={viewOpen}
-        onClose={() => setViewOpen(false)}
-        firm={selectedFirm}
-        firmMeta={firmMeta}
-      />
-      <UpdateFirmDialog
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        firm={selectedFirm}
-        onSubmit={handleSubmitFirm}
-        isLoading={isUpdating}
-      />
-    </div>
+    </PermissionGuard>
   );
 };
 

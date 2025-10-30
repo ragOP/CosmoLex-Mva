@@ -21,7 +21,7 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, X } from 'lucide-react';
 import { createMatterSchema } from '@/pages/matter/intake/schema/createMatterSchema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
@@ -30,6 +30,8 @@ import getContacts from '@/pages/matter/intake/helpers/getContacts';
 import searchContact from '@/pages/matter/intake/helpers/searchContact';
 import isArrayWithValues from '@/utils/isArrayWithValues';
 import { useNavigate } from 'react-router-dom';
+import { usePermission } from '@/utils/usePermission';
+import { toast } from 'sonner';
 
 export default function CreateMatterDialog({
   open = false,
@@ -39,6 +41,10 @@ export default function CreateMatterDialog({
   const navigate = useNavigate();
   const [selectedContactType, setSelectedContactType] = useState(null);
   const [searchContactQuery, setSearchContactQuery] = useState('');
+
+  // Permissions
+  const { hasPermission, isAdmin } = usePermission();
+  const canCreateMatter = isAdmin || hasPermission('matters.intake.store');
 
   const { data: matterMeta } = useQuery({
     queryKey: ['matterMeta'],
@@ -159,181 +165,220 @@ export default function CreateMatterDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <form
-          onSubmit={handleSubmit(() => {
-            onSubmit(getValues());
-            reset();
-            onClose();
-          })}
-          className="space-y-4"
-        >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {formFields.map(({ label, name, type, required, options }) => (
-              <div key={name}>
-                {type != 'checkbox' && (
-                  <Label className="text-[#40444D] font-semibold mb-2">
-                    {label}
-                  </Label>
-                )}
+        {/* Permission Denied Message */}
+        {!canCreateMatter && (
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <X className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+              Access Denied
+            </h3>
+            <p className="text-base text-gray-600 mb-1 text-center">
+              You do not have permission to create matters.
+            </p>
+            <p className="text-sm text-gray-500 text-center">
+              Please contact your administrator if you need access to this
+              feature.
+            </p>
+            <DialogFooter className="pt-4">
+              <DialogClose asChild>
+                <Button
+                  type="button"
+                  className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
+                >
+                  Close
+                </Button>
+              </DialogClose>
+            </DialogFooter>
+          </div>
+        )}
 
-                {type === 'select' ? (
-                  <Controller
-                    control={control}
-                    name={name}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder={`Select ${label}`} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectGroup>
-                            {options.map((option) => (
-                              <SelectItem
-                                key={option.id}
-                                value={
-                                  name === 'assignee_id' || name === 'owner_id'
-                                    ? option.id
-                                    : option.name
-                                }
-                              >
-                                {option.name}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                ) : type === 'checkbox' ? (
-                  <div className="flex items-center space-x-2">
+        {canCreateMatter && (
+          <form
+            onSubmit={handleSubmit(() => {
+              // Check permission before submitting
+              if (!canCreateMatter) {
+                toast.error('You do not have permission to create matters.');
+                return;
+              }
+              onSubmit(getValues());
+              reset();
+              onClose();
+            })}
+            className="space-y-4"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {formFields.map(({ label, name, type, required, options }) => (
+                <div key={name}>
+                  {type != 'checkbox' && (
+                    <Label className="text-[#40444D] font-semibold mb-2">
+                      {label}
+                    </Label>
+                  )}
+
+                  {type === 'select' ? (
                     <Controller
                       control={control}
                       name={name}
                       render={({ field }) => (
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          className={`border ${
-                            errors[name] ? 'border-red-500' : ''
-                          }`}
-                        />
-                      )}
-                    />
-                    <Label className="text-[#40444D] font-semibold">
-                      {label}
-                    </Label>
-                  </div>
-                ) : (
-                  <Controller
-                    control={control}
-                    name={name}
-                    render={({ field }) => <Input type={type} {...field} />}
-                  />
-                )}
-                {errors[name] && (
-                  <p className="text-xs text-red-500">{errors[name].message}</p>
-                )}
-              </div>
-            ))}
-
-            <div className="relative space-y-2">
-              <Label className="text-[#40444D] font-semibold block">
-                Search Contact
-              </Label>
-
-              <Controller
-                control={control}
-                name="contacts_id"
-                render={({ field }) => (
-                  <>
-                    <Input
-                      placeholder="Search by name or email..."
-                      value={searchContactQuery}
-                      onChange={(e) => setSearchContactQuery(e.target.value)}
-                      disabled={!selectedContactType}
-                    />
-                    <p
-                      onClick={() => navigate('/dashboard/contacts')}
-                      className="text-[0.6rem] text-[#22d3ee] hover:underline cursor-pointer text-end"
-                    >
-                      Create a new contact
-                    </p>
-
-                    {searchContactQuery &&
-                      isArrayWithValues(searchContactData) && (
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
-                          disabled={!selectedContactType}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select Contact" />
+                            <SelectValue placeholder={`Select ${label}`} />
                           </SelectTrigger>
                           <SelectContent>
-                            {searchContactData?.map((contact) => (
-                              <SelectItem key={contact.id} value={contact.id}>
-                                {contact.prefix} {contact.first_name}
-                                {contact.middle_name} {contact.last_name}
-                              </SelectItem>
-                            ))}
+                            <SelectGroup>
+                              {options.map((option) => (
+                                <SelectItem
+                                  key={option.id}
+                                  value={
+                                    name === 'assignee_id' ||
+                                    name === 'owner_id'
+                                      ? option.id
+                                      : option.name
+                                  }
+                                >
+                                  {option.name}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
                           </SelectContent>
                         </Select>
                       )}
-                  </>
+                    />
+                  ) : type === 'checkbox' ? (
+                    <div className="flex items-center space-x-2">
+                      <Controller
+                        control={control}
+                        name={name}
+                        render={({ field }) => (
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className={`border ${
+                              errors[name] ? 'border-red-500' : ''
+                            }`}
+                          />
+                        )}
+                      />
+                      <Label className="text-[#40444D] font-semibold">
+                        {label}
+                      </Label>
+                    </div>
+                  ) : (
+                    <Controller
+                      control={control}
+                      name={name}
+                      render={({ field }) => <Input type={type} {...field} />}
+                    />
+                  )}
+                  {errors[name] && (
+                    <p className="text-xs text-red-500">
+                      {errors[name].message}
+                    </p>
+                  )}
+                </div>
+              ))}
+
+              <div className="relative space-y-2">
+                <Label className="text-[#40444D] font-semibold block">
+                  Search Contact
+                </Label>
+
+                <Controller
+                  control={control}
+                  name="contacts_id"
+                  render={({ field }) => (
+                    <>
+                      <Input
+                        placeholder="Search by name or email..."
+                        value={searchContactQuery}
+                        onChange={(e) => setSearchContactQuery(e.target.value)}
+                        disabled={!selectedContactType}
+                      />
+                      <p
+                        onClick={() => navigate('/dashboard/contacts')}
+                        className="text-[0.6rem] text-[#22d3ee] hover:underline cursor-pointer text-end"
+                      >
+                        Create a new contact
+                      </p>
+
+                      {searchContactQuery &&
+                        isArrayWithValues(searchContactData) && (
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            disabled={!selectedContactType}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select Contact" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {searchContactData?.map((contact) => (
+                                <SelectItem key={contact.id} value={contact.id}>
+                                  {contact.prefix} {contact.first_name}
+                                  {contact.middle_name} {contact.last_name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                    </>
+                  )}
+                />
+                {errors.contacts_id && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.contacts_id.message}
+                  </p>
                 )}
-              />
-              {errors.contacts_id && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.contacts_id.message}
-                </p>
-              )}
+              </div>
+
+              <div>
+                <Label className="text-[#40444D] font-semibold mb-2 block">
+                  Select Contact Type
+                </Label>
+                <Select
+                  onValueChange={(value) => {
+                    setSelectedContactType(value);
+                    setSearchContactQuery(''); // reset search when type changes
+                  }}
+                  value={selectedContactType}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Contact Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {contactType.map((contact) => (
+                      <SelectItem key={contact.id} value={contact.name}>
+                        {contact.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div>
-              <Label className="text-[#40444D] font-semibold mb-2 block">
-                Select Contact Type
-              </Label>
-              <Select
-                onValueChange={(value) => {
-                  setSelectedContactType(value);
-                  setSearchContactQuery(''); // reset search when type changes
-                }}
-                value={selectedContactType}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Contact Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {contactType.map((contact) => (
-                    <SelectItem key={contact.id} value={contact.name}>
-                      {contact.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <DialogFooter className="pt-4 flex justify-end gap-4">
-            <DialogClose asChild>
+            <DialogFooter className="pt-4 flex justify-end gap-4">
+              <DialogClose asChild>
+                <Button
+                  type="button"
+                  className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
+                >
+                  Cancel
+                </Button>
+              </DialogClose>
               <Button
-                type="button"
-                className="bg-gray-300 text-black hover:bg-gray-400 cursor-pointer"
+                type="submit"
+                className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
               >
-                Cancel
+                Create Task
               </Button>
-            </DialogClose>
-            <Button
-              type="submit"
-              className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
-            >
-              Create Task
-            </Button>
-          </DialogFooter>
-        </form>
+            </DialogFooter>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );

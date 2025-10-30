@@ -12,7 +12,8 @@ import TaskDialog from '@/components/dialogs/TaskDialog';
 import ShowTaskDialog from '@/components/tasks/ShowTaskDialog';
 import DeleteTaskDialog from '@/components/tasks/DeleteTaskDialog';
 import TaskTable from '@/components/tasks/TaskTable';
-import { Loader2, Plus, Filter as FilterIcon } from 'lucide-react';
+import { Loader2, Plus, Filter as FilterIcon, X } from 'lucide-react';
+import BreadCrumb from '@/components/BreadCrumb';
 import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTasks } from '@/components/tasks/hooks/useTasks';
@@ -35,6 +36,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import PermissionGuard from '@/components/auth/PermissionGuard';
+import { usePermission } from '@/utils/usePermission';
 
 const TasksPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -49,7 +52,6 @@ const TasksPage = () => {
 
   // Get user data from Redux store
   const user = useSelector((state) => state.auth.user);
-  const isAdmin = user?.role_id === 1;
 
   // Get matter slug from URL params (assuming notes are matter-specific)
   const matterSlug = searchParams.get('slugId');
@@ -66,6 +68,13 @@ const TasksPage = () => {
     isDeleting,
     getFilteredTasks,
   } = useTasks();
+
+  // Permissions
+  const { hasPermission, isAdmin } = usePermission();
+  const canCreateTask = isAdmin || hasPermission('tasks.create');
+  const canUpdateTask = isAdmin || hasPermission('tasks.update');
+  const canDeleteTask = isAdmin || hasPermission('tasks.delete');
+  const canCommentTask = isAdmin || hasPermission('task-comments.create');
 
   // Use custom hook for filter management
   const {
@@ -164,8 +173,11 @@ const TasksPage = () => {
   );
 
   const handleUpdateTaskStatus = useCallback(
-    (id, status) => updateStatus({ taskId: id, status_id: parseInt(status) }),
-    [updateStatus]
+    (id, status) => {
+      if (!canUpdateTask) return;
+      return updateStatus({ taskId: id, status_id: parseInt(status) });
+    },
+    [updateStatus, canUpdateTask]
   );
 
   const handleCommentClick = useCallback(
@@ -224,405 +236,472 @@ const TasksPage = () => {
   }
 
   return (
-    <div className="flex flex-col gap-4 h-full w-full overflow-auto">
-      <div className="flex justify-between w-full items-center px-4 pt-4">
-        <p className="text-2xl font-bold">
-          Tasks ({(serverTasks || tasks || []).length})
-        </p>
-        <div className="flex items-center gap-3">
-          <Dialog>
-            <DialogTrigger asChild>
-              <UIButton
-                variant="outline"
-                className={`h-10 px-4 flex items-center gap-2 transition-all duration-200 ${
-                  activeFiltersCount > 0
-                    ? 'border-primary-500 bg-primary-50 text-primary-700 shadow-sm'
-                    : 'hover:bg-gray-50'
-                }`}
-              >
-                <FilterIcon className="h-4 w-4" />
-                {activeFiltersCount
-                  ? `Filters (${activeFiltersCount})`
-                  : 'Filter'}
-                {activeFiltersCount > 0 && (
-                  <span className="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-white bg-primary-500 rounded-full">
-                    {activeFiltersCount}
-                  </span>
-                )}
-              </UIButton>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl w-full mx-4">
-              <DialogHeader className="pb-4">
-                <DialogTitle className="text-xl font-semibold text-gray-900">
-                  Filter Tasks
-                </DialogTitle>
-                {activeFiltersCount > 0 && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    {activeFiltersCount} filter
-                    {activeFiltersCount > 1 ? 's' : ''} applied
-                  </p>
-                )}
-              </DialogHeader>
+    <PermissionGuard
+      permission="tasks.view"
+      fallback={
+        <div className="px-4 pb-2 flex flex-col gap-2 h-full overflow-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="pl-2">
+              <h1 className="text-xl font-bold text-gray-900">Tasks</h1>
+              <p className="text-base text-gray-600">
+                Manage and track your tasks efficiently
+              </p>
+            </div>
+          </div>
 
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 block">
-                      Client
-                    </label>
-                    <Select
-                      value={
-                        tempFilters.client_name === ''
-                          ? '__all__'
-                          : tempFilters.client_name
-                      }
-                      onValueChange={(val) =>
-                        updateFilter(
-                          'client_name',
-                          val === '__all__' ? '' : val
-                        )
-                      }
-                      disabled={tasksLoading}
-                    >
-                      <SelectTrigger className="h-10 w-full">
-                        <SelectValue placeholder="All clients" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-64 overflow-auto">
-                        <SelectItem value="__all__">All clients</SelectItem>
-                        {clientOptions.map((name) => (
-                          <SelectItem key={name} value={name}>
-                            {name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+          {/* Permission Denied Message */}
+          <div className="bg-white/50 backdrop-blur-md border border-gray-200/80 shadow-lg gap-4 p-8 rounded-lg flex flex-col items-center justify-center h-full">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <X className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                Access Denied
+              </h3>
+              <p className="text-base text-gray-600 mb-1">
+                You do not have permission to view tasks.
+              </p>
+              <p className="text-sm text-gray-500">
+                Please contact your administrator if you need access to this
+                feature.
+              </p>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <div className="flex flex-col gap-4 h-full w-full overflow-auto">
+        <div className="flex justify-between w-full items-center px-4 pt-4">
+          <p className="text-2xl font-bold">
+            Tasks ({(serverTasks || tasks || []).length})
+          </p>
+          <div className="flex items-center gap-3">
+            <Dialog>
+              <DialogTrigger asChild>
+                <UIButton
+                  variant="outline"
+                  className={`h-10 px-4 flex items-center gap-2 transition-all duration-200 ${
+                    activeFiltersCount > 0
+                      ? 'border-primary-500 bg-primary-50 text-primary-700 shadow-sm'
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <FilterIcon className="h-4 w-4" />
+                  {activeFiltersCount
+                    ? `Filters (${activeFiltersCount})`
+                    : 'Filter'}
+                  {activeFiltersCount > 0 && (
+                    <span className="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-white bg-primary-500 rounded-full">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                </UIButton>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl w-full mx-4">
+                <DialogHeader className="pb-4">
+                  <DialogTitle className="text-xl font-semibold text-gray-900">
+                    Filter Tasks
+                  </DialogTitle>
+                  {activeFiltersCount > 0 && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      {activeFiltersCount} filter
+                      {activeFiltersCount > 1 ? 's' : ''} applied
+                    </p>
+                  )}
+                </DialogHeader>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 block">
-                      Priority
-                    </label>
-                    <Select
-                      value={
-                        tempFilters.priority_id === ''
-                          ? '__all__'
-                          : tempFilters.priority_id
-                      }
-                      onValueChange={(val) =>
-                        updateFilter(
-                          'priority_id',
-                          val === '__all__' ? '' : val
-                        )
-                      }
-                      disabled={tasksLoading}
-                    >
-                      <SelectTrigger className="h-10 w-full">
-                        <SelectValue placeholder="All priorities" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__all__">All priorities</SelectItem>
-                        {priorityOptions.map((p) => (
-                          <SelectItem key={p.id} value={p.id.toString()}>
-                            {p.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 block">
-                      Status
-                    </label>
-                    <Select
-                      value={
-                        tempFilters.status_id === ''
-                          ? '__all__'
-                          : tempFilters.status_id
-                      }
-                      onValueChange={(val) =>
-                        updateFilter('status_id', val === '__all__' ? '' : val)
-                      }
-                      disabled={tasksLoading}
-                    >
-                      <SelectTrigger className="h-10 w-full">
-                        <SelectValue placeholder="All statuses" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="__all__">All statuses</SelectItem>
-                        {statusOptions.map((s) => (
-                          <SelectItem key={s.id} value={s.id.toString()}>
-                            {s.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 block">
-                      Assignee
-                    </label>
-                    <Select
-                      value={
-                        tempFilters.assigned_to === ''
-                          ? '__all__'
-                          : tempFilters.assigned_to
-                      }
-                      onValueChange={(val) =>
-                        updateFilter(
-                          'assigned_to',
-                          val === '__all__' ? '' : val
-                        )
-                      }
-                      disabled={tasksLoading}
-                    >
-                      <SelectTrigger className="h-10 w-full">
-                        <SelectValue placeholder="All assignees" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-64 overflow-auto">
-                        <SelectItem value="__all__">All assignees</SelectItem>
-                        {assigneeOptions.map((a) => (
-                          <SelectItem key={a.id} value={a.name}>
-                            {a.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 block">
-                      Assigned By
-                    </label>
-                    <Select
-                      value={
-                        tempFilters.assigned_by === ''
-                          ? '__all__'
-                          : tempFilters.assigned_by
-                      }
-                      onValueChange={(val) =>
-                        updateFilter(
-                          'assigned_by',
-                          val === '__all__' ? '' : val
-                        )
-                      }
-                      disabled={tasksLoading}
-                    >
-                      <SelectTrigger className="h-10 w-full">
-                        <SelectValue placeholder="All assigned by" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-64 overflow-auto">
-                        <SelectItem value="__all__">All assigned by</SelectItem>
-                        {assignedByOptions.map((a) => (
-                          <SelectItem key={a.id} value={a.name}>
-                            {a.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 block">
-                      From Date
-                    </label>
-                    <Input
-                      type="date"
-                      value={tempFilters.from_date}
-                      onChange={(e) =>
-                        updateFilter('from_date', e.target.value)
-                      }
-                      className="h-10 w-full"
-                      placeholder="Select from date"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700 block">
-                      To Date
-                    </label>
-                    <Input
-                      type="date"
-                      value={tempFilters.to_date}
-                      onChange={(e) => updateFilter('to_date', e.target.value)}
-                      className="h-10 w-full"
-                      placeholder="Select to date"
-                    />
-                  </div>
-
-                  {isAdmin && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-gray-700 block">
-                        Administrator
+                        Client
                       </label>
                       <Select
                         value={
-                          tempFilters.administrator === ''
+                          tempFilters.client_name === ''
                             ? '__all__'
-                            : tempFilters.administrator
+                            : tempFilters.client_name
                         }
                         onValueChange={(val) =>
                           updateFilter(
-                            'administrator',
+                            'client_name',
                             val === '__all__' ? '' : val
                           )
                         }
                         disabled={tasksLoading}
                       >
                         <SelectTrigger className="h-10 w-full">
-                          <SelectValue placeholder="All" />
+                          <SelectValue placeholder="All clients" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="__all__">All</SelectItem>
-                          {administratorOptions.map((option) => (
-                            <SelectItem key={option.id} value={option.id}>
-                              {option.name}
+                        <SelectContent className="max-h-64 overflow-auto">
+                          <SelectItem value="__all__">All clients</SelectItem>
+                          {clientOptions.map((name) => (
+                            <SelectItem key={name} value={name}>
+                              {name}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
-                  )}
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 block">
+                        Priority
+                      </label>
+                      <Select
+                        value={
+                          tempFilters.priority_id === ''
+                            ? '__all__'
+                            : tempFilters.priority_id
+                        }
+                        onValueChange={(val) =>
+                          updateFilter(
+                            'priority_id',
+                            val === '__all__' ? '' : val
+                          )
+                        }
+                        disabled={tasksLoading}
+                      >
+                        <SelectTrigger className="h-10 w-full">
+                          <SelectValue placeholder="All priorities" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__all__">
+                            All priorities
+                          </SelectItem>
+                          {priorityOptions.map((p) => (
+                            <SelectItem key={p.id} value={p.id.toString()}>
+                              {p.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 block">
+                        Status
+                      </label>
+                      <Select
+                        value={
+                          tempFilters.status_id === ''
+                            ? '__all__'
+                            : tempFilters.status_id
+                        }
+                        onValueChange={(val) =>
+                          updateFilter(
+                            'status_id',
+                            val === '__all__' ? '' : val
+                          )
+                        }
+                        disabled={tasksLoading}
+                      >
+                        <SelectTrigger className="h-10 w-full">
+                          <SelectValue placeholder="All statuses" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__all__">All statuses</SelectItem>
+                          {statusOptions.map((s) => (
+                            <SelectItem key={s.id} value={s.id.toString()}>
+                              {s.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 block">
+                        Assignee
+                      </label>
+                      <Select
+                        value={
+                          tempFilters.assigned_to === ''
+                            ? '__all__'
+                            : tempFilters.assigned_to
+                        }
+                        onValueChange={(val) =>
+                          updateFilter(
+                            'assigned_to',
+                            val === '__all__' ? '' : val
+                          )
+                        }
+                        disabled={tasksLoading}
+                      >
+                        <SelectTrigger className="h-10 w-full">
+                          <SelectValue placeholder="All assignees" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-64 overflow-auto">
+                          <SelectItem value="__all__">All assignees</SelectItem>
+                          {assigneeOptions.map((a) => (
+                            <SelectItem key={a.id} value={a.name}>
+                              {a.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 block">
+                        Assigned By
+                      </label>
+                      <Select
+                        value={
+                          tempFilters.assigned_by === ''
+                            ? '__all__'
+                            : tempFilters.assigned_by
+                        }
+                        onValueChange={(val) =>
+                          updateFilter(
+                            'assigned_by',
+                            val === '__all__' ? '' : val
+                          )
+                        }
+                        disabled={tasksLoading}
+                      >
+                        <SelectTrigger className="h-10 w-full">
+                          <SelectValue placeholder="All assigned by" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-64 overflow-auto">
+                          <SelectItem value="__all__">
+                            All assigned by
+                          </SelectItem>
+                          {assignedByOptions.map((a) => (
+                            <SelectItem key={a.id} value={a.name}>
+                              {a.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 block">
+                        From Date
+                      </label>
+                      <Input
+                        type="date"
+                        value={tempFilters.from_date}
+                        onChange={(e) =>
+                          updateFilter('from_date', e.target.value)
+                        }
+                        className="h-10 w-full"
+                        placeholder="Select from date"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 block">
+                        To Date
+                      </label>
+                      <Input
+                        type="date"
+                        value={tempFilters.to_date}
+                        onChange={(e) =>
+                          updateFilter('to_date', e.target.value)
+                        }
+                        className="h-10 w-full"
+                        placeholder="Select to date"
+                      />
+                    </div>
+
+                    <PermissionGuard permission="tasks.view" fallback={null}>
+                      {isAdmin && (
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-gray-700 block">
+                            Administrator
+                          </label>
+                          <Select
+                            value={
+                              tempFilters.administrator === ''
+                                ? '__all__'
+                                : tempFilters.administrator
+                            }
+                            onValueChange={(val) =>
+                              updateFilter(
+                                'administrator',
+                                val === '__all__' ? '' : val
+                              )
+                            }
+                            disabled={tasksLoading}
+                          >
+                            <SelectTrigger className="h-10 w-full">
+                              <SelectValue placeholder="All" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__all__">All</SelectItem>
+                              {administratorOptions.map((option) => (
+                                <SelectItem key={option.id} value={option.id}>
+                                  {option.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                    </PermissionGuard>
+                  </div>
                 </div>
-              </div>
 
-              <div className="flex items-center justify-between pt-6 border-t border-gray-200 mt-6">
-                <button
-                  onClick={clearAllFilters}
-                  disabled={activeFiltersCount === 0}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                    activeFiltersCount === 0
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
-                  }`}
-                >
-                  Clear all filters
-                </button>
-                <DialogTrigger asChild>
+                <div className="flex items-center justify-between pt-6 border-t border-gray-200 mt-6">
                   <button
-                    onClick={() => applyFilters()}
-                    className="flex items-center gap-2 shadow-lg"
-                    style={{
-                      background:
-                        'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
-                      color: '#fff',
-                      padding: '8px 16px',
-                      borderRadius: '6px',
-                      border: 'none',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                    }}
-                    disabled={isFiltering}
+                    onClick={clearAllFilters}
+                    disabled={activeFiltersCount === 0}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                      activeFiltersCount === 0
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400'
+                    }`}
                   >
-                    {isFiltering ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Applying...
-                      </>
-                    ) : (
-                      'Apply filters'
-                    )}
+                    Clear all filters
                   </button>
-                </DialogTrigger>
-              </div>
-            </DialogContent>
-          </Dialog>
+                  <DialogTrigger asChild>
+                    <button
+                      onClick={() => applyFilters()}
+                      className="flex items-center gap-2 shadow-lg"
+                      style={{
+                        background:
+                          'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
+                        color: '#fff',
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                      }}
+                      disabled={isFiltering}
+                    >
+                      {isFiltering ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Applying...
+                        </>
+                      ) : (
+                        'Apply filters'
+                      )}
+                    </button>
+                  </DialogTrigger>
+                </div>
+              </DialogContent>
+            </Dialog>
 
-          <button
-            onClick={() => setOpen(true)}
-            className="flex items-center gap-2 shadow-lg cursor-pointer"
-            style={{
-              background:
-                'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
-              color: '#fff',
-              padding: '8px 12px',
-              borderRadius: '6px',
-              border: 'none',
-              cursor: 'pointer',
-            }}
-          >
-            <Plus className="w-4 h-4" />
-            <span>Create Task</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="flex-1 min-h-0">
-        {isFiltering ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-              <p className="text-sm text-gray-600">Applying filters...</p>
-            </div>
+            <PermissionGuard permission="tasks.create">
+              <button
+                onClick={() => setOpen(true)}
+                className="flex items-center gap-2 shadow-lg cursor-pointer"
+                style={{
+                  background:
+                    'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
+                  color: '#fff',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <Plus className="w-4 h-4" />
+                <span>Create Task</span>
+              </button>
+            </PermissionGuard>
           </div>
-        ) : (
-          <TaskTable
-            tasks={serverTasks || tasks || []}
-            tasksMeta={tasksMeta || []}
-            handleUpdateTaskStatus={handleUpdateTaskStatus}
-            onRowClick={(params) => {
-              // append taskId to url params
-              handleNavigate(params.row.id);
-              setSelectedTaskId(params.row.id);
-              setSelectedTask(params.row);
-              setShowViewDialog(true);
-            }}
-            handleEdit={(task) => {
-              handleNavigate(task.id);
-              setSelectedTaskId(task.id);
-              setSelectedTask(task);
-              setShowUpdateDialog(true);
-            }}
-            handleDelete={(task) => {
-              setSelectedTask(task);
-              setShowDeleteConfirm(true);
-            }}
-            handleCommentClick={handleCommentClick}
-          />
-        )}
+        </div>
+
+        <div className="flex-1 min-h-0">
+          {isFiltering ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                <p className="text-sm text-gray-600">Applying filters...</p>
+              </div>
+            </div>
+          ) : (
+            <TaskTable
+              tasks={serverTasks || tasks || []}
+              tasksMeta={tasksMeta || []}
+              handleUpdateTaskStatus={handleUpdateTaskStatus}
+              onRowClick={(params) => {
+                // append taskId to url params
+                handleNavigate(params.row.id);
+                setSelectedTaskId(params.row.id);
+                setSelectedTask(params.row);
+                setShowViewDialog(true);
+              }}
+              handleEdit={(task) => {
+                handleNavigate(task.id);
+                setSelectedTaskId(task.id);
+                setSelectedTask(task);
+                setShowUpdateDialog(true);
+              }}
+              handleDelete={(task) => {
+                setSelectedTask(task);
+                setShowDeleteConfirm(true);
+              }}
+              handleCommentClick={handleCommentClick}
+              canUpdate={canUpdateTask}
+              canDelete={canDeleteTask}
+              canComment={canCommentTask}
+              canChangeStatus={canUpdateTask}
+            />
+          )}
+        </div>
+
+        {/* View */}
+        <PermissionGuard permission="tasks.view">
+          {showViewDialog && (
+            <ShowTaskDialog
+              open={showViewDialog}
+              onClose={() => {
+                // remove taskId from url params
+                handleNavigate(null);
+                setShowViewDialog(false);
+              }}
+            />
+          )}
+        </PermissionGuard>
+
+        {/* Create Task Dialog */}
+        <PermissionGuard permission="tasks.create">
+          {open && (
+            <TaskDialog
+              open={open}
+              onClose={() => setOpen(false)}
+              mode="create"
+            />
+          )}
+        </PermissionGuard>
+
+        {/* Update Task Dialog */}
+        <PermissionGuard permission="tasks.update">
+          {showUpdateDialog && (
+            <TaskDialog
+              open={showUpdateDialog}
+              onClose={() => {
+                setShowUpdateDialog(false);
+                handleNavigate(null);
+              }}
+              task={selectedTask}
+              mode="update"
+            />
+          )}
+        </PermissionGuard>
+
+        {/* Delete Task Dialog */}
+        <PermissionGuard permission="tasks.delete">
+          {showDeleteConfirm && (
+            <DeleteTaskDialog
+              open={showDeleteConfirm}
+              onClose={() => setShowDeleteConfirm(false)}
+              task={selectedTask}
+              onConfirm={() => handleDelete(selectedTask?.id)}
+              isDeleting={isDeleting}
+            />
+          )}
+        </PermissionGuard>
       </div>
-
-      {/* View */}
-      {showViewDialog && (
-        <ShowTaskDialog
-          open={showViewDialog}
-          onClose={() => {
-            // remove taskId from url params
-            handleNavigate(null);
-            setShowViewDialog(false);
-          }}
-        />
-      )}
-
-      {open && (
-        <TaskDialog open={open} onClose={() => setOpen(false)} mode="create" />
-      )}
-
-      {showUpdateDialog && (
-        <TaskDialog
-          open={showUpdateDialog}
-          onClose={() => {
-            setShowUpdateDialog(false);
-            handleNavigate(null);
-          }}
-          task={selectedTask}
-          mode="update"
-        />
-      )}
-
-      {/* Delete */}
-      {showDeleteConfirm && (
-        <DeleteTaskDialog
-          open={showDeleteConfirm}
-          onClose={() => setShowDeleteConfirm(false)}
-          task={selectedTask}
-          onConfirm={() => handleDelete(selectedTask?.id)}
-          isDeleting={isDeleting}
-        />
-      )}
-    </div>
+    </PermissionGuard>
   );
 };
 

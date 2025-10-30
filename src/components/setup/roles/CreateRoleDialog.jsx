@@ -24,6 +24,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { X, Search, Shield, Users } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getPermissions } from '@/api/api_services/setup';
+import { usePermission } from '@/utils/usePermission';
+import PermissionGuard from '@/components/auth/PermissionGuard';
 import { toast } from 'sonner';
 
 const CreateRoleDialog = ({
@@ -34,6 +36,10 @@ const CreateRoleDialog = ({
   editMode = false,
   editingRole = null,
 }) => {
+  // Permission checks
+  const { hasPermission } = usePermission();
+  const canManagePermissions = hasPermission('roles.permissions.manage');
+
   const {
     control,
     // register,
@@ -319,20 +325,22 @@ const CreateRoleDialog = ({
                           >
                             {category}
                           </Typography>
-                          <Button
-                            type="button"
-                            variant="outlined"
-                            size="small"
-                            onClick={() =>
-                              handleSelectAllInCategory(categoryPermissions)
-                            }
-                          >
-                            {categoryPermissions.every((p) =>
-                              selectedPermissions.includes(p.id)
-                            )
-                              ? 'Deselect All'
-                              : 'Select All'}
-                          </Button>
+                          <PermissionGuard permission="roles.permissions.manage">
+                            <Button
+                              type="button"
+                              variant="outlined"
+                              size="small"
+                              onClick={() =>
+                                handleSelectAllInCategory(categoryPermissions)
+                              }
+                            >
+                              {categoryPermissions.every((p) =>
+                                selectedPermissions.includes(p.id)
+                              )
+                                ? 'Deselect All'
+                                : 'Select All'}
+                            </Button>
+                          </PermissionGuard>
                         </Box>
                         <Grid container spacing={1}>
                           {categoryPermissions.map((permission) => (
@@ -344,14 +352,16 @@ const CreateRoleDialog = ({
                                   gap: 1,
                                 }}
                               >
-                                <Checkbox
-                                  checked={selectedPermissions.includes(
-                                    permission.id
-                                  )}
-                                  onCheckedChange={() =>
-                                    handlePermissionToggle(permission.id)
-                                  }
-                                />
+                                <PermissionGuard permission="roles.permissions.manage">
+                                  <Checkbox
+                                    checked={selectedPermissions.includes(
+                                      permission.id
+                                    )}
+                                    onCheckedChange={() =>
+                                      handlePermissionToggle(permission.id)
+                                    }
+                                  />
+                                </PermissionGuard>
                                 <Typography variant="body2">
                                   {permission.name}
                                 </Typography>

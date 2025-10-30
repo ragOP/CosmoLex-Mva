@@ -39,6 +39,8 @@ import { toast } from 'sonner';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import UploadMediaDialog from '@/components/UploadMediaDialog';
+import PermissionGuard from '@/components/auth/PermissionGuard';
+import { usePermission } from '@/utils/usePermission';
 
 const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
   const [attachments, setAttachments] = useState([]);
@@ -59,6 +61,13 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
 
   // Upload media dialog state
   const [showUploadMediaDialog, setShowUploadMediaDialog] = useState(false);
+
+  // Permission hooks
+  const { hasPermission } = usePermission();
+  const canUploadAttachment = hasPermission(
+    'communications.attachments.upload'
+  );
+  const canSearchUsers = hasPermission('communications.users.search');
 
   // Debounced search terms
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -86,7 +95,7 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
   const { data: metaData } = useQuery({
     queryKey: ['email-communicationMeta', matterId],
     queryFn: () => getCommunicationMeta(matterId, 1), // Type 1 for emails
-    enabled: open
+    enabled: open,
   });
 
   // Search for From email addresses (independent search)
@@ -417,6 +426,7 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
                       onClick={() => setShowToDialog(true)}
                       className="border-gray-300 text-gray-600 hover:bg-gray-50"
                       title="Search and select email contacts"
+                      disabled={!canSearchUsers}
                     >
                       Select
                     </Button>
@@ -501,6 +511,7 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
                         variant="outline"
                         onClick={() => setShowCcDialog(true)}
                         className="border-gray-300 text-gray-600 hover:bg-gray-50"
+                        disabled={!canSearchUsers}
                       >
                         Select
                       </Button>
@@ -573,6 +584,7 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
                         variant="outline"
                         onClick={() => setShowBccDialog(true)}
                         className="border-gray-300 text-gray-600 hover:bg-gray-50"
+                        disabled={!canSearchUsers}
                       >
                         Select
                       </Button>
@@ -686,29 +698,31 @@ const ComposeEmailDialog = ({ open, onClose, onSuccess, matterId }) => {
           sx={{ p: 2, justifyContent: 'space-between', bgcolor: '#f8f9fa' }}
         >
           <Stack direction="row" alignItems="center" spacing={1}>
-            <input
-              type="file"
-              multiple
-              onChange={handleFileAttachment}
-              style={{ display: 'none' }}
-              id="attachment-input"
-            />
-            <label htmlFor="attachment-input">
-              <IconButton
-                // onClick={() => setShowUploadMediaDialog(true)}
-                component="span"
-                size="small"
-                sx={{
-                  p: 1.5,
-                  borderRadius: 1,
-                  '&:hover': {
-                    bgcolor: '#e3f2fd',
-                  },
-                }}
-              >
-                <Paperclip size={18} color="#666" />
-              </IconButton>
-            </label>
+            <PermissionGuard permission="communications.attachments.upload">
+              <input
+                type="file"
+                multiple
+                onChange={handleFileAttachment}
+                style={{ display: 'none' }}
+                id="attachment-input"
+              />
+              <label htmlFor="attachment-input">
+                <IconButton
+                  // onClick={() => setShowUploadMediaDialog(true)}
+                  component="span"
+                  size="small"
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 1,
+                    '&:hover': {
+                      bgcolor: '#e3f2fd',
+                    },
+                  }}
+                >
+                  <Paperclip size={18} color="#666" />
+                </IconButton>
+              </label>
+            </PermissionGuard>
           </Stack>
 
           <Stack direction="row" spacing={2}>

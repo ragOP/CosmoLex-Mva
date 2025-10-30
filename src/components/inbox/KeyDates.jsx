@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useMatter } from './MatterContext';
 import isArrayWithValues from '@/utils/isArrayWithValues';
+import PermissionGuard from '@/components/auth/PermissionGuard';
+import { usePermission } from '@/utils/usePermission';
 
 const CASE_TYPE_FIELDS = {
   'Auto Accident': [
@@ -171,6 +173,12 @@ const KeyDates = () => {
 
   const { matter, matterMeta } = useMatter();
 
+  // Permission checks
+  const { hasPermission } = usePermission();
+  const canViewKeyDates = hasPermission('case-key-dates.view');
+  const canGetKeyDates = hasPermission('case-key-dates.get');
+  const canStoreKeyDates = hasPermission('case-key-dates.store');
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -182,21 +190,34 @@ const KeyDates = () => {
             (type) => type.id === matter.case_type_id
           )?.name;
           setCaseType(caseType);
-          const keyDatesResponse = await getCaseKeyDates(slugId);
-          console.log('Key Dates Response:', keyDatesResponse);
 
-          const initialData = {};
-          if (CASE_TYPE_FIELDS[caseType]) {
-            CASE_TYPE_FIELDS[caseType].forEach((field) => {
-              if (keyDatesResponse && keyDatesResponse[field]) {
-                initialData[field] = keyDatesResponse[field];
-                setHasExistingData(true);
-              } else {
+          // Only fetch key dates if user has get permission
+          if (canGetKeyDates) {
+            const keyDatesResponse = await getCaseKeyDates(slugId);
+            console.log('Key Dates Response:', keyDatesResponse);
+
+            const initialData = {};
+            if (CASE_TYPE_FIELDS[caseType]) {
+              CASE_TYPE_FIELDS[caseType].forEach((field) => {
+                if (keyDatesResponse && keyDatesResponse[field]) {
+                  initialData[field] = keyDatesResponse[field];
+                  setHasExistingData(true);
+                } else {
+                  initialData[field] = null;
+                }
+              });
+            }
+            setFormData(initialData);
+          } else {
+            // Initialize with empty data if no get permission
+            const initialData = {};
+            if (CASE_TYPE_FIELDS[caseType]) {
+              CASE_TYPE_FIELDS[caseType].forEach((field) => {
                 initialData[field] = null;
-              }
-            });
+              });
+            }
+            setFormData(initialData);
           }
-          setFormData(initialData);
         } else {
           setError('Failed to fetch matter data');
         }
@@ -211,7 +232,7 @@ const KeyDates = () => {
     if (slugId) {
       fetchData();
     }
-  }, [matter, matterMeta]);
+  }, [matter, matterMeta, canGetKeyDates]);
 
   const handleFieldChange = (fieldName, value) => {
     setFormData((prev) => ({
@@ -286,6 +307,7 @@ const KeyDates = () => {
           value={formData[fieldName]}
           placeholder="Select Date"
           onChange={(e) => handleFieldChange(fieldName, e.target.value)}
+          disabled={!canStoreKeyDates}
           // className="h-full"
         />
       </div>
@@ -320,44 +342,59 @@ const KeyDates = () => {
   const fields = CASE_TYPE_FIELDS[caseType] || defaultFields;
 
   return (
-    <Card>
-      <BreadCrumb label={caseType} />
-      <div className="bg-white/40 rounded-2xl p-6 flex flex-col justify-between gap-4 overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center h-full w-full">
-            <Loader2 className="animate-spin" />
-          </div>
-        ) : isArrayWithValues(fields) && fields.length > 0 ? (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {fields.map((fieldName) => (
-                <div key={fieldName}>{renderField(fieldName)}</div>
-              ))}
+    <PermissionGuard
+      permission="case-key-dates.view"
+      fallback={
+        <Card>
+          <div className="p-6">
+            <div className="text-red-600 text-center">
+              You don't have permission to view key dates.
             </div>
-            <div className="pt-4 flex justify-end gap-4">
-              <Button
-                type="button"
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
-              >
-                {submitting ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                ) : (
-                  'Save'
-                )}
-              </Button>
-            </div>
-          </>
-        ) : (
-          <div className="text-gray-500 text-center py-6">
-            No key dates configured for this case type.
           </div>
-        )}
-      </div>
-    </Card>
+        </Card>
+      }
+    >
+      <Card>
+        <BreadCrumb label={caseType} />
+        <div className="bg-white/40 rounded-2xl p-6 flex flex-col justify-between gap-4 overflow-hidden">
+          {loading ? (
+            <div className="flex items-center justify-center h-full w-full">
+              <Loader2 className="animate-spin" />
+            </div>
+          ) : isArrayWithValues(fields) && fields.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {fields.map((fieldName) => (
+                  <div key={fieldName}>{renderField(fieldName)}</div>
+                ))}
+              </div>
+              <div className="pt-4 flex justify-end gap-4">
+                <PermissionGuard permission="case-key-dates.store">
+                  <Button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
+                  >
+                    {submitting ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    ) : (
+                      'Save'
+                    )}
+                  </Button>
+                </PermissionGuard>
+              </div>
+            </>
+          ) : (
+            <div className="text-gray-500 text-center py-6">
+              No key dates configured for this case type.
+            </div>
+          )}
+        </div>
+      </Card>
+    </PermissionGuard>
   );
 };
 

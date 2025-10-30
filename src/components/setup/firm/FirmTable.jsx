@@ -8,6 +8,8 @@ import { truncateStr } from '@/utils/truncateStr';
 import { getTableWidth } from '@/utils/isMobile';
 import { getFirmDetails } from '@/api/api_services/setup';
 import { Eye, Pencil } from 'lucide-react';
+import PermissionGuard from '@/components/auth/PermissionGuard';
+import { usePermission } from '@/utils/usePermission';
 
 const FirmTable = ({
   onRowClick = () => {},
@@ -15,6 +17,12 @@ const FirmTable = ({
   reloadKey = 0,
 }) => {
   const [firmRows, setFirmRows] = useState([]);
+
+  // Permission checks
+  const { hasPermission } = usePermission();
+  const canViewMasters = hasPermission('masters.view');
+  const canUpdateMasters = hasPermission('masters.update');
+  const canShowMasters = hasPermission('masters.show');
 
   useEffect(() => {
     let isMounted = true;
@@ -185,15 +193,17 @@ const FirmTable = ({
       renderCell: (params) => {
         if (!params || !params.row) return null;
         return (
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              onRowClick(params);
-            }}
-            className="cursor-pointer"
-          >
-            <Eye className="h-4 w-4" />
-          </IconButton>
+          <PermissionGuard permission="masters.show">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                onRowClick(params);
+              }}
+              className="cursor-pointer"
+            >
+              <Eye className="h-4 w-4" />
+            </IconButton>
+          </PermissionGuard>
         );
       },
     },
@@ -209,15 +219,17 @@ const FirmTable = ({
       renderCell: (params) => {
         if (!params || !params.row) return null;
         return (
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit(params.row);
-            }}
-            className="cursor-pointer"
-          >
-            <Pencil className="h-4 w-4 text-[#6366F1]" />
-          </IconButton>
+          <PermissionGuard permission="masters.update">
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit(params.row);
+              }}
+              className="cursor-pointer"
+            >
+              <Pencil className="h-4 w-4 text-[#6366F1]" />
+            </IconButton>
+          </PermissionGuard>
         );
       },
     },
@@ -242,6 +254,7 @@ const FirmTable = ({
         slots={{ toolbar: GridToolbar }}
         getRowId={(row) => row.id}
         autoHeight={false}
+        onRowClick={canShowMasters ? undefined : undefined}
         sx={{
           padding: 2,
           border: 'none',

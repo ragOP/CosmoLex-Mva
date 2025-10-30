@@ -25,6 +25,8 @@ import CreateFolderDialog from './components/CreateFolderDialog';
 import UploadFileDialog from './components/UploadFileDialog';
 import RenameFolderDialog from './components/RenameFolderDialog';
 import DeleteConfirmationDialog from './components/DeleteConfirmationDialog';
+import { usePermission } from '@/utils/usePermission';
+import { X } from 'lucide-react';
 
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -36,10 +38,12 @@ const DocumentationPage = () => {
   const [folderToRename, setFolderToRename] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-  
+
   const [searchParams] = useSearchParams();
   const slugId = searchParams.get('slugId');
   const isFromInbox = !!slugId;
+
+  const { hasPermission } = usePermission();
 
   const {
     folders,
@@ -98,55 +102,78 @@ const DocumentationPage = () => {
     }
 
     // Always include upload and create folder actions (even at root level)
-    const alwaysAvailableActions = [
-      defineFileAction({
-        id: 'create_folder',
-        requiresSelection: false,
-        icon: ChonkyIconName.folderCreate,
-        button: {
-          name: 'New Folder',
-          toolbar: true,
-          contextMenu: false,
-        },
-      }),
-      defineFileAction({
-        id: 'upload_file',
-        requiresSelection: false,
-        icon: ChonkyIconName.upload,
-        button: {
-          name: 'Upload File',
-          toolbar: true,
-          contextMenu: false,
-        },
-      }),
-      defineFileAction({
-        id: 'rename_item',
-        requiresSelection: true,
-        selectionConstraint: (files) => files.length === 1,
-        hotkeys: ['f2'],
-        button: {
-          name: 'Rename',
-          toolbar: false,
-          contextMenu: true,
-          icon: ChonkyIconName.config,
-        },
-      }),
-      defineFileAction({
-        id: 'delete_item',
-        requiresSelection: true,
-        selectionConstraint: (files) => files.length > 0,
-        hotkeys: ['delete'],
-        button: {
-          name: 'Delete',
-          toolbar: false,
-          contextMenu: true,
-          icon: ChonkyIconName.trash,
-        },
-      }),
-    ];
+    const alwaysAvailableActions = [];
+
+    // Add create folder action if user has permission
+    if (hasPermission('documents.folders.create')) {
+      alwaysAvailableActions.push(
+        defineFileAction({
+          id: 'create_folder',
+          requiresSelection: false,
+          icon: ChonkyIconName.folderCreate,
+          button: {
+            name: 'New Folder',
+            toolbar: true,
+            contextMenu: false,
+          },
+        })
+      );
+    }
+
+    // Add upload file action if user has permission
+    if (hasPermission('documents.upload')) {
+      alwaysAvailableActions.push(
+        defineFileAction({
+          id: 'upload_file',
+          requiresSelection: false,
+          icon: ChonkyIconName.upload,
+          button: {
+            name: 'Upload File',
+            toolbar: true,
+            contextMenu: false,
+          },
+        })
+      );
+    }
+
+    // Add rename action if user has permission
+    if (hasPermission('documents.rename')) {
+      alwaysAvailableActions.push(
+        defineFileAction({
+          id: 'rename_item',
+          requiresSelection: true,
+          selectionConstraint: (files) => files.length === 1,
+          hotkeys: ['f2'],
+          button: {
+            name: 'Rename',
+            toolbar: false,
+            contextMenu: true,
+            icon: ChonkyIconName.config,
+          },
+        })
+      );
+    }
+
+    // Add delete action if user has permission
+    if (hasPermission('documents.delete')) {
+      alwaysAvailableActions.push(
+        defineFileAction({
+          id: 'delete_item',
+          requiresSelection: true,
+          selectionConstraint: (files) => files.length > 0,
+          hotkeys: ['delete'],
+          button: {
+            name: 'Delete',
+            toolbar: false,
+            contextMenu: true,
+            icon: ChonkyIconName.trash,
+          },
+        })
+      );
+    }
 
     return [...navigationActions, ...alwaysAvailableActions];
-  }, [currentPath]);
+  }, [currentPath, hasPermission]);
 
   // Transform data for Chonky
   const chonkyFiles = useMemo(() => {
@@ -206,19 +233,22 @@ const DocumentationPage = () => {
     }));
   }, [folders, folderContents, selectedFolder, currentPath]);
 
-    // Handle file actions
+  // Handle file actions
   const handleFileAction = (data) => {
     if (data.id === ChonkyActions.OpenParentFolder.id) {
       navigateBack();
     } else if (data.id === ChonkyActions.OpenFiles.id) {
       // Try to get file from different possible sources
       let fileToOpen = null;
-      
+
       if (data.payload?.targetFile) {
         fileToOpen = data.payload.targetFile;
       } else if (data.payload?.files && data.payload.files.length > 0) {
         fileToOpen = data.payload.files[0];
-      } else if (data.state?.selectedFiles && data.state.selectedFiles.length > 0) {
+      } else if (
+        data.state?.selectedFiles &&
+        data.state.selectedFiles.length > 0
+      ) {
         fileToOpen = data.state.selectedFiles[0];
       }
 
@@ -231,6 +261,14 @@ const DocumentationPage = () => {
         };
         navigateToFolder(folder);
       } else if (fileToOpen && fileToOpen.downloadUrl) {
+        // Check permission to view documents or get document items
+        if (
+          !hasPermission('documents.view') &&
+          !hasPermission('documents.items.get')
+        ) {
+          toast.error('You do not have permission to view documents');
+          return;
+        }
         // Handle file opening/download
         window.open(fileToOpen.downloadUrl, '_blank');
       }
@@ -243,20 +281,39 @@ const DocumentationPage = () => {
         navigateToRoot();
       }
     } else if (data.id === 'create_folder') {
+      // Check permission
+      if (!hasPermission('documents.folders.create')) {
+        toast.error('You do not have permission to create folders');
+        return;
+      }
       // Check if current folder allows editing
       if (selectedFolder && selectedFolder.is_editable === false) {
-        toast.error('Cannot create folders in this directory - permission not present');
+        toast.error(
+          'Cannot create folders in this directory - permission not present'
+        );
         return;
       }
       setCreateFolderOpen(true);
     } else if (data.id === 'upload_file') {
+      // Check permission
+      if (!hasPermission('documents.upload')) {
+        toast.error('You do not have permission to upload files');
+        return;
+      }
       // Check if current folder allows editing
       if (selectedFolder && selectedFolder.is_editable === false) {
-        toast.error('Cannot upload files to this directory - permission not present');
+        toast.error(
+          'Cannot upload files to this directory - permission not present'
+        );
         return;
       }
       setUploadFileOpen(true);
     } else if (data.id === 'rename_item') {
+      // Check permission
+      if (!hasPermission('documents.rename')) {
+        toast.error('You do not have permission to rename items');
+        return;
+      }
       const files = data.state?.selectedFiles || [];
       if (files.length === 1) {
         const file = files[0];
@@ -269,12 +326,19 @@ const DocumentationPage = () => {
         setRenameFolderOpen(true);
       }
     } else if (data.id === 'delete_item') {
+      // Check permission
+      if (!hasPermission('documents.delete')) {
+        toast.error('You do not have permission to delete items');
+        return;
+      }
       const files = data.state?.selectedFiles || [];
       if (files.length > 0) {
         // Check if any selected item is not deletable
         for (const file of files) {
           if (file.isDir && file.is_deletable === false) {
-            toast.error('This folder cannot be deleted - permission not present');
+            toast.error(
+              'This folder cannot be deleted - permission not present'
+            );
             return;
           }
         }
@@ -323,10 +387,54 @@ const DocumentationPage = () => {
     }
   };
 
+  // Check if user has permission to view documents
+  if (
+    !hasPermission('documents.view') &&
+    !hasPermission('documents.items.get')
+  ) {
+    return (
+      <div className="px-4">
+        <BreadCrumb label={isFromInbox ? 'Documents' : 'Documentation'} />
+        <div className="pb-2 flex flex-col gap-2 h-full overflow-auto mt-4">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="pl-2">
+              <h1 className="text-xl font-bold text-gray-900">
+                {isFromInbox ? 'Documents' : 'Documentation'}
+              </h1>
+              <p className="text-base text-gray-600">
+                Manage and organize your documents
+              </p>
+            </div>
+          </div>
+
+          {/* Permission Denied Message */}
+          <div className="bg-white/50 backdrop-blur-md border border-gray-200/80 shadow-lg gap-4 p-8 rounded-lg flex flex-col items-center justify-center h-full">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <X className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                Access Denied
+              </h3>
+              <p className="text-base text-gray-600 mb-1">
+                You do not have permission to view documents.
+              </p>
+              <p className="text-sm text-gray-500">
+                Please contact your administrator if you need access to this
+                feature.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (foldersLoading) {
     return (
       <div className="px-4">
-        <BreadCrumb label={isFromInbox ? "Documents" : "Documentation"} />
+        <BreadCrumb label={isFromInbox ? 'Documents' : 'Documentation'} />
         <Box sx={{ mt: 2 }}>
           <Skeleton variant="rectangular" height={400} />
         </Box>
@@ -336,7 +444,7 @@ const DocumentationPage = () => {
 
   return (
     <div className="px-4">
-      <BreadCrumb label={isFromInbox ? "Documents" : "Documentation"} />
+      <BreadCrumb label={isFromInbox ? 'Documents' : 'Documentation'} />
 
       <Box sx={{ mt: 2, height: 'calc(100vh - 200px)' }}>
         <FileBrowser
@@ -363,24 +471,59 @@ const DocumentationPage = () => {
                 onClick={navigateToRoot}
                 className="text-gray-700 hover:text-blue-600 text-sm font-medium hover:underline flex items-center gap-1"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"
+                  />
                 </svg>
                 {isFromInbox ? 'Documents' : 'Documentation'}
               </button>
-              
+
               {currentPath.map((folder, index) => (
                 <div key={folder.id} className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  <svg
+                    className="w-4 h-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                   <button
                     onClick={() => navigateToPathLevel(index)}
                     className="text-gray-700 hover:text-blue-600 text-sm font-medium hover:underline flex items-center gap-1"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"
+                      />
                     </svg>
                     {folder.name}
                   </button>

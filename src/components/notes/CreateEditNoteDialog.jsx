@@ -19,8 +19,13 @@ import { Stack, Divider, IconButton, Tooltip } from '@mui/material';
 import UploadMediaDialog from '@/components/UploadMediaDialog';
 import { useDocuments } from '@/components/inbox/documents/hooks/useDocuments';
 import { useMutation } from '@tanstack/react-query';
-import { uploadNoteAttachment, deleteNoteAttachment } from '@/api/api_services/notes';
+import {
+  uploadNoteAttachment,
+  deleteNoteAttachment,
+} from '@/api/api_services/notes';
 import { toast } from 'sonner';
+import PermissionGuard from '@/components/auth/PermissionGuard';
+import { usePermission } from '@/utils/usePermission';
 
 // Quill modules configuration
 const quillModules = {
@@ -48,6 +53,11 @@ const CreateEditNoteDialog = ({
   const [uploadedAttachments, setUploadedAttachments] = useState([]);
   const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
   const [attachmentToDelete, setAttachmentToDelete] = useState(null);
+
+  // Permission checks
+  const { hasPermission } = usePermission();
+  const canUploadAttachment = hasPermission('notes.attachments.upload');
+  const canDeleteAttachment = hasPermission('notes.attachments.delete');
 
   const { isUploadingFile } = useDocuments();
 
@@ -119,13 +129,13 @@ const CreateEditNoteDialog = ({
 
       // Load existing attachments if available
       if (note.attachments && Array.isArray(note.attachments)) {
-        const existingAttachments = note.attachments.map(att => ({
+        const existingAttachments = note.attachments.map((att) => ({
           id: att.id,
           name: att.file_name || att.name || `File ${att.id}`,
           file_name: att.file_name || att.name || `File ${att.id}`,
           url: att.file_path || att.url || '',
           file_path: att.file_path || att.url || '',
-          file_type: att.file_type || 'application/octet-stream'
+          file_type: att.file_type || 'application/octet-stream',
         }));
         setUploadedAttachments(existingAttachments);
       }
@@ -154,7 +164,7 @@ const CreateEditNoteDialog = ({
       category_id: data.category_id,
       title: data.title,
       body: data.body,
-      attachment_ids: uploadedAttachments.map(att => att.id), // Extract just the IDs
+      attachment_ids: uploadedAttachments.map((att) => att.id), // Extract just the IDs
     };
 
     console.log('JSON payload being sent:', jsonPayload);
@@ -185,10 +195,10 @@ const CreateEditNoteDialog = ({
           file_name: response.file_name || `File ${response.attachment_id}`,
           url: response.file_path || '',
           file_path: response.file_path || '',
-          file_type: response.file_type || 'application/octet-stream'
+          file_type: response.file_type || 'application/octet-stream',
         };
         console.log('Adding attachment:', attachment);
-        setUploadedAttachments(prev => {
+        setUploadedAttachments((prev) => {
           const newAttachments = [...prev, attachment];
           console.log('Updated uploadedAttachments:', newAttachments);
           return newAttachments;
@@ -236,9 +246,11 @@ const CreateEditNoteDialog = ({
     if (attachmentToDelete) {
       try {
         const response = await deleteNoteAttachment(attachmentToDelete.id);
-        
+
         if (response && response.Apistatus) {
-          setUploadedAttachments(prev => prev.filter(att => att.id !== attachmentToDelete.id));
+          setUploadedAttachments((prev) =>
+            prev.filter((att) => att.id !== attachmentToDelete.id)
+          );
           toast.success('Attachment deleted successfully');
         } else {
           toast.error(response?.message || 'Failed to delete attachment');
@@ -327,8 +339,9 @@ const CreateEditNoteDialog = ({
                         {...field}
                         placeholder="Enter note title"
                         disabled={isLoading}
-                        className={`h-12 w-full ${errors.title ? 'border-red-500' : 'border-gray-300'
-                          }`}
+                        className={`h-12 w-full ${
+                          errors.title ? 'border-red-500' : 'border-gray-300'
+                        }`}
                         value={field.value || ''}
                       />
                     );
@@ -378,16 +391,17 @@ const CreateEditNoteDialog = ({
                         key={`category-select-${field.value || 'empty'}`}
                       >
                         <SelectTrigger
-                          className={`h-12 w-full ${errors.category_id
+                          className={`h-12 w-full ${
+                            errors.category_id
                               ? 'border-red-500'
                               : 'border-gray-300'
-                            }`}
+                          }`}
                         >
                           <SelectValue placeholder="Select Category">
                             {field.value
                               ? categories.find(
-                                (cat) => cat.id === field.value.toString()
-                              )?.name
+                                  (cat) => cat.id === field.value.toString()
+                                )?.name
                               : 'Select Category'}
                           </SelectValue>
                         </SelectTrigger>
@@ -422,8 +436,9 @@ const CreateEditNoteDialog = ({
                     console.log('Body field render - value:', field.value);
                     return (
                       <div
-                        className={`border rounded-md ${errors.body ? 'border-red-500' : 'border-gray-300'
-                          }`}
+                        className={`border rounded-md ${
+                          errors.body ? 'border-red-500' : 'border-gray-300'
+                        }`}
                       >
                         <ReactQuill
                           theme="snow"
@@ -452,29 +467,41 @@ const CreateEditNoteDialog = ({
               {/* Attachments - Full Width */}
               <div className="w-full mt-20">
                 <Label>Attachments</Label>
-                <Button
-                  type="button"
-                  onClick={() => setAttachmentDialogOpen(true)}
-                  variant="outline"
-                  className="w-fit mt-2 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Attachment
-                </Button>
+                <PermissionGuard permission="notes.attachments.upload">
+                  <Button
+                    type="button"
+                    onClick={() => setAttachmentDialogOpen(true)}
+                    variant="outline"
+                    className="w-fit mt-2 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Attachment
+                  </Button>
+                </PermissionGuard>
 
                 {/* Display uploaded files */}
                 {uploadedAttachments.length > 0 && (
                   <div className="mt-4 space-y-2">
-                    <Label className="text-sm text-gray-600">Uploaded Files:</Label>
+                    <Label className="text-sm text-gray-600">
+                      Uploaded Files:
+                    </Label>
                     {uploadedAttachments.map((attachment) => (
-                      <div key={attachment.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                      <div
+                        key={attachment.id}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded border"
+                      >
                         <span
                           className="text-sm text-blue-600 hover:text-blue-800 cursor-pointer underline"
                           onClick={() => {
                             // Open file in new window if it's an image
-                            const fileName = attachment.file_name || attachment.name;
-                            if (fileName && fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-                              const fileUrl = attachment.file_path || attachment.url;
+                            const fileName =
+                              attachment.file_name || attachment.name;
+                            if (
+                              fileName &&
+                              fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i)
+                            ) {
+                              const fileUrl =
+                                attachment.file_path || attachment.url;
                               if (fileUrl) {
                                 window.open(fileUrl, '_blank');
                               }
@@ -482,7 +509,9 @@ const CreateEditNoteDialog = ({
                           }}
                           title="Click to open file"
                         >
-                          {attachment.file_name || attachment.name || `File ${attachment.id}`}
+                          {attachment.file_name ||
+                            attachment.name ||
+                            `File ${attachment.id}`}
                         </span>
                         <div className="flex items-center gap-2">
                           <Tooltip title="Preview file" arrow placement="top">
@@ -490,9 +519,14 @@ const CreateEditNoteDialog = ({
                               size="small"
                               onClick={() => {
                                 // Preview functionality - open in new window if image
-                                const fileName = attachment.file_name || attachment.name;
-                                if (fileName && fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-                                  const fileUrl = attachment.file_path || attachment.url;
+                                const fileName =
+                                  attachment.file_name || attachment.name;
+                                if (
+                                  fileName &&
+                                  fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i)
+                                ) {
+                                  const fileUrl =
+                                    attachment.file_path || attachment.url;
                                   if (fileUrl) {
                                     window.open(fileUrl, '_blank');
                                   }
@@ -500,19 +534,27 @@ const CreateEditNoteDialog = ({
                               }}
                               className="text-blue-600 hover:text-blue-700 transition-colors"
                             >
-                              <Eye size={16} className="text-blue-600 hover:text-blue-700 transition-colors"
+                              <Eye
+                                size={16}
+                                className="text-blue-600 hover:text-blue-700 transition-colors"
                               />
                             </IconButton>
                           </Tooltip>
-                          <Tooltip title="Delete file" arrow placement="top">
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDeleteAttachment(attachment)}
-                            >
-                              <Trash2 size={16} className="text-red-600 hover:text-red-700 transition-colors"
-                              />
-                            </IconButton>
-                          </Tooltip>
+                          <PermissionGuard permission="notes.attachments.delete">
+                            <Tooltip title="Delete file" arrow placement="top">
+                              <IconButton
+                                size="small"
+                                onClick={() =>
+                                  handleDeleteAttachment(attachment)
+                                }
+                              >
+                                <Trash2
+                                  size={16}
+                                  className="text-red-600 hover:text-red-700 transition-colors"
+                                />
+                              </IconButton>
+                            </Tooltip>
+                          </PermissionGuard>
                         </div>
                       </div>
                     ))}
@@ -550,12 +592,14 @@ const CreateEditNoteDialog = ({
         </Stack>
       </Dialog>
 
-      <UploadMediaDialog
-        open={attachmentDialogOpen}
-        onClose={() => setAttachmentDialogOpen(false)}
-        onSubmit={(payload) => handleUploadAttachment(payload)}
-        isLoading={isUploadingFile}
-      />
+      {canUploadAttachment && (
+        <UploadMediaDialog
+          open={attachmentDialogOpen}
+          onClose={() => setAttachmentDialogOpen(false)}
+          onSubmit={(payload) => handleUploadAttachment(payload)}
+          isLoading={isUploadingFile}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog
@@ -586,8 +630,11 @@ const CreateEditNoteDialog = ({
                 Are you sure?
               </h3>
               <p className="text-gray-600 mb-6">
-                You are about to delete "{attachmentToDelete?.file_name || attachmentToDelete?.name || 'this file'}". 
-                This action cannot be undone.
+                You are about to delete "
+                {attachmentToDelete?.file_name ||
+                  attachmentToDelete?.name ||
+                  'this file'}
+                ". This action cannot be undone.
               </p>
             </div>
           </div>

@@ -34,6 +34,8 @@ import { formatDateForInput } from '@/utils/formatDateForInput';
 import isArrayWithValues from '@/utils/isArrayWithValues';
 import { getContacts } from '@/api/api_services/contact';
 import { useMatter } from '@/components/inbox/MatterContext';
+import { usePermission } from '@/utils/usePermission';
+import PermissionGuard from '@/components/auth/PermissionGuard';
 
 export default function NewEventDialogRHF({
   open = false,
@@ -46,6 +48,10 @@ export default function NewEventDialogRHF({
 }) {
   const [searchParams] = useSearchParams();
   const slugId = searchParams.get('slugId');
+
+  // Permissions
+  const { hasPermission, isAdmin } = usePermission();
+  const canUpdateEvent = isAdmin || hasPermission('events.update');
 
   // Get matter data if we're in a matter context
   let matterData = null;
@@ -634,15 +640,20 @@ export default function NewEventDialogRHF({
                           <Edit className="h-4 w-4 text-blue-500" />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip arrow title="Remove Reminder">
-                        <IconButton
-                          type="button"
-                          onClick={() => removeReminder(idx)}
-                          size="small"
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </IconButton>
-                      </Tooltip>
+                      <PermissionGuard
+                        permission="events.reminders.delete"
+                        fallback={<></>}
+                      >
+                        <Tooltip arrow title="Remove Reminder">
+                          <IconButton
+                            type="button"
+                            onClick={() => removeReminder(idx)}
+                            size="small"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </IconButton>
+                        </Tooltip>
+                      </PermissionGuard>
                     </div>
                   </div>
                 ))}
@@ -715,15 +726,20 @@ export default function NewEventDialogRHF({
                             <Edit className="h-4 w-4 text-blue-500" />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip arrow title="Remove Participant">
-                          <IconButton
-                            type="button"
-                            onClick={() => removeParticipant(idx)}
-                            size="small"
-                          >
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          </IconButton>
-                        </Tooltip>
+                        <PermissionGuard
+                          permission="events.participants.delete"
+                          fallback={<></>}
+                        >
+                          <Tooltip arrow title="Remove Participant">
+                            <IconButton
+                              type="button"
+                              onClick={() => removeParticipant(idx)}
+                              size="small"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </IconButton>
+                          </Tooltip>
+                        </PermissionGuard>
                       </div>
                     </div>
                   ))}
@@ -775,37 +791,47 @@ export default function NewEventDialogRHF({
                         </a>
                       )}
                     </div>
-                    <div className="flex gap-1">
-                      <Tooltip arrow title="Delete Attachment">
-                        <IconButton
-                          type="button"
-                          onClick={() => {
-                            handleDeleteFile(
-                              attachment.attachment_id || attachment.id
-                            );
-                          }}
-                          size="small"
-                        >
-                          {isDeletingFile ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin text-red-500" />
-                          ) : (
-                            <Trash2 className="h-4 w-4 text-red-500" />
-                          )}
-                        </IconButton>
-                      </Tooltip>
-                    </div>
+                    <PermissionGuard
+                      permission="events.attachments.delete"
+                      fallback={<></>}
+                    >
+                      <div className="flex gap-1">
+                        <Tooltip arrow title="Delete Attachment">
+                          <IconButton
+                            type="button"
+                            onClick={() => {
+                              handleDeleteFile(
+                                attachment.attachment_id || attachment.id
+                              );
+                            }}
+                            size="small"
+                          >
+                            {isDeletingFile ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin text-red-500" />
+                            ) : (
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            )}
+                          </IconButton>
+                        </Tooltip>
+                      </div>
+                    </PermissionGuard>
                   </div>
                 ))}
 
-                <Button
-                  type="button"
-                  onClick={() => setShowUploadMediaDialog(true)}
-                  variant="outline"
-                  className="w-fit mt-2 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
+                <PermissionGuard
+                  permission="events.attachments.upload"
+                  fallback={<></>}
                 >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Attachment
-                </Button>
+                  <Button
+                    type="button"
+                    onClick={() => setShowUploadMediaDialog(true)}
+                    variant="outline"
+                    className="w-fit mt-2 bg-white hover:bg-gray-100 text-gray-700 cursor-pointer"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Attachment
+                  </Button>
+                </PermissionGuard>
               </div>
             </div>
 
@@ -817,30 +843,32 @@ export default function NewEventDialogRHF({
                 event ? 'justify-between' : 'justify-end'
               }`}
             >
-              {event && (
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <label htmlFor="attachment-input">
-                    <Tooltip arrow title="Delete Event">
-                      <IconButton
-                        onClick={() => {
-                          onDelete();
-                        }}
-                        component="span"
-                        size="small"
-                        sx={{
-                          p: 1.5,
-                        }}
-                      >
-                        {isDeleting ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin text-red-500" />
-                        ) : (
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        )}
-                      </IconButton>
-                    </Tooltip>
-                  </label>
-                </Stack>
-              )}
+              <PermissionGuard permission="events.delete" fallback={<></>}>
+                {event && (
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <label htmlFor="attachment-input">
+                      <Tooltip arrow title="Delete Event">
+                        <IconButton
+                          onClick={() => {
+                            onDelete();
+                          }}
+                          component="span"
+                          size="small"
+                          sx={{
+                            p: 1.5,
+                          }}
+                        >
+                          {isDeleting ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin text-red-500" />
+                          ) : (
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          )}
+                        </IconButton>
+                      </Tooltip>
+                    </label>
+                  </Stack>
+                )}
+              </PermissionGuard>
               <div className="flex justify-end gap-2">
                 <Button
                   type="button"
@@ -851,7 +879,7 @@ export default function NewEventDialogRHF({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || (isUpdateMode && !canUpdateEvent)}
                   className="bg-[#6366F1] text-white hover:bg-[#4e5564]"
                 >
                   {isLoading ? (

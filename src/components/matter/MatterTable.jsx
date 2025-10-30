@@ -3,10 +3,16 @@ import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { Box } from '@mui/material';
 import { noFilterColumns } from '@/utils/noFilterColumns';
 import { getTableWidth } from '@/utils/isMobile';
+import { usePermission } from '@/utils/usePermission';
+import { toast } from 'sonner';
 
 const MatterTable = ({ matters = [], onRowClick }) => {
   const [matterData, setMatterData] = useState([]);
   // const [searchParams, setSearchParams] = useSearchParams();
+
+  // Permissions
+  const { hasPermission, isAdmin } = usePermission();
+  const canShowMatter = isAdmin || hasPermission('matters.show');
 
   const columns = [
     {
@@ -110,6 +116,14 @@ const MatterTable = ({ matters = [], onRowClick }) => {
     setMatterData(matters);
   }, [matters]);
 
+  const handleRowClick = (params) => {
+    if (!canShowMatter) {
+      toast.error('You do not have permission to view matter details.');
+      return;
+    }
+    onRowClick?.(params);
+  };
+
   return (
     <>
       <Box
@@ -201,7 +215,7 @@ const MatterTable = ({ matters = [], onRowClick }) => {
           }}
           disableRowSelectionOnClick
           disableSelectionOnClick
-          onRowClick={onRowClick}
+          onRowClick={handleRowClick}
         />
       </Box>
     </>

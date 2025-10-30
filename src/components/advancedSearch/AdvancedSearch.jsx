@@ -8,6 +8,7 @@ import {
 } from '@/api/api_services/advancedSearch';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { usePermission } from '@/utils/usePermission';
 import SearchForm from './SearchForm';
 import SearchResults from './SearchResults';
 
@@ -16,6 +17,10 @@ const AdvancedSearch = () => {
   const [searchFormData, setSearchFormData] = useState({});
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState(null);
+
+  // Permissions
+  const { hasPermission, isAdmin } = usePermission();
+  const canRunSearch = isAdmin || hasPermission('search.advanced.run');
 
   // Load search criteria from URL params on component mount
   useEffect(() => {
@@ -31,6 +36,12 @@ const AdvancedSearch = () => {
     if (Object.keys(urlCriteria).length > 0) {
       setSearchFormData(urlCriteria);
 
+      // Check permission before executing search
+      if (!canRunSearch) {
+        toast.error('You do not have permission to run advanced searches.');
+        return;
+      }
+
       // Only trigger search if we *didn't already* add page=results
       if (!hasResults) {
         handleSearch(urlCriteria);
@@ -41,6 +52,7 @@ const AdvancedSearch = () => {
     } else if (hasResults) {
       setSearchResults({ data: [] });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch search metadata
@@ -69,6 +81,12 @@ const AdvancedSearch = () => {
   });
 
   const handleSearch = (formData) => {
+    // Check permission before running search
+    if (!canRunSearch) {
+      toast.error('You do not have permission to run advanced searches.');
+      return;
+    }
+
     setIsSearching(true);
     setSearchFormData(formData);
 
@@ -105,6 +123,42 @@ const AdvancedSearch = () => {
     // Clear search parameters from URL including page=results
     setSearchParams(new URLSearchParams());
   };
+
+  // Show permission denied message if user doesn't have access
+  if (!canRunSearch) {
+    return (
+      <div className="px-4 pb-2 flex flex-col gap-2 h-full overflow-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="pl-2">
+            <h1 className="text-xl font-bold text-gray-900">Advanced Search</h1>
+            <p className="text-base text-gray-600 ">
+              Search through contacts and cases with advanced filters
+            </p>
+          </div>
+        </div>
+
+        {/* Permission Denied Message */}
+        <div className="bg-white/50 backdrop-blur-md border border-gray-200/80 shadow-lg gap-4 p-8 rounded-lg flex flex-col items-center justify-center h-full">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <X className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+              Access Denied
+            </h3>
+            <p className="text-base text-gray-600 mb-1">
+              You do not have permission to run advanced searches.
+            </p>
+            <p className="text-sm text-gray-500">
+              Please contact your administrator if you need access to this
+              feature.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 pb-2 flex flex-col gap-2 h-full overflow-auto">

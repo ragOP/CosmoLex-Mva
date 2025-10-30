@@ -15,16 +15,22 @@ import {
   SelectItem,
 } from '@/components/ui/select';
 import getMatterMeta from '@/pages/matter/intake/helpers/getMatterMeta';
+import { usePermission } from '@/utils/usePermission';
+import { toast } from 'sonner';
 
 const FilterTag = ({ filterKey, filterValue, onRemove }) => (
   <div className="flex items-center gap-1 bg-indigo-100 text-indigo-700 text-xs font-semibold px-2 py-1 rounded-full">
-    <span className="capitalize">{filterKey.replace(/_/g, ' ')}: {filterValue}</span>
-    <button onClick={() => onRemove(filterKey, filterValue)} className="rounded-full hover:bg-indigo-200">
+    <span className="capitalize">
+      {filterKey.replace(/_/g, ' ')}: {filterValue}
+    </span>
+    <button
+      onClick={() => onRemove(filterKey, filterValue)}
+      className="rounded-full hover:bg-indigo-200"
+    >
       <X size={14} />
     </button>
   </div>
 );
-
 
 const TasksPage = () => {
   const navigate = useNavigate();
@@ -32,9 +38,15 @@ const TasksPage = () => {
   const [searchText, setSearchText] = useState('');
   const [currentFilterType, setCurrentFilterType] = useState('');
 
+  // Permissions
+  const { hasPermission, isAdmin } = usePermission();
+  const canViewMatters = isAdmin || hasPermission('matters.view');
+  const canCreateMatter = isAdmin || hasPermission('matters.intake.store');
+
   const { data: matters, isLoading } = useQuery({
     queryKey: ['matters'],
     queryFn: getMatters,
+    enabled: canViewMatters,
   });
 
   const { data: matterMeta } = useQuery({
@@ -48,11 +60,11 @@ const TasksPage = () => {
     // Search functionality is applied first
     const searchedMatters = searchText
       ? baseMatters.filter((matter) =>
-        (matter?.contact || '')
-          .toString()
-          .toLowerCase()
-          .includes(searchText.toLowerCase())
-      )
+          (matter?.contact || '')
+            .toString()
+            .toLowerCase()
+            .includes(searchText.toLowerCase())
+        )
       : baseMatters;
 
     const filterKeys = Object.keys(activeFilters);
@@ -96,6 +108,13 @@ const TasksPage = () => {
     setCurrentFilterType('');
   };
 
+  const handleCreateMatter = () => {
+    if (!canCreateMatter) {
+      toast.error('You do not have permission to create matters.');
+      return;
+    }
+    navigate(`/dashboard/inbox/overview/create`);
+  };
 
   if (isLoading) {
     return (
@@ -105,11 +124,41 @@ const TasksPage = () => {
     );
   }
 
+  // Show permission denied message if user doesn't have access
+  if (!canViewMatters) {
+    return (
+      <div className="flex flex-col gap-2 h-full w-full overflow-auto">
+        <div className="flex items-center justify-between px-[50px] pt-4">
+          <p className="text-2xl font-bold">Matters</p>
+        </div>
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <X className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+              Access Denied
+            </h3>
+            <p className="text-base text-gray-600 mb-1">
+              You do not have permission to view matters.
+            </p>
+            <p className="text-sm text-gray-500">
+              Please contact your administrator if you need access to this
+              feature.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2 h-full w-full overflow-auto">
       {/* --- Main Header Container --- */}
       <div className="flex flex-col sm:flex-row justify-between w-full items-start sm:items-center px-[50px] pt-4 gap-3">
-        <p className="text-2xl font-bold">Matters ({filteredMatters?.length || 0})</p>
+        <p className="text-2xl font-bold">
+          Matters ({filteredMatters?.length || 0})
+        </p>
 
         {/* --- Right-side Controls Container (responsive) --- */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-[70px] sm:w-auto">
@@ -144,7 +193,9 @@ const TasksPage = () => {
                   <SelectItem value="case_role">Case Role</SelectItem>
                   <SelectItem value="case_type">Case Type</SelectItem>
                   <SelectItem value="case_status">Case Status</SelectItem>
-                  <SelectItem value="marketing_source">Marketing Source</SelectItem>
+                  <SelectItem value="marketing_source">
+                    Marketing Source
+                  </SelectItem>
                   <SelectItem value="assignees">Assignee</SelectItem>
                   <SelectItem value="owners">Owner</SelectItem>
                   <SelectItem value="ad_campaign_id">Ad Campaign</SelectItem>
@@ -156,41 +207,50 @@ const TasksPage = () => {
                 value=""
                 onValueChange={(value) => {
                   if (currentFilterType && value) {
-                    handleFilterChange(currentFilterType, value)
+                    handleFilterChange(currentFilterType, value);
                   }
                 }}
                 disabled={!currentFilterType || isLoading}
               >
                 <SelectTrigger className="h-10 bg-transparent border-0 shadow-none px-1 focus:ring-0 focus:outline-none w-auto min-w-[120px]">
-                  <SelectValue placeholder={activeFilters[currentFilterType]?.join(', ') || 'Select Value...'} />
+                  <SelectValue
+                    placeholder={
+                      activeFilters[currentFilterType]?.join(', ') ||
+                      'Select Value...'
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent className="min-w-[160px]">
-                  {matterMeta && currentFilterType && matterMeta[currentFilterType] ? (
+                  {matterMeta &&
+                  currentFilterType &&
+                  matterMeta[currentFilterType] ? (
                     matterMeta[currentFilterType]?.map((item) => (
                       <SelectItem key={item.id} value={item.name}>
                         {item.name}
                       </SelectItem>
                     ))
                   ) : (
-                    <div className="px-2 py-1 text-sm text-gray-500">Select a category first</div>
+                    <div className="px-2 py-1 text-sm text-gray-500">
+                      Select a category first
+                    </div>
                   )}
                 </SelectContent>
               </Select>
             </div>
-
-
           </div>
           {/* Create button moved outside of Select to avoid layout issues on small screens */}
-          <div className="ml-auto">
-            <Button
-              onClick={() => navigate(`/dashboard/inbox/overview/create`)}
-              className="cursor-pointer text-center pr-1.5 max-w-48 rounded-md min-w-36"
-              icon={Plus}
-              iconPosition="left"
-            >
-              Create Matter
-            </Button>
-          </div>
+          {canCreateMatter && (
+            <div className="ml-auto">
+              <Button
+                onClick={handleCreateMatter}
+                className="cursor-pointer text-center pr-1.5 max-w-48 rounded-md min-w-36"
+                icon={Plus}
+                iconPosition="left"
+              >
+                Create Matter
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -199,9 +259,14 @@ const TasksPage = () => {
         {Object.keys(activeFilters).length > 0 && (
           <>
             {Object.entries(activeFilters).flatMap(([key, values]) =>
-              values.map(value =>
-                <FilterTag key={`${key}-${value}`} filterKey={key} filterValue={value} onRemove={handleFilterChange} />
-              )
+              values.map((value) => (
+                <FilterTag
+                  key={`${key}-${value}`}
+                  filterKey={key}
+                  filterValue={value}
+                  onRemove={handleFilterChange}
+                />
+              ))
             )}
             <button
               onClick={clearAllFilters}

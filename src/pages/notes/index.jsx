@@ -28,11 +28,21 @@ import {
   getNote,
 } from '@/api/api_services/notes';
 import { toast } from 'sonner';
+import PermissionGuard from '@/components/auth/PermissionGuard';
+import { usePermission } from '@/utils/usePermission';
 
 const NotesPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  // Permission checks
+  const { hasPermission } = usePermission();
+  const canViewNotes = hasPermission('notes.view');
+  const canCreateNote = hasPermission('notes.create');
+  const canShowNote = hasPermission('notes.show');
+  const canUpdateNote = hasPermission('notes.update');
+  const canDeleteNote = hasPermission('notes.delete');
 
   // Categories will be fetched from API
   const [categories, setCategories] = useState([]);
@@ -198,17 +208,18 @@ const NotesPage = () => {
         toast.error('Please wait for categories to load before editing');
         return;
       }
-      
+
       console.log('Starting to fetch note data for ID:', note.id);
-      
+
       // Fetch complete note data from API
       const completeNote = await getNote(note.id);
       console.log('Complete note data fetched:', completeNote);
       console.log('Note ID being edited:', note.id);
       console.log('Raw API response:', completeNote);
-      
+
       // Check the data structure
-      const noteData = completeNote?.data || completeNote?.response || completeNote;
+      const noteData =
+        completeNote?.data || completeNote?.response || completeNote;
       console.log('Processed note data:', noteData);
       console.log('Note data structure:', {
         hasData: !!noteData,
@@ -217,9 +228,9 @@ const NotesPage = () => {
         hasCategoryId: !!noteData?.category_id,
         title: noteData?.title,
         body: noteData?.body,
-        category_id: noteData?.category_id
+        category_id: noteData?.category_id,
       });
-      
+
       // Set the complete note data for editing
       setEditingNote(noteData);
       console.log('Editing note state set to:', noteData);
@@ -233,7 +244,9 @@ const NotesPage = () => {
   };
 
   const handleViewNote = (noteId) => {
-    navigate(`/dashboard/notes/${noteId}?slugId=${matterSlug}`);
+    if (canShowNote) {
+      navigate(`/dashboard/notes/${noteId}?slugId=${matterSlug}`);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -266,196 +279,286 @@ const NotesPage = () => {
   }
 
   return (
-    <div className="px-4">
-      <Stack className="bg-white/30 p-4 rounded-2xl">
-        <BreadCrumb label="Notes" />
-
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-4 mb-6">
-          {/* Left Side - Notes Count */}
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Notes ({filteredNotes.length})
-            </h1>
-            {!categoriesData && (
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
-                Loading categories...
-              </div>
-            )}
-          </div>
-
-          {/* Right Side - Search, View Toggle, and Create Button */}
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            {/* Search */}
-            <div className="relative flex-1 md:w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
-              <Input
-                placeholder="Search notes..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            {/* View Mode Toggle */}
-            <div className="flex items-center bg-gray-100 rounded-lg p-1 shadow-sm">
-              <Button
-                onClick={() => setViewMode('list')}
-                size="sm"
-                variant="ghost"
-                className={`p-2 rounded-md transition-all ${
-                  viewMode === 'list'
-                    ? 'bg-[#6366F1] text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
-                }`}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              <Button
-                onClick={() => setViewMode('grid')}
-                size="sm"
-                variant="ghost"
-                className={`p-2 rounded-md transition-all ${
-                  viewMode === 'grid'
-                    ? 'bg-[#6366F1] text-white shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
-                }`}
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Create Note Button */}
-            <Button
-              onClick={() => {
-                setEditingNote(null);
-                setDialogOpen(true);
-              }}
-              className="bg-[#6366F1] text-white hover:bg-[#5856eb] transition-colors shadow-sm whitespace-nowrap"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Create Note
-            </Button>
+    <PermissionGuard
+      permission="notes.view"
+      fallback={
+        <div className="px-4">
+          <BreadCrumb label="Notes" />
+          <div className="text-center py-8">
+            <p className="text-red-600">
+              You don't have permission to view notes.
+            </p>
           </div>
         </div>
+      }
+    >
+      <div className="px-4">
+        <Stack className="bg-white/30 p-4 rounded-2xl">
+          <BreadCrumb label="Notes" />
 
-        {/* Loading State */}
-        {notesLoading && (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[...Array(6)].map((_, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-lg border border-gray-200 p-6"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <Skeleton variant="text" width="70%" height={28} />
-                  <Skeleton
-                    variant="rectangular"
-                    width={80}
-                    height={24}
-                    className="rounded-full"
-                  />
+          {/* Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mt-4 mb-6">
+            {/* Left Side - Notes Count */}
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-gray-900">
+                Notes ({filteredNotes.length})
+              </h1>
+              {!categoriesData && (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+                  Loading categories...
                 </div>
-                <div className="space-y-2 mb-4">
-                  <Skeleton variant="text" width="100%" height={20} />
-                  <Skeleton variant="text" width="90%" height={20} />
-                  <Skeleton variant="text" width="75%" height={20} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Skeleton variant="text" width={120} height={16} />
-                  <div className="flex gap-2">
+              )}
+            </div>
+
+            {/* Right Side - Search, View Toggle, and Create Button */}
+            <div className="flex items-center gap-4 w-full md:w-auto">
+              {/* Search */}
+              <div className="relative flex-1 md:w-64">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+                <Input
+                  placeholder="Search notes..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {/* View Mode Toggle */}
+              <div className="flex items-center bg-gray-100 rounded-lg p-1 shadow-sm">
+                <Button
+                  onClick={() => setViewMode('list')}
+                  size="sm"
+                  variant="ghost"
+                  className={`p-2 rounded-md transition-all ${
+                    viewMode === 'list'
+                      ? 'bg-[#6366F1] text-white shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+                  }`}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  onClick={() => setViewMode('grid')}
+                  size="sm"
+                  variant="ghost"
+                  className={`p-2 rounded-md transition-all ${
+                    viewMode === 'grid'
+                      ? 'bg-[#6366F1] text-white shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+                  }`}
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Create Note Button */}
+              <PermissionGuard permission="notes.create">
+                <Button
+                  onClick={() => {
+                    setEditingNote(null);
+                    setDialogOpen(true);
+                  }}
+                  className="bg-[#6366F1] text-white hover:bg-[#5856eb] transition-colors shadow-sm whitespace-nowrap"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Note
+                </Button>
+              </PermissionGuard>
+            </div>
+          </div>
+
+          {/* Loading State */}
+          {notesLoading && (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[...Array(6)].map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-lg border border-gray-200 p-6"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <Skeleton variant="text" width="70%" height={28} />
                     <Skeleton
                       variant="rectangular"
-                      width={32}
-                      height={32}
-                      className="rounded"
-                    />
-                    <Skeleton
-                      variant="rectangular"
-                      width={32}
-                      height={32}
-                      className="rounded"
-                    />
-                    <Skeleton
-                      variant="rectangular"
-                      width={32}
-                      height={32}
-                      className="rounded"
+                      width={80}
+                      height={24}
+                      className="rounded-full"
                     />
                   </div>
+                  <div className="space-y-2 mb-4">
+                    <Skeleton variant="text" width="100%" height={20} />
+                    <Skeleton variant="text" width="90%" height={20} />
+                    <Skeleton variant="text" width="75%" height={20} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Skeleton variant="text" width={120} height={16} />
+                    <div className="flex gap-2">
+                      <Skeleton
+                        variant="rectangular"
+                        width={32}
+                        height={32}
+                        className="rounded"
+                      />
+                      <Skeleton
+                        variant="rectangular"
+                        width={32}
+                        height={32}
+                        className="rounded"
+                      />
+                      <Skeleton
+                        variant="rectangular"
+                        width={32}
+                        height={32}
+                        className="rounded"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
 
-        {/* Notes Display */}
-        {!notesLoading && (
-          <>
-            {filteredNotes.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="mb-6">
-                  <FileText size={80} className="mx-auto" />
+          {/* Notes Display */}
+          {!notesLoading && (
+            <>
+              {filteredNotes.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="mb-6">
+                    <FileText size={80} className="mx-auto" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-700 mb-3">
+                    No notes found
+                  </h3>
+                  <p className="text-gray-500 mb-6 max-w-md mx-auto">
+                    {searchTerm || selectedCategory !== 'all'
+                      ? 'No notes match your current search or filter criteria. Try adjusting your search terms or removing filters.'
+                      : 'Get started by creating your first note. Notes help you organize thoughts, track important information, and collaborate with your team.'}
+                  </p>
+                  {!searchTerm && selectedCategory === 'all' && (
+                    <PermissionGuard permission="notes.create">
+                      <Button
+                        onClick={() => {
+                          setEditingNote(null);
+                          setDialogOpen(true);
+                        }}
+                        className="bg-[#6366F1] text-white hover:bg-[#5856eb] transition-colors shadow-sm px-6 py-2"
+                      >
+                        <Plus className="mr-2 h-5 w-5" />
+                        Create Your First Note
+                      </Button>
+                    </PermissionGuard>
+                  )}
                 </div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-3">
-                  No notes found
-                </h3>
-                <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                  {searchTerm || selectedCategory !== 'all'
-                    ? 'No notes match your current search or filter criteria. Try adjusting your search terms or removing filters.'
-                    : 'Get started by creating your first note. Notes help you organize thoughts, track important information, and collaborate with your team.'}
-                </p>
-                {!searchTerm && selectedCategory === 'all' && (
-                  <Button
-                    onClick={() => {
-                      setEditingNote(null);
-                      setDialogOpen(true);
-                    }}
-                    className="bg-[#6366F1] text-white hover:bg-[#5856eb] transition-colors shadow-sm px-6 py-2"
-                  >
-                    <Plus className="mr-2 h-5 w-5" />
-                    Create Your First Note
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div
-                className={
-                  viewMode === 'grid'
-                    ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
-                    : 'space-y-4'
-                }
-              >
-                {filteredNotes.map((note) => (
-                  <div
-                    key={note.id}
-                    className={`bg-white rounded-lg border hover:shadow-md transition-shadow p-4 ${
-                      viewMode === 'list'
-                        ? 'flex items-center justify-between'
-                        : ''
-                    }`}
-                  >
-                    <div className={`${viewMode === 'list' ? 'flex-1' : ''}`}>
-                      <div className="flex items-start justify-between mb-2">
-                        <h3
-                          className={`font-semibold text-[#40444D] ${
-                            viewMode === 'list' ? 'text-base' : 'text-lg'
+              ) : (
+                <div
+                  className={
+                    viewMode === 'grid'
+                      ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
+                      : 'space-y-4'
+                  }
+                >
+                  {filteredNotes.map((note) => (
+                    <div
+                      key={note.id}
+                      className={`bg-white rounded-lg border hover:shadow-md transition-shadow p-4 ${
+                        viewMode === 'list'
+                          ? 'flex items-center justify-between'
+                          : ''
+                      }`}
+                    >
+                      <div className={`${viewMode === 'list' ? 'flex-1' : ''}`}>
+                        <div className="flex items-start justify-between mb-2">
+                          <h3
+                            className={`font-semibold text-[#40444D] ${
+                              viewMode === 'list' ? 'text-base' : 'text-lg'
+                            }`}
+                          >
+                            {note.title}
+                          </h3>
+                          {viewMode === 'grid' && (
+                            <div className="flex gap-1 ml-2">
+                              <PermissionGuard permission="notes.show">
+                                <Button
+                                  onClick={() => handleViewNote(note.id)}
+                                  size="sm"
+                                  variant="ghost"
+                                  className="bg-blue-50 text-blue-600 hover:bg-blue-100 p-1 h-6 w-6 transition-colors"
+                                  title="View"
+                                >
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                              </PermissionGuard>
+                              <PermissionGuard permission="notes.update">
+                                <Button
+                                  onClick={() => {
+                                    setEditingNoteId(note.id);
+                                    handleEditNote(note);
+                                  }}
+                                  size="sm"
+                                  variant="ghost"
+                                  className="bg-green-50 text-green-600 hover:bg-green-100 p-1 h-6 w-6 transition-colors"
+                                  title="Edit"
+                                  disabled={!categoriesData}
+                                >
+                                  {editingNoteId === note.id ? (
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-600"></div>
+                                  ) : (
+                                    <Edit className="h-3 w-3" />
+                                  )}
+                                </Button>
+                              </PermissionGuard>
+                              <PermissionGuard permission="notes.delete">
+                                <Button
+                                  onClick={() => handleDeleteNote(note.id)}
+                                  size="sm"
+                                  variant="ghost"
+                                  className="bg-red-50 text-red-600 hover:bg-red-100 p-1 h-6 w-6 transition-colors"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </PermissionGuard>
+                            </div>
+                          )}
+                        </div>
+                        <p
+                          className={`text-gray-600 mb-3 ${
+                            viewMode === 'list' ? 'text-sm' : 'text-base'
                           }`}
                         >
-                          {note.title}
-                        </h3>
-                        {viewMode === 'grid' && (
-                          <div className="flex gap-1 ml-2">
+                          {truncateText(
+                            note.body,
+                            viewMode === 'list' ? 80 : 120
+                          )}
+                        </p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <Tag className="h-3 w-3" />
+                            {getCategoryName(note.category_id)}
+                          </div>
+                          {note.attachments?.length > 0 && (
+                            <div className="flex items-center gap-1">
+                              <Paperclip className="h-3 w-3" />
+                              {note.attachments.length}
+                            </div>
+                          )}
+                          <div>{formatDate(note.created_at)}</div>
+                        </div>
+                      </div>
+                      {viewMode === 'list' && (
+                        <div className="flex gap-2 ml-4">
+                          <PermissionGuard permission="notes.show">
                             <Button
                               onClick={() => handleViewNote(note.id)}
                               size="sm"
                               variant="ghost"
-                              className="bg-blue-50 text-blue-600 hover:bg-blue-100 p-1 h-6 w-6 transition-colors"
+                              className="bg-blue-50 text-blue-600 hover:bg-blue-100 p-2 h-8 w-8 transition-colors"
                               title="View"
                             >
-                              <Eye className="h-3 w-3" />
+                              <Eye className="h-4 w-4" />
                             </Button>
+                          </PermissionGuard>
+                          <PermissionGuard permission="notes.update">
                             <Button
                               onClick={() => {
                                 setEditingNoteId(note.id);
@@ -463,122 +566,66 @@ const NotesPage = () => {
                               }}
                               size="sm"
                               variant="ghost"
-                              className="bg-green-50 text-green-600 hover:bg-green-100 p-1 h-6 w-6 transition-colors"
+                              className="bg-green-50 text-green-600 hover:bg-green-100 p-2 h-8 w-8 transition-colors"
                               title="Edit"
                               disabled={!categoriesData}
                             >
                               {editingNoteId === note.id ? (
-                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-600"></div>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
                               ) : (
-                                <Edit className="h-3 w-3" />
+                                <Edit className="h-4 w-4" />
                               )}
                             </Button>
+                          </PermissionGuard>
+                          <PermissionGuard permission="notes.delete">
                             <Button
                               onClick={() => handleDeleteNote(note.id)}
                               size="sm"
                               variant="ghost"
-                              className="bg-red-50 text-red-600 hover:bg-red-100 p-1 h-6 w-6 transition-colors"
+                              className="bg-red-50 text-red-600 hover:bg-red-100 p-2 h-8 w-8 transition-colors"
                               title="Delete"
                             >
-                              <Trash2 className="h-3 w-3" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
-                          </div>
-                        )}
-                      </div>
-                      <p
-                        className={`text-gray-600 mb-3 ${
-                          viewMode === 'list' ? 'text-sm' : 'text-base'
-                        }`}
-                      >
-                        {truncateText(
-                          note.body,
-                          viewMode === 'list' ? 80 : 120
-                        )}
-                      </p>
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <Tag className="h-3 w-3" />
-                          {getCategoryName(note.category_id)}
+                          </PermissionGuard>
                         </div>
-                        {note.attachments?.length > 0 && (
-                          <div className="flex items-center gap-1">
-                            <Paperclip className="h-3 w-3" />
-                            {note.attachments.length}
-                          </div>
-                        )}
-                        <div>{formatDate(note.created_at)}</div>
-                      </div>
+                      )}
                     </div>
-                    {viewMode === 'list' && (
-                      <div className="flex gap-2 ml-4">
-                        <Button
-                          onClick={() => handleViewNote(note.id)}
-                          size="sm"
-                          variant="ghost"
-                          className="bg-blue-50 text-blue-600 hover:bg-blue-100 p-2 h-8 w-8 transition-colors"
-                          title="View"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          onClick={() => {
-                            setEditingNoteId(note.id);
-                            handleEditNote(note);
-                          }}
-                          size="sm"
-                          variant="ghost"
-                          className="bg-green-50 text-green-600 hover:bg-green-100 p-2 h-8 w-8 transition-colors"
-                          title="Edit"
-                          disabled={!categoriesData}
-                        >
-                          {editingNoteId === note.id ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
-                          ) : (
-                            <Edit className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button
-                          onClick={() => handleDeleteNote(note.id)}
-                          size="sm"
-                          variant="ghost"
-                          className="bg-red-50 text-red-600 hover:bg-red-100 p-2 h-8 w-8 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </Stack>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </Stack>
 
-      {/* Create/Edit Dialog */}
-      <CreateEditNoteDialog
-        open={dialogOpen}
-        onClose={handleDialogClose}
-        onSubmit={editingNote ? handleUpdateNote : handleCreateNote}
-        isLoading={createNoteMutation.isPending || updateNoteMutation.isPending || editingNoteId !== null}
-        note={editingNote}
-        isEdit={!!editingNote}
-        categories={categoriesData || categories}
-      />
-
-      {/* Delete Confirmation Dialog */}
-      <DeleteConfirmationDialog
-        open={deleteConfirmationOpen}
-        onClose={() => setDeleteConfirmationOpen(false)}
-        onConfirm={() => {
-          if (noteToDelete) {
-            deleteNoteMutation.mutate(noteToDelete);
+        {/* Create/Edit Dialog */}
+        <CreateEditNoteDialog
+          open={dialogOpen}
+          onClose={handleDialogClose}
+          onSubmit={editingNote ? handleUpdateNote : handleCreateNote}
+          isLoading={
+            createNoteMutation.isPending ||
+            updateNoteMutation.isPending ||
+            editingNoteId !== null
           }
-        }}
-        isLoading={deleteNoteMutation.isPending}
-      />
-    </div>
+          note={editingNote}
+          isEdit={!!editingNote}
+          categories={categoriesData || categories}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <DeleteConfirmationDialog
+          open={deleteConfirmationOpen}
+          onClose={() => setDeleteConfirmationOpen(false)}
+          onConfirm={() => {
+            if (noteToDelete) {
+              deleteNoteMutation.mutate(noteToDelete);
+            }
+          }}
+          isLoading={deleteNoteMutation.isPending}
+        />
+      </div>
+    </PermissionGuard>
   );
 };
 

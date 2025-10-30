@@ -27,6 +27,7 @@ import getMetaOptions from '@/utils/getMetaFields';
 import { truncateStr } from '@/utils/truncateStr';
 import { noFilterColumns } from '@/utils/noFilterColumns';
 import { getTableWidth } from '@/utils/isMobile';
+import PermissionGuard from '@/components/auth/PermissionGuard';
 
 // Utility function to determine flag color based on due status
 const getFlagColor = (dueStatus) => {
@@ -63,6 +64,10 @@ const TaskTable = ({
   handleEdit,
   handleDelete,
   handleCommentClick,
+  canUpdate = false,
+  canDelete = false,
+  canComment = false,
+  canChangeStatus = false,
 }) => {
   const statusMeta = getMetaOptions({
     metaField: 'taks_status',
@@ -281,25 +286,36 @@ const TaskTable = ({
       renderCell: (params) => {
         return (
           <div className="w-full h-full flex items-center justify-start">
-            <Select
-              value={statusMeta
-                .find((s) => s.id === params.value)
-                ?.id.toString()} // convert "Pending" → "1"
-              onValueChange={(value) => {
-                handleUpdateTaskStatus(params.id, parseInt(value));
-              }}
+            <PermissionGuard
+              permission="tasks.status.update"
+              fallback={
+                <div className="w-[120px] h-8 text-xs flex items-center justify-center bg-gray-100 rounded border text-gray-500">
+                  {statusMeta.find((s) => s.id === params.value)?.name ||
+                    'Unknown'}
+                </div>
+              }
             >
-              <SelectTrigger className="w-[120px] h-8 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {statusMeta.map((status) => (
-                  <SelectItem key={status.id} value={status.id.toString()}>
-                    {status.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <Select
+                value={statusMeta
+                  .find((s) => s.id === params.value)
+                  ?.id.toString()} // convert "Pending" → "1"
+                onValueChange={(value) => {
+                  handleUpdateTaskStatus(params.id, parseInt(value));
+                }}
+                disabled={!canChangeStatus}
+              >
+                <SelectTrigger className="w-[120px] h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusMeta.map((status) => (
+                    <SelectItem key={status.id} value={status.id.toString()}>
+                      {status.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </PermissionGuard>
             {/* <Select
               disabled={params.value === 'Completed'}
               value={params.value} // "Pending", "Completed"
@@ -332,15 +348,24 @@ const TaskTable = ({
       headerAlign: 'center',
       align: 'center',
       renderCell: (params) => (
-        <IconButton
-          onClick={(e) => {
-            e.stopPropagation();
-            onRowClick(params);
-          }}
-          className="cursor-pointer"
+        <PermissionGuard
+          permission="tasks.view"
+          fallback={
+            <IconButton disabled className="cursor-not-allowed">
+              <Eye className="h-4 w-4 text-gray-400" />
+            </IconButton>
+          }
         >
-          <Eye className="h-4 w-4" />
-        </IconButton>
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              onRowClick(params);
+            }}
+            className="cursor-pointer"
+          >
+            <Eye className="h-4 w-4" />
+          </IconButton>
+        </PermissionGuard>
       ),
     },
     {
@@ -353,15 +378,26 @@ const TaskTable = ({
       headerAlign: 'center',
       align: 'center',
       renderCell: (params) => (
-        <IconButton
-          onClick={(e) => {
-            e.stopPropagation();
-            handleCommentClick(params.row);
-          }}
-          className="cursor-pointer"
+        <PermissionGuard
+          permission="task-comments.view"
+          fallback={
+            <IconButton disabled className="cursor-not-allowed">
+              <MessageSquare className="h-4 w-4 text-gray-400" />
+            </IconButton>
+          }
         >
-          <MessageSquare className="h-4 w-4 text-[#6366F1]" />
-        </IconButton>
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!canComment) return;
+              handleCommentClick(params.row);
+            }}
+            className="cursor-pointer"
+            disabled={!canComment}
+          >
+            <MessageSquare className="h-4 w-4 text-[#6366F1]" />
+          </IconButton>
+        </PermissionGuard>
       ),
     },
     {
@@ -375,21 +411,30 @@ const TaskTable = ({
       align: 'center',
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-center">
-          {params?.row?.is_editable ? (
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEdit(params.row);
-              }}
-              className="cursor-pointer"
-            >
-              <Pencil className="h-4 w-4 text-[#6366F1]" />
-            </IconButton>
-          ) : (
-            <IconButton className="cursor-pointer">
-              <CircleOff className="h-4 w-4 text-[#6366F1]" />
-            </IconButton>
-          )}
+          <PermissionGuard
+            permission="tasks.update"
+            fallback={
+              <IconButton className="cursor-pointer" disabled>
+                <CircleOff className="h-4 w-4 text-gray-400" />
+              </IconButton>
+            }
+          >
+            {canUpdate ? (
+              <IconButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit(params.row);
+                }}
+                className="cursor-pointer"
+              >
+                <Pencil className="h-4 w-4 text-[#6366F1]" />
+              </IconButton>
+            ) : (
+              <IconButton className="cursor-pointer" disabled>
+                <CircleOff className="h-4 w-4 text-[#6366F1]" />
+              </IconButton>
+            )}
+          </PermissionGuard>
         </div>
       ),
     },
@@ -404,21 +449,30 @@ const TaskTable = ({
       align: 'center',
       renderCell: (params) => (
         <div className="w-full h-full flex items-center justify-center">
-          {params?.row?.is_deletable ? (
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete(params.row);
-              }}
-              className="cursor-pointer"
-            >
-              <Trash2 className="h-4 w-4 text-red-500" />
-            </IconButton>
-          ) : (
-            <IconButton className="cursor-pointer">
-              <CircleOff className="h-4 w-4" />
-            </IconButton>
-          )}
+          <PermissionGuard
+            permission="tasks.delete"
+            fallback={
+              <IconButton className="cursor-pointer" disabled>
+                <CircleOff className="h-4 w-4 text-gray-400" />
+              </IconButton>
+            }
+          >
+            {params?.row?.is_deletable && canDelete ? (
+              <IconButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(params.row);
+                }}
+                className="cursor-pointer"
+              >
+                <Trash2 className="h-4 w-4 text-red-500" />
+              </IconButton>
+            ) : (
+              <IconButton className="cursor-pointer" disabled>
+                <CircleOff className="h-4 w-4" />
+              </IconButton>
+            )}
+          </PermissionGuard>
         </div>
       ),
     },

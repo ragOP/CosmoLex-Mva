@@ -7,6 +7,7 @@ import listPlugin from '@fullcalendar/list';
 import '../../styles/calendar.css';
 import CustomToolBar from './CustomToolBar';
 import { addDays } from 'date-fns';
+import { usePermission } from '@/utils/usePermission';
 
 const CalendarWrapper = ({
   slug = null,
@@ -23,6 +24,11 @@ const CalendarWrapper = ({
   const [currentView, setCurrentView] = React.useState('dayGridMonth');
 
   const [label, setLabel] = React.useState('');
+
+  // Permissions
+  const { hasPermission, isAdmin } = usePermission();
+  const canShowEvent = isAdmin || hasPermission('events.show');
+  const canUpdateTime = isAdmin || hasPermission('events.time.update');
 
   // Convert events to FullCalendar format
   const fullCalendarEvents = events.map((event) => {
@@ -72,6 +78,9 @@ const CalendarWrapper = ({
 
   // Handle event click
   const handleEventClick = (clickInfo) => {
+    if (!canShowEvent) {
+      return;
+    }
     const event = events.find((e) => e.id === parseInt(clickInfo?.event?.id));
     if (event) {
       handleShowEvent(event);
@@ -80,6 +89,11 @@ const CalendarWrapper = ({
 
   // Handle event drop (drag and drop events)
   const handleEventDropInternal = async (dropInfo) => {
+    if (!canUpdateTime) {
+      dropInfo.revert();
+      return;
+    }
+
     const { event } = dropInfo;
 
     try {
@@ -115,6 +129,11 @@ const CalendarWrapper = ({
 
   // Handle event resize
   const handleEventResize = async (resizeInfo) => {
+    if (!canUpdateTime) {
+      resizeInfo.revert();
+      return;
+    }
+
     const { event } = resizeInfo;
 
     try {
@@ -240,7 +259,7 @@ const CalendarWrapper = ({
               },
               listWeek: { titleFormat: { month: 'long', year: 'numeric' } },
             }}
-            editable={true}
+            editable={canUpdateTime}
             selectable={true}
             selectMirror={true}
             w
