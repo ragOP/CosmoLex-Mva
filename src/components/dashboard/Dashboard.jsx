@@ -296,7 +296,7 @@ const Dashboard = () => {
   return (
     <div className="flex flex-col space-y-6 overflow-y-auto overflow-x-hidden no-scrollbar p-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-[32px] text-[#1E293B] font-bold font-sans">
+        <h2 className="hidden sm:block text-[32px] text-[#1E293B] font-bold font-sans">
           Dashboard
         </h2>
         <div className="flex items-center gap-3 lg:space-x-7">
@@ -328,19 +328,21 @@ const Dashboard = () => {
             </div>
           </div>
           <button
-            className="flex items-center gap-2 shadow-lg"
+            className="flex items-center gap-2 shadow-lg flex-shrink-0 text-sm sm:text-base leading-none"
             style={{
               background:
                 'linear-gradient(180deg, #4648AB 0%, rgba(70, 72, 171, 0.7) 100%)',
               color: '#fff',
-              padding: '8px 12px',
+              height: '40px',
+              lineHeight: '40px',
+              padding: '0 12px',
               borderRadius: '6px',
               border: 'none',
               cursor: 'pointer',
             }}
             onClick={() => navigate('/dashboard/inbox/overview/create')}
           >
-            <PlusIcon />
+            <PlusIcon size={16} />
             <span>Create Matter</span>
           </button>
           <ChartLine

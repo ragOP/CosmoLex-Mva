@@ -132,7 +132,18 @@ const TaskTable = ({
       cellClassName: 'text-[#6366F1]',
       headerAlign: 'center',
       align: 'center',
-      renderCell: (params) => truncateStr(params.value, 15),
+      renderCell: (params) => {
+        // Dynamically determine how many characters to show based on column width
+        const computedWidth = params.colDef?.computedWidth || 150;
+        const horizontalPaddingPx = 32; // estimated padding + grid cell gaps
+        const approxCharWidthPx = 7; // ~7px per character for ~14px font size
+        const availablePx = Math.max(0, computedWidth - horizontalPaddingPx);
+        const maxChars = Math.max(
+          5,
+          Math.floor(availablePx / approxCharWidthPx)
+        );
+        return truncateStr(params.value, maxChars);
+      },
     },
     {
       field: 'priority',
@@ -157,6 +168,21 @@ const TaskTable = ({
           </div>
         );
       },
+    },
+    {
+      field: 'created_at',
+      headerName: 'Created At',
+      flex: 1,
+      minWidth: 130,
+      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
+      renderCell: (params) => (
+        <span className="text-sm text-muted-foreground">
+          {formatDate(params.value)}
+        </span>
+      ),
     },
     {
       field: 'due_date',

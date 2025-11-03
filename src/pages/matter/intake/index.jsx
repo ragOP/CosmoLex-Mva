@@ -17,6 +17,7 @@ import {
 import getMatterMeta from '@/pages/matter/intake/helpers/getMatterMeta';
 import { usePermission } from '@/utils/usePermission';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 const FilterTag = ({ filterKey, filterValue, onRemove }) => (
   <div className="flex items-center gap-1 bg-indigo-100 text-indigo-700 text-xs font-semibold px-2 py-1 rounded-full">
@@ -37,6 +38,9 @@ const TasksPage = () => {
   const [activeFilters, setActiveFilters] = useState({});
   const [searchText, setSearchText] = useState('');
   const [currentFilterType, setCurrentFilterType] = useState('');
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [exportStartDate, setExportStartDate] = useState('');
+  const [exportEndDate, setExportEndDate] = useState('');
 
   // Permissions
   const { hasPermission, isAdmin } = usePermission();
@@ -83,6 +87,7 @@ const TasksPage = () => {
       });
     });
   }, [activeFilters, matters, searchText]);
+  console.log(filteredMatters, '>>>>>>>>>>filteredMatters');
 
   const handleFilterChange = (type, value) => {
     setActiveFilters((prevFilters) => {
@@ -106,6 +111,66 @@ const TasksPage = () => {
   const clearAllFilters = () => {
     setActiveFilters({});
     setCurrentFilterType('');
+  };
+
+  const openExportDialog = () => {
+    setIsExportOpen(true);
+  };
+
+  const closeExportDialog = () => {
+    setIsExportOpen(false);
+  };
+
+  const parseDate = (value) => {
+    if (!value) return null;
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  const getCreatedAt = (item) => {
+    return (
+      item?.created_at ||
+      item?.createdAt ||
+      item?.['Created At'] ||
+      item?.created ||
+      item?.created_date ||
+      null
+    );
+  };
+
+  const confirmExportExcel = () => {
+    try {
+      const start = exportStartDate ? new Date(exportStartDate) : null;
+      const end = exportEndDate ? new Date(exportEndDate) : null;
+
+      const source = filteredMatters || [];
+      const withinRange = source.filter((item) => {
+        const createdVal = getCreatedAt(item);
+        const created = parseDate(createdVal);
+        if (!created) return false;
+        if (start && created < new Date(start.setHours(0, 0, 0, 0)))
+          return false;
+        if (end && created > new Date(end.setHours(23, 59, 59, 999)))
+          return false;
+        return true;
+      });
+
+      const rows = (withinRange.length ? withinRange : source).map(
+        (item, index) => ({
+          'S.No': index + 1,
+          ...item,
+        })
+      );
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Matters');
+      XLSX.writeFile(workbook, 'matters.xlsx');
+
+      setIsExportOpen(false);
+    } catch (e) {
+      toast.error('Failed to export Excel');
+    }
   };
 
   const handleCreateMatter = () => {
@@ -239,8 +304,14 @@ const TasksPage = () => {
             </div>
           </div>
           {/* Create button moved outside of Select to avoid layout issues on small screens */}
-          {canCreateMatter && (
-            <div className="ml-auto">
+          <div className="ml-auto flex gap-2">
+            <Button
+              onClick={openExportDialog}
+              className="cursor-pointer text-center pr-1.5 rounded-md min-w-36"
+            >
+              Export
+            </Button>
+            {canCreateMatter && (
               <Button
                 onClick={handleCreateMatter}
                 className="cursor-pointer text-center pr-1.5 max-w-48 rounded-md min-w-36"
@@ -249,8 +320,8 @@ const TasksPage = () => {
               >
                 Create Matter
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -288,6 +359,54 @@ const TasksPage = () => {
           }}
         />
       </div>
+
+      {isExportOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg w-[90%] max-w-md p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-semibold">Export Matters to Excel</h3>
+              <button
+                onClick={closeExportDialog}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-gray-700 mb-1">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={exportStartDate}
+                  onChange={(e) => setExportStartDate(e.target.value)}
+                  className="h-10 border border-gray-300 rounded-md px-3"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-gray-700 mb-1">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={exportEndDate}
+                  onChange={(e) => setExportEndDate(e.target.value)}
+                  className="h-10 border border-gray-300 rounded-md px-3"
+                />
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <Button onClick={closeExportDialog} className="min-w-24">
+                Cancel
+              </Button>
+              <Button onClick={confirmExportExcel} className="min-w-24">
+                Export
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

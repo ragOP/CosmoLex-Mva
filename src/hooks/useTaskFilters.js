@@ -58,40 +58,47 @@ export const useTaskFilters = ({ getFilteredTasks, tasks, tasksLoading }) => {
     }
   }, [tasksLoading, getFilteredTasks, urlFilters]);
 
-  const applyFilters = useCallback(() => {
-    const next = updateURLWithFilters(tempFilters, searchParams);
-    setSearchParams(next, { replace: true });
+  const applyFilters = useCallback(
+    (overrides = null) => {
+      const filtersToApply = overrides
+        ? { ...tempFilters, ...overrides }
+        : tempFilters;
 
-    if (!hasActiveFilters(tempFilters)) {
-      setServerTasks(Array.isArray(tasks) ? tasks : []);
-      return;
-    }
+      const next = updateURLWithFilters(filtersToApply, searchParams);
+      setSearchParams(next, { replace: true });
 
-    // Build query string and fetch filtered data
-    const qs = buildFilterQuery(tempFilters);
+      if (!hasActiveFilters(filtersToApply)) {
+        setServerTasks(Array.isArray(tasks) ? tasks : []);
+        return;
+      }
 
-    isApplyingFilters.current = true;
-    setIsFiltering(true);
+      // Build query string and fetch filtered data
+      const qs = buildFilterQuery(filtersToApply);
 
-    getFilteredTasks(qs.toString())
-      .then((data) => {
-        setServerTasks(Array.isArray(data) ? data : []);
-        toast.success(
-          `Found ${
-            Array.isArray(data) ? data.length : 0
-          } tasks matching your filters.`
-        );
-      })
-      .catch((error) => {
-        console.error('Filter error:', error);
-        toast.error('Failed to apply filters. Please try again.');
-        setServerTasks([]);
-      })
-      .finally(() => {
-        setIsFiltering(false);
-        isApplyingFilters.current = false;
-      });
-  }, [tempFilters, searchParams, setSearchParams, tasks, getFilteredTasks]);
+      isApplyingFilters.current = true;
+      setIsFiltering(true);
+
+      getFilteredTasks(qs.toString())
+        .then((data) => {
+          setServerTasks(Array.isArray(data) ? data : []);
+          toast.success(
+            `Found ${
+              Array.isArray(data) ? data.length : 0
+            } tasks matching your filters.`
+          );
+        })
+        .catch((error) => {
+          console.error('Filter error:', error);
+          toast.error('Failed to apply filters. Please try again.');
+          setServerTasks([]);
+        })
+        .finally(() => {
+          setIsFiltering(false);
+          isApplyingFilters.current = false;
+        });
+    },
+    [tempFilters, searchParams, setSearchParams, tasks, getFilteredTasks]
+  );
 
   // Clear all filters
   const clearAllFilters = useCallback(() => {

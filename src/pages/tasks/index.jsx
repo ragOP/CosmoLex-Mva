@@ -91,6 +91,8 @@ const TasksPage = () => {
     tasksLoading,
   });
 
+  console.log(tasks, '>>>>>>>>>tasks');
+
   // Build select options
   const priorityOptions = useMemo(
     () => getMetaOptions({ metaField: 'taks_priority', metaObj: tasksMeta }),
@@ -272,11 +274,68 @@ const TasksPage = () => {
       }
     >
       <div className="flex flex-col gap-4 h-full w-full overflow-auto">
-        <div className="flex justify-between w-full items-center px-4 pt-4">
-          <p className="text-2xl font-bold">
+        <div className="flex flex-col md:flex-row md:flex-wrap md:justify-between w-full md:items-center px-4 pt-4 gap-3">
+          <p className="text-2xl font-bold w-full md:flex-1">
             Tasks ({(serverTasks || tasks || []).length})
           </p>
-          <div className="flex items-center gap-3">
+          {/* Quick Assignee Filter */}
+          <div className="w-auto min-w-0">
+            <Select
+              value={
+                tempFilters.assigned_to === ''
+                  ? '__all__'
+                  : tempFilters.assigned_to
+              }
+              onValueChange={(val) => {
+                const nextVal = val === '__all__' ? '' : val;
+                updateFilter('assigned_to', nextVal);
+                applyFilters({ assigned_to: nextVal });
+              }}
+              disabled={tasksLoading}
+            >
+              <SelectTrigger className="h-10 w-56 md:w-64">
+                <SelectValue placeholder="Assignees" />
+              </SelectTrigger>
+              <SelectContent className="max-h-64 overflow-auto">
+                <SelectItem value="__all__">Assignees</SelectItem>
+                {assigneeOptions.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Quick Assigned By Filter */}
+          <div className="w-auto min-w-0">
+            <Select
+              value={
+                tempFilters.assigned_by === ''
+                  ? '__all__'
+                  : tempFilters.assigned_by
+              }
+              onValueChange={(val) => {
+                const nextVal = val === '__all__' ? '' : val;
+                updateFilter('assigned_by', nextVal);
+                applyFilters({ assigned_by: nextVal });
+              }}
+              disabled={tasksLoading}
+            >
+              <SelectTrigger className="h-10 w-56 md:w-64">
+                <SelectValue placeholder="Assigned by" />
+              </SelectTrigger>
+              <SelectContent className="max-h-64 overflow-auto">
+                <SelectItem value="__all__">Assigned by</SelectItem>
+                {assignedByOptions.map((a) => (
+                  <SelectItem key={a.id} value={a.id}>
+                    {a.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-3 w-full md:w-auto md:ml-auto">
             <Dialog>
               <DialogTrigger asChild>
                 <UIButton
@@ -435,7 +494,7 @@ const TasksPage = () => {
                         <SelectContent className="max-h-64 overflow-auto">
                           <SelectItem value="__all__">All assignees</SelectItem>
                           {assigneeOptions.map((a) => (
-                            <SelectItem key={a.id} value={a.name}>
+                            <SelectItem key={a.id} value={a.id}>
                               {a.name}
                             </SelectItem>
                           ))}
@@ -469,7 +528,7 @@ const TasksPage = () => {
                             All assigned by
                           </SelectItem>
                           {assignedByOptions.map((a) => (
-                            <SelectItem key={a.id} value={a.name}>
+                            <SelectItem key={a.id} value={a.id}>
                               {a.name}
                             </SelectItem>
                           ))}

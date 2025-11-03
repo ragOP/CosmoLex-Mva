@@ -222,14 +222,14 @@ export default function ContactDialog({
       label: 'First Name',
       name: 'first_name',
       type: 'text',
-      required: nature === 'Individual',
+      required: true,
     },
     { label: 'Middle Name', name: 'middle_name', type: 'text' },
     {
       label: 'Last Name',
       name: 'last_name',
       type: 'text',
-      required: nature === 'Individual',
+      required: true,
     },
     { label: 'Suffix', name: 'suffix', type: 'text' },
     {
@@ -260,14 +260,14 @@ export default function ContactDialog({
       label: 'Primary Phone',
       name: 'primary_phone',
       type: 'text',
-      required: true,
+      // required: true,
     },
     { label: 'Fax', name: 'fax', type: 'text' },
     {
       label: 'Primary Email',
       name: 'primary_email',
       type: 'text',
-      required: true,
+      // required: true,
     },
     { label: 'Secondary Email', name: 'secondary_email', type: 'text' },
     { label: 'When to Contact', name: 'when_to_contact', type: 'text' },
@@ -617,7 +617,7 @@ export default function ContactDialog({
               <div className="w-full">
                 <h3 className="text-lg font-semibold mb-1">
                   Addresses
-                  <span className="text-red-500 ml-1">*</span>
+                  {/* <span className="text-red-500 ml-1">*</span> */}
                 </h3>
                 {addressFields.map((addr, idx) => (
                   <div

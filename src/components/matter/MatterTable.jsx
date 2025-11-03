@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { Box } from '@mui/material';
+import { Box, Button } from '@mui/material';
 import { noFilterColumns } from '@/utils/noFilterColumns';
 import { getTableWidth } from '@/utils/isMobile';
 import { usePermission } from '@/utils/usePermission';
 import { toast } from 'sonner';
+import formatDate from '@/utils/formatDate';
 
 const MatterTable = ({ matters = [], onRowClick }) => {
   const [matterData, setMatterData] = useState([]);
@@ -27,6 +28,21 @@ const MatterTable = ({ matters = [], onRowClick }) => {
       sortable: false,
       renderCell: (params) =>
         params.api.getRowIndexRelativeToVisibleRows(params.id) + 1,
+    },
+    {
+      field: 'created_at',
+      headerName: 'Created At',
+      flex: 1,
+      minWidth: 130,
+      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
+      renderCell: (params) => (
+        <span className="text-sm text-muted-foreground">
+          {params.value ? formatDate(params.value) : '-'}
+        </span>
+      ),
     },
     {
       field: 'contact',
