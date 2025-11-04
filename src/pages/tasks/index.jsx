@@ -118,24 +118,10 @@ const TasksPage = () => {
     [tasksMeta]
   );
 
-  const assignedByOptions = useMemo(() => {
-    if (!Array.isArray(tasks) || tasks.length === 0) return [];
-
-    const map = new Map();
-    for (const task of tasks) {
-      const assignedBy = task?.assigned_by;
-      if (assignedBy?.name) {
-        const key = assignedBy.id || assignedBy.name;
-        if (!map.has(key)) {
-          map.set(key, assignedBy.name);
-        }
-      }
-    }
-
-    return Array.from(map.entries())
-      .map(([key, name]) => ({ id: key, name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [tasks]);
+  const assignedByOptions = useMemo(
+    () => getMetaOptions({ metaField: 'assignees', metaObj: tasksMeta }),
+    [tasksMeta]
+  );
 
   const administratorOptions = useMemo(() => {
     return [
@@ -308,7 +294,10 @@ const TasksPage = () => {
               <SelectContent className="max-h-64 overflow-auto">
                 <SelectItem value="__all__">Assigned by</SelectItem>
                 {assignedByOptions.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
+                  <SelectItem
+                    key={a.id}
+                    value={a.id?.toString() || String(a.id)}
+                  >
                     {a.name}
                   </SelectItem>
                 ))}
@@ -512,7 +501,10 @@ const TasksPage = () => {
                             All assigned by
                           </SelectItem>
                           {assignedByOptions.map((a) => (
-                            <SelectItem key={a.id} value={a.id}>
+                            <SelectItem
+                              key={a.id}
+                              value={a.id?.toString() || String(a.id)}
+                            >
                               {a.name}
                             </SelectItem>
                           ))}
