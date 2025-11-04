@@ -144,6 +144,7 @@ export default function CreateIntake() {
       'assignee_id',
       'owner_id',
       'ad_campaign_id',
+      // 'created_at',
       'contact_id',
     ];
 
@@ -182,6 +183,7 @@ export default function CreateIntake() {
       case_description: '',
       contact_id: '',
       contact_ids: [],
+      created_at: '',
     },
     mode: 'onChange',
   });
@@ -311,6 +313,12 @@ export default function CreateIntake() {
       type: 'select',
       required: false,
       options: matterMeta?.ad_campaign_id || [],
+    },
+    {
+      label: 'Created At',
+      name: 'created_at',
+      type: 'date',
+      required: false,
     },
     {
       label: 'Case Description',

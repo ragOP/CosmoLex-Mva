@@ -117,6 +117,7 @@ export const useTaskFilters = ({ getFilteredTasks, tasks, tasksLoading }) => {
       [key]: value,
     }));
   }, []);
+  console.log(tempFilters, '>>>>>>>>>tempFilters');
 
   //Get count of active filters
   const activeFiltersCount = getActiveFiltersCount(urlFilters);

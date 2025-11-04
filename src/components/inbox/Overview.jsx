@@ -129,6 +129,7 @@ export default function Overview() {
   const handleAddContact = (contact) => {
     if (!selectedContacts.find((c) => c.id === contact.id)) {
       setSelectedContacts([...selectedContacts, contact]);
+      setValue('contact_id', Number(contact.id), { shouldValidate: true });
       toast.success(`${contact.contact_name} added to contacts`);
     } else {
       toast.info(`${contact.contact_name} is already added`);
@@ -189,6 +190,13 @@ export default function Overview() {
     setSelectedContacts((prev) =>
       prev.filter((c) => !contactsToDelete.includes(c.id))
     );
+    // Update form contact_id to the first remaining contact or null
+    const remaining = selectedContacts.filter(
+      (c) => !contactsToDelete.includes(c.id)
+    );
+    setValue('contact_id', remaining[0]?.id ? Number(remaining[0].id) : null, {
+      shouldValidate: true,
+    });
     setContactsToDelete([]);
     setDeleteMode(false);
     toast.success(`Deleted: ${deletedNames.join(', ')}`);
@@ -230,11 +238,13 @@ export default function Overview() {
       assignee_id: null,
       owner_id: null,
       ad_campaign_id: null,
+      created_at: null,
       case_description: '',
       description: '',
       rating_id: null,
       call_outcome_id: null,
       office_location_id: null,
+      contact_id: null,
     },
     resolver: zodResolver(createMatterSchema),
   });
@@ -256,6 +266,7 @@ export default function Overview() {
       assignee_id: matter.assignee_id || null,
       owner_id: matter.owner_id || null,
       ad_campaign_id: matter.ad_campaign_id || null,
+      created_at: matter.created_at || null,
       case_description: matter.case_description || '',
       description: matter.description || '',
       rating_id: matter.rating_id || null,
@@ -279,6 +290,9 @@ export default function Overview() {
           return prev;
         });
         setSelectedContactType(upcomingContact.contact_type);
+        setValue('contact_id', Number(upcomingContact.id), {
+          shouldValidate: true,
+        });
       }
     }
 
@@ -337,6 +351,12 @@ export default function Overview() {
       name: 'ad_campaign_id',
       type: 'select',
       options: matterMeta?.ad_campaign_id || [],
+    },
+    {
+      label: 'Created At',
+      name: 'created_at',
+      type: 'date',
+      required: false,
     },
     // { label: 'Description', name: 'description', type: 'text' },
     // { label: 'Contact ID', name: 'contact_id', type: 'text' },

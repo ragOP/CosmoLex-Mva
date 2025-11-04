@@ -113,32 +113,10 @@ const TasksPage = () => {
     return Array.from(setNames).sort();
   }, [tasks]);
 
-  const assigneeOptions = useMemo(() => {
-    if (!Array.isArray(tasks) || tasks.length === 0) return [];
-
-    const map = new Map();
-    for (const task of tasks) {
-      const assignees = Array.isArray(task?.assignees) ? task.assignees : [];
-      for (const assignee of assignees) {
-        // Handle assignees with or without ID
-        const assigneeId =
-          assignee?.id || assignee?.user_id || assignee?.assignee_id;
-        const assigneeName =
-          assignee?.name || assignee?.user_name || assignee?.assignee_name;
-
-        // Use ID if available, otherwise use name as the key
-        const key = assigneeId || assigneeName;
-
-        if (assigneeName && key && !map.has(key)) {
-          map.set(key, assigneeName);
-        }
-      }
-    }
-
-    return Array.from(map.entries())
-      .map(([key, name]) => ({ id: key, name }))
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }, [tasks]);
+  const assigneeOptions = useMemo(
+    () => getMetaOptions({ metaField: 'assignees', metaObj: tasksMeta }),
+    [tasksMeta]
+  );
 
   const assignedByOptions = useMemo(() => {
     if (!Array.isArray(tasks) || tasks.length === 0) return [];
@@ -299,7 +277,10 @@ const TasksPage = () => {
               <SelectContent className="max-h-64 overflow-auto">
                 <SelectItem value="__all__">Assignees</SelectItem>
                 {assigneeOptions.map((a) => (
-                  <SelectItem key={a.id} value={a.id}>
+                  <SelectItem
+                    key={a.id}
+                    value={a.id?.toString() || String(a.id)}
+                  >
                     {a.name}
                   </SelectItem>
                 ))}
@@ -494,7 +475,10 @@ const TasksPage = () => {
                         <SelectContent className="max-h-64 overflow-auto">
                           <SelectItem value="__all__">All assignees</SelectItem>
                           {assigneeOptions.map((a) => (
-                            <SelectItem key={a.id} value={a.id}>
+                            <SelectItem
+                              key={a.id}
+                              value={a.id?.toString() || String(a.id)}
+                            >
                               {a.name}
                             </SelectItem>
                           ))}

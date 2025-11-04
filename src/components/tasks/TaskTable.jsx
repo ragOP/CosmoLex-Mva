@@ -217,6 +217,31 @@ const TaskTable = ({
       ),
     },
     {
+      field: 'assigned_by',
+      headerName: 'Assigned By',
+      flex: 1,
+      minWidth: 100,
+      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+      cellClassName: 'text-[#6366F1]',
+      headerAlign: 'center',
+      align: 'center',
+      renderCell: (params) => (
+        <div className="w-full h-full flex items-center justify-start">
+          <ScrollArea className="w-full">
+            <div className="text-sm text-muted-foreground flex justify-center">
+              {params.row.assigned_by && (
+                <Tooltip title={params.row.assigned_by?.name}>
+                  <div className="w-14 h-4 flex items-center justify-center text-xs font-medium text-[#6366F1] border border-gray-200 rounded-sm">
+                    {getFirstName(params.row.assigned_by?.name)}
+                  </div>
+                </Tooltip>
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+      ),
+    },
+    {
       field: 'assignees',
       headerName: 'Assignees',
       flex: 1,
@@ -275,31 +300,7 @@ const TaskTable = ({
         );
       },
     },
-    {
-      field: 'assigned_by',
-      headerName: 'Assigned By',
-      flex: 1,
-      minWidth: 100,
-      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
-      cellClassName: 'text-[#6366F1]',
-      headerAlign: 'center',
-      align: 'center',
-      renderCell: (params) => (
-        <div className="w-full h-full flex items-center justify-start">
-          <ScrollArea className="w-full">
-            <div className="text-sm text-muted-foreground flex justify-center">
-              {params.row.assigned_by && (
-                <Tooltip title={params.row.assigned_by?.name}>
-                  <div className="w-14 h-4 flex items-center justify-center text-xs font-medium text-[#6366F1] border border-gray-200 rounded-sm">
-                    {getFirstName(params.row.assigned_by?.name)}
-                  </div>
-                </Tooltip>
-              )}
-            </div>
-          </ScrollArea>
-        </div>
-      ),
-    },
+
     {
       field: 'status_id',
       headerName: 'Status',

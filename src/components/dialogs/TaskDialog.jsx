@@ -51,6 +51,12 @@ const formFields = [
     required: true,
   },
   {
+    label: 'Created At',
+    name: 'created_at',
+    type: 'date',
+    required: false,
+  },
+  {
     label: 'Subject',
     name: 'subject',
     type: 'text',
@@ -232,6 +238,7 @@ export default function TaskDialog({
       subject: '',
       description: '',
       due_date: '',
+      created_at: '',
       priority_id: '',
       utbms_code_id: '',
       billable: false,
@@ -476,6 +483,8 @@ export default function TaskDialog({
       // Format the data for API
       const formattedData = {
         ...data,
+        // Ensure created_at uses the user-selected date (YYYY-MM-DD) if provided
+        created_at: data.created_at || null,
         contact_id: data.contact_id
           ? parseInt(data.contact_id) || data.contact_id
           : null,
@@ -562,6 +571,9 @@ export default function TaskDialog({
           due_date: currentTask.due_date
             ? currentTask.due_date.split('T')[0]
             : '',
+          created_at: currentTask.created_at
+            ? currentTask.created_at.split('T')[0]
+            : '',
           reminders: currentTask.reminders || [],
           assigned_to:
             currentTask.assignees?.map((assignee) => ({
@@ -617,6 +629,7 @@ export default function TaskDialog({
           subject: '',
           description: '',
           due_date: '',
+          created_at: '',
           priority_id: '',
           utbms_code_id: '',
           billable: false,

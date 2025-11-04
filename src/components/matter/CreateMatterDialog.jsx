@@ -94,6 +94,7 @@ export default function CreateMatterDialog({
       assignee_id: '',
       owner_id: '',
       ad_campaign: '',
+      created_at: '',
       case_description: '',
       contacts_id: '',
     },
@@ -149,6 +150,12 @@ export default function CreateMatterDialog({
       name: 'ad_campaign',
       type: 'select',
       options: matterMeta?.ad_campaigns || [],
+    },
+    {
+      label: 'Created At',
+      name: 'created_at',
+      type: 'date',
+      required: false,
     },
     { label: 'Case Description', name: 'case_description', type: 'text' },
   ];
