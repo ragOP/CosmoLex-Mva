@@ -200,41 +200,7 @@ const TasksPage = () => {
   }
 
   return (
-    <PermissionGuard
-      permission="tasks.view"
-      fallback={
-        <div className="px-4 pb-2 flex flex-col gap-2 h-full overflow-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="pl-2">
-              <h1 className="text-xl font-bold text-gray-900">Tasks</h1>
-              <p className="text-base text-gray-600">
-                Manage and track your tasks efficiently
-              </p>
-            </div>
-          </div>
-
-          {/* Permission Denied Message */}
-          <div className="bg-white/50 backdrop-blur-md border border-gray-200/80 shadow-lg gap-4 p-8 rounded-lg flex flex-col items-center justify-center h-full">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <X className="w-8 h-8 text-red-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                Access Denied
-              </h3>
-              <p className="text-base text-gray-600 mb-1">
-                You do not have permission to view tasks.
-              </p>
-              <p className="text-sm text-gray-500">
-                Please contact your administrator if you need access to this
-                feature.
-              </p>
-            </div>
-          </div>
-        </div>
-      }
-    >
+    <PermissionGuard permission="tasks.view" fallback={null}>
       <div className="flex flex-col gap-4 h-full w-full overflow-auto">
         <div className="flex flex-col md:flex-row md:flex-wrap md:justify-between w-full md:items-center px-4 pt-4 gap-3">
           <p className="text-2xl font-bold w-full md:flex-1">

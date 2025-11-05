@@ -387,49 +387,7 @@ const DocumentationPage = () => {
     }
   };
 
-  // Check if user has permission to view documents
-  if (
-    !hasPermission('documents.view') &&
-    !hasPermission('documents.items.get')
-  ) {
-    return (
-      <div className="px-4">
-        <BreadCrumb label={isFromInbox ? 'Documents' : 'Documentation'} />
-        <div className="pb-2 flex flex-col gap-2 h-full overflow-auto mt-4">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="pl-2">
-              <h1 className="text-xl font-bold text-gray-900">
-                {isFromInbox ? 'Documents' : 'Documentation'}
-              </h1>
-              <p className="text-base text-gray-600">
-                Manage and organize your documents
-              </p>
-            </div>
-          </div>
-
-          {/* Permission Denied Message */}
-          <div className="bg-white/50 backdrop-blur-md border border-gray-200/80 shadow-lg gap-4 p-8 rounded-lg flex flex-col items-center justify-center h-full">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <X className="w-8 h-8 text-red-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                Access Denied
-              </h3>
-              <p className="text-base text-gray-600 mb-1">
-                You do not have permission to view documents.
-              </p>
-              <p className="text-sm text-gray-500">
-                Please contact your administrator if you need access to this
-                feature.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Removed access denied UI; actions remain permission-guarded via toasts
 
   if (foldersLoading) {
     return (

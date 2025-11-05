@@ -29,6 +29,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { getToken, decodeToken } from '@/utils/auth';
 import { getUserById } from '@/api/api_services/user';
 import { setUser } from '@/store/slices/authSlice';
+import { usePermission } from '@/utils/usePermission';
 
 const typeToIcon = {
   file: File,
@@ -465,6 +466,11 @@ const Sidebar = ({ isDrawer }) => {
   const location = useLocation();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const {
+    hasPermission,
+    hasAnyPermission,
+    isAdmin: isAdminFromHook,
+  } = usePermission();
   const [openTree, setOpenTree] = React.useState(null);
   const [hovered, setHovered] = React.useState(null);
   const [sidebarMode, setSidebarMode] = React.useState('default');
@@ -493,15 +499,91 @@ const Sidebar = ({ isDrawer }) => {
     fetchUserData();
   }, [dispatch, user]);
 
-  // check if user is admin
-  const isAdmin = user?.role_id === 1;
+  // check if user is admin (prefer hook, fallback to role_id)
+  const isAdmin =
+    typeof isAdminFromHook === 'boolean'
+      ? isAdminFromHook
+      : user?.role_id === 1;
 
   const getSidebarItems = () => {
+    // Map sidebar routes to the permission(s) needed to view them
+    const routePermissionMap = {
+      // ============================================
+      // Top-level Sidebar Buttons
+      // ============================================
+
+      // "Contacts" button - requires permission to view contacts
+      '/dashboard/contacts': 'contacts.view',
+
+      // "Tasks" button - requires permission to view tasks
+      '/dashboard/tasks': 'tasks.view',
+
+      // "Agenda" button - requires permission to view agenda
+      '/dashboard/agenda': 'agenda.view',
+
+      // "Advanced Search" button - requires permission to run advanced search
+      '/dashboard/advanced-search': 'search.advanced.run',
+
+      // "Communication" button - requires permission to view communications
+      '/dashboard/communication': 'communications.view',
+
+      // "Documentation" button - requires permissions to view documents and get document items
+      '/dashboard/documentation': ['documents.view', 'documents.items.get'],
+
+      // "Inbox" button - show/hide based on matter-related permissions
+      '/dashboard/inbox': 'matters.view',
+
+      // ============================================
+      // Inbox Mode Sidebar Buttons
+      // ============================================
+
+      // "Notes" button (in inbox mode) - requires permission to view notes
+      '/dashboard/inbox/notes': 'notes.view',
+
+      // "Tasks" button (in inbox mode) - requires permission to view tasks
+      '/dashboard/inbox/tasks': 'tasks.view',
+
+      // "Key Dates" button (in inbox mode) - requires permission to view case key dates
+      '/dashboard/inbox/key-dates': 'case-key-dates.view',
+
+      // "Communication" button (in inbox mode) - requires permission to view communications
+      '/dashboard/inbox/communication': 'communications.view',
+
+      // "Finance" button (in inbox mode) - requires permission to view finance
+      '/dashboard/inbox/finance': 'finance.view',
+
+      // "Documentation" button (in inbox mode) - requires permissions to view documents and get document items
+      '/dashboard/inbox/documentation': [
+        'documents.view',
+        'documents.items.get',
+      ],
+
+      // "Overview" button (in inbox mode) - requires permission to view matters
+      '/dashboard/inbox/overview': 'matters.view',
+
+      // "Form" button (in inbox mode) - requires permission to store matter intake forms
+      '/dashboard/inbox/form': 'matters.intake.store',
+    };
+
+    const filterByPermission = (items) => {
+      return items.filter((item) => {
+        const required = routePermissionMap[item.id];
+        if (!required) return true;
+        if (isAdmin) return true;
+        if (Array.isArray(required)) return hasAnyPermission(required);
+        return hasPermission(required);
+      });
+    };
+
     if (sidebarMode === 'inbox') {
-      return inboxSidebarItems;
+      return filterByPermission(inboxSidebarItems);
     }
 
-    return isAdmin ? [...sidebarItems, ...adminSidebarItems] : sidebarItems;
+    const baseItems = isAdmin
+      ? [...sidebarItems, ...adminSidebarItems]
+      : [...sidebarItems];
+
+    return filterByPermission(baseItems);
   };
   const itemsToRender = getSidebarItems();
 

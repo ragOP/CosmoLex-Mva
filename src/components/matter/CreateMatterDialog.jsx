@@ -172,34 +172,7 @@ export default function CreateMatterDialog({
           </DialogTitle>
         </DialogHeader>
 
-        {/* Permission Denied Message */}
-        {!canCreateMatter && (
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <X className="w-8 h-8 text-red-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              Access Denied
-            </h3>
-            <p className="text-base text-gray-600 mb-1 text-center">
-              You do not have permission to create matters.
-            </p>
-            <p className="text-sm text-gray-500 text-center">
-              Please contact your administrator if you need access to this
-              feature.
-            </p>
-            <DialogFooter className="pt-4">
-              <DialogClose asChild>
-                <Button
-                  type="button"
-                  className="bg-[#6366F1] text-white hover:bg-[#4e5564] cursor-pointer"
-                >
-                  Close
-                </Button>
-              </DialogClose>
-            </DialogFooter>
-          </div>
-        )}
+        {/* Removed access denied UI; submission still permission-gated via toast */}
 
         {canCreateMatter && (
           <form

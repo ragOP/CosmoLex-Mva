@@ -17,7 +17,7 @@ import {
 import getMatterMeta from '@/pages/matter/intake/helpers/getMatterMeta';
 import { usePermission } from '@/utils/usePermission';
 import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
+import { exportToExcel, exportToPdf } from '@/utils/exportUtils';
 
 const FilterTag = ({ filterKey, filterValue, onRemove }) => (
   <div className="flex items-center gap-1 bg-indigo-100 text-indigo-700 text-xs font-semibold px-2 py-1 rounded-full">
@@ -41,6 +41,7 @@ const TasksPage = () => {
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [exportStartDate, setExportStartDate] = useState('');
   const [exportEndDate, setExportEndDate] = useState('');
+  const [exportFormat, setExportFormat] = useState('excel');
 
   // Permissions
   const { hasPermission, isAdmin } = usePermission();
@@ -162,15 +163,63 @@ const TasksPage = () => {
         })
       );
 
-      const worksheet = XLSX.utils.json_to_sheet(rows);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Matters');
-      XLSX.writeFile(workbook, 'matters.xlsx');
-
+      const { ok, reason } = exportToExcel(rows, 'matters.xlsx', 'Matters');
+      if (!ok && reason === 'no_rows') {
+        toast.info('No rows available to export');
+        return;
+      }
       setIsExportOpen(false);
     } catch (e) {
       toast.error('Failed to export Excel');
     }
+  };
+
+  const confirmExportPdf = () => {
+    try {
+      const start = exportStartDate ? new Date(exportStartDate) : null;
+      const end = exportEndDate ? new Date(exportEndDate) : null;
+
+      const source = filteredMatters || [];
+      const withinRange = source.filter((item) => {
+        const createdVal = getCreatedAt(item);
+        const created = parseDate(createdVal);
+        if (!created) return false;
+        if (start && created < new Date(start.setHours(0, 0, 0, 0)))
+          return false;
+        if (end && created > new Date(end.setHours(23, 59, 59, 999)))
+          return false;
+        return true;
+      });
+
+      const rows = (withinRange.length ? withinRange : source).map(
+        (item, index) => ({
+          'S.No': index + 1,
+          ...item,
+        })
+      );
+
+      const { ok, reason } = exportToPdf(rows, 'matters.pdf', {
+        orientation: 'landscape',
+        unit: 'pt',
+        format: 'a4',
+        maxColumns: 12,
+      });
+      if (!ok && reason === 'no_rows') {
+        toast.info('No rows available to export');
+        return;
+      }
+      setIsExportOpen(false);
+    } catch (e) {
+      toast.error('Failed to export PDF');
+    }
+  };
+
+  const confirmExport = () => {
+    if (exportFormat === 'pdf') {
+      confirmExportPdf();
+      return;
+    }
+    confirmExportExcel();
   };
 
   const handleCreateMatter = () => {
@@ -189,33 +238,7 @@ const TasksPage = () => {
     );
   }
 
-  // Show permission denied message if user doesn't have access
-  if (!canViewMatters) {
-    return (
-      <div className="flex flex-col gap-2 h-full w-full overflow-auto">
-        <div className="flex items-center justify-between px-[50px] pt-4">
-          <p className="text-2xl font-bold">Matters</p>
-        </div>
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <X className="w-8 h-8 text-red-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              Access Denied
-            </h3>
-            <p className="text-base text-gray-600 mb-1">
-              You do not have permission to view matters.
-            </p>
-            <p className="text-sm text-gray-500">
-              Please contact your administrator if you need access to this
-              feature.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Removed access denied UI; page renders without permission gating
 
   return (
     <div className="flex flex-col gap-2 h-full w-full overflow-auto">
@@ -364,7 +387,7 @@ const TasksPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-lg shadow-lg w-[90%] max-w-md p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold">Export Matters to Excel</h3>
+              <h3 className="text-lg font-semibold">Export Matters</h3>
               <button
                 onClick={closeExportDialog}
                 className="text-gray-500 hover:text-gray-700"
@@ -373,6 +396,19 @@ const TasksPage = () => {
               </button>
             </div>
             <div className="space-y-3">
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-gray-700 mb-1">
+                  Format
+                </label>
+                <select
+                  value={exportFormat}
+                  onChange={(e) => setExportFormat(e.target.value)}
+                  className="h-10 border border-gray-300 rounded-md px-3"
+                >
+                  <option value="excel">Excel</option>
+                  <option value="pdf">PDF</option>
+                </select>
+              </div>
               <div className="flex flex-col">
                 <label className="text-sm font-medium text-gray-700 mb-1">
                   Start Date
@@ -400,7 +436,7 @@ const TasksPage = () => {
               <Button onClick={closeExportDialog} className="min-w-24">
                 Cancel
               </Button>
-              <Button onClick={confirmExportExcel} className="min-w-24">
+              <Button onClick={confirmExport} className="min-w-24">
                 Export
               </Button>
             </div>

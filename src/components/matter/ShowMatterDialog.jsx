@@ -20,6 +20,7 @@ const ShowMatterDialog = ({ matter, open = false, onClose = () => {} }) => {
   const canShowMatter = isAdmin || hasPermission('matters.show');
 
   if (!matter) return null;
+  if (!canShowMatter) return null;
 
   const {
     case_role,
@@ -49,33 +50,6 @@ const ShowMatterDialog = ({ matter, open = false, onClose = () => {} }) => {
             Matter Details
           </DialogTitle>
         </DialogHeader>
-
-        {/* Permission Denied Message */}
-        {!canShowMatter && (
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <X className="w-8 h-8 text-red-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              Access Denied
-            </h3>
-            <p className="text-base text-gray-600 mb-1 text-center">
-              You do not have permission to view matter details.
-            </p>
-            <p className="text-sm text-gray-500 text-center">
-              Please contact your administrator if you need access to this
-              feature.
-            </p>
-            <DialogFooter className="mt-6">
-              <Button
-                onClick={onClose}
-                className="bg-[#6366F1] text-white hover:bg-[#4f51d8]"
-              >
-                Close
-              </Button>
-            </DialogFooter>
-          </div>
-        )}
 
         {canShowMatter && (
           <div className="space-y-6 text-sm text-slate-700">
