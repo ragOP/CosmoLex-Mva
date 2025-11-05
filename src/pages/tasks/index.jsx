@@ -91,8 +91,6 @@ const TasksPage = () => {
     tasksLoading,
   });
 
-  console.log(tasks, '>>>>>>>>>tasks');
-
   // Build select options
   const priorityOptions = useMemo(
     () => getMetaOptions({ metaField: 'taks_priority', metaObj: tasksMeta }),
