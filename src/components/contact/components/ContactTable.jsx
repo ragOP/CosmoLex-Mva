@@ -12,56 +12,11 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Pencil, CircleOff, Trash2 } from 'lucide-react';
-import { useContact } from '@/components/contact/hooks/useContact';
-import getMetaOptions from '@/utils/getMetaFields';
 import { noFilterColumns } from '@/utils/noFilterColumns';
 import { getTableWidth } from '@/utils/isMobile';
 import { truncateStr } from '@/utils/truncateStr';
 import PermissionGuard from '@/components/auth/PermissionGuard';
 import { usePermission } from '@/utils/usePermission';
-import { getContactById } from '@/api/api_services/contact';
-import {
-  normalizeCountry,
-  getRowCountryHint,
-  getCountryFromAddresses,
-  getCountryForRow,
-  isCanadaRow,
-  formatCanadian,
-  getRowPhone,
-  getRowFax,
-} from '@/utils/phoneUtils';
-
-// Prefetch and cache addresses for contacts that lack country/addresses
-const useAddressesCache = (contacts) => {
-  const [cache, setCache] = React.useState({});
-
-  React.useEffect(() => {
-    const ids = (contacts || [])
-      .filter((c) => c?.id && !cache[c.id])
-      .filter((c) => !getRowCountryHint(c) && !Array.isArray(c.addresses))
-      .map((c) => c.id);
-    if (!ids.length) return;
-    (async () => {
-      const results = await Promise.all(
-        ids.map(async (id) => {
-          try {
-            const detail = await getContactById(id);
-            return [id, detail?.addresses || []];
-          } catch (_) {
-            return [id, []];
-          }
-        })
-      );
-      setCache((prev) => {
-        const next = { ...prev };
-        for (const [id, addresses] of results) next[id] = addresses;
-        return next;
-      });
-    })();
-  }, [contacts]);
-
-  return cache;
-};
 
 const ContactTable = ({
   contacts = [],
@@ -72,9 +27,6 @@ const ContactTable = ({
   const [contactData, setContactData] = useState([]);
   const { hasPermission } = usePermission();
   const canShowContact = hasPermission('contacts.show');
-
-  // Optimized: only fetch addresses when row-level info is insufficient
-  const addressesById = useAddressesCache(contacts);
 
   const handleRowClick = (params) => {
     if (canShowContact) {
@@ -156,10 +108,7 @@ const ContactTable = ({
       headerAlign: 'center',
       align: 'center',
       renderCell: (params) => {
-        const value = getRowPhone(params.row, params.value);
-        const text = isCanadaRow(params.row, addressesById)
-          ? formatCanadian(value, true)
-          : value;
+        const text = params.value;
         return (
           <div className="w-full h-full flex items-center justify-center">
             {truncateStr(text, 20)}
@@ -167,27 +116,24 @@ const ContactTable = ({
         );
       },
     },
-    {
-      field: 'fax',
-      headerName: 'Fax',
-      flex: 1,
-      minWidth: 120,
-      headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
-      cellClassName: 'text-[#6366F1]',
-      headerAlign: 'center',
-      align: 'center',
-      renderCell: (params) => {
-        const value = getRowFax(params.row, params.value);
-        const text = isCanadaRow(params.row, addressesById)
-          ? formatCanadian(value, false)
-          : value;
-        return (
-          <div className="w-full h-full flex items-center justify-center">
-            {truncateStr(text, 20)}
-          </div>
-        );
-      },
-    },
+    // {
+    //   field: 'fax',
+    //   headerName: 'Fax',
+    //   flex: 1,
+    //   minWidth: 120,
+    //   headerClassName: 'uppercase text-[#40444D] font-semibold text-xs',
+    //   cellClassName: 'text-[#6366F1]',
+    //   headerAlign: 'center',
+    //   align: 'center',
+    //   renderCell: (params) => {
+    //     const text = params.value;
+    //     return (
+    //       <div className="w-full h-full flex items-center justify-center">
+    //         {truncateStr(text, 20)}
+    //       </div>
+    //     );
+    //   },
+    // },
     {
       field: 'primary_email',
       headerName: 'Email',

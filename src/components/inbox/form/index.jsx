@@ -7,6 +7,7 @@ import {
 import { Button } from '@/components/ui/button';
 
 import { Stack, Typography } from '@mui/material';
+import formatCanadianPhone from '@/utils/formatPhoneNo';
 import { Grid } from '@mui/material';
 import { useState, useEffect } from 'react';
 import { useMatter } from '../MatterContext';
@@ -172,6 +173,11 @@ const Form = () => {
           processedValue = value; // Keep as is if already in HH:MM:SS format
         }
       }
+    }
+
+    // Apply phone formatting if specified in field config
+    if (field && field.format === 'canadianPhone') {
+      processedValue = formatCanadianPhone(String(value || ''));
     }
 
     // Handle dropdown fields with YES_NO options - ensure numeric values

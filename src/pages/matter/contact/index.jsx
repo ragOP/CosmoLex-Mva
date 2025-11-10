@@ -22,8 +22,10 @@ import getContacts from '@/pages/matter/intake/helpers/getContacts';
 import searchContact from '@/pages/matter/intake/helpers/searchContact';
 import isArrayWithValues from '@/utils/isArrayWithValues';
 import createContact from '../intake/helpers/createContact';
+import formatCanadianPhone from '@/utils/formatPhoneNo';
 
 export default function CreateContact() {
+  
   const {
     control,
     handleSubmit,
@@ -326,7 +328,27 @@ export default function CreateContact() {
                     <Controller
                       control={control}
                       name={name}
-                      render={({ field }) => <Input type={type} {...field} />}
+                      render={({ field }) => (
+                        <Input
+                          type={type}
+                          {...field}
+                          onChange={(e) => {
+                            let value = e.target.value;
+                            if (
+                              [
+                                'work_phone',
+                                'home_phone',
+                                'primary_phone',
+                                'fax',
+                              ].includes(name)
+                            ) {
+                              value = formatCanadianPhone(value);
+                            }
+                            field.onChange(value);
+                          }}
+                          value={field.value || ''}
+                        />
+                      )}
                     />
 
                     {errors[name] && (

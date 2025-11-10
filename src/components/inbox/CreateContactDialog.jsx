@@ -31,6 +31,7 @@ import {
 } from '@mui/material';
 import PrimaryAddressConfirmDialog from '@/components/contact/components/PrimaryAddressConfirmDialog';
 import PermissionGuard from '@/components/auth/PermissionGuard';
+import formatCanadianPhone from '@/utils/formatPhoneNo';
 
 export default function CreateContactDialog({ open, setOpen, setValueFn }) {
   const { data: contactMeta } = useQuery({
@@ -534,6 +535,18 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
                       )}
                     />
                   ) : (
+                    // <Controller
+                    //   control={control}
+                    //   name={name}
+                    //   rules={getValidationRules(name)}
+                    //   render={({ field }) => (
+                    //     <Input
+                    //       type={type}
+                    //       {...field}
+                    //       className={errors[name] ? 'border-red-500' : ''}
+                    //     />
+                    //   )}
+                    // />
                     <Controller
                       control={control}
                       name={name}
@@ -542,7 +555,48 @@ export default function CreateContactDialog({ open, setOpen, setValueFn }) {
                         <Input
                           type={type}
                           {...field}
-                          className={errors[name] ? 'border-red-500' : ''}
+                          value={field.value || ''}
+                          onChange={(e) => {
+                            let value = e.target.value;
+
+                            // Apply Canadian phone format for these specific fields
+                            if (
+                              [
+                                'work_phone',
+                                'home_phone',
+                                'primary_phone',
+                                'fax',
+                                'contact_phone', // newly added field
+                              ].includes(name)
+                            ) {
+                              value = formatCanadianPhone(value);
+                            }
+
+                            field.onChange(value);
+                          }}
+                          placeholder={
+                            [
+                              'work_phone',
+                              'home_phone',
+                              'primary_phone',
+                              'fax',
+                              'contact_phone',
+                            ].includes(name)
+                              ? '(123) 456-7890'
+                              : ''
+                          }
+                          maxLength={
+                            [
+                              'work_phone',
+                              'home_phone',
+                              'primary_phone',
+                              'fax',
+                              'contact_phone',
+                            ].includes(name)
+                              ? 14
+                              : undefined
+                          }
+                          className={`${errors[name] ? 'border-red-500' : ''}`}
                         />
                       )}
                     />

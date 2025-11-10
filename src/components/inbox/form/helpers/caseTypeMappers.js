@@ -96,6 +96,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       maxLength: 50,
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.PERSONAL_INFO,
+      format: 'canadianPhone',
     },
 
     // Accident Information Section
@@ -357,6 +358,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       maxLength: 50,
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.PERSONAL_INFO,
+      format: 'canadianPhone',
     },
 
     // Case Information Section
@@ -443,6 +445,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       maxLength: 50,
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.PERSONAL_INFO,
+      format: 'canadianPhone',
     },
 
     // Incident Details Section
@@ -530,6 +533,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       maxLength: 50,
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.PERSONAL_INFO,
+      format: 'canadianPhone',
     },
 
     // Divorce With Children Section
@@ -842,6 +846,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       maxLength: 50,
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.PERSONAL_INFO,
+      format: 'canadianPhone',
     },
 
     // Incident Information Section
@@ -994,6 +999,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       maxLength: 50,
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.PERSONAL_INFO,
+      format: 'canadianPhone',
     },
 
     // Case Scenario Section
@@ -1231,6 +1237,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       maxLength: 50,
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.PERSONAL_INFO,
+      format: 'canadianPhone',
     },
 
     // Employment Information Section
@@ -1376,6 +1383,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       maxLength: 50,
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.PERSONAL_INFO,
+      format: 'canadianPhone',
     },
 
     // Meeting Purpose Section
@@ -1495,6 +1503,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       maxLength: 50,
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.PERSONAL_INFO,
+      format: 'canadianPhone',
     },
 
     // Incident Information Section
@@ -1611,6 +1620,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       maxLength: 50,
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.PERSONAL_INFO,
+      format: 'canadianPhone',
     },
 
     // Incident Information Section
@@ -1755,6 +1765,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       maxLength: 50,
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.PERSONAL_INFO,
+      format: 'canadianPhone',
     },
 
     // Personal Information Section
@@ -1950,6 +1961,7 @@ const CASE_TYPE_FIELD_MAPPERS = {
       maxLength: 50,
       gridSize: GRID_CONFIG.QUARTER_WIDTH,
       section: SECTIONS.PERSONAL_INFO,
+      format: 'canadianPhone',
     },
 
     // Case Information Section

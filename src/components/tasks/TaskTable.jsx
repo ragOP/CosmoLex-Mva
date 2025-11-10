@@ -40,20 +40,13 @@ const getFlagColor = (dueStatus) => {
 
     if (days > 7) {
       return 'orange';
-    } else if (days >= 3) {
+    } else if (days >= 3 && days <= 7) {
       return 'yellow';
     } else {
       return 'red';
     }
   }
-  if (status.includes('overdue')) {
-    return 'red';
-  }
-  if (status.includes('1 day left')) {
-    return 'red';
-  }
-
-  return 'gray';
+  return 'red';
 };
 
 const TaskTable = ({
